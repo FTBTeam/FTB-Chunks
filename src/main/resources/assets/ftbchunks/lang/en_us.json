@@ -1,0 +1,6 @@
+{
+	"sidebar_button.ftbchunks.chunks": "FTB Chunks",
+	"wilderness": "Wilderness",
+	"ftbchunks.no_server_mod": "FTB Chunks requires mod on server!",
+	"ftbchunks.already_claimed": "Chunk is already claimed by %s"
+}

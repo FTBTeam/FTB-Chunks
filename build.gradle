@@ -1,0 +1,140 @@
+buildscript {
+	repositories {
+		jcenter()
+		maven { url = 'https://files.minecraftforge.net/maven' }
+		maven { url "https://plugins.gradle.org/m2/" }
+		mavenCentral()
+	}
+	dependencies {
+		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.1.0'
+		classpath 'com.wynprice.cursemaven:CurseMaven:1.2.+'
+	}
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'com.matthewprenger.cursegradle'
+apply plugin: 'maven'
+apply plugin: 'com.wynprice.cursemaven'
+
+apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/master/generic/markdown-git-changelog.gradle'
+
+def ENV = System.getenv()
+version = ENV.BUILD_NUMBER ? "${mod_version}.${ENV.BUILD_NUMBER}" : "${mod_version}.custom"
+group = project.mod_package
+archivesBaseName = project.mod_name
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+	mappings channel: 'snapshot', version: project.mapping_version
+	// accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+	runs {
+		client {
+			workingDirectory project.file('run')
+			property 'forge.logging.console.level', 'debug'
+
+			if (project.hasProperty('mc_dev_uuid')) args '--uuid', project.mc_dev_uuid
+			if (project.hasProperty('mc_dev_username')) args '--username', project.mc_dev_username
+			if (project.hasProperty('mc_dev_width')) args '--width', project.mc_dev_width
+			if (project.hasProperty('mc_dev_height')) args '--height', project.mc_dev_height
+
+			mods {
+				ftbchunks {
+					source sourceSets.main
+				}
+			}
+		}
+
+		server {
+			workingDirectory project.file('run')
+			property 'forge.logging.console.level', 'debug'
+
+			mods {
+				ftbchunks {
+					source sourceSets.main
+				}
+			}
+		}
+
+		data {
+			workingDirectory project.file('run')
+			property 'forge.logging.console.level', 'debug'
+
+			args '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/')
+
+			mods {
+				ftbchunks {
+					source sourceSets.main
+				}
+			}
+		}
+	}
+}
+
+/*
+configurations.all {
+	transitive = false
+}
+*/
+
+repositories {
+	mavenLocal()
+	maven { url "https://maven.tterrag.com/" } //Yarn2MCP
+	maven { url "https://maven.latmod.com/" } //FTB GUI Library, FTB Teams, KubeJS
+}
+
+dependencies {
+	minecraft "net.minecraftforge:forge:${forge_version}"
+	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-gui-library:${ftb_gui_library_version}") {
+		transitive = false
+	}))
+	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-teams:${ftb_teams_version}") {
+		transitive = false
+	}))
+	compile(fg.deobf(project.dependencies.create("dev.latvian.mods:kubejs-forge-1.14.4:${kubejs_version}") {
+		transitive = false
+	}))
+	//compile fg.deobf(curse.resolve('jei', project.jei_file))
+}
+
+jar {
+	manifest {
+		attributes([
+				"Specification-Title"     : project.mod_id,
+				"Specification-Vendor"    : project.mod_author,
+				"Specification-Version"   : "1",
+				"Implementation-Title"    : project.name,
+				"Implementation-Version"  : version,
+				"Implementation-Vendor"   : project.mod_author,
+				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+		])
+	}
+}
+
+task deobfJar(type: Jar) {
+	from sourceSets.main.output
+	classifier 'deobf'
+}
+
+build.dependsOn deobfJar
+
+def reobfFile = file("$buildDir/reobfJar/output.jar")
+def reobfArtifact = artifacts.add('default', reobfFile) {
+	type 'jar'
+	builtBy 'reobfJar'
+}
+
+artifacts {
+	archives deobfJar
+}
+
+if (ENV.LOCAL_MAVEN) {
+	uploadArchives {
+		repositories {
+			mavenDeployer {
+				repository(url: "file://${ENV.LOCAL_MAVEN}")
+			}
+		}
+	}
+}

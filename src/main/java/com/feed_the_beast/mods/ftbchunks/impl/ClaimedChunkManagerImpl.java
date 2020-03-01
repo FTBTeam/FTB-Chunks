@@ -8,6 +8,7 @@ import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
@@ -154,7 +155,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		if (data == null)
 		{
 			data = new ClaimedChunkPlayerDataImpl(this, new File(dataDirectory, UUIDTypeAdapter.fromUUID(id) + "-" + name + ".json"), id);
-			data.name = name;
+			data.profile = new GameProfile(id, name);
 			playerData.put(id, data);
 			data.save();
 		}
@@ -261,7 +262,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		for (ClaimedChunkPlayerDataImpl data : playerData.values())
 		{
-			json.add(data.name, data.toJson());
+			json.add(data.getName(), data.toJson());
 		}
 
 		try (Writer writer = new BufferedWriter(new FileWriter(new File(exportFolder, "all.json"))))

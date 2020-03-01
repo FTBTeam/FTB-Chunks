@@ -62,7 +62,7 @@ public class ClaimedChunkImpl implements ClaimedChunk
 
 	private boolean isAlly(ServerPlayerEntity player)
 	{
-		return playerData.getUuid().equals(player.getUniqueID()) || playerData.getName().equals(player.getGameProfile().getName()) || player.getServer().isSinglePlayer() || player.hasPermissionLevel(2);
+		return player.getServer().isSinglePlayer() || player.hasPermissionLevel(2) || playerData.isAlly(player);
 	}
 
 	@Override

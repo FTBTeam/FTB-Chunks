@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.ClaimedChunkManager;
 import com.feed_the_beast.mods.ftbchunks.ClaimedChunkPlayerData;
+import com.feed_the_beast.mods.ftbchunks.FTBTeamsIntegration;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResults;
@@ -12,11 +13,14 @@ import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerChunkProvider;
+import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -33,8 +37,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 {
 	public final ClaimedChunkManagerImpl manager;
 	public final File file;
-	public final UUID uuid;
-	public String name;
+	public GameProfile profile;
 	public int color;
 	public Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
 	private final Map<String, ClaimedChunkGroupImpl> groups;
@@ -44,8 +47,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	{
 		manager = m;
 		file = f;
-		uuid = id;
-		name = "";
+		profile = new GameProfile(id, "");
 		color = 0;
 		claimedChunks = new HashMap<>();
 		groups = new HashMap<>();
@@ -55,7 +57,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	@Override
 	public String toString()
 	{
-		return name;
+		return getName();
 	}
 
 	@Override
@@ -65,15 +67,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	}
 
 	@Override
-	public UUID getUuid()
+	public GameProfile getProfile()
 	{
-		return uuid;
-	}
-
-	@Override
-	public String getName()
-	{
-		return name;
+		return profile;
 	}
 
 	@Override
@@ -268,11 +264,17 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		shouldSave = true;
 	}
 
+	@Override
+	public boolean isAlly(ServerPlayerEntity player)
+	{
+		return getUuid().equals(player.getUniqueID()) || getName().equals(player.getGameProfile().getName()) || ModList.get().isLoaded("ftbteams") && FTBTeamsIntegration.isAlly(this, player);
+	}
+
 	public JsonObject toJson()
 	{
 		JsonObject json = new JsonObject();
-		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(uuid));
-		json.addProperty("name", name);
+		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(getUuid()));
+		json.addProperty("name", getName());
 		json.addProperty("color", String.format("#%06X", 0xFFFFFF & color));
 
 		JsonObject groupJson = new JsonObject();
@@ -322,7 +324,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public long fromJson(JsonObject json)
 	{
 		long totalChunks = 0L;
-		name = json.get("name").getAsString();
+		profile = new GameProfile(getUuid(), json.get("name").getAsString());
 		color = 0;
 
 		try

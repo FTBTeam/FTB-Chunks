@@ -6,6 +6,7 @@ import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -99,9 +100,9 @@ public class FTBChunks
 	{
 		ClaimedChunkPlayerDataImpl data = (ClaimedChunkPlayerDataImpl) FTBChunksAPI.manager.getData((ServerPlayerEntity) event.getPlayer());
 
-		if (!data.name.equals(event.getPlayer().getGameProfile().getName()))
+		if (!data.getName().equals(event.getPlayer().getGameProfile().getName()))
 		{
-			data.name = event.getPlayer().getGameProfile().getName();
+			data.profile = new GameProfile(data.getUuid(), event.getPlayer().getGameProfile().getName());
 			data.save();
 		}
 	}

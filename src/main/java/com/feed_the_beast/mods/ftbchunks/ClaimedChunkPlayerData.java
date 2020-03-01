@@ -4,7 +4,9 @@ import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.command.CommandSource;
+import net.minecraft.entity.player.ServerPlayerEntity;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -17,9 +19,17 @@ public interface ClaimedChunkPlayerData
 {
 	ClaimedChunkManager getManager();
 
-	UUID getUuid();
+	GameProfile getProfile();
 
-	String getName();
+	default UUID getUuid()
+	{
+		return getProfile().getId();
+	}
+
+	default String getName()
+	{
+		return getProfile().getName();
+	}
 
 	int getColor();
 
@@ -43,4 +53,6 @@ public interface ClaimedChunkPlayerData
 	ClaimResult unload(CommandSource source, ChunkDimPos pos, boolean checkOnly);
 
 	void save();
+
+	boolean isAlly(ServerPlayerEntity player);
 }

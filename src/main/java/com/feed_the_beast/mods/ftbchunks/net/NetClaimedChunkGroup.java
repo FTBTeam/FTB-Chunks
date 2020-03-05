@@ -13,6 +13,7 @@ public class NetClaimedChunkGroup
 	public int color;
 	public boolean forceLoaded;
 	public ITextComponent owner;
+	public String formattedOwner = "";
 
 	@Override
 	public int hashCode()

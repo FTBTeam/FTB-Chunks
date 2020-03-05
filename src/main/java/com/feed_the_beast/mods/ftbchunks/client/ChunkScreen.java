@@ -4,6 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkData;
+import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkGroup;
 import com.feed_the_beast.mods.ftbchunks.net.RequestMapDataPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
@@ -16,36 +17,72 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.toasts.SystemToast;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.opengl.GL11;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author LatvianModder
  */
 public class ChunkScreen extends GuiBase
 {
-	public class ChunkButton extends Button
+	public static class ChunkButton extends Button
 	{
-		public final int x, z;
+		public final int chunkX, chunkZ;
+		public NetClaimedChunk chunk;
 
-		public ChunkButton(Panel panel, int _x, int _z)
+		public ChunkButton(Panel panel, int x, int z)
 		{
-			super(panel, "ABC", Icon.EMPTY);
-			x = _x;
-			z = _z;
+			super(panel, "", Icon.EMPTY);
+			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
+			chunkX = x;
+			chunkZ = z;
 		}
 
 		@Override
 		public void onClicked(MouseButton mouseButton)
 		{
 			playClickSound();
+			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("Not finished yet!"), new StringTextComponent("Use /ftbchunks")));
+		}
+
+		@Override
+		public void drawBackground(Theme theme, int x, int y, int w, int h)
+		{
+			if (isMouseOver())
+			{
+				Color4I.WHITE.withAlpha(100).draw(x, y, w, h);
+			}
+		}
+
+		@Override
+		public void addMouseOverText(List<String> list)
+		{
+			if (chunk != null)
+			{
+				list.add(chunk.group.formattedOwner);
+
+				if (chunk.group.forceLoaded)
+				{
+					list.add(TextFormatting.RED + "Force Loaded");
+				}
+			}
 		}
 	}
 
 	public NetClaimedChunkData data;
+	public List<ChunkButton> chunkButtons;
 
 	@Override
 	public boolean onInit()
@@ -56,22 +93,50 @@ public class ChunkScreen extends GuiBase
 	@Override
 	public void addWidgets()
 	{
+		int sx = getX() + (width - FTBChunks.GUI_SIZE) / 2;
+		int sy = getY() + (height - FTBChunks.GUI_SIZE) / 2;
 		int startX = Minecraft.getInstance().player.chunkCoordX - FTBChunks.TILE_OFFSET;
 		int startZ = Minecraft.getInstance().player.chunkCoordZ - FTBChunks.TILE_OFFSET;
 		ThreadReloadChunkSelector.reloadArea(Minecraft.getInstance().world, startX, startZ);
-		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket());
+
+		chunkButtons = new ArrayList<>();
 
 		for (int z = 0; z < FTBChunks.TILES; z++)
 		{
 			for (int x = 0; x < FTBChunks.TILES; x++)
 			{
-				add(new ChunkButton(this, startX + x, startZ + z));
+				ChunkButton button = new ChunkButton(this, startX + x, startZ + z);
+				chunkButtons.add(button);
+				button.setPos(sx + x * FTBChunks.TILE_SIZE, sy + z * FTBChunks.TILE_SIZE);
 			}
 		}
+
+		addAll(chunkButtons);
+		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket());
 	}
 
 	public void setData(NetClaimedChunkData d)
 	{
+		int centerX = Minecraft.getInstance().player.chunkCoordX;
+		int centerZ = Minecraft.getInstance().player.chunkCoordZ;
+
+		for (NetClaimedChunkGroup group : d.groups)
+		{
+			group.formattedOwner = new StringTextComponent("").applyTextStyle(TextFormatting.AQUA).appendSibling(group.owner).getFormattedText();
+		}
+
+		Map<ChunkPos, NetClaimedChunk> chunkMap = new HashMap<>();
+
+		for (NetClaimedChunk chunk : d.chunks)
+		{
+			chunkMap.put(new ChunkPos(centerX + chunk.x, centerZ + chunk.z), chunk);
+		}
+
+		for (ChunkButton button : chunkButtons)
+		{
+			button.chunk = chunkMap.get(new ChunkPos(button.chunkX, button.chunkZ));
+		}
+
 		data = d;
 	}
 

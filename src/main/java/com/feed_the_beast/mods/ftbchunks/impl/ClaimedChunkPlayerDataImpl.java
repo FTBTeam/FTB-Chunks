@@ -25,8 +25,10 @@ import net.minecraftforge.fml.ModList;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,7 +41,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public final File file;
 	public GameProfile profile;
 	public int color;
-	public Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
 	private final Map<String, ClaimedChunkGroupImpl> groups;
 	public boolean shouldSave;
 
@@ -49,7 +50,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		file = f;
 		profile = new GameProfile(id, "");
 		color = 0;
-		claimedChunks = new HashMap<>();
 		groups = new HashMap<>();
 		shouldSave = false;
 	}
@@ -85,10 +85,35 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Collection<ClaimedChunk> getClaimedChunks()
 	{
-		return (Collection<ClaimedChunk>) (Collection) claimedChunks.values();
+		List<ClaimedChunk> list = new ArrayList<>();
+
+		for (ClaimedChunkImpl chunk : manager.claimedChunks.values())
+		{
+			if (chunk.playerData == this)
+			{
+				list.add(chunk);
+			}
+		}
+
+		return list;
+	}
+
+	@Override
+	public Collection<ClaimedChunk> getForceLoadedChunks()
+	{
+		List<ClaimedChunk> list = new ArrayList<>();
+
+		for (ClaimedChunkImpl chunk : manager.claimedChunks.values())
+		{
+			if (chunk.playerData == this && chunk.isForceLoaded())
+			{
+				list.add(chunk);
+			}
+		}
+
+		return list;
 	}
 
 	@Override
@@ -147,6 +172,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_CLAIMED;
 		}
+		else if (getClaimedChunks().size() >= 100)
+		{
+			return ClaimResults.NOT_ENOUGH_POWER;
+		}
 
 		chunk = new ClaimedChunkImpl(this, pos);
 
@@ -157,7 +186,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return r;
 		}
 
-		claimedChunks.put(pos, chunk);
 		manager.claimedChunks.put(pos, chunk);
 		new ClaimedChunkEvent.Claim.Done(source, chunk).postAndGetResult();
 		save();
@@ -185,7 +213,14 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return r;
 		}
 
-		claimedChunks.remove(pos);
+		if (chunk.forceLoaded)
+		{
+			chunk.forceLoaded = false;
+			ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
+			chunkProvider.releaseTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
+			new ClaimedChunkEvent.Unload.Done(source, chunk).postAndGetResult();
+		}
+
 		manager.claimedChunks.remove(pos);
 		new ClaimedChunkEvent.Unclaim.Done(source, chunk).postAndGetResult();
 		chunk.playerData.save();
@@ -208,6 +243,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		else if (chunk.forceLoaded)
 		{
 			return ClaimResults.ALREADY_LOADED;
+		}
+		else if (getForceLoadedChunks().size() >= 25)
+		{
+			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
 		ClaimResult r = new ClaimedChunkEvent.Load.Check(source, chunk).postAndGetResult();
@@ -288,7 +327,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		JsonObject chunksJson = new JsonObject();
 
-		for (ClaimedChunk chunk : claimedChunks.values())
+		for (ClaimedChunk chunk : getClaimedChunks())
 		{
 			String dim = DimensionType.getKey(chunk.getPos().dimension).toString();
 			JsonElement e = chunksJson.get(dim);
@@ -374,7 +413,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 						chunk.group = getGroup(o.get("group").getAsString());
 					}
 
-					claimedChunks.put(chunk.pos, chunk);
 					manager.claimedChunks.put(chunk.pos, chunk);
 					totalChunks++;
 				}

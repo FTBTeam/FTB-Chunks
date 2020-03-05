@@ -5,7 +5,9 @@ import com.feed_the_beast.mods.ftbchunks.ClaimedChunkManager;
 /**
  * @author LatvianModder
  */
-public class FTBChunksAPI
+public abstract class FTBChunksAPI
 {
-	public static ClaimedChunkManager manager;
+	public static FTBChunksAPI INSTANCE;
+
+	public abstract ClaimedChunkManager getManager();
 }

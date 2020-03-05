@@ -35,6 +35,8 @@ public interface ClaimedChunkPlayerData
 
 	Collection<ClaimedChunk> getClaimedChunks();
 
+	Collection<ClaimedChunk> getForceLoadedChunks();
+
 	ClaimedChunkGroup getGroup(String id);
 
 	boolean hasGroup(String id);

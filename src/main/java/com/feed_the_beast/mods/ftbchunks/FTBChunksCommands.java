@@ -5,12 +5,13 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
-import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -37,7 +38,7 @@ public class FTBChunksCommands
 {
 	public FTBChunksCommands(FMLServerStartingEvent event)
 	{
-		event.getCommandDispatcher().register(Commands.literal("ftbchunks")
+		LiteralCommandNode<CommandSource> command = event.getCommandDispatcher().register(Commands.literal("ftbchunks")
 				.then(Commands.literal("claim")
 						.executes(context -> claim(context.getSource(), 0))
 						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 300))
@@ -96,6 +97,8 @@ public class FTBChunksCommands
 						)
 				)
 		);
+
+		event.getCommandDispatcher().register(Commands.literal("chunks").redirect(command));
 	}
 
 	private interface ChunkCallback
@@ -105,7 +108,7 @@ public class FTBChunksCommands
 
 	private void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
 	{
-		ClaimedChunkPlayerData data = FTBChunksAPI.manager.getData(source.asPlayer());
+		ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(source.asPlayer());
 		int c = r >> 4;
 		DimensionType type = source.getWorld().dimension.getType();
 		int ox = MathHelper.floor(source.getPos().x) >> 4;
@@ -202,23 +205,17 @@ public class FTBChunksCommands
 
 	private int unclaimAll(CommandSource source, Collection<GameProfile> players)
 	{
-		if (FTBChunksAPI.manager == null)
-		{
-			return 0;
-		}
-
 		for (GameProfile profile : players)
 		{
-			ClaimedChunkPlayerDataImpl data = ((ClaimedChunkManagerImpl) FTBChunksAPI.manager).playerData.get(profile.getId());
+			ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.playerData.get(profile.getId());
 
 			if (data != null)
 			{
-				for (ClaimedChunk c : data.claimedChunks.values())
+				for (ClaimedChunk c : data.getClaimedChunks())
 				{
-					data.unload(source, c.getPos(), false);
+					data.unclaim(source, c.getPos(), false);
 				}
 
-				data.claimedChunks.clear();
 				data.save();
 			}
 		}
@@ -228,18 +225,13 @@ public class FTBChunksCommands
 
 	private int unloadAll(CommandSource source, Collection<GameProfile> players)
 	{
-		if (FTBChunksAPI.manager == null)
-		{
-			return 0;
-		}
-
 		for (GameProfile profile : players)
 		{
-			ClaimedChunkPlayerDataImpl data = ((ClaimedChunkManagerImpl) FTBChunksAPI.manager).playerData.get(profile.getId());
+			ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.playerData.get(profile.getId());
 
 			if (data != null)
 			{
-				for (ClaimedChunk c : data.claimedChunks.values())
+				for (ClaimedChunk c : data.getClaimedChunks())
 				{
 					data.unload(source, c.getPos(), false);
 				}
@@ -251,14 +243,9 @@ public class FTBChunksCommands
 
 	private int info(CommandSource source, ChunkDimPos pos)
 	{
-		if (FTBChunksAPI.manager == null)
-		{
-			return 0;
-		}
-
 		source.sendFeedback(new StringTextComponent("Location: " + pos), true);
 
-		ClaimedChunk chunk = FTBChunksAPI.manager.getChunk(pos);
+		ClaimedChunk chunk = FTBChunksAPIImpl.manager.getChunk(pos);
 
 		if (chunk == null)
 		{
@@ -278,14 +265,14 @@ public class FTBChunksCommands
 
 	private int exportJson(CommandSource source)
 	{
-		((ClaimedChunkManagerImpl) FTBChunksAPI.manager).exportJson();
+		FTBChunksAPIImpl.manager.exportJson();
 		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/all.json!"), true);
 		return 1;
 	}
 
 	private int exportSvg(CommandSource source)
 	{
-		((ClaimedChunkManagerImpl) FTBChunksAPI.manager).exportSvg();
+		FTBChunksAPIImpl.manager.exportSvg();
 		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/<dimension>.svg!"), true);
 		return 1;
 	}

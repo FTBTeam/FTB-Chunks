@@ -4,7 +4,6 @@ import com.feed_the_beast.mods.ftbchunks.ClaimedChunkManager;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
-import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -177,7 +176,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 	@Override
 	@Nullable
-	public ClaimedChunk getChunk(ChunkDimPos pos)
+	public ClaimedChunkImpl getChunk(ChunkDimPos pos)
 	{
 		return claimedChunks.get(pos);
 	}
@@ -286,7 +285,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		HashMap<DimensionType, ArrayList<ClaimedChunk>> chunkMap = new HashMap<>();
 
-		for (ClaimedChunk chunk : FTBChunksAPI.manager.getAllClaimedChunks())
+		for (ClaimedChunk chunk : FTBChunksAPIImpl.manager.getAllClaimedChunks())
 		{
 			chunkMap.computeIfAbsent(chunk.getPos().dimension, type -> new ArrayList<>()).add(chunk);
 		}

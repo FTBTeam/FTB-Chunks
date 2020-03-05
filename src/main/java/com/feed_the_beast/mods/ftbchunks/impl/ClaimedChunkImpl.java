@@ -2,7 +2,6 @@ package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
-import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -18,7 +17,7 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	public final ClaimedChunkPlayerDataImpl playerData;
 	public final ChunkDimPos pos;
 	public boolean forceLoaded;
-	public ClaimedChunkGroup group;
+	public ClaimedChunkGroupImpl group;
 	public Instant time;
 
 	public ClaimedChunkImpl(ClaimedChunkPlayerDataImpl p, ChunkDimPos cp)
@@ -49,7 +48,7 @@ public class ClaimedChunkImpl implements ClaimedChunk
 
 	@Nullable
 	@Override
-	public ClaimedChunkGroup getGroup()
+	public ClaimedChunkGroupImpl getGroup()
 	{
 		return group;
 	}
@@ -86,6 +85,6 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	@Override
 	public boolean allowExplosions()
 	{
-		return true;
+		return false;
 	}
 }

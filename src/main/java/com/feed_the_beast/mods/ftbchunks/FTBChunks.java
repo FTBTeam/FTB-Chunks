@@ -9,6 +9,8 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -20,6 +22,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
@@ -39,6 +42,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -125,9 +129,14 @@ public class FTBChunks
 		}
 	}
 
+	private boolean isValidPlayer(@Nullable Entity entity)
+	{
+		return entity instanceof ServerPlayerEntity && !(entity instanceof FakePlayer);
+	}
+
 	private void blockLeftClick(PlayerInteractEvent.LeftClickBlock event)
 	{
-		if (event.getPlayer() instanceof ServerPlayerEntity)
+		if (isValidPlayer(event.getPlayer()))
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
@@ -143,7 +152,7 @@ public class FTBChunks
 
 	private void blockRightClick(PlayerInteractEvent.RightClickBlock event)
 	{
-		if (event.getPlayer() instanceof ServerPlayerEntity)
+		if (isValidPlayer(event.getPlayer()))
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
@@ -159,7 +168,7 @@ public class FTBChunks
 
 	private void itemRightClick(PlayerInteractEvent.RightClickItem event)
 	{
-		if (event.getPlayer() instanceof ServerPlayerEntity)
+		if (isValidPlayer(event.getPlayer()) && !event.getItemStack().isFood())
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
@@ -175,7 +184,7 @@ public class FTBChunks
 
 	private void blockBreak(BlockEvent.BreakEvent event)
 	{
-		if (event.getPlayer() instanceof ServerPlayerEntity)
+		if (isValidPlayer(event.getPlayer()))
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
@@ -191,7 +200,7 @@ public class FTBChunks
 
 	private void blockPlace(BlockEvent.EntityPlaceEvent event)
 	{
-		if (event.getEntity() instanceof ServerPlayerEntity)
+		if (isValidPlayer(event.getEntity()))
 		{
 			if (event instanceof BlockEvent.EntityMultiPlaceEvent)
 			{
@@ -220,7 +229,7 @@ public class FTBChunks
 
 	private void fillBucket(FillBucketEvent event)
 	{
-		if (event.getEntity() instanceof ServerPlayerEntity && event.getTarget() != null && event.getTarget() instanceof BlockRayTraceResult)
+		if (isValidPlayer(event.getPlayer()) && event.getTarget() != null && event.getTarget() instanceof BlockRayTraceResult)
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), ((BlockRayTraceResult) event.getTarget()).getPos()));
 
@@ -240,7 +249,7 @@ public class FTBChunks
 
 	private void chunkChange(EntityEvent.EnteringChunk event)
 	{
-		if (event.getEntity() instanceof ServerPlayerEntity && (event.getOldChunkX() != event.getNewChunkX() || event.getOldChunkZ() != event.getNewChunkZ()))
+		if (isValidPlayer(event.getEntity()) && (event.getOldChunkX() != event.getNewChunkX() || event.getOldChunkZ() != event.getNewChunkZ()))
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getEntity()));
 
@@ -264,7 +273,7 @@ public class FTBChunks
 
 	private void mobSpawned(LivingSpawnEvent.CheckSpawn event)
 	{
-		if (!event.getWorld().isRemote())
+		if (!event.getWorld().isRemote() && !(event.getEntity() instanceof PlayerEntity))
 		{
 			switch (event.getSpawnReason())
 			{

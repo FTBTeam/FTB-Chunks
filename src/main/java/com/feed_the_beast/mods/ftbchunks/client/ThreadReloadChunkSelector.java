@@ -2,35 +2,23 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.PixelBuffer;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author LatvianModder
@@ -40,7 +28,6 @@ public class ThreadReloadChunkSelector extends Thread
 	private static ByteBuffer pixelBuffer = null;
 	private static final int PIXEL_SIZE = FTBChunks.TILE_SIZE * 16;
 	private static final PixelBuffer PIXELS = new PixelBuffer(PIXEL_SIZE, PIXEL_SIZE);
-	private static Map<Block, Color4I> COLOR_CACHE = null;
 	private static final BlockPos.Mutable CURRENT_BLOCK_POS = new BlockPos.Mutable(0, 0, 0);
 	private static World world = null;
 	private static ThreadReloadChunkSelector instance;
@@ -207,9 +194,9 @@ public class ThreadReloadChunkSelector extends Thread
 					//state = chunk.getBlockState(wx, by, wz);
 					state = chunk.getBlockState(CURRENT_BLOCK_POS);
 
-					color = getBlockColor0(state.getBlock());
+					color = FTBChunksClient.COLOR_MAP.get(state.getBlock());
 
-					if (color.isEmpty())
+					if (color == null)
 					{
 						color = Color4I.rgb(state.getMaterialColor(world, CURRENT_BLOCK_POS).colorValue);
 					}
@@ -241,32 +228,5 @@ public class ThreadReloadChunkSelector extends Thread
 		pixelBuffer = PIXELS.toByteBuffer(false);
 		world = null;
 		instance = null;
-	}
-
-	private Color4I getBlockColor0(Block block)
-	{
-		if (COLOR_CACHE == null)
-		{
-			COLOR_CACHE = new HashMap<>();
-
-			try (Reader reader = new BufferedReader(new InputStreamReader(ThreadReloadChunkSelector.class.getResourceAsStream("/data/ftbchunks/ftbchunks_colors.json"))))
-			{
-				for (Map.Entry<String, JsonElement> entry : new Gson().fromJson(reader, JsonObject.class).entrySet())
-				{
-					Block b = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
-
-					if (b != null && b != Blocks.AIR)
-					{
-						COLOR_CACHE.put(b, Color4I.fromJson(entry.getValue()));
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace();
-			}
-		}
-
-		return COLOR_CACHE.getOrDefault(block, Icon.EMPTY);
 	}
 }

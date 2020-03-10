@@ -5,6 +5,7 @@ import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkData;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkGroup;
+import com.feed_the_beast.mods.ftbchunks.net.RequestChunkChangePacket;
 import com.feed_the_beast.mods.ftbchunks.net.RequestMapDataPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
@@ -17,7 +18,6 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.toasts.SystemToast;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -29,40 +29,45 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author LatvianModder
  */
 public class ChunkScreen extends GuiBase
 {
-	public static class ChunkButton extends Button
+	public class ChunkButton extends Button
 	{
-		public final int chunkX, chunkZ;
+		public final ChunkPos chunkPos;
 		public NetClaimedChunk chunk;
 
-		public ChunkButton(Panel panel, int x, int z)
+		public ChunkButton(Panel panel, ChunkPos cp)
 		{
 			super(panel, "", Icon.EMPTY);
 			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
-			chunkX = x;
-			chunkZ = z;
+			chunkPos = cp;
 		}
 
 		@Override
 		public void onClicked(MouseButton mouseButton)
 		{
-			playClickSound();
-			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("Not finished yet!"), new StringTextComponent("Use /ftbchunks")));
+			selectedChunks.add(chunkPos);
 		}
 
 		@Override
 		public void drawBackground(Theme theme, int x, int y, int w, int h)
 		{
-			if (isMouseOver())
+			if (isMouseOver() || selectedChunks.contains(chunkPos))
 			{
 				Color4I.WHITE.withAlpha(100).draw(x, y, w, h);
+
+				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))
+				{
+					selectedChunks.add(chunkPos);
+				}
 			}
 		}
 
@@ -83,6 +88,7 @@ public class ChunkScreen extends GuiBase
 
 	public NetClaimedChunkData data;
 	public List<ChunkButton> chunkButtons;
+	public Set<ChunkPos> selectedChunks;
 
 	@Override
 	public boolean onInit()
@@ -100,12 +106,13 @@ public class ChunkScreen extends GuiBase
 		ThreadReloadChunkSelector.reloadArea(Minecraft.getInstance().world, startX, startZ);
 
 		chunkButtons = new ArrayList<>();
+		selectedChunks = new LinkedHashSet<>();
 
 		for (int z = 0; z < FTBChunks.TILES; z++)
 		{
 			for (int x = 0; x < FTBChunks.TILES; x++)
 			{
-				ChunkButton button = new ChunkButton(this, startX + x, startZ + z);
+				ChunkButton button = new ChunkButton(this, new ChunkPos(startX + x, startZ + z));
 				chunkButtons.add(button);
 				button.setPos(sx + x * FTBChunks.TILE_SIZE, sy + z * FTBChunks.TILE_SIZE);
 			}
@@ -134,10 +141,23 @@ public class ChunkScreen extends GuiBase
 
 		for (ChunkButton button : chunkButtons)
 		{
-			button.chunk = chunkMap.get(new ChunkPos(button.chunkX, button.chunkZ));
+			button.chunk = chunkMap.get(new ChunkPos(button.chunkPos.x, button.chunkPos.z));
 		}
 
 		data = d;
+	}
+
+	@Override
+	public void mouseReleased(MouseButton button)
+	{
+		super.mouseReleased(button);
+
+		if (!selectedChunks.isEmpty())
+		{
+			FTBChunksNet.MAIN.sendToServer(new RequestChunkChangePacket(isShiftKeyDown() ? (button.isLeft() ? 2 : 3) : (button.isLeft() ? 0 : 1), selectedChunks));
+			selectedChunks.clear();
+			playClickSound();
+		}
 	}
 
 	@Override

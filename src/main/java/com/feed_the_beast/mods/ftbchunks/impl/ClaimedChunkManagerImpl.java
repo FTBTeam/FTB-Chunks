@@ -68,18 +68,20 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 			dataDirectory.mkdirs();
 		}
 
-		long totalChunks = loadPlayerData();
+		loadPlayerData();
+		int forceLoaded = 0;
 
 		for (ClaimedChunk chunk : claimedChunks.values())
 		{
 			if (chunk.isForceLoaded())
 			{
+				forceLoaded++;
 				ServerChunkProvider chunkProvider = server.getWorld(chunk.getPos().dimension).getChunkProvider();
 				chunkProvider.registerTicket(TICKET_TYPE, chunk.getPos().getChunkPos(), 2, chunk);
 			}
 		}
 
-		FTBChunks.LOGGER.info("Loaded " + totalChunks + " chunks from " + playerData.size() + " players in " + ((System.nanoTime() - nanos) / 1000000D) + "ms");
+		FTBChunks.LOGGER.info("Loaded " + claimedChunks.size() + " chunks (" + forceLoaded + " force loaded) from " + playerData.size() + " players in " + ((System.nanoTime() - nanos) / 1000000D) + "ms");
 		getServerData();
 	}
 
@@ -103,16 +105,14 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		}
 	}
 
-	private long loadPlayerData()
+	private void loadPlayerData()
 	{
 		File[] files = dataDirectory.listFiles();
 
 		if (files == null || files.length == 0)
 		{
-			return 0;
+			return;
 		}
-
-		long totalChunks = 0;
 
 		for (File f : files)
 		{
@@ -132,7 +132,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 						UUID id = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
 
 						ClaimedChunkPlayerDataImpl data = new ClaimedChunkPlayerDataImpl(this, f, id);
-						totalChunks += data.fromJson(json);
+						data.fromJson(json);
 						playerData.put(id, data);
 					}
 				}
@@ -142,8 +142,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				ex.printStackTrace();
 			}
 		}
-
-		return totalChunks;
 	}
 
 	@Override
@@ -341,7 +339,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 					c.setAttribute("fill", String.format("#%06X", 0xFFFFFF & chunk.getColor()));
 
 					StringBuilder title = new StringBuilder();
-					title.append("Claimed: ").append(prettyTimeString(sec - chunk.getTime().getEpochSecond())).append(" ago");
+					title.append("Claimed: ").append(prettyTimeString(sec - chunk.getTimeClaimed().getEpochSecond())).append(" ago");
 
 					String group = chunk.getGroupID();
 

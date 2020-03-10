@@ -24,5 +24,7 @@ public class FTBChunksNet
 
 		MAIN.registerMessage(1, RequestMapDataPacket.class, RequestMapDataPacket::write, RequestMapDataPacket::new, RequestMapDataPacket::handle);
 		MAIN.registerMessage(2, SendMapDataPacket.class, SendMapDataPacket::write, SendMapDataPacket::new, SendMapDataPacket::handle);
+		MAIN.registerMessage(3, SendColorMapPacket.class, SendColorMapPacket::write, SendColorMapPacket::new, SendColorMapPacket::handle);
+		MAIN.registerMessage(4, RequestChunkChangePacket.class, RequestChunkChangePacket::write, RequestChunkChangePacket::new, RequestChunkChangePacket::handle);
 	}
 }

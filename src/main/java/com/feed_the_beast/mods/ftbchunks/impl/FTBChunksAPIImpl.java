@@ -1,10 +1,14 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
+import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.block.Block;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.Tag;
+import net.minecraft.util.ResourceLocation;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author LatvianModder
@@ -12,8 +16,10 @@ import java.util.Set;
 public class FTBChunksAPIImpl extends FTBChunksAPI
 {
 	public static ClaimedChunkManagerImpl manager;
-	private static final HashSet<Block> BLOCK_EDIT_WHITELIST = new HashSet<>();
-	private static final HashSet<Block> BLOCK_INTERACT_WHITELIST = new HashSet<>();
+	public static final Tag<Block> EDIT_TAG = new BlockTags.Wrapper(new ResourceLocation("ftbchunks", "edit_whitelist"));
+	public static final Tag<Block> INTERACT_TAG = new BlockTags.Wrapper(new ResourceLocation("ftbchunks", "interact_whitelist"));
+	public static final Map<Block, Color4I> COLOR_MAP = new HashMap<>();
+	public static final Map<ResourceLocation, Integer> COLOR_MAP_NET = new HashMap<>();
 
 	@Override
 	public ClaimedChunkManagerImpl getManager()
@@ -24,17 +30,5 @@ public class FTBChunksAPIImpl extends FTBChunksAPI
 		}
 
 		return manager;
-	}
-
-	@Override
-	public Set<Block> getEditWhitelist()
-	{
-		return BLOCK_EDIT_WHITELIST;
-	}
-
-	@Override
-	public Set<Block> getInteractWhitelist()
-	{
-		return BLOCK_INTERACT_WHITELIST;
 	}
 }

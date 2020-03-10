@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.net;
 import net.minecraft.network.PacketBuffer;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,6 +20,8 @@ public class NetClaimedChunkData
 
 	void read(PacketBuffer buf)
 	{
+		long currentTime = new Date().getTime();
+
 		claimed = buf.readVarInt();
 		loaded = buf.readVarInt();
 		maxClaimed = buf.readVarInt();
@@ -47,6 +50,16 @@ public class NetClaimedChunkData
 			c.z = buf.readVarInt();
 			c.borders = buf.readUnsignedByte();
 			c.group = groups.get(buf.readVarInt());
+			c.relativeTimeClaimed = buf.readVarLong();
+			c.relativeTimeForceLoaded = buf.readVarLong();
+
+			c.claimedDate = new Date(currentTime - c.relativeTimeClaimed);
+
+			if (c.relativeTimeForceLoaded > 0)
+			{
+				c.forceLoadedDate = new Date(currentTime - c.relativeTimeForceLoaded);
+			}
+
 			chunks.add(c);
 		}
 	}
@@ -75,6 +88,8 @@ public class NetClaimedChunkData
 			buf.writeVarInt(c.z);
 			buf.writeByte(c.borders);
 			buf.writeVarInt(c.group.id);
+			buf.writeVarLong(c.relativeTimeClaimed);
+			buf.writeVarLong(c.relativeTimeForceLoaded);
 		}
 	}
 }

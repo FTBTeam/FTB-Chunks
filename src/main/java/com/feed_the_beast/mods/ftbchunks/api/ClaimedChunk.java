@@ -19,7 +19,13 @@ public interface ClaimedChunk extends ClaimResult
 
 	ChunkDimPos getPos();
 
-	boolean isForceLoaded();
+	@Nullable
+	Instant getForceLoadedTime();
+
+	default boolean isForceLoaded()
+	{
+		return getForceLoadedTime() != null;
+	}
 
 	@Nullable
 	ClaimedChunkGroup getGroup();
@@ -30,7 +36,7 @@ public interface ClaimedChunk extends ClaimResult
 		return g == null ? "" : g.getId();
 	}
 
-	Instant getTime();
+	Instant getTimeClaimed();
 
 	@Override
 	default boolean isSuccess()

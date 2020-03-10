@@ -8,13 +8,26 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
+import com.feed_the_beast.mods.ftbchunks.net.SendColorMapPacket;
+import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BucketItem;
+import net.minecraft.profiler.IProfiler;
+import net.minecraft.resources.IResource;
+import net.minecraft.resources.IResourceManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
@@ -39,10 +52,15 @@ import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +116,62 @@ public class FTBChunks
 	private void serverAboutToStart(FMLServerAboutToStartEvent event)
 	{
 		FTBChunksAPIImpl.manager = new ClaimedChunkManagerImpl();
+
+		event.getServer().getResourceManager().addReloadListener(new ReloadListener<JsonObject>()
+		{
+			@Override
+			protected JsonObject prepare(IResourceManager resourceManager, IProfiler profiler)
+			{
+				Gson gson = new GsonBuilder().setLenient().create();
+				JsonObject object = new JsonObject();
+
+				try
+				{
+					for (IResource resource : resourceManager.getAllResources(new ResourceLocation("ftbchunks", "ftbchunks_colors.json")))
+					{
+						try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))
+						{
+							for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet())
+							{
+								object.add(entry.getKey(), entry.getValue());
+							}
+						}
+						catch (Exception ex)
+						{
+							ex.printStackTrace();
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
+				}
+
+				return object;
+			}
+
+			@Override
+			protected void apply(JsonObject object, IResourceManager resourceManager, IProfiler profiler)
+			{
+				FTBChunksAPIImpl.COLOR_MAP.clear();
+				FTBChunksAPIImpl.COLOR_MAP_NET.clear();
+
+				for (Map.Entry<String, JsonElement> entry : object.entrySet())
+				{
+					if (entry.getValue().isJsonPrimitive())
+					{
+						Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
+						Color4I color = Color4I.fromJson(entry.getValue());
+
+						if (block != Blocks.AIR && !color.isEmpty())
+						{
+							FTBChunksAPIImpl.COLOR_MAP.put(block, color);
+							FTBChunksAPIImpl.COLOR_MAP_NET.put(block.getRegistryName(), color.rgba());
+						}
+					}
+				}
+			}
+		});
 	}
 
 	private void serverStarted(FMLServerStartedEvent event)
@@ -127,6 +201,8 @@ public class FTBChunks
 			data.profile = new GameProfile(data.getUuid(), event.getPlayer().getGameProfile().getName());
 			data.save();
 		}
+
+		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new SendColorMapPacket(FTBChunksAPIImpl.COLOR_MAP_NET));
 	}
 
 	private boolean isValidPlayer(@Nullable Entity entity)

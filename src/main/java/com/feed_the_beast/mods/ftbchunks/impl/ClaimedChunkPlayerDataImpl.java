@@ -213,9 +213,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return r;
 		}
 
-		if (chunk.forceLoaded)
+		if (chunk.isForceLoaded())
 		{
-			chunk.forceLoaded = false;
+			chunk.setForceLoadedTime(null);
 			ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
 			chunkProvider.releaseTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
 			new ClaimedChunkEvent.Unload.Done(source, chunk).postAndGetResult();
@@ -240,7 +240,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_OWNER;
 		}
-		else if (chunk.forceLoaded)
+		else if (chunk.isForceLoaded())
 		{
 			return ClaimResults.ALREADY_LOADED;
 		}
@@ -256,7 +256,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return r;
 		}
 
-		chunk.forceLoaded = true;
+		chunk.setForceLoadedTime(Instant.now());
 		ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
 		chunkProvider.registerTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
 		new ClaimedChunkEvent.Load.Done(source, chunk).postAndGetResult();
@@ -277,7 +277,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_OWNER;
 		}
-		else if (!chunk.forceLoaded)
+		else if (!chunk.isForceLoaded())
 		{
 			return ClaimResults.NOT_LOADED;
 		}
@@ -289,7 +289,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return r;
 		}
 
-		chunk.forceLoaded = false;
+		chunk.setForceLoadedTime(null);
 		ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
 		chunkProvider.releaseTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
 		new ClaimedChunkEvent.Unload.Done(source, chunk).postAndGetResult();
@@ -341,7 +341,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			JsonObject chunkJson = new JsonObject();
 			chunkJson.addProperty("x", chunk.getPos().x);
 			chunkJson.addProperty("z", chunk.getPos().z);
-			chunkJson.addProperty("time", chunk.getTime().toString());
+			chunkJson.addProperty("time", chunk.getTimeClaimed().toString());
 
 			if (chunk.isForceLoaded())
 			{
@@ -360,9 +360,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		return json;
 	}
 
-	public long fromJson(JsonObject json)
+	public void fromJson(JsonObject json)
 	{
-		long totalChunks = 0L;
 		profile = new GameProfile(getUuid(), json.get("name").getAsString());
 		color = 0;
 
@@ -406,7 +405,17 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 						chunk.time = Instant.parse(o.get("time").getAsString());
 					}
 
-					chunk.forceLoaded = o.has("force_loaded") && o.get("force_loaded").getAsBoolean();
+					if (o.has("force_loaded"))
+					{
+						if (o.getAsJsonPrimitive().isBoolean())
+						{
+							chunk.forceLoaded = chunk.time;
+						}
+						else
+						{
+							chunk.forceLoaded = Instant.parse(o.get("force_loaded").getAsString());
+						}
+					}
 
 					if (o.has("group"))
 					{
@@ -414,11 +423,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					}
 
 					manager.claimedChunks.put(chunk.pos, chunk);
-					totalChunks++;
 				}
 			}
 		}
-
-		return totalChunks;
 	}
 }

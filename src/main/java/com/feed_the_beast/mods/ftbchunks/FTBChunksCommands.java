@@ -4,7 +4,6 @@ import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
-import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -141,12 +140,8 @@ public class FTBChunksCommands
 
 			if (result.isSuccess())
 			{
+				result.setClaimedTime(time);
 				success[0]++;
-
-				if (result instanceof ClaimedChunkImpl)
-				{
-					((ClaimedChunkImpl) result).time = time;
-				}
 			}
 		});
 
@@ -174,10 +169,14 @@ public class FTBChunksCommands
 	private int load(CommandSource source, int r) throws CommandSyntaxException
 	{
 		int[] success = new int[1];
+		Instant time = Instant.now();
 
 		forEachChunk(source, r, (data, pos) -> {
-			if (data.load(source, pos, false).isSuccess())
+			ClaimResult result = data.load(source, pos, false);
+
+			if (result.isSuccess())
 			{
+				result.setForceLoadedTime(time);
 				success[0]++;
 			}
 		});

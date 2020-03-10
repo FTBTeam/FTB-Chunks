@@ -7,6 +7,8 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -57,4 +59,9 @@ public interface ClaimedChunkPlayerData
 	void save();
 
 	boolean isAlly(ServerPlayerEntity player);
+
+	default ITextComponent getDisplayName()
+	{
+		return new StringTextComponent(getName());
+	}
 }

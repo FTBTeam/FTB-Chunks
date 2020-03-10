@@ -5,7 +5,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -67,7 +66,6 @@ public interface ClaimedChunk extends ClaimResult
 			return group.getCustomName();
 		}
 
-		return new StringTextComponent(getPlayerData().getName());
+		return getPlayerData().getDisplayName();
 	}
-
 }

@@ -18,6 +18,8 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraftforge.fml.ModList;
@@ -407,9 +409,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 					if (o.has("force_loaded"))
 					{
-						if (o.getAsJsonPrimitive().isBoolean())
+						if (o.get("force_loaded").getAsJsonPrimitive().isBoolean())
 						{
 							chunk.forceLoaded = chunk.time;
+							save();
 						}
 						else
 						{
@@ -426,5 +429,20 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 				}
 			}
 		}
+	}
+
+	public ITextComponent getDisplayName()
+	{
+		if (ModList.get().isLoaded("ftbteams"))
+		{
+			ITextComponent component = FTBTeamsIntegration.getTeamName(this);
+
+			if (component != null)
+			{
+				return component;
+			}
+		}
+
+		return new StringTextComponent(getName());
 	}
 }

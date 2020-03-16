@@ -7,6 +7,7 @@ import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.SendColorMapPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
@@ -73,7 +74,9 @@ import java.util.Map;
 public class FTBChunks
 {
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
-	public static FTBChunksCommon PROXY;
+	public static FTBChunks instance;
+	public FTBChunksCommon proxy;
+	public FTBChunksConfig config;
 
 	public static final int TILES = 15;
 	public static final int TILE_SIZE = 16;
@@ -83,6 +86,7 @@ public class FTBChunks
 
 	public FTBChunks()
 	{
+		instance = this;
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
 		MinecraftForge.EVENT_BUS.addListener(FTBChunksCommands::new);
 		MinecraftForge.EVENT_BUS.addListener(this::serverAboutToStart);
@@ -103,9 +107,10 @@ public class FTBChunks
 		MinecraftForge.EVENT_BUS.addListener(this::explosionDetonate);
 
 		//noinspection Convert2MethodRef
-		PROXY = DistExecutor.runForDist(() -> () -> new FTBChunksClient(), () -> () -> new FTBChunksCommon());
-		PROXY.init();
+		proxy = DistExecutor.runForDist(() -> () -> new FTBChunksClient(), () -> () -> new FTBChunksCommon());
+		proxy.init();
 		FTBChunksAPI.INSTANCE = new FTBChunksAPIImpl();
+		config = new FTBChunksConfig();
 	}
 
 	private void init(FMLCommonSetupEvent event)
@@ -207,7 +212,31 @@ public class FTBChunks
 
 	private boolean isValidPlayer(@Nullable Entity entity)
 	{
-		return entity instanceof ServerPlayerEntity && !(entity instanceof FakePlayer);
+		if (entity instanceof ServerPlayerEntity)
+		{
+			if (entity instanceof FakePlayer)
+			{
+				if (config.disableAllFakePlayers)
+				{
+					return false;
+				}
+
+				KnownFakePlayer player = FTBChunksAPIImpl.manager.knownFakePlayers.get(entity.getUniqueID());
+
+				if (player == null)
+				{
+					player = new KnownFakePlayer(entity.getUniqueID(), ((FakePlayer) entity).getGameProfile().getName(), false);
+					FTBChunksAPIImpl.manager.knownFakePlayers.put(player.uuid, player);
+					FTBChunksAPIImpl.manager.saveFakePlayers = true;
+				}
+
+				return !player.banned;
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private void blockLeftClick(PlayerInteractEvent.LeftClickBlock event)
@@ -325,7 +354,7 @@ public class FTBChunks
 
 	private void chunkChange(EntityEvent.EnteringChunk event)
 	{
-		if (isValidPlayer(event.getEntity()) && (event.getOldChunkX() != event.getNewChunkX() || event.getOldChunkZ() != event.getNewChunkZ()))
+		if (!(event.getEntity() instanceof FakePlayer) && (event.getOldChunkX() != event.getNewChunkX() || event.getOldChunkZ() != event.getNewChunkZ()) && isValidPlayer(event.getEntity()))
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getEntity()));
 

@@ -1,9 +1,5 @@
-package com.feed_the_beast.mods.ftbchunks;
+package com.feed_the_beast.mods.ftbchunks.api;
 
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
-import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
-import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
-import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;

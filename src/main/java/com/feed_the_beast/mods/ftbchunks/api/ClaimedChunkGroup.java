@@ -1,6 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.api;
 
-import com.feed_the_beast.mods.ftbchunks.ClaimedChunkPlayerData;
 import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nullable;

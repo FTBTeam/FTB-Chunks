@@ -1,7 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
-import com.feed_the_beast.mods.ftbchunks.ClaimedChunkManager;
-import com.feed_the_beast.mods.ftbchunks.ClaimedChunkPlayerData;
+import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBTeamsIntegration;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
@@ -9,6 +8,8 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimResults;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkEvent;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -30,8 +31,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -44,6 +47,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public GameProfile profile;
 	public int color;
 	private final Map<String, ClaimedChunkGroupImpl> groups;
+	public final Set<UUID> allies;
 	public boolean shouldSave;
 
 	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, File f, UUID id)
@@ -53,6 +57,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		profile = new GameProfile(id, "");
 		color = 0;
 		groups = new HashMap<>();
+		allies = new HashSet<>();
 		shouldSave = false;
 	}
 
@@ -174,7 +179,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_CLAIMED;
 		}
-		else if (getClaimedChunks().size() >= 100)
+		else if (getClaimedChunks().size() >= FTBChunks.instance.config.maxClaimedChunks)
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -246,7 +251,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_LOADED;
 		}
-		else if (getForceLoadedChunks().size() >= 25)
+		else if (getForceLoadedChunks().size() >= FTBChunks.instance.config.maxForceLoadedChunks)
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -308,7 +313,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	@Override
 	public boolean isAlly(ServerPlayerEntity player)
 	{
-		return getUuid().equals(player.getUniqueID()) || getName().equals(player.getGameProfile().getName()) || ModList.get().isLoaded("ftbteams") && FTBTeamsIntegration.isAlly(this, player);
+		return getUuid().equals(player.getUniqueID()) || getName().equals(player.getGameProfile().getName()) || allies.contains(player.getUniqueID()) || ModList.get().isLoaded("ftbteams") && FTBTeamsIntegration.isAlly(this, player);
 	}
 
 	public JsonObject toJson()
@@ -326,6 +331,15 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 
 		json.add("groups", groupJson);
+
+		JsonArray alliesJson = new JsonArray();
+
+		for (UUID ally : allies)
+		{
+			alliesJson.add(UUIDTypeAdapter.fromUUID(ally));
+		}
+
+		json.add("allies", alliesJson);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -347,7 +361,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 			if (chunk.isForceLoaded())
 			{
-				chunkJson.addProperty("force_loaded", true);
+				chunkJson.addProperty("force_loaded", chunk.getForceLoadedTime().toString());
 			}
 
 			if (chunk.getGroup() != null)
@@ -380,6 +394,14 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			for (Map.Entry<String, JsonElement> entry : json.get("groups").getAsJsonObject().entrySet())
 			{
 				getGroup(entry.getKey()).fromJson(entry.getValue().getAsJsonObject());
+			}
+		}
+
+		if (json.has("allies"))
+		{
+			for (JsonElement e : json.get("allies").getAsJsonArray())
+			{
+				allies.add(UUIDTypeAdapter.fromString(e.getAsString()));
 			}
 		}
 

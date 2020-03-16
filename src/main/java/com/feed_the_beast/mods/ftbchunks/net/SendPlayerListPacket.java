@@ -1,0 +1,128 @@
+package com.feed_the_beast.mods.ftbchunks.net;
+
+import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+/**
+ * @author LatvianModder
+ */
+public class SendPlayerListPacket
+{
+	public static class NetPlayer implements Comparable<NetPlayer>
+	{
+		public static final int FAKE = 1;
+		public static final int ALLY = 2;
+		public static final int BANNED = 4;
+
+		public final UUID uuid;
+		public final String name;
+		public final int flags;
+
+		public NetPlayer(UUID u, String n, int f)
+		{
+			uuid = u;
+			name = n;
+			flags = f;
+		}
+
+		public boolean isFake()
+		{
+			return (flags & FAKE) != 0;
+		}
+
+		public boolean isAlly()
+		{
+			return (flags & ALLY) != 0;
+		}
+
+		public boolean isBanned()
+		{
+			return (flags & BANNED) != 0;
+		}
+
+		@Override
+		public int compareTo(NetPlayer o)
+		{
+			int i = Boolean.compare(isFake(), o.isFake());
+			return i == 0 ? name.compareToIgnoreCase(o.name) : i;
+		}
+	}
+
+	private final List<NetPlayer> players;
+
+	public SendPlayerListPacket(List<NetPlayer> p)
+	{
+		players = p;
+	}
+
+	SendPlayerListPacket(PacketBuffer buf)
+	{
+		int s = buf.readVarInt();
+		players = new ArrayList<>(s);
+
+		for (int i = 0; i < s; i++)
+		{
+			long most = buf.readLong();
+			long least = buf.readLong();
+			String name = buf.readString(50);
+			int flags = buf.readVarInt();
+			players.add(new NetPlayer(new UUID(most, least), name, flags));
+		}
+	}
+
+	public static void send(ServerPlayerEntity player)
+	{
+		ClaimedChunkPlayerDataImpl self = FTBChunksAPIImpl.manager.getData(player);
+		List<NetPlayer> players = new ArrayList<>();
+		ClaimedChunkPlayerDataImpl server = FTBChunksAPIImpl.manager.getServerData();
+
+		for (ClaimedChunkPlayerDataImpl p : FTBChunksAPIImpl.manager.playerData.values())
+		{
+			if (p == server || p == self)
+			{
+				continue;
+			}
+
+			players.add(new NetPlayer(p.getUuid(), p.getName(), self.allies.contains(p.getUuid()) ? NetPlayer.ALLY : 0));
+		}
+
+		for (KnownFakePlayer p : FTBChunksAPIImpl.manager.knownFakePlayers.values())
+		{
+			players.add(new NetPlayer(p.uuid, p.name, NetPlayer.FAKE | (p.banned ? NetPlayer.BANNED : 0) | (self.allies.contains(p.uuid) ? NetPlayer.ALLY : 0)));
+		}
+
+		players.sort(null);
+
+		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendPlayerListPacket(players));
+	}
+
+	void write(PacketBuffer buf)
+	{
+		buf.writeVarInt(players.size());
+
+		for (NetPlayer p : players)
+		{
+			buf.writeLong(p.uuid.getMostSignificantBits());
+			buf.writeLong(p.uuid.getLeastSignificantBits());
+			buf.writeString(p.name, 50);
+			buf.writeVarInt(p.flags);
+		}
+	}
+
+	void handle(Supplier<NetworkEvent.Context> context)
+	{
+		context.get().enqueueWork(() -> FTBChunks.instance.proxy.openPlayerList(players));
+		context.get().setPacketHandled(true);
+	}
+}

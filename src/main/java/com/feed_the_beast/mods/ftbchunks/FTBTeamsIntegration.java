@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks;
 
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbteams.api.FTBTeamsAPI;
 import com.feed_the_beast.mods.ftbteams.api.Team;
 import com.mojang.authlib.GameProfile;

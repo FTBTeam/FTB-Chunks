@@ -1,7 +1,5 @@
-package com.feed_the_beast.mods.ftbchunks;
+package com.feed_the_beast.mods.ftbchunks.api;
 
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
-import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import net.minecraft.entity.player.ServerPlayerEntity;
 
 import javax.annotation.Nullable;

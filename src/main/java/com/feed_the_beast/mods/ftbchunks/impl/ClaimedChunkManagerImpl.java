@@ -1,11 +1,13 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
-import com.feed_the_beast.mods.ftbchunks.ClaimedChunkManager;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
@@ -50,12 +52,16 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 	public final Map<UUID, ClaimedChunkPlayerDataImpl> playerData;
 	public final Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
+	public final Map<UUID, KnownFakePlayer> knownFakePlayers;
+	public boolean saveFakePlayers;
 	public File dataDirectory;
 
 	public ClaimedChunkManagerImpl()
 	{
 		playerData = new HashMap<>();
 		claimedChunks = new HashMap<>();
+		knownFakePlayers = new HashMap<>();
+		saveFakePlayers = false;
 	}
 
 	public void serverStarted(MinecraftServer server)
@@ -103,6 +109,31 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				data.shouldSave = false;
 			}
 		}
+
+		if (saveFakePlayers)
+		{
+			saveFakePlayers = false;
+
+			JsonArray array = new JsonArray();
+
+			for (KnownFakePlayer p : knownFakePlayers.values())
+			{
+				JsonObject json = new JsonObject();
+				json.addProperty("uuid", UUIDTypeAdapter.fromUUID(p.uuid));
+				json.addProperty("name", p.name);
+				json.addProperty("banned", p.banned);
+				array.add(json);
+			}
+
+			try (Writer writer = new BufferedWriter(new FileWriter(new File(dataDirectory, "known_fake_players.json"))))
+			{
+				ClaimedChunkManagerImpl.GSON_PRETTY.toJson(array, writer);
+			}
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
+		}
 	}
 
 	private void loadPlayerData()
@@ -118,7 +149,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		{
 			try
 			{
-				if (f.getName().endsWith(".json"))
+				if (f.getName().endsWith(".json") && !f.getName().equals("known_fake_players.json"))
 				{
 					try (Reader reader = new BufferedReader(new FileReader(f)))
 					{
@@ -135,6 +166,27 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 						data.fromJson(json);
 						playerData.put(id, data);
 					}
+				}
+			}
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
+		}
+
+		File knownFakePlayersFile = new File(dataDirectory, "known_fake_players.json");
+
+		if (knownFakePlayersFile.exists())
+		{
+			try (Reader reader = new BufferedReader(new FileReader(knownFakePlayersFile)))
+			{
+				for (JsonElement e : GSON.fromJson(reader, JsonArray.class))
+				{
+					JsonObject json = e.getAsJsonObject();
+					UUID uuid = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
+					String name = json.get("name").getAsString();
+					boolean banned = json.get("banned").getAsBoolean();
+					knownFakePlayers.put(uuid, new KnownFakePlayer(uuid, name, banned));
 				}
 			}
 			catch (Exception ex)
@@ -186,7 +238,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		return (Collection<ClaimedChunk>) (Collection) claimedChunks.values();
 	}
 
-	private static String prettyTimeString(long seconds)
+	public static String prettyTimeString(long seconds)
 	{
 		if (seconds <= 0L)
 		{

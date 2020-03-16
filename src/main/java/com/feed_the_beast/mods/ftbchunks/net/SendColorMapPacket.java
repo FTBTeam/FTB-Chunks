@@ -47,7 +47,7 @@ public class SendColorMapPacket
 
 	void handle(Supplier<NetworkEvent.Context> context)
 	{
-		context.get().enqueueWork(() -> FTBChunks.PROXY.setColorMap(colorMap));
+		context.get().enqueueWork(() -> FTBChunks.instance.proxy.setColorMap(colorMap));
 		context.get().setPacketHandled(true);
 	}
 }

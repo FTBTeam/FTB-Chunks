@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
@@ -40,25 +41,25 @@ public class FTBChunksCommands
 		LiteralCommandNode<CommandSource> command = event.getCommandDispatcher().register(Commands.literal("ftbchunks")
 				.then(Commands.literal("claim")
 						.executes(context -> claim(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 300))
+						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
 								.executes(context -> claim(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
 				.then(Commands.literal("unclaim")
 						.executes(context -> unclaim(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 300))
+						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
 								.executes(context -> unclaim(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
 				.then(Commands.literal("load")
 						.executes(context -> load(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 300))
+						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
 								.executes(context -> load(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
 				.then(Commands.literal("unload")
 						.executes(context -> unload(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 300))
+						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
 								.executes(context -> unload(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
@@ -108,15 +109,14 @@ public class FTBChunksCommands
 	private void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
 	{
 		ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(source.asPlayer());
-		int c = r >> 4;
 		DimensionType type = source.getWorld().dimension.getType();
 		int ox = MathHelper.floor(source.getPos().x) >> 4;
 		int oz = MathHelper.floor(source.getPos().z) >> 4;
 		List<ChunkDimPos> list = new ArrayList<>();
 
-		for (int z = -c; z <= c; z++)
+		for (int z = -r; z <= r; z++)
 		{
-			for (int x = -c; x <= c; x++)
+			for (int x = -r; x <= r; x++)
 			{
 				list.add(new ChunkDimPos(type, ox + x, oz + z));
 			}

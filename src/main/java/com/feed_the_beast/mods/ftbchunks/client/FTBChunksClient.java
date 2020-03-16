@@ -2,17 +2,18 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkData;
+import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.widget.CustomClickEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,8 +27,19 @@ public class FTBChunksClient extends FTBChunksCommon
 	public void init()
 	{
 		MinecraftForge.EVENT_BUS.addListener(this::customClick);
-		MinecraftForge.EVENT_BUS.addListener(this::loggedOut);
-		MinecraftForge.EVENT_BUS.addListener(this::respawned);
+	}
+
+	public static void openGui()
+	{
+		new ChunkScreen().openGui();
+	}
+
+	private void customClick(CustomClickEvent event)
+	{
+		if (event.getId().equals(BUTTON_ID))
+		{
+			openGui();
+		}
 	}
 
 	@Override
@@ -57,19 +69,9 @@ public class FTBChunksClient extends FTBChunksCommon
 		}
 	}
 
-	private void customClick(CustomClickEvent event)
+	@Override
+	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players)
 	{
-		if (event.getId().equals(BUTTON_ID))
-		{
-			new ChunkScreen().openGui();
-		}
-	}
-
-	private void loggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
-	{
-	}
-
-	private void respawned(ClientPlayerNetworkEvent.RespawnEvent event)
-	{
+		new PlayerListScreen(players).openGui();
 	}
 }

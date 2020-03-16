@@ -1,23 +1,28 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkData;
 import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkGroup;
 import com.feed_the_beast.mods.ftbchunks.net.RequestChunkChangePacket;
 import com.feed_the_beast.mods.ftbchunks.net.RequestMapDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
+import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
+import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -28,6 +33,7 @@ import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -78,9 +84,29 @@ public class ChunkScreen extends GuiBase
 			{
 				list.add(chunk.group.formattedOwner);
 
-				if (chunk.group.forceLoaded)
+				Date date = new Date();
+
+				if (Screen.hasAltDown())
 				{
-					list.add(TextFormatting.RED + "Force Loaded");
+					list.add(TextFormatting.GRAY + chunk.claimedDate.toLocaleString());
+				}
+				else
+				{
+					list.add(TextFormatting.GRAY + ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago");
+				}
+
+				if (chunk.forceLoadedDate != null)
+				{
+					list.add(TextFormatting.RED + I18n.format("ftbchunks.gui.force_loaded"));
+
+					if (Screen.hasAltDown())
+					{
+						list.add(TextFormatting.GRAY + chunk.forceLoadedDate.toLocaleString());
+					}
+					else
+					{
+						list.add(TextFormatting.GRAY + ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago");
+					}
 				}
 			}
 		}
@@ -120,6 +146,7 @@ public class ChunkScreen extends GuiBase
 
 		addAll(chunkButtons);
 		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket());
+		add(new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())).setPosAndSize(2, 2, 16, 16));
 	}
 
 	public void setData(NetClaimedChunkData d)
@@ -300,8 +327,16 @@ public class ChunkScreen extends GuiBase
 
 		if (data != null)
 		{
-			theme.drawString(I18n.format("ftbchunks.gui.claimed", data.claimed, data.maxClaimed), 3, getScreen().getScaledHeight() - 21, Color4I.WHITE, Theme.SHADOW);
-			theme.drawString(I18n.format("ftbchunks.gui.force_loaded", data.loaded, data.maxLoaded), 3, getScreen().getScaledHeight() - 11, Color4I.WHITE, Theme.SHADOW);
+			List<String> list = new ArrayList<>(4);
+			list.add(I18n.format("ftbchunks.gui.claimed"));
+			list.add((data.claimed > data.maxClaimed ? TextFormatting.RED : data.claimed == data.maxClaimed ? TextFormatting.YELLOW : TextFormatting.GREEN) + "" + data.claimed + " / " + data.maxClaimed);
+			list.add(I18n.format("ftbchunks.gui.force_loaded"));
+			list.add((data.loaded > data.maxLoaded ? TextFormatting.RED : data.loaded == data.maxLoaded ? TextFormatting.YELLOW : TextFormatting.GREEN) + "" + data.loaded + " / " + data.maxLoaded);
+
+			for (int i = 0; i < list.size(); i++)
+			{
+				theme.drawString(list.get(i), 3, getScreen().getScaledHeight() - 10 * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
+			}
 		}
 	}
 

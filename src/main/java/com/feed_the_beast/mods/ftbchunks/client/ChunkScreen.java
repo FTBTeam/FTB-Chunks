@@ -11,6 +11,8 @@ import com.feed_the_beast.mods.ftbchunks.net.RequestMapDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
+import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
+import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
@@ -27,6 +29,8 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -45,6 +49,8 @@ import java.util.Set;
  */
 public class ChunkScreen extends GuiBase
 {
+	private static final ImageIcon PLAYER_BACKGROUND = new ImageIcon(new ResourceLocation("ftbchunks", "textures/player_background.png"));
+
 	public class ChunkButton extends Button
 	{
 		public final ChunkPos chunkPos;
@@ -302,28 +308,27 @@ public class ChunkScreen extends GuiBase
 
 		GlStateManager.enableTexture();
 		GlStateManager.lineWidth(1F);
-		
-		/*
-		EntityPlayer player = Minecraft.getMinecraft().player;
 
-		int cx = MathUtils.chunk(player.posX);
-		int cy = MathUtils.chunk(player.posZ);
+		PlayerEntity player = Minecraft.getInstance().player;
+		int cx = player.chunkCoordX;
+		int cz = player.chunkCoordZ;
+		int startX = cx - FTBChunks.TILE_OFFSET;
+		int startZ = cz - FTBChunks.TILE_OFFSET;
 
-		if (cx >= startX && cy >= startZ && cx < startX + TILES_GUI && cy < startZ + TILES_GUI)
+		if (cx >= startX && cz >= startZ && cx < startX + FTBChunks.GUI_SIZE && cz < startZ + FTBChunks.GUI_SIZE)
 		{
-			double x = ((cx - startX) * 16D + MathUtils.mod(player.posX, 16D));
-			double y = ((cy - startZ) * 16D + MathUtils.mod(player.posZ, 16D));
+			double x1 = ((cx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));
+			double z1 = ((cz - startZ) * 16D + MathUtils.mod(player.getPosZ(), 16D));
 
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(ax + x * GuiChunkSelectorBase.TILE_SIZE / 16D, ay + y * GuiChunkSelectorBase.TILE_SIZE / 16D, 0D);
-			GlStateManager.pushMatrix();
-			GlStateManager.rotate(player.rotationYaw + 180F, 0F, 0F, 1F);
-			TEX_ENTITY.draw(-8, -8, 16, 16);
-			GlStateManager.popMatrix();
-			ClientUtils.localPlayerHead.draw(-2, -2, 4, 4);
-			GlStateManager.popMatrix();
+			RenderSystem.pushMatrix();
+			RenderSystem.translated(sx + x1 * FTBChunks.TILE_SIZE / 16D, sy + z1 * FTBChunks.TILE_SIZE / 16D, 0D);
+			RenderSystem.pushMatrix();
+			RenderSystem.rotatef(player.rotationYaw + 180F, 0F, 0F, 1F);
+			PLAYER_BACKGROUND.draw(-8, -8, 16, 16);
+			RenderSystem.popMatrix();
+			GuiIcons.PLAYER.draw(-4, -4, 8, 8);
+			RenderSystem.popMatrix();
 		}
-		*/
 
 		if (data != null)
 		{

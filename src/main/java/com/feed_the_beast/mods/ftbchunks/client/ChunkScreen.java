@@ -29,6 +29,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
@@ -236,7 +237,7 @@ public class ChunkScreen extends GuiBase
 
 		tessellator.draw();
 
-		if (data != null && !data.chunks.isEmpty())
+		if (data != null && !data.chunks.isEmpty() && !InputMappings.isKeyDown(Minecraft.getInstance().getMainWindow().getHandle(), 258))
 		{
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
 			boolean anyForceLoaded = false;

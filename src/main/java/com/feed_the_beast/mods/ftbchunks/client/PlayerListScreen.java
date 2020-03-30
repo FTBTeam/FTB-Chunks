@@ -20,11 +20,28 @@ import java.util.List;
 public class PlayerListScreen extends GuiButtonListBase
 {
 	public final List<SendPlayerListPacket.NetPlayer> players;
+	public final int allyMode;
 
-	public PlayerListScreen(List<SendPlayerListPacket.NetPlayer> p)
+	public PlayerListScreen(List<SendPlayerListPacket.NetPlayer> p, int a)
 	{
-		setTitle(I18n.format("ftbchunks.gui.allies"));
 		players = p;
+		allyMode = a;
+
+		switch (allyMode)
+		{
+			case 0:
+				setTitle(I18n.format("ftbchunks.gui.ally_whitelist"));
+				break;
+			case 1:
+				setTitle(I18n.format("ftbchunks.gui.ally_blacklist"));
+				break;
+			case 2:
+				setTitle("Forced whitelist");
+				break;
+			case 3:
+				setTitle("Forced blacklist");
+				break;
+		}
 	}
 
 	@Override

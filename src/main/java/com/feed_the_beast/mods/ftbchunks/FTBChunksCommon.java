@@ -24,7 +24,7 @@ public class FTBChunksCommon
 	{
 	}
 
-	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players)
+	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players, int allyMode)
 	{
 	}
 }

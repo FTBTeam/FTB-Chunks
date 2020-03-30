@@ -1,6 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
-import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.FTBTeamsIntegration;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
@@ -17,12 +17,12 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
@@ -44,21 +44,23 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 {
 	public final ClaimedChunkManagerImpl manager;
 	public final File file;
+	public boolean shouldSave;
 	public GameProfile profile;
 	public int color;
 	private final Map<String, ClaimedChunkGroupImpl> groups;
 	public final Set<UUID> allies;
-	public boolean shouldSave;
+	public boolean alliesWhitelist;
 
 	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, File f, UUID id)
 	{
 		manager = m;
 		file = f;
+		shouldSave = false;
 		profile = new GameProfile(id, "");
 		color = 0;
 		groups = new HashMap<>();
 		allies = new HashSet<>();
-		shouldSave = false;
+		alliesWhitelist = true;
 	}
 
 	@Override
@@ -179,7 +181,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_CLAIMED;
 		}
-		else if (getClaimedChunks().size() >= FTBChunks.instance.config.maxClaimedChunks)
+		else if (getClaimedChunks().size() >= FTBChunksConfig.maxClaimedChunks)
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -208,7 +210,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_CLAIMED;
 		}
-		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer())
+		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer() && !isTeamMember(source.getEntity()))
 		{
 			return ClaimResults.NOT_OWNER;
 		}
@@ -223,8 +225,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		if (chunk.isForceLoaded())
 		{
 			chunk.setForceLoadedTime(null);
-			ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
-			chunkProvider.releaseTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
+			chunk.postSetForceLoaded(false);
 			new ClaimedChunkEvent.Unload.Done(source, chunk).postAndGetResult();
 		}
 
@@ -251,7 +252,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_LOADED;
 		}
-		else if (getForceLoadedChunks().size() >= FTBChunks.instance.config.maxForceLoadedChunks)
+		else if (getForceLoadedChunks().size() >= FTBChunksConfig.maxForceLoadedChunks)
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -264,8 +265,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 
 		chunk.setForceLoadedTime(Instant.now());
-		ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
-		chunkProvider.registerTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
+		chunk.postSetForceLoaded(true);
 		new ClaimedChunkEvent.Load.Done(source, chunk).postAndGetResult();
 		chunk.playerData.save();
 		return chunk;
@@ -280,7 +280,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_CLAIMED;
 		}
-		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer())
+		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer() && !isTeamMember(source.getEntity()))
 		{
 			return ClaimResults.NOT_OWNER;
 		}
@@ -297,8 +297,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 
 		chunk.setForceLoadedTime(null);
-		ServerChunkProvider chunkProvider = source.getServer().getWorld(pos.dimension).getChunkProvider();
-		chunkProvider.releaseTicket(ClaimedChunkManagerImpl.TICKET_TYPE, pos.getChunkPos(), 2, chunk);
+		chunk.postSetForceLoaded(false);
 		new ClaimedChunkEvent.Unload.Done(source, chunk).postAndGetResult();
 		chunk.playerData.save();
 		return chunk;
@@ -310,10 +309,24 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		shouldSave = true;
 	}
 
+	public boolean isTeamMember(@Nullable Entity entity)
+	{
+		return entity instanceof ServerPlayerEntity && ModList.get().isLoaded("ftbteams") && FTBTeamsIntegration.isTeamMember(this, (ServerPlayerEntity) entity);
+	}
+
 	@Override
 	public boolean isAlly(ServerPlayerEntity player)
 	{
-		return getUuid().equals(player.getUniqueID()) || getName().equals(player.getGameProfile().getName()) || allies.contains(player.getUniqueID()) || ModList.get().isLoaded("ftbteams") && FTBTeamsIntegration.isAlly(this, player);
+		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL)
+		{
+			return true;
+		}
+		else if (FTBChunksConfig.allyMode == AllyMode.FORCED_NONE)
+		{
+			return false;
+		}
+
+		return getUuid().equals(player.getUniqueID()) || getName().equals(player.getGameProfile().getName()) || alliesWhitelist == allies.contains(player.getUniqueID()) || isTeamMember(player);
 	}
 
 	public JsonObject toJson()
@@ -340,6 +353,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 
 		json.add("allies", alliesJson);
+		json.addProperty("allies_whitelist", alliesWhitelist);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -403,6 +417,16 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			{
 				allies.add(UUIDTypeAdapter.fromString(e.getAsString()));
 			}
+		}
+
+		if (json.has("allies_whitelist"))
+		{
+			alliesWhitelist = json.get("allies_whitelist").getAsBoolean();
+		}
+		else
+		{
+			alliesWhitelist = true;
+			save();
 		}
 
 		if (json.has("chunks"))

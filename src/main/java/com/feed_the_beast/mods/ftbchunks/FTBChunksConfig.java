@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks;
 
+import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -11,15 +12,16 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class FTBChunksConfig
 {
-	public boolean disableAllFakePlayers;
-	public int maxClaimedChunks;
-	public int maxForceLoadedChunks;
+	public static boolean disableAllFakePlayers;
+	public static int maxClaimedChunks;
+	public static int maxForceLoadedChunks;
+	public static AllyMode allyMode;
 
-	private Pair<ServerConfig, ForgeConfigSpec> server;
+	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
-	public FTBChunksConfig()
+	public static void init()
 	{
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::reload);
+		FMLJavaModLoadingContext.get().getModEventBus().addListener(FTBChunksConfig::reload);
 
 		server = new ForgeConfigSpec.Builder().configure(ServerConfig::new);
 
@@ -27,7 +29,7 @@ public class FTBChunksConfig
 		modLoadingContext.registerConfig(ModConfig.Type.SERVER, server.getRight());
 	}
 
-	public void reload(ModConfig.ModConfigEvent event)
+	public static void reload(ModConfig.ModConfigEvent event)
 	{
 		ModConfig config = event.getConfig();
 
@@ -37,6 +39,7 @@ public class FTBChunksConfig
 			disableAllFakePlayers = c.disableAllFakePlayers.get();
 			maxClaimedChunks = c.maxClaimedChunks.get();
 			maxForceLoadedChunks = c.maxForceLoadedChunks.get();
+			allyMode = c.allyMode.get();
 		}
 	}
 
@@ -45,10 +48,12 @@ public class FTBChunksConfig
 		private final ForgeConfigSpec.BooleanValue disableAllFakePlayers;
 		private final ForgeConfigSpec.IntValue maxClaimedChunks;
 		private final ForgeConfigSpec.IntValue maxForceLoadedChunks;
+		private final ForgeConfigSpec.EnumValue<AllyMode> allyMode;
 
 		private ServerConfig(ForgeConfigSpec.Builder builder)
 		{
 			disableAllFakePlayers = builder
+					.comment("Disables fake players like miners and auto-clickers.")
 					.translation("ftbchunks.general.disable_fake_players")
 					.define("disable_fake_players", false);
 
@@ -67,6 +72,11 @@ public class FTBChunksConfig
 					)
 					.translation("ftbchunks.general.max_force_loaded_chunks")
 					.defineInRange("max_force_loaded_chunks", 25, -1, Integer.MAX_VALUE);
+
+			allyMode = builder
+					.comment("Forced modes won't let players change their ally settings.")
+					.translation("ftbchunks.general.ally_mode")
+					.defineEnum("ally_mode", AllyMode.DEFAULT);
 		}
 	}
 }

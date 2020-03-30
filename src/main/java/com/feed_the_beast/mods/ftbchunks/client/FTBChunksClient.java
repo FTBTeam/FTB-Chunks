@@ -70,8 +70,8 @@ public class FTBChunksClient extends FTBChunksCommon
 	}
 
 	@Override
-	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players)
+	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players, int allyMode)
 	{
-		new PlayerListScreen(players).openGui();
+		new PlayerListScreen(players, allyMode).openGui();
 	}
 }

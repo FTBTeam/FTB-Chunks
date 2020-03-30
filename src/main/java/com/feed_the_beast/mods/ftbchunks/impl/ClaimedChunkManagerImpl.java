@@ -14,8 +14,6 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.server.ServerChunkProvider;
-import net.minecraft.world.server.TicketType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -36,7 +34,6 @@ import java.io.Writer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -46,25 +43,26 @@ import java.util.UUID;
  */
 public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 {
-	public static TicketType<ClaimedChunk> TICKET_TYPE = TicketType.create("ftbchunks", Comparator.comparing((ClaimedChunk a) -> a.getPos().dimension.getRegistryName()).thenComparingLong(a -> a.getPos().getChunkPos().asLong()));
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 	public static final Gson GSON_PRETTY = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 
+	public final MinecraftServer server;
 	public final Map<UUID, ClaimedChunkPlayerDataImpl> playerData;
 	public final Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
 	public final Map<UUID, KnownFakePlayer> knownFakePlayers;
 	public boolean saveFakePlayers;
 	public File dataDirectory;
 
-	public ClaimedChunkManagerImpl()
+	public ClaimedChunkManagerImpl(MinecraftServer s)
 	{
+		server = s;
 		playerData = new HashMap<>();
 		claimedChunks = new HashMap<>();
 		knownFakePlayers = new HashMap<>();
 		saveFakePlayers = false;
 	}
 
-	public void serverStarted(MinecraftServer server)
+	public void serverStarting()
 	{
 		long nanos = System.nanoTime();
 		dataDirectory = new File(server.getWorld(DimensionType.OVERWORLD).getSaveHandler().getWorldDirectory(), "data/ftbchunks");
@@ -77,13 +75,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		loadPlayerData();
 		int forceLoaded = 0;
 
-		for (ClaimedChunk chunk : claimedChunks.values())
+		for (ClaimedChunkImpl chunk : claimedChunks.values())
 		{
 			if (chunk.isForceLoaded())
 			{
 				forceLoaded++;
-				ServerChunkProvider chunkProvider = server.getWorld(chunk.getPos().dimension).getChunkProvider();
-				chunkProvider.registerTicket(TICKET_TYPE, chunk.getPos().getChunkPos(), 2, chunk);
+				chunk.postSetForceLoaded(true);
 			}
 		}
 
@@ -194,6 +191,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				ex.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public MinecraftServer getMinecraftServer()
+	{
+		return server;
 	}
 
 	@Override

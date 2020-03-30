@@ -12,7 +12,7 @@ import java.util.Objects;
 /**
  * @author LatvianModder
  */
-public class ChunkDimPos
+public class ChunkDimPos implements Comparable<ChunkDimPos>
 {
 	public final DimensionType dimension;
 	public final int x;
@@ -88,5 +88,12 @@ public class ChunkDimPos
 		}
 
 		return false;
+	}
+
+	@Override
+	public int compareTo(ChunkDimPos o)
+	{
+		int i = dimension.getRegistryName().compareTo(o.dimension.getRegistryName());
+		return i == 0 ? Long.compare(getChunkPos().asLong(), o.getChunkPos().asLong()) : i;
 	}
 }

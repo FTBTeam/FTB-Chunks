@@ -1,6 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
+import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
@@ -60,10 +62,12 @@ public class SendPlayerListPacket
 	}
 
 	private final List<NetPlayer> players;
+	private final int allyMode;
 
-	public SendPlayerListPacket(List<NetPlayer> p)
+	public SendPlayerListPacket(List<NetPlayer> p, int a)
 	{
 		players = p;
+		allyMode = a;
 	}
 
 	SendPlayerListPacket(PacketBuffer buf)
@@ -79,11 +83,15 @@ public class SendPlayerListPacket
 			int flags = buf.readVarInt();
 			players.add(new NetPlayer(new UUID(most, least), name, flags));
 		}
+
+		allyMode = buf.readUnsignedByte();
 	}
 
 	public static void send(ServerPlayerEntity player)
 	{
 		ClaimedChunkPlayerDataImpl self = FTBChunksAPIImpl.manager.getData(player);
+		int allyMode = FTBChunksConfig.allyMode == AllyMode.FORCED_ALL ? 2 : FTBChunksConfig.allyMode == AllyMode.FORCED_NONE ? 3 : self.alliesWhitelist ? 0 : 1;
+
 		List<NetPlayer> players = new ArrayList<>();
 		ClaimedChunkPlayerDataImpl server = FTBChunksAPIImpl.manager.getServerData();
 
@@ -104,7 +112,7 @@ public class SendPlayerListPacket
 
 		players.sort(null);
 
-		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendPlayerListPacket(players));
+		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendPlayerListPacket(players, allyMode));
 	}
 
 	void write(PacketBuffer buf)
@@ -118,11 +126,13 @@ public class SendPlayerListPacket
 			buf.writeString(p.name, 50);
 			buf.writeVarInt(p.flags);
 		}
+
+		buf.writeByte(allyMode);
 	}
 
 	void handle(Supplier<NetworkEvent.Context> context)
 	{
-		context.get().enqueueWork(() -> FTBChunks.instance.proxy.openPlayerList(players));
+		context.get().enqueueWork(() -> FTBChunks.instance.proxy.openPlayerList(players, allyMode));
 		context.get().setPacketHandled(true);
 	}
 }

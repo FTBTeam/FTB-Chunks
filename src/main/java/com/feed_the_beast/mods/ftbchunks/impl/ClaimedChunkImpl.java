@@ -5,15 +5,22 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.server.TicketType;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
+import java.util.Comparator;
 
 /**
  * @author LatvianModder
  */
 public class ClaimedChunkImpl implements ClaimedChunk
 {
+	public static TicketType<ChunkPos> TICKET_TYPE = TicketType.create("ftbchunks", Comparator.comparingLong(ChunkPos::asLong));
+	public static final int MAGIC_NUMBER = 2;
+
 	public final ClaimedChunkPlayerDataImpl playerData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
@@ -99,5 +106,11 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	public boolean allowExplosions()
 	{
 		return false;
+	}
+
+	public void postSetForceLoaded(boolean load)
+	{
+		ServerWorld world = getPlayerData().getManager().getMinecraftServer().getWorld(getPos().dimension);
+		world.forceChunk(getPos().x, getPos().z, load);
 	}
 }

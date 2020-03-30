@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 public class FTBTeamsIntegration
 {
-	public static boolean isAlly(ClaimedChunkPlayerData data, ServerPlayerEntity player)
+	public static boolean isTeamMember(ClaimedChunkPlayerData data, ServerPlayerEntity player)
 	{
 		Optional<Team> team1 = FTBTeamsAPI.INSTANCE.getManager().getTeam(new GameProfile(data.getUuid(), data.getName()));
 

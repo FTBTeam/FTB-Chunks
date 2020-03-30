@@ -50,7 +50,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -76,7 +76,6 @@ public class FTBChunks
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
 	public static FTBChunks instance;
 	public FTBChunksCommon proxy;
-	public FTBChunksConfig config;
 
 	public static final int TILES = 15;
 	public static final int TILE_SIZE = 16;
@@ -90,7 +89,7 @@ public class FTBChunks
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
 		MinecraftForge.EVENT_BUS.addListener(FTBChunksCommands::new);
 		MinecraftForge.EVENT_BUS.addListener(this::serverAboutToStart);
-		MinecraftForge.EVENT_BUS.addListener(this::serverStarted);
+		MinecraftForge.EVENT_BUS.addListener(this::serverStarting);
 		MinecraftForge.EVENT_BUS.addListener(this::serverStopped);
 		MinecraftForge.EVENT_BUS.addListener(this::worldSaved);
 		MinecraftForge.EVENT_BUS.addListener(this::loggedIn);
@@ -110,7 +109,7 @@ public class FTBChunks
 		proxy = DistExecutor.runForDist(() -> () -> new FTBChunksClient(), () -> () -> new FTBChunksCommon());
 		proxy.init();
 		FTBChunksAPI.INSTANCE = new FTBChunksAPIImpl();
-		config = new FTBChunksConfig();
+		FTBChunksConfig.init();
 	}
 
 	private void init(FMLCommonSetupEvent event)
@@ -120,7 +119,7 @@ public class FTBChunks
 
 	private void serverAboutToStart(FMLServerAboutToStartEvent event)
 	{
-		FTBChunksAPIImpl.manager = new ClaimedChunkManagerImpl();
+		FTBChunksAPIImpl.manager = new ClaimedChunkManagerImpl(event.getServer());
 
 		event.getServer().getResourceManager().addReloadListener(new ReloadListener<JsonObject>()
 		{
@@ -179,9 +178,9 @@ public class FTBChunks
 		});
 	}
 
-	private void serverStarted(FMLServerStartedEvent event)
+	private void serverStarting(FMLServerStartingEvent event)
 	{
-		FTBChunksAPIImpl.manager.serverStarted(event.getServer());
+		FTBChunksAPIImpl.manager.serverStarting();
 	}
 
 	private void serverStopped(FMLServerStoppedEvent event)
@@ -216,7 +215,7 @@ public class FTBChunks
 		{
 			if (entity instanceof FakePlayer)
 			{
-				if (config.disableAllFakePlayers)
+				if (FTBChunksConfig.disableAllFakePlayers)
 				{
 					return false;
 				}

@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
@@ -27,8 +28,8 @@ public class SendMapDataPacket
 		LinkedHashMap<NetClaimedChunkGroup, NetClaimedChunkGroup> groups = new LinkedHashMap<>();
 		LinkedHashMap<ChunkDimPos, NetClaimedChunk> chunks = new LinkedHashMap<>();
 		NetClaimedChunkData data = new NetClaimedChunkData();
-		data.maxClaimed = FTBChunks.instance.config.maxClaimedChunks;
-		data.maxLoaded = FTBChunks.instance.config.maxForceLoadedChunks;
+		data.maxClaimed = FTBChunksConfig.maxClaimedChunks;
+		data.maxLoaded = FTBChunksConfig.maxForceLoadedChunks;
 		long currentTime = Instant.now().getEpochSecond();
 
 		for (ClaimedChunk chunk : FTBChunksAPI.INSTANCE.getManager().getData(player).getClaimedChunks())

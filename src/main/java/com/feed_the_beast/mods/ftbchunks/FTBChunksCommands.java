@@ -96,6 +96,14 @@ public class FTBChunksCommands
 								.executes(context -> exportSvg(context.getSource()))
 						)
 				)
+				.then(Commands.literal("ally_whitelist")
+						.then(Commands.literal("true")
+								.executes(context -> allyWhitelist(context.getSource(), true))
+						)
+						.then(Commands.literal("false")
+								.executes(context -> allyWhitelist(context.getSource(), false))
+						)
+				)
 		);
 
 		event.getCommandDispatcher().register(Commands.literal("chunks").redirect(command));
@@ -103,6 +111,7 @@ public class FTBChunksCommands
 
 	private interface ChunkCallback
 	{
+
 		void accept(ClaimedChunkPlayerData data, ChunkDimPos pos) throws CommandSyntaxException;
 	}
 
@@ -273,6 +282,15 @@ public class FTBChunksCommands
 	{
 		FTBChunksAPIImpl.manager.exportSvg();
 		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/<dimension>.svg!"), true);
+		return 1;
+	}
+
+	private int allyWhitelist(CommandSource source, boolean b) throws CommandSyntaxException
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(source.asPlayer());
+		data.alliesWhitelist = b;
+		data.save();
+		source.sendFeedback(new StringTextComponent("Changed ally mode to " + (b ? "whitelist" : "blacklist")), false);
 		return 1;
 	}
 }

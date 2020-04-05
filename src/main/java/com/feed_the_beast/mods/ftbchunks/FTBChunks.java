@@ -47,6 +47,7 @@ import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
@@ -83,6 +84,9 @@ public class FTBChunks
 	public static final int GUI_SIZE = TILE_SIZE * TILES;
 	public static final float UV = (float) TILES / (float) TILE_SIZE;
 
+	public static boolean teamsMod = false;
+	public static boolean ranksMod = false;
+
 	public FTBChunks()
 	{
 		instance = this;
@@ -115,6 +119,8 @@ public class FTBChunks
 	private void init(FMLCommonSetupEvent event)
 	{
 		FTBChunksNet.init();
+		teamsMod = ModList.get().isLoaded("ftbteams");
+		ranksMod = ModList.get().isLoaded("ftbranks");
 	}
 
 	private void serverAboutToStart(FMLServerAboutToStartEvent event)

@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks;
 
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -58,25 +59,39 @@ public class FTBChunksConfig
 					.define("disable_fake_players", false);
 
 			maxClaimedChunks = builder
-					.comment(
-							"Max claimed chunks.",
-							"-1 - Up to permissions / default"
-					)
+					.comment("Max claimed chunks.")
 					.translation("ftbchunks.general.max_claimed_chunks")
-					.defineInRange("max_claimed_chunks", 100, -1, Integer.MAX_VALUE);
+					.defineInRange("max_claimed_chunks", 500, 0, Integer.MAX_VALUE);
 
 			maxForceLoadedChunks = builder
-					.comment(
-							"Max force loaded chunks.",
-							"-1 - Up to permissions / default"
-					)
+					.comment("Max force loaded chunks.")
 					.translation("ftbchunks.general.max_force_loaded_chunks")
-					.defineInRange("max_force_loaded_chunks", 25, -1, Integer.MAX_VALUE);
+					.defineInRange("max_force_loaded_chunks", 25, 0, Integer.MAX_VALUE);
 
 			allyMode = builder
 					.comment("Forced modes won't let players change their ally settings.")
 					.translation("ftbchunks.general.ally_mode")
 					.defineEnum("ally_mode", AllyMode.DEFAULT);
 		}
+	}
+
+	public static int getMaxClaimedChunks(ServerPlayerEntity player)
+	{
+		if (FTBChunks.ranksMod)
+		{
+			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks);
+		}
+
+		return maxClaimedChunks;
+	}
+
+	public static int getMaxForceLoadedChunks(ServerPlayerEntity player)
+	{
+		if (FTBChunks.ranksMod)
+		{
+			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxClaimedChunks);
+		}
+
+		return maxForceLoadedChunks;
 	}
 }

@@ -28,8 +28,8 @@ public class SendMapDataPacket
 		LinkedHashMap<NetClaimedChunkGroup, NetClaimedChunkGroup> groups = new LinkedHashMap<>();
 		LinkedHashMap<ChunkDimPos, NetClaimedChunk> chunks = new LinkedHashMap<>();
 		NetClaimedChunkData data = new NetClaimedChunkData();
-		data.maxClaimed = FTBChunksConfig.maxClaimedChunks;
-		data.maxLoaded = FTBChunksConfig.maxForceLoadedChunks;
+		data.maxClaimed = FTBChunksConfig.getMaxClaimedChunks(player);
+		data.maxLoaded = FTBChunksConfig.getMaxForceLoadedChunks(player);
 		long currentTime = Instant.now().getEpochSecond();
 
 		for (ClaimedChunk chunk : FTBChunksAPI.INSTANCE.getManager().getData(player).getClaimedChunks())

@@ -92,10 +92,12 @@ dependencies {
 	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-teams:${ftb_teams_version}") {
 		transitive = false
 	}))
-	compile(fg.deobf(project.dependencies.create("dev.latvian.mods:kubejs-forge-1.14.4:${kubejs_version}") {
+	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-ranks:${ftb_ranks_version}") {
 		transitive = false
 	}))
-	//compile fg.deobf(curse.resolve('jei', project.jei_file))
+	compileOnly(fg.deobf(project.dependencies.create("dev.latvian.mods:kubejs:${kubejs_version}") {
+		transitive = false
+	}))
 }
 
 jar {

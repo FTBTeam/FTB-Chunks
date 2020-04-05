@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
+import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.FTBTeamsIntegration;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
@@ -23,7 +24,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -181,7 +181,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_CLAIMED;
 		}
-		else if (getClaimedChunks().size() >= FTBChunksConfig.maxClaimedChunks)
+		else if (source.getEntity() instanceof ServerPlayerEntity && getClaimedChunks().size() >= FTBChunksConfig.getMaxClaimedChunks((ServerPlayerEntity) source.getEntity()))
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -252,7 +252,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_LOADED;
 		}
-		else if (getForceLoadedChunks().size() >= FTBChunksConfig.maxForceLoadedChunks)
+		else if (source.getEntity() instanceof ServerPlayerEntity && getForceLoadedChunks().size() >= FTBChunksConfig.getMaxForceLoadedChunks((ServerPlayerEntity) source.getEntity()))
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -311,7 +311,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 	public boolean isTeamMember(@Nullable Entity entity)
 	{
-		return entity instanceof ServerPlayerEntity && ModList.get().isLoaded("ftbteams") && FTBTeamsIntegration.isTeamMember(this, (ServerPlayerEntity) entity);
+		return entity instanceof ServerPlayerEntity && FTBChunks.teamsMod && FTBTeamsIntegration.isTeamMember(this, (ServerPlayerEntity) entity);
 	}
 
 	@Override
@@ -479,7 +479,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 	public ITextComponent getDisplayName()
 	{
-		if (ModList.get().isLoaded("ftbteams"))
+		if (FTBChunks.teamsMod)
 		{
 			ITextComponent component = FTBTeamsIntegration.getTeamName(this);
 

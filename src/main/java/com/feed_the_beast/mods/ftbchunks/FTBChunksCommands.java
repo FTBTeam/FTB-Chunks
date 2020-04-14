@@ -7,6 +7,8 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapDimension;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapRegion;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -89,20 +91,34 @@ public class FTBChunksCommands
 						)
 				)
 				.then(Commands.literal("export")
+						.requires(source -> source.hasPermissionLevel(2))
 						.then(Commands.literal("json")
+								.requires(source -> source.hasPermissionLevel(2))
 								.executes(context -> exportJson(context.getSource()))
 						)
 						.then(Commands.literal("svg")
+								.requires(source -> source.hasPermissionLevel(2))
 								.executes(context -> exportSvg(context.getSource()))
+						)
+						.then(Commands.literal("map_png")
+								.requires(source -> source.hasPermissionLevel(2))
+								.executes(context -> exportMapPng(context.getSource()))
 						)
 				)
 				.then(Commands.literal("ally_whitelist")
+						.requires(source -> source.hasPermissionLevel(2))
 						.then(Commands.literal("true")
+								.requires(source -> source.hasPermissionLevel(2))
 								.executes(context -> allyWhitelist(context.getSource(), true))
 						)
 						.then(Commands.literal("false")
+								.requires(source -> source.hasPermissionLevel(2))
 								.executes(context -> allyWhitelist(context.getSource(), false))
 						)
+				)
+				.then(Commands.literal("refresh_entire_map")
+						.requires(source -> source.hasPermissionLevel(2))
+						.executes(context -> refreshEntireMap())
 				)
 		);
 
@@ -113,6 +129,7 @@ public class FTBChunksCommands
 	{
 
 		void accept(ClaimedChunkPlayerData data, ChunkDimPos pos) throws CommandSyntaxException;
+
 	}
 
 	private void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
@@ -291,6 +308,28 @@ public class FTBChunksCommands
 		data.alliesWhitelist = b;
 		data.save();
 		source.sendFeedback(new StringTextComponent("Changed ally mode to " + (b ? "whitelist" : "blacklist")), false);
+		return 1;
+	}
+
+	private int refreshEntireMap()
+	{
+		for (MapDimension dimension : FTBChunksAPIImpl.manager.map.dimensions.values())
+		{
+			for (MapRegion region : dimension.regions.values())
+			{
+				region.save = true;
+				region.run();
+			}
+		}
+
+		return 1;
+	}
+
+	private int exportMapPng(CommandSource source)
+	{
+		MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(source.getWorld().dimension.getType());
+		dimension.exportPng();
+		source.sendFeedback(new StringTextComponent("Exported FTB Chunks map for " + DimensionType.getKey(dimension.dimension) + " to <world directory>/data/ftbchunks/export/<dimension>_map.png!"), true);
 		return 1;
 	}
 }

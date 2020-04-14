@@ -1,14 +1,14 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
+import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.time.Instant;
@@ -22,10 +22,10 @@ import java.util.function.Supplier;
  */
 public class RequestChunkChangePacket
 {
-	private int action;
-	private Set<ChunkPos> chunks;
+	private final int action;
+	private final Set<XZ> chunks;
 
-	public RequestChunkChangePacket(int a, Set<ChunkPos> c)
+	public RequestChunkChangePacket(int a, Set<XZ> c)
 	{
 		action = a;
 		chunks = c;
@@ -41,7 +41,7 @@ public class RequestChunkChangePacket
 		{
 			int x = buf.readVarInt();
 			int z = buf.readVarInt();
-			chunks.add(new ChunkPos(x, z));
+			chunks.add(XZ.of(x, z));
 		}
 	}
 
@@ -50,7 +50,7 @@ public class RequestChunkChangePacket
 		buf.writeVarInt(action);
 		buf.writeVarInt(chunks.size());
 
-		for (ChunkPos pos : chunks)
+		for (XZ pos : chunks)
 		{
 			buf.writeVarInt(pos.x);
 			buf.writeVarInt(pos.z);
@@ -63,14 +63,14 @@ public class RequestChunkChangePacket
 			ServerPlayerEntity player = context.get().getSender();
 			CommandSource source = player.getCommandSource();
 			ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(player);
-			Consumer<ChunkPos> consumer;
+			Consumer<XZ> consumer;
 			Instant time = Instant.now();
 
 			switch (action)
 			{
 				case 0:
 					consumer = pos -> {
-						ClaimResult result = data.claim(source, new ChunkDimPos(player.dimension, pos), false);
+						ClaimResult result = data.claim(source, pos.dim(player.dimension), false);
 
 						if (result.isSuccess())
 						{
@@ -79,11 +79,11 @@ public class RequestChunkChangePacket
 					};
 					break;
 				case 1:
-					consumer = pos -> data.unclaim(source, new ChunkDimPos(player.dimension, pos), false);
+					consumer = pos -> data.unclaim(source, pos.dim(player.dimension), false);
 					break;
 				case 2:
 					consumer = pos -> {
-						ClaimResult result = data.load(source, new ChunkDimPos(player.dimension, pos), false);
+						ClaimResult result = data.load(source, pos.dim(player.dimension), false);
 
 						if (result.isSuccess())
 						{
@@ -92,16 +92,22 @@ public class RequestChunkChangePacket
 					};
 					break;
 				case 3:
-					consumer = pos -> data.unload(source, new ChunkDimPos(player.dimension, pos), false);
+					consumer = pos -> data.unload(source, pos.dim(player.dimension), false);
 					break;
 				default:
 					FTBChunks.LOGGER.warn("Unknown chunk action ID: " + action);
 					return;
 			}
 
-			chunks.forEach(consumer);
-			SendMapDataPacket.send(player);
+			SendGeneralData.send(player);
+
+			for (XZ pos : chunks)
+			{
+				consumer.accept(pos);
+				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, pos, p -> true, true);
+			}
 		});
+
 		context.get().setPacketHandled(true);
 	}
 }

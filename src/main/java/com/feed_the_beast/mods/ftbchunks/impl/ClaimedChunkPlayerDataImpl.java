@@ -50,6 +50,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	private final Map<String, ClaimedChunkGroupImpl> groups;
 	public final Set<UUID> allies;
 	public boolean alliesWhitelist;
+	public final List<Waypoint> waypoints;
+
+	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
+	public String lastChunkID = "";
 
 	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, File f, UUID id)
 	{
@@ -61,6 +65,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		groups = new HashMap<>();
 		allies = new HashSet<>();
 		alliesWhitelist = true;
+		waypoints = new ArrayList<>();
 	}
 
 	@Override
@@ -387,6 +392,23 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 
 		json.add("chunks", chunksJson);
+
+		JsonArray waypointArray = new JsonArray();
+
+		for (Waypoint waypoint : waypoints)
+		{
+			JsonObject waypointJson = new JsonObject();
+			waypointJson.addProperty("dimension", DimensionType.getKey(waypoint.dimension).toString());
+			waypointJson.addProperty("x", waypoint.x);
+			waypointJson.addProperty("y", waypoint.y);
+			waypointJson.addProperty("z", waypoint.z);
+			waypointJson.addProperty("color", waypoint.color);
+			waypointJson.addProperty("public", waypoint.isPublic);
+			waypointArray.add(waypointJson);
+		}
+
+		json.add("waypoints", waypointArray);
+
 		return json;
 	}
 
@@ -474,6 +496,33 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					manager.claimedChunks.put(chunk.pos, chunk);
 				}
 			}
+		}
+
+		if (json.has("waypoints"))
+		{
+			for (JsonElement e : json.get("waypoints").getAsJsonArray())
+			{
+				JsonObject o = e.getAsJsonObject();
+				Waypoint w = new Waypoint(this);
+
+				w.dimension = DimensionType.byName(new ResourceLocation(o.get("dimension").getAsString()));
+
+				if (w.dimension == null)
+				{
+					continue;
+				}
+
+				w.x = o.get("x").getAsDouble();
+				w.y = o.get("y").getAsDouble();
+				w.z = o.get("z").getAsDouble();
+				w.color = o.get("color").getAsInt();
+				w.isPublic = o.get("public").getAsBoolean();
+				waypoints.add(w);
+			}
+		}
+		else
+		{
+			save();
 		}
 	}
 

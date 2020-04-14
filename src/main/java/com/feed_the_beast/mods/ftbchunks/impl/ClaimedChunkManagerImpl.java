@@ -4,6 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapImageManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -14,6 +15,7 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -47,19 +49,24 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	public static final Gson GSON_PRETTY = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 
 	public final MinecraftServer server;
+	public UUID serverId;
 	public final Map<UUID, ClaimedChunkPlayerDataImpl> playerData;
 	public final Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
 	public final Map<UUID, KnownFakePlayer> knownFakePlayers;
 	public boolean saveFakePlayers;
 	public File dataDirectory;
+	public File localDirectory;
+	public MapImageManager map;
 
 	public ClaimedChunkManagerImpl(MinecraftServer s)
 	{
 		server = s;
+		serverId = UUID.randomUUID();
 		playerData = new HashMap<>();
 		claimedChunks = new HashMap<>();
 		knownFakePlayers = new HashMap<>();
 		saveFakePlayers = false;
+		map = new MapImageManager(this);
 	}
 
 	public void serverStarting()
@@ -71,6 +78,15 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		{
 			dataDirectory.mkdirs();
 		}
+
+		localDirectory = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks").toFile();
+
+		if (!localDirectory.exists())
+		{
+			localDirectory.mkdirs();
+		}
+
+		map.directory = new File(dataDirectory, "map/");
 
 		loadPlayerData();
 		int forceLoaded = 0;
@@ -200,6 +216,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	}
 
 	@Override
+	public UUID getServerId()
+	{
+		return serverId;
+	}
+
+	@Override
 	public ClaimedChunkPlayerDataImpl getData(UUID id, String name)
 	{
 		ClaimedChunkPlayerDataImpl data = playerData.get(id);
@@ -224,7 +246,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	@Override
 	public ClaimedChunkPlayerDataImpl getServerData()
 	{
-		return getData(SERVER_ID, "Server");
+		return getData(SERVER_PLAYER_ID, "Server");
 	}
 
 	@Override
@@ -303,13 +325,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 	public void exportJson()
 	{
-		File exportFolder = new File(dataDirectory, "export");
-
-		if (!exportFolder.exists())
-		{
-			exportFolder.mkdirs();
-		}
-
 		JsonObject json = new JsonObject();
 
 		for (ClaimedChunkPlayerDataImpl data : playerData.values())
@@ -317,7 +332,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 			json.add(data.getName(), data.toJson());
 		}
 
-		try (Writer writer = new BufferedWriter(new FileWriter(new File(exportFolder, "all.json"))))
+		try (Writer writer = new BufferedWriter(new FileWriter(new File(localDirectory, "all.json"))))
 		{
 			ClaimedChunkManagerImpl.GSON.toJson(json, writer);
 		}
@@ -329,13 +344,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 	public void exportSvg()
 	{
-		File exportFolder = new File(dataDirectory, "export");
-
-		if (!exportFolder.exists())
-		{
-			exportFolder.mkdirs();
-		}
-
 		HashMap<DimensionType, ArrayList<ClaimedChunk>> chunkMap = new HashMap<>();
 
 		for (ClaimedChunk chunk : FTBChunksAPIImpl.manager.getAllClaimedChunks())
@@ -347,7 +355,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		for (Map.Entry<DimensionType, ArrayList<ClaimedChunk>> entry : chunkMap.entrySet())
 		{
-			try (Writer writer = new BufferedWriter(new FileWriter(new File(exportFolder, entry.getKey().getRegistryName().toString().replaceAll("\\W", "_") + ".svg"))))
+			try (Writer writer = new BufferedWriter(new FileWriter(new File(localDirectory, entry.getKey().getRegistryName().toString().replaceAll("\\W", "_") + ".svg"))))
 			{
 				DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();

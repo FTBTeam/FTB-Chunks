@@ -12,9 +12,11 @@ import java.util.UUID;
  */
 public interface ClaimedChunkManager
 {
-	UUID SERVER_ID = new UUID(0L, 0L);
+	UUID SERVER_PLAYER_ID = new UUID(0L, 0L);
 
 	MinecraftServer getMinecraftServer();
+
+	UUID getServerId();
 
 	ClaimedChunkPlayerData getData(UUID id, String name);
 
@@ -25,7 +27,7 @@ public interface ClaimedChunkManager
 
 	default ClaimedChunkPlayerData getServerData()
 	{
-		return getData(SERVER_ID, "Server");
+		return getData(SERVER_PLAYER_ID, "Server");
 	}
 
 	@Nullable

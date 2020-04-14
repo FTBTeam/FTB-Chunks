@@ -18,8 +18,8 @@ public class FTBChunksAPIImpl extends FTBChunksAPI
 	public static ClaimedChunkManagerImpl manager;
 	public static final Tag<Block> EDIT_TAG = new BlockTags.Wrapper(new ResourceLocation("ftbchunks", "edit_whitelist"));
 	public static final Tag<Block> INTERACT_TAG = new BlockTags.Wrapper(new ResourceLocation("ftbchunks", "interact_whitelist"));
-	public static final Map<Block, Color4I> COLOR_MAP = new HashMap<>();
-	public static final Map<ResourceLocation, Integer> COLOR_MAP_NET = new HashMap<>();
+	public static final Tag<Block> MAP_IGNORE_IN_WATER_TAG = new BlockTags.Wrapper(new ResourceLocation("ftbchunks", "map_ignore_in_water"));
+	public static Map<Block, Color4I> COLOR_MAP = new HashMap<>();
 
 	@Override
 	public ClaimedChunkManagerImpl getManager()

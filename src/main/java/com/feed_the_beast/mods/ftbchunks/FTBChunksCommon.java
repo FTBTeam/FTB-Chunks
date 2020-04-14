@@ -1,11 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbchunks.net.NetClaimedChunkData;
+import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
-import net.minecraft.util.ResourceLocation;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author LatvianModder
@@ -16,11 +14,11 @@ public class FTBChunksCommon
 	{
 	}
 
-	public void setMapData(NetClaimedChunkData data)
+	public void updateGeneralData(SendGeneralData data)
 	{
 	}
 
-	public void setColorMap(Map<ResourceLocation, Integer> m)
+	public void updateChunk(int chunkX, int chunkZ, byte[] imageData)
 	{
 	}
 

@@ -89,7 +89,7 @@ public class FTBChunksConfig
 	{
 		if (FTBChunks.ranksMod)
 		{
-			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxClaimedChunks);
+			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks);
 		}
 
 		return maxForceLoadedChunks;

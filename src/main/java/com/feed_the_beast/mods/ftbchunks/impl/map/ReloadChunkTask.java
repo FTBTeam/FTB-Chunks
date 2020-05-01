@@ -2,27 +2,22 @@ package com.feed_the_beast.mods.ftbchunks.impl.map;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
-import com.feed_the_beast.mods.ftbchunks.net.SendChunk;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.FlowingFluidBlock;
 import net.minecraft.block.GrassBlock;
 import net.minecraft.block.LeavesBlock;
+import net.minecraft.block.RedstoneWireBlock;
 import net.minecraft.block.VineBlock;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraftforge.fml.network.PacketDistributor;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.util.function.Predicate;
 
 /**
@@ -30,17 +25,28 @@ import java.util.function.Predicate;
  */
 public class ReloadChunkTask implements Runnable
 {
-	private final World world;
-	private final XZ chunkPosition;
-	private final Predicate<ServerPlayerEntity> playerFilter;
-	private final boolean sendIsOptional;
+	public interface Callback
+	{
+		void accept(ReloadChunkTask task, boolean changed);
+	}
 
-	public ReloadChunkTask(World w, XZ pos, Predicate<ServerPlayerEntity> p, boolean s)
+	public static int reduce(int c)
+	{
+		float f = (c & 0xFF) / 255F;
+		int c1 = (int) (f * 64F);
+		float f1 = c1 / 64F;
+		return (int) (f1 * 255F);
+	}
+
+	public final World world;
+	public final XZ chunkPosition;
+	private final Callback callback;
+
+	public ReloadChunkTask(World w, XZ pos, Callback c)
 	{
 		world = w;
 		chunkPosition = pos;
-		playerFilter = p;
-		sendIsOptional = s;
+		callback = c;
 	}
 
 	@Override
@@ -62,64 +68,33 @@ public class ReloadChunkTask implements Runnable
 		BlockPos.Mutable currentBlockPos = new BlockPos.Mutable(0, 0, 0);
 		int x = cx << 4;
 		int z = cz << 4;
-		long now = System.currentTimeMillis();
-		BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		boolean changed = false;
 
 		try
 		{
-			int topY = Math.max(world.getActualHeight(), chunk.getTopFilledSegment() + 16) - 1;
+			int topY = world.getActualHeight() + 1;
 
 			for (int wi = 0; wi < 256; wi++)
 			{
 				int wx = wi % 16;
 				int wz = wi / 16;
-				int by = topY;
-				BlockState state = null;
+				int by = MapChunk.getHeight(chunk, currentBlockPos, x + wx, z + wz, topY);
 
-				for (; by > 0; by--)
-				{
-					currentBlockPos.setPos(x + wx, by, z + wz);
-					state = chunk.getBlockState(currentBlockPos);
-
-					if (by == topY || state.getBlock() == Blocks.BEDROCK)
-					{
-						for (; by > 0; by--)
-						{
-							currentBlockPos.setPos(x + wx, by, z + wz);
-							state = chunk.getBlockState(currentBlockPos);
-
-							if (state.getBlock().isAir(state, world, currentBlockPos))
-							{
-								break;
-							}
-						}
-					}
-
-					if (state.getBlock() != Blocks.GRASS && state.getBlock() != Blocks.TALL_GRASS && !state.getBlock().isAir(state, world, currentBlockPos))
-					{
-						if (data.setHeight(wx, wz, by))
-						{
-							data.lastUpdate = now;
-						}
-
-						break;
-					}
-				}
-
-				if (state == null)
+				if (by == -1)
 				{
 					data.setRGB(wx, wz, 0);
+					data.setHeight(wx, wz, 0);
 					continue;
 				}
 
-				Color4I color = FTBChunksAPIImpl.COLOR_MAP.get(state.getBlock());
-
-				if (color == null)
+				if (data.setHeight(wx, wz, by))
 				{
-					color = Color4I.rgb(state.getMaterialColor(world, currentBlockPos).colorValue);
+					changed = true;
 				}
 
-				float addedBrightness = 0F;
+				BlockState state = chunk.getBlockState(currentBlockPos);
+
+				Color4I color = null;
 
 				if ((state.getBlock() instanceof FlowingFluidBlock && ((FlowingFluidBlock) state.getBlock()).getFluid().isEquivalentTo(Fluids.WATER)) || FTBChunksAPIImpl.MAP_IGNORE_IN_WATER_TAG.contains(state.getBlock()))
 				{
@@ -156,38 +131,68 @@ public class ReloadChunkTask implements Runnable
 					{
 						color = Color4I.rgb(ColorBlend.FOLIAGE.blend(world, currentBlockPos, 2)).withTint(Color4I.BLACK.withAlpha(50));
 					}
+					else if (state.getBlock() instanceof RedstoneWireBlock)
+					{
+						color = Color4I.rgb(redstoneColor(state.get(RedstoneWireBlock.POWER)));
+					}
 				}
 
-				int c = ColorBlend.addBrightness(color, addedBrightness);
-
-				if (data.setRGB(wx, wz, c))
+				if (color == null)
 				{
-					data.lastUpdate = now;
+					color = FTBChunksAPIImpl.COLOR_MAP.get(state.getBlock());
 				}
 
-				image.setRGB(wx, wz, (c & 0x00FFFFFF) | (by << 24));
+				if (color == null)
+				{
+					color = Color4I.rgb(state.getMaterialColor(world, currentBlockPos).colorValue);
+				}
+
+				if (data.setRGB(wx, wz, color.rgb()))
+				{
+					changed = true;
+				}
 			}
 
 			FTBChunks.LOGGER.debug("Reloaded chunk " + data.pos + " in " + data.region.pos + " (" + FTBChunksAPIImpl.manager.map.taskQueue.size() + " tasks left)");
-
-			if (data.lastUpdate == now || !sendIsOptional)
-			{
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(image, "PNG", baos);
-				byte[] imageData = baos.toByteArray();
-
-				for (ServerPlayerEntity player : world.getServer().getPlayerList().getPlayers())
-				{
-					if (playerFilter.test(player))
-					{
-						FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendChunk(cx, cz, imageData));
-					}
-				}
-			}
 		}
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
 		}
+
+		callback.accept(this, changed);
+	}
+
+	private static int redstoneColor(int power)
+	{
+		float f = power / 15F;
+		float f1 = f * 0.6F + 0.4F;
+		if (power == 0)
+		{
+			f1 = 0.3F;
+		}
+
+		float f2 = f * f * 0.7F - 0.5F;
+		float f3 = f * f * 0.6F - 0.7F;
+
+		if (f2 < 0F)
+		{
+			f2 = 0F;
+		}
+
+		if (f3 < 0F)
+		{
+			f3 = 0F;
+		}
+
+		int i = MathHelper.clamp((int) (f1 * 255F), 0, 255);
+		int j = MathHelper.clamp((int) (f2 * 255F), 0, 255);
+		int k = MathHelper.clamp((int) (f3 * 255F), 0, 255);
+		return 0xFF000000 | i << 16 | j << 8 | k;
+	}
+
+	public void send(Predicate<ServerPlayerEntity> predicate)
+	{
+		FTBChunksAPIImpl.manager.map.queueSend(world, chunkPosition, predicate);
 	}
 }

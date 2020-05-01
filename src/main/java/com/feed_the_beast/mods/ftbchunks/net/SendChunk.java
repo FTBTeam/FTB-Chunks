@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -11,33 +12,61 @@ import java.util.function.Supplier;
  */
 public class SendChunk
 {
-	private final int chunkX, chunkZ;
-	private final byte[] imageData;
+	public int x, z;
+	public byte[] imageData;
+	public int color;
+	public ITextComponent owner;
+	public long relativeTimeClaimed;
+	public long relativeTimeForceLoaded;
+	public boolean forceLoaded;
 
-	public SendChunk(int cx, int cz, byte[] img)
+	public SendChunk()
 	{
-		chunkX = cx;
-		chunkZ = cz;
-		imageData = img;
 	}
 
 	SendChunk(PacketBuffer buf)
 	{
-		chunkX = buf.readVarInt();
-		chunkZ = buf.readVarInt();
+		x = buf.readVarInt();
+		z = buf.readVarInt();
 		imageData = buf.readByteArray();
+		color = buf.readInt();
+
+		if (color != 0)
+		{
+			owner = buf.readTextComponent();
+			relativeTimeClaimed = buf.readVarLong();
+			forceLoaded = buf.readBoolean();
+
+			if (forceLoaded)
+			{
+				relativeTimeForceLoaded = buf.readVarLong();
+			}
+		}
 	}
 
 	void write(PacketBuffer buf)
 	{
-		buf.writeVarInt(chunkX);
-		buf.writeVarInt(chunkZ);
+		buf.writeVarInt(x);
+		buf.writeVarInt(z);
 		buf.writeByteArray(imageData);
+		buf.writeInt(color);
+
+		if (color != 0)
+		{
+			buf.writeTextComponent(owner);
+			buf.writeVarLong(relativeTimeClaimed);
+			buf.writeBoolean(forceLoaded);
+
+			if (forceLoaded)
+			{
+				buf.writeVarLong(relativeTimeForceLoaded);
+			}
+		}
 	}
 
 	void handle(Supplier<NetworkEvent.Context> context)
 	{
-		context.get().enqueueWork(() -> FTBChunks.instance.proxy.updateChunk(chunkX, chunkZ, imageData));
+		context.get().enqueueWork(() -> FTBChunks.instance.proxy.updateChunk(this));
 		context.get().setPacketHandled(true);
 	}
 }

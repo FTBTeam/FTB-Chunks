@@ -2,18 +2,23 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
+import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
 import com.feed_the_beast.mods.ftbchunks.impl.map.ColorBlend;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import com.feed_the_beast.mods.ftbchunks.net.LoginData;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunk;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
+import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
+import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.widget.CustomClickEvent;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.NativeImage;
@@ -22,17 +27,18 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.lwjgl.opengl.GL11;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.util.List;
+import java.nio.file.Files;
+import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author LatvianModder
@@ -43,16 +49,19 @@ public class FTBChunksClient extends FTBChunksCommon
 	public static final ResourceLocation MAP_ICONS = new ResourceLocation("textures/map/map_icons.png");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
+	public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 
 	public static int minimapTextureId = -1;
-	public static NativeImage minimapImage = null;
 	private static int currentPlayerChunkX, currentPlayerChunkZ;
-	public static boolean updateMinimap = true;
+	public static boolean blur = true;
+	public static float noise = 0.05F;
+
+	private boolean updateMinimap = false;
 	public static SendGeneralData generalData;
+	private long nextRegionSave = 0L;
 
 	public void init()
 	{
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
@@ -62,28 +71,76 @@ public class FTBChunksClient extends FTBChunksCommon
 	}
 
 	@Override
-	public void updateGeneralData(SendGeneralData data)
+	public void login(LoginData loginData)
 	{
-		generalData = data;
+		if (ClientMapManager.inst != null)
+		{
+			ClientMapManager.inst.release();
+		}
+
+		ClientMapManager.inst = new ClientMapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/map/" + loginData.serverId));
+		ClientMapDimension.current = ClientMapManager.inst.getDimension(Minecraft.getInstance().world.dimension.getType());
+		updateMinimap = true;
 	}
 
 	@Override
-	public void updateChunk(int chunkX, int chunkZ, byte[] imageData)
+	public void updateGeneralData(SendGeneralData packet)
+	{
+		generalData = packet;
+	}
+
+	@Override
+	public void updateChunk(SendChunk packet)
 	{
 		try
 		{
-			BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
+			BufferedImage image = ImageIO.read(new ByteArrayInputStream(packet.imageData));
 			//System.out.println(image);
-			ClientMapChunk chunk = ClientMapDimension.get().getRegion(XZ.regionFromChunk(chunkX, chunkZ)).getChunk(XZ.of(chunkX, chunkZ));
+			ClientMapChunk chunk = ClientMapDimension.current.getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
+			chunk.relativeTimeClaimed = packet.relativeTimeClaimed;
+			chunk.relativeTimeForceLoaded = packet.relativeTimeForceLoaded;
+			Date now = new Date();
+			chunk.claimedDate = new Date(now.getTime() - chunk.relativeTimeClaimed);
+			chunk.forceLoadedDate = packet.forceLoaded ? new Date(now.getTime() - chunk.relativeTimeForceLoaded) : null;
+			chunk.color = packet.color;
+			chunk.formattedOwner = packet.owner == null ? "" : packet.owner.getFormattedText();
+			boolean updateRegion = false;
+			Random random = new Random(packet.x * 31L + packet.z);
 
-			for (int y = 0; y < 16; y++)
+			for (int z = 0; z < 16; z++)
 			{
 				for (int x = 0; x < 16; x++)
 				{
-					int c = image.getRGB(x, y);
-					chunk.setRGB(x, y, c & 0x00FFFFFF);
-					chunk.setHeight(x, y, c >> 24);
+					int c = chunk.region.getImage().getPixelRGBA(chunk.pos.x * 16 + x, chunk.pos.z * 16 + z);
+					int h0 = NativeImage.getAlpha(c);
+					int r0 = NativeImage.getRed(c);
+					int g0 = NativeImage.getGreen(c);
+					int b0 = NativeImage.getBlue(c);
+
+					int nc = image.getRGB(x, z);
+
+					if (noise != 0F)
+					{
+						nc = ColorBlend.addBrightness(nc, random.nextFloat() * noise - noise / 2F);
+					}
+
+					int h = (nc >> 24) & 0xFF;
+					int r = (nc >> 16) & 0xFF;
+					int g = (nc >> 8) & 0xFF;
+					int b = (nc >> 0) & 0xFF;
+
+					if (h0 != h || r0 != r || g0 != g || b0 != b)
+					{
+						chunk.region.getImage().setPixelRGBA(chunk.pos.x * 16 + x, chunk.pos.z * 16 + z, NativeImage.getCombined(h, b, g, r));
+						updateRegion = true;
+					}
 				}
+			}
+
+			if (updateRegion)
+			{
+				chunk.region.saveImage = true;
+				updateMinimap = true;
 			}
 		}
 		catch (Exception ex)
@@ -92,15 +149,24 @@ public class FTBChunksClient extends FTBChunksCommon
 		}
 	}
 
-	private void setup(FMLClientSetupEvent event)
+	@Override
+	public void updateWaypoints(SendWaypoints packet)
 	{
-		//((IReloadableResourceManager) event.getMinecraftSupplier().get().getResourceManager()).addReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) -> CompletableFuture.runAsync(() -> minimapTexture = null).thenCompose(stage::markCompleteAwaitingOthers));
+		for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
+		{
+			dimension.waypoints.clear();
+		}
+
+		for (Waypoint waypoint : packet.waypoints)
+		{
+			ClientMapManager.inst.getDimension(waypoint.dimension).waypoints.add(waypoint);
+		}
 	}
 
 	@Override
-	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players, int allyMode)
+	public void openPlayerList(SendPlayerListPacket packet)
 	{
-		new PlayerListScreen(players, allyMode).openGui();
+		new PlayerListScreen(packet.players, packet.allyMode).openGui();
 	}
 
 	@SubscribeEvent
@@ -122,16 +188,53 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		if (minimapImage == null)
+		if (ClientMapManager.inst == null)
+		{
+			return;
+		}
+
+		if (ClientMapDimension.current == null || ClientMapDimension.current.dimension != Minecraft.getInstance().world.getDimension().getType())
+		{
+			ClientMapDimension.current = ClientMapManager.inst.getDimension(Minecraft.getInstance().world.getDimension().getType());
+		}
+
+		long now = System.currentTimeMillis();
+
+		if (nextRegionSave == 0L || now >= nextRegionSave)
+		{
+			nextRegionSave = now + 3000L;
+
+			for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
+			{
+				for (ClientMapRegion region : dimension.regions.values())
+				{
+					if (region.saveImage)
+					{
+						EXECUTOR_SERVICE.submit(() -> {
+							if (Files.notExists(dimension.directory))
+							{
+								Files.createDirectories(dimension.directory);
+							}
+
+							region.getImage().write(dimension.directory.resolve(region.pos.x + "," + region.pos.z + ",map.png"));
+							return null;
+						});
+
+						region.saveImage = false;
+					}
+				}
+			}
+		}
+
+		if (minimapTextureId == -1)
 		{
 			minimapTextureId = TextureUtil.generateTextureId();
-			minimapImage = new NativeImage(FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, true);
-			TextureUtil.prepareImage(minimapTextureId, minimapImage.getWidth(), minimapImage.getHeight());
+			TextureUtil.prepareImage(minimapTextureId, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE);
+			updateMinimap = true;
 		}
 
 		RenderSystem.enableTexture();
 		RenderSystem.bindTexture(minimapTextureId);
-		boolean blur = true;
 
 		if (blur)
 		{
@@ -144,12 +247,19 @@ public class FTBChunksClient extends FTBChunksCommon
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		}
 
+		int cx = mc.player.chunkCoordX;
+		int cz = mc.player.chunkCoordZ;
+
+		if (cx != currentPlayerChunkX || cz != currentPlayerChunkZ)
+		{
+			updateMinimap = true;
+		}
+
 		if (updateMinimap)
 		{
 			updateMinimap = false;
-			ClientMapDimension dim = ClientMapDimension.get();
-			int cx = mc.player.chunkCoordX;
-			int cz = mc.player.chunkCoordZ;
+
+			// TODO: More math here to upload from (up to) 4 regions instead of all chunks inside them, to speed things up
 
 			for (int mz = 0; mz < FTBChunks.TILES; mz++)
 			{
@@ -158,55 +268,11 @@ public class FTBChunksClient extends FTBChunksCommon
 					int ox = cx + mx - FTBChunks.TILE_OFFSET;
 					int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
-					ClientMapChunk chunk = dim.getRegion(XZ.regionFromChunk(ox, oz)).getChunk(XZ.of(ox, oz));
-					Random random = new Random(ox * 31L + oz);
-
-					for (int z = 0; z < 16; z++)
-					{
-						for (int x = 0; x < 16; x++)
-						{
-							int by = dim.getHeight(chunk, ox * 16 + x, oz * 16 + z);
-
-							if (by == -1)
-							{
-								continue;
-							}
-
-							int bn = dim.getHeight(chunk, ox * 16 + x, oz * 16 + z - 1);
-							int bw = dim.getHeight(chunk, ox * 16 + x - 1, oz * 16 + z);
-							float addedBrightness = random.nextFloat() * 0.05F;
-
-							if (bn != -1 || bw != -1)
-							{
-								if (by > bn || by > bw)
-								{
-									addedBrightness += 0.15F;
-								}
-
-								if (by < bn || by < bw)
-								{
-									addedBrightness -= 0.15F;
-								}
-							}
-
-							int c = ColorBlend.addBrightness(Color4I.rgb(chunk.getRGB(x, z)), addedBrightness);
-							minimapImage.setPixelRGBA(mx * 16 + x, mz * 16 + z, NativeImage.getCombined(255, c >> 0, c >> 8, c >> 16));
-						}
-					}
+					ClientMapRegion region = ClientMapDimension.current.getRegion(XZ.regionFromChunk(ox, oz));
+					region.getImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, false, false);
 				}
 			}
 
-			/*
-			for (int y = 0; y < FTBChunks.MINIMAP_SIZE; y++)
-			{
-				for (int x = 0; x < FTBChunks.MINIMAP_SIZE; x++)
-				{
-					minimapImage.setPixelRGBA(x, y, NativeImage.getCombined(255, c >> 0, c >> 8, c >> 16));
-				}
-			}
-			 */
-
-			minimapImage.uploadTextureSub(0, 0, 0, false);
 			currentPlayerChunkX = cx;
 			currentPlayerChunkZ = cz;
 		}
@@ -216,7 +282,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		double scale = 1D;
+		double scale = 1D * 4D / mc.getMainWindow().getGuiScaleFactor();
 
 		int s = (int) (64D * scale);
 		int x = mc.getMainWindow().getScaledWidth() - 3 - s;
@@ -283,14 +349,48 @@ public class FTBChunksClient extends FTBChunksCommon
 		tessellator.draw();
 
 		RenderSystem.enableTexture();
+
+		if (!ClientMapDimension.current.waypoints.isEmpty())
+		{
+			for (Waypoint waypoint : ClientMapDimension.current.waypoints)
+			{
+				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x, waypoint.z) / 3.2D * scale;
+
+				if (d > s / 2D)
+				{
+					d = s / 2D;
+				}
+
+				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z, mc.player.getPosX() - waypoint.x) + (-mc.player.rotationYaw) * Math.PI / 180D;
+
+				double wx = x + s / 2D + Math.cos(angle) * d;
+				double wy = y + s / 2D + Math.sin(angle) * d;
+				double ws = s / 32D;
+
+				mc.getTextureManager().bindTexture(waypoint.type.texture);
+				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+
+				int r = (waypoint.color >> 16) & 0xFF;
+				int g = (waypoint.color >> 8) & 0xFF;
+				int b = (waypoint.color >> 0) & 0xFF;
+
+				buffer.pos(wx - ws, wy - ws, z).color(r, g, b, 255).tex(0F, 0F).endVertex();
+				buffer.pos(wx - ws, wy + ws, z).color(r, g, b, 255).tex(0F, 1F).endVertex();
+				buffer.pos(wx + ws, wy + ws, z).color(r, g, b, 255).tex(1F, 1F).endVertex();
+				buffer.pos(wx + ws, wy - ws, z).color(r, g, b, 255).tex(1F, 0F).endVertex();
+				tessellator.draw();
+			}
+		}
 	}
 
+	/*
 	@SubscribeEvent
 	public void chunkChange(EntityEvent.EnteringChunk event)
 	{
-		if (event.getEntity() instanceof ClientPlayerEntity)
+		if (event.getEntity() instanceof ClientPlayerEntity && (event.getOldChunkX() != event.getNewChunkX() || event.getOldChunkZ() != event.getNewChunkZ()))
 		{
 			updateMinimap = true;
 		}
 	}
+	 */
 }

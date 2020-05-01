@@ -99,13 +99,13 @@ public class RequestChunkChangePacket
 					return;
 			}
 
-			SendGeneralData.send(player);
-
 			for (XZ pos : chunks)
 			{
 				consumer.accept(pos);
-				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, pos, p -> true, true);
+				FTBChunksAPIImpl.manager.map.queueSend(player.world, pos, p -> p == player);
 			}
+
+			SendGeneralData.send(player);
 		});
 
 		context.get().setPacketHandled(true);

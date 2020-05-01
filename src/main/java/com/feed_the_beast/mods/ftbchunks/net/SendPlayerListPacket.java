@@ -61,8 +61,8 @@ public class SendPlayerListPacket
 		}
 	}
 
-	private final List<NetPlayer> players;
-	private final int allyMode;
+	public final List<NetPlayer> players;
+	public final int allyMode;
 
 	public SendPlayerListPacket(List<NetPlayer> p, int a)
 	{
@@ -132,7 +132,7 @@ public class SendPlayerListPacket
 
 	void handle(Supplier<NetworkEvent.Context> context)
 	{
-		context.get().enqueueWork(() -> FTBChunks.instance.proxy.openPlayerList(players, allyMode));
+		context.get().enqueueWork(() -> FTBChunks.instance.proxy.openPlayerList(this));
 		context.get().setPacketHandled(true);
 	}
 }

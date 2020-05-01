@@ -4,9 +4,10 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,19 +32,14 @@ public class MapRegion implements Runnable
 
 	public MapRegion load()
 	{
-		if (!dimension.directory.exists() || !dimension.directory.isDirectory())
+		Path file = dimension.directory.resolve(pos.x + "," + pos.z + ",map.png");
+
+		if (Files.notExists(file))
 		{
 			return this;
 		}
 
-		File file = new File(dimension.directory, pos.x + "," + pos.z + ",map.png");
-
-		if (!file.exists() || !file.isFile())
-		{
-			return this;
-		}
-
-		try (FileInputStream is = new FileInputStream(file))
+		try (InputStream is = Files.newInputStream(file))
 		{
 			BufferedImage image = ImageIO.read(is);
 
@@ -91,14 +87,14 @@ public class MapRegion implements Runnable
 		return this;
 	}
 
-	public MapChunk getChunk(XZ pos)
+	public MapChunk getChunk(XZ chunkPos)
 	{
-		if (pos.x != (pos.x & 31) || pos.z != (pos.z & 31))
+		if (chunkPos.x != (chunkPos.x & 31) || chunkPos.z != (chunkPos.z & 31))
 		{
-			pos = XZ.of(pos.x & 31, pos.z & 31);
+			chunkPos = XZ.of(chunkPos.x & 31, chunkPos.z & 31);
 		}
 
-		return chunks.computeIfAbsent(pos, p -> new MapChunk(this, p));
+		return chunks.computeIfAbsent(chunkPos, p -> new MapChunk(this, p));
 	}
 
 	@Override
@@ -111,9 +107,16 @@ public class MapRegion implements Runnable
 
 		save = false;
 
-		if (!dimension.directory.exists())
+		if (Files.notExists(dimension.directory))
 		{
-			dimension.directory.mkdirs();
+			try
+			{
+				Files.createDirectories(dimension.directory);
+			}
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 
 		BufferedImage mapImg = new BufferedImage(16 * 32, 16 * 32, BufferedImage.TYPE_INT_ARGB);
@@ -144,7 +147,7 @@ public class MapRegion implements Runnable
 			}
 		}
 
-		try (FileOutputStream out = new FileOutputStream(new File(dimension.directory, pos.x + "," + pos.z + ",map.png")))
+		try (OutputStream out = Files.newOutputStream(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png")))
 		{
 			ImageIO.write(mapImg, "PNG", out);
 		}

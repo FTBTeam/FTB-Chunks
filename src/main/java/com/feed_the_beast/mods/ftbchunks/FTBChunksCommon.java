@@ -1,9 +1,10 @@
 package com.feed_the_beast.mods.ftbchunks;
 
+import com.feed_the_beast.mods.ftbchunks.net.LoginData;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunk;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
-
-import java.util.List;
+import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
 
 /**
  * @author LatvianModder
@@ -14,15 +15,23 @@ public class FTBChunksCommon
 	{
 	}
 
-	public void updateGeneralData(SendGeneralData data)
+	public void login(LoginData loginData)
 	{
 	}
 
-	public void updateChunk(int chunkX, int chunkZ, byte[] imageData)
+	public void updateGeneralData(SendGeneralData packet)
 	{
 	}
 
-	public void openPlayerList(List<SendPlayerListPacket.NetPlayer> players, int allyMode)
+	public void updateChunk(SendChunk packet)
+	{
+	}
+
+	public void updateWaypoints(SendWaypoints packet)
+	{
+	}
+
+	public void openPlayerList(SendPlayerListPacket packet)
 	{
 	}
 }

@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.impl.map;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.dimension.DimensionType;
 
 /**
@@ -22,6 +23,11 @@ public class XZ
 	public static XZ chunkFromBlock(int x, int z)
 	{
 		return of(x >> 4, z >> 4);
+	}
+
+	public static XZ chunkFromBlock(Vec3i pos)
+	{
+		return chunkFromBlock(pos.getX(), pos.getZ());
 	}
 
 	public static XZ regionFromChunk(int x, int z)

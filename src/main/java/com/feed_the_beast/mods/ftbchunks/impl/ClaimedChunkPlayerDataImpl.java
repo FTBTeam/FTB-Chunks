@@ -11,6 +11,9 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkEvent;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
+import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
+import com.feed_the_beast.mods.ftbchunks.api.WaypointMode;
+import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -26,7 +29,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.dimension.DimensionType;
 
 import javax.annotation.Nullable;
-import java.io.File;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +46,7 @@ import java.util.UUID;
 public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 {
 	public final ClaimedChunkManagerImpl manager;
-	public final File file;
+	public final Path file;
 	public boolean shouldSave;
 	public GameProfile profile;
 	public int color;
@@ -55,7 +58,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
 
-	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, File f, UUID id)
+	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, Path f, UUID id)
 	{
 		manager = m;
 		file = f;
@@ -398,12 +401,14 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		for (Waypoint waypoint : waypoints)
 		{
 			JsonObject waypointJson = new JsonObject();
+			waypointJson.addProperty("name", waypoint.name);
 			waypointJson.addProperty("dimension", DimensionType.getKey(waypoint.dimension).toString());
 			waypointJson.addProperty("x", waypoint.x);
 			waypointJson.addProperty("y", waypoint.y);
 			waypointJson.addProperty("z", waypoint.z);
 			waypointJson.addProperty("color", waypoint.color);
-			waypointJson.addProperty("public", waypoint.isPublic);
+			waypointJson.addProperty("mode", waypoint.mode.name().toLowerCase());
+			waypointJson.addProperty("type", waypoint.type.name().toLowerCase());
 			waypointArray.add(waypointJson);
 		}
 
@@ -503,7 +508,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			for (JsonElement e : json.get("waypoints").getAsJsonArray())
 			{
 				JsonObject o = e.getAsJsonObject();
-				Waypoint w = new Waypoint(this);
+				Waypoint w = new Waypoint();
 
 				w.dimension = DimensionType.byName(new ResourceLocation(o.get("dimension").getAsString()));
 
@@ -512,11 +517,13 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					continue;
 				}
 
-				w.x = o.get("x").getAsDouble();
-				w.y = o.get("y").getAsDouble();
-				w.z = o.get("z").getAsDouble();
+				w.name = o.get("name").getAsString();
+				w.x = o.get("x").getAsInt();
+				w.y = o.get("y").getAsInt();
+				w.z = o.get("z").getAsInt();
 				w.color = o.get("color").getAsInt();
-				w.isPublic = o.get("public").getAsBoolean();
+				w.mode = WaypointMode.valueOf(o.get("mode").getAsString().toUpperCase());
+				w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
 				waypoints.add(w);
 			}
 		}

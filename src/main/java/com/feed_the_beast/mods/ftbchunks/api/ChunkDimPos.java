@@ -96,4 +96,9 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 		int i = dimension.getRegistryName().compareTo(o.dimension.getRegistryName());
 		return i == 0 ? Long.compare(getChunkPos().asLong(), o.getChunkPos().asLong()) : i;
 	}
+
+	public ChunkDimPos offset(int ox, int oz)
+	{
+		return new ChunkDimPos(dimension, x + ox, z + oz);
+	}
 }

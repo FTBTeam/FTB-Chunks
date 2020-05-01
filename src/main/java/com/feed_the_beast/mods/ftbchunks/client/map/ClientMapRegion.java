@@ -1,7 +1,12 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
+import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import net.minecraft.client.renderer.texture.NativeImage;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,17 +15,75 @@ import java.util.Map;
  */
 public class ClientMapRegion
 {
+	private static final int NO_CHUNK = NativeImage.getCombined(255, 0, 0, 0);
+
 	public final ClientMapDimension dimension;
 	public final XZ pos;
 	public final Map<XZ, ClientMapChunk> chunks;
-	public boolean updateTexture;
+	private NativeImage image;
+	public boolean saveImage;
 
 	public ClientMapRegion(ClientMapDimension d, XZ p)
 	{
 		dimension = d;
 		pos = p;
 		chunks = new HashMap<>();
-		updateTexture = false;
+		image = null;
+		saveImage = false;
+	}
+
+	public ClientMapRegion load()
+	{
+		if (Files.notExists(dimension.directory))
+		{
+			return this;
+		}
+
+		Path file = dimension.directory.resolve(pos.x + "," + pos.z + ",map.png");
+
+		if (Files.notExists(file))
+		{
+			return this;
+		}
+
+		try (InputStream is = Files.newInputStream(file))
+		{
+			image = NativeImage.read(is);
+
+			if (image.getWidth() == 512 && image.getHeight() == 512)
+			{
+				for (int cz = 0; cz < 32; cz++)
+				{
+					for (int cx = 0; cx < 32; cx++)
+					{
+						if (image.getPixelRGBA(cx * 16, cz * 16) != NO_CHUNK)
+						{
+							ClientMapChunk chunk = new ClientMapChunk(this, XZ.of(cx, cz));
+							chunks.put(chunk.pos, chunk);
+						}
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+
+		FTBChunks.LOGGER.debug("Loaded client region " + pos + " - " + chunks.size() + " chunks");
+		return this;
+	}
+
+	public NativeImage getImage()
+	{
+		if (image == null)
+		{
+			image = new NativeImage(NativeImage.PixelFormat.RGBA, 512, 512, true);
+			image.fillAreaRGBA(0, 0, 512, 512, NO_CHUNK);
+			saveImage = true;
+		}
+
+		return image;
 	}
 
 	public ClientMapChunk getChunk(XZ pos)
@@ -31,5 +94,14 @@ public class ClientMapRegion
 		}
 
 		return chunks.computeIfAbsent(pos, p -> new ClientMapChunk(this, p));
+	}
+
+	public void release()
+	{
+		if (image != null)
+		{
+			image.close();
+			image = null;
+		}
 	}
 }

@@ -6,7 +6,6 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 
-import java.io.File;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,20 +14,19 @@ import java.util.function.Predicate;
 /**
  * @author LatvianModder
  */
-public class MapImageManager
+public class MapManager
 {
 	public final ClaimedChunkManagerImpl manager;
-	public File directory;
 	public final Map<DimensionType, MapDimension> dimensions;
 	public final ArrayDeque<Runnable> taskQueue;
-	public long lastUpdate;
+	public long ticks;
 
-	public MapImageManager(ClaimedChunkManagerImpl m)
+	public MapManager(ClaimedChunkManagerImpl m)
 	{
 		manager = m;
 		dimensions = new HashMap<>();
 		taskQueue = new ArrayDeque<>();
-		lastUpdate = 0L;
+		ticks = 0L;
 	}
 
 	public MapDimension getDimension(DimensionType dim)
@@ -41,8 +39,18 @@ public class MapImageManager
 		return getDimension(pos.dimension).getRegion(XZ.regionFromChunk(pos.x, pos.z)).access().getChunk(XZ.of(pos.x, pos.z));
 	}
 
-	public void queueUpdate(World world, XZ pos, Predicate<ServerPlayerEntity> playerFilter, boolean sendIsOptional)
+	public void queueUpdate(World world, XZ pos, ReloadChunkTask.Callback callback)
 	{
-		taskQueue.addLast(new ReloadChunkTask(world, pos, playerFilter, sendIsOptional));
+		taskQueue.addLast(new ReloadChunkTask(world, pos, callback));
+	}
+
+	public void queueUpdate(World world, XZ pos, ServerPlayerEntity player)
+	{
+		queueUpdate(world, pos, (task, changed) -> task.send(p -> p == player));
+	}
+
+	public void queueSend(World world, XZ pos, Predicate<ServerPlayerEntity> sendTo)
+	{
+		taskQueue.addLast(new SendChunkTask(world, pos, sendTo));
 	}
 }

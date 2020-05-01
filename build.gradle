@@ -114,21 +114,10 @@ jar {
 	}
 }
 
-task deobfJar(type: Jar) {
-	from sourceSets.main.output
-	classifier 'deobf'
-}
-
-build.dependsOn deobfJar
-
 def reobfFile = file("$buildDir/reobfJar/output.jar")
 def reobfArtifact = artifacts.add('default', reobfFile) {
 	type 'jar'
 	builtBy 'reobfJar'
-}
-
-artifacts {
-	archives deobfJar
 }
 
 if (ENV.LOCAL_MAVEN) {

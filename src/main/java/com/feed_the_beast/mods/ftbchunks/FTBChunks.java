@@ -3,6 +3,9 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
+import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
+import com.feed_the_beast.mods.ftbchunks.api.WaypointMode;
+import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
@@ -11,6 +14,9 @@ import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.impl.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
+import com.feed_the_beast.mods.ftbchunks.net.LoginData;
+import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
+import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.Gson;
@@ -30,27 +36,28 @@ import net.minecraft.item.BucketItem;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
+import net.minecraft.stats.Stats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
@@ -65,6 +72,7 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -187,7 +195,7 @@ public class FTBChunks
 	@SubscribeEvent
 	public void serverStarting(FMLServerStartingEvent event)
 	{
-		FTBChunksAPIImpl.manager.serverStarting();
+		FTBChunksAPIImpl.manager.init(event.getServer().getWorld(DimensionType.OVERWORLD));
 	}
 
 	@SubscribeEvent
@@ -237,6 +245,10 @@ public class FTBChunks
 			data.save();
 		}
 
+		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new LoginData(FTBChunksAPIImpl.manager.serverId));
+		SendGeneralData.send(player);
+		SendWaypoints.send(player);
+
 		for (XZ sp : RELATIVE_SPIRAL_POSITIONS)
 		{
 			int x = player.chunkCoordX + sp.x;
@@ -246,9 +258,10 @@ public class FTBChunks
 
 			if (chunk instanceof Chunk)
 			{
-				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(x, z), p -> p == player, false);
+				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(x, z), player);
 			}
 		}
+
 	}
 
 	private boolean isValidPlayer(@Nullable Entity entity)
@@ -448,7 +461,7 @@ public class FTBChunks
 
 				for (XZ sp : positions)
 				{
-					FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(sp.x, sp.z), p -> p == player, false);
+					FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(sp.x, sp.z), player);
 				}
 			}
 
@@ -514,12 +527,9 @@ public class FTBChunks
 	{
 		if (event.phase == TickEvent.Phase.START)
 		{
-			long now = System.currentTimeMillis();
-
-			if ((now - FTBChunksAPIImpl.manager.map.lastUpdate) >= 1000L)
+			if (FTBChunksAPIImpl.manager.map.ticks % 5L == 1L)
 			{
-				FTBChunksAPIImpl.manager.map.lastUpdate = now;
-				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), Math.max(100, FTBChunksAPIImpl.manager.map.taskQueue.size() / 4));
+				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), Math.max(50, FTBChunksAPIImpl.manager.map.taskQueue.size() / 10));
 
 				for (int i = 0; i < s; i++)
 				{
@@ -531,17 +541,26 @@ public class FTBChunks
 					}
 				}
 			}
+
+			FTBChunksAPIImpl.manager.map.ticks++;
 		}
 	}
 
+	/*
 	@SubscribeEvent
 	public void chunkLoaded(ChunkEvent.Load event)
 	{
-		if (event.getChunk() instanceof Chunk && event.getWorld() instanceof World && !event.getWorld().isRemote())
+		if (event.getChunk() instanceof Chunk && event.getWorld() instanceof ServerWorld)
 		{
-			FTBChunksAPIImpl.manager.map.queueUpdate((World) event.getWorld(), XZ.of(event.getChunk().getPos()), p -> false, true);
+			FTBChunksAPIImpl.manager.map.queueUpdate((World) event.getWorld(), XZ.of(event.getChunk().getPos()), (task, changed) -> {
+				if (changed)
+				{
+					//task.send(p -> p.dimension == chunk.region.dimension.dimension);
+				}
+			});
 		}
 	}
+	*/
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void blockPlaceLowest(BlockEvent.EntityPlaceEvent event)
@@ -562,14 +581,14 @@ public class FTBChunks
 
 						if (posSet.add(pos))
 						{
-							FTBChunksAPIImpl.manager.map.queueUpdate(player.world, pos, p -> p == player, true);
+							FTBChunksAPIImpl.manager.map.queueUpdate(player.world, pos, player);
 						}
 					}
 				}
 			}
 			else
 			{
-				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.chunkFromBlock(event.getPos().getX(), event.getPos().getZ()), p -> p == player, true);
+				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.chunkFromBlock(event.getPos()), player);
 			}
 		}
 	}
@@ -580,7 +599,30 @@ public class FTBChunks
 		if (event.getPlayer() instanceof ServerPlayerEntity)
 		{
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
-			FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.chunkFromBlock(event.getPos().getX(), event.getPos().getZ()), p -> p == player, true);
+			FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.chunkFromBlock(event.getPos()), player);
+		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public void playerDeath(LivingDeathEvent event)
+	{
+		if (event.getEntity() instanceof ServerPlayerEntity)
+		{
+			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+			ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+
+			Waypoint w = new Waypoint();
+			w.name = "Death #" + player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+			w.dimension = player.dimension;
+			w.mode = WaypointMode.ALLIES;
+			w.type = WaypointType.DEATH;
+			w.x = MathHelper.floor(player.getPosX());
+			w.y = MathHelper.floor(player.getPosY());
+			w.z = MathHelper.floor(player.getPosZ());
+			data.waypoints.add(w);
+			data.save();
+
+			SendWaypoints.send(player);
 		}
 	}
 }

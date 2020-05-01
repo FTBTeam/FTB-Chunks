@@ -1,12 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.CubeCoordinateIterator;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-
-import java.awt.*;
 
 /**
  * @author LatvianModder
@@ -49,21 +46,16 @@ public enum ColorBlend
 		return (k / j & 255) << 16 | (l / j & 255) << 8 | i1 / j & 255;
 	}
 
-	public static int addBrightness(Color4I c, float f)
+	public static int addBrightness(int c, float f)
 	{
-		float[] hsb = new float[3];
-		Color.RGBtoHSB(c.redi(), c.greeni(), c.bluei(), hsb);
-		float b = hsb[2] + f;
-		float s = hsb[1];
+		float r = ((c >> 16) & 0xFF) / 255F + f;
+		float g = ((c >> 8) & 0xFF) / 255F + f;
+		float b = ((c >> 0) & 0xFF) / 255F + f;
 
-		if (b > 1F)
-		{
-			s += b - 1F;
-		}
+		int ri = MathHelper.clamp((int) (r * 255F), 0, 255);
+		int gi = MathHelper.clamp((int) (g * 255F), 0, 255);
+		int bi = MathHelper.clamp((int) (b * 255F), 0, 255);
 
-		b = MathHelper.clamp(b, 0F, 1F);
-		s = MathHelper.clamp(s, 0F, 1F);
-
-		return Color.HSBtoRGB(hsb[0], s, b) | 0xFF000000;
+		return 0xFF000000 | (ri << 16) | (gi << 8) | bi;
 	}
 }

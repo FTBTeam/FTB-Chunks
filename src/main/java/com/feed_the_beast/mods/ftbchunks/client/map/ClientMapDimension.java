@@ -93,4 +93,9 @@ public class ClientMapDimension
 		Files.write(file, lines);
 		return file;
 	}
+
+	public ClientMapChunk getChunk(XZ pos)
+	{
+		return getRegion(XZ.regionFromChunk(pos.x, pos.z)).getChunk(pos);
+	}
 }

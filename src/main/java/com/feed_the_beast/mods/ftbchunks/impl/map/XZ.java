@@ -82,4 +82,9 @@ public class XZ
 	{
 		return new ChunkDimPos(type, x, z);
 	}
+
+	public XZ offset(int ox, int oz)
+	{
+		return of(x + ox, z + oz);
+	}
 }

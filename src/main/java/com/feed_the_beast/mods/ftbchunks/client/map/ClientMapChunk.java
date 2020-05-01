@@ -13,8 +13,6 @@ public class ClientMapChunk
 	public final ClientMapRegion region;
 	public final XZ pos;
 
-	public long relativeTimeClaimed;
-	public long relativeTimeForceLoaded;
 	public Date claimedDate;
 	public Date forceLoadedDate;
 	public int color;
@@ -25,8 +23,6 @@ public class ClientMapChunk
 		region = r;
 		pos = p;
 
-		relativeTimeClaimed = 0L;
-		relativeTimeForceLoaded = 0L;
 		claimedDate = null;
 		forceLoadedDate = null;
 		color = 0;
@@ -40,5 +36,10 @@ public class ClientMapChunk
 		int g = NativeImage.getGreen(c);
 		int b = NativeImage.getBlue(c);
 		return 0xFF000000 | (r << 16) | (g << 8) | b;
+	}
+
+	public boolean connects(ClientMapChunk chunk)
+	{
+		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && formattedOwner.equals(chunk.formattedOwner);
 	}
 }

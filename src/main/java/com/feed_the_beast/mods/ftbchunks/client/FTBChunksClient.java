@@ -97,11 +97,9 @@ public class FTBChunksClient extends FTBChunksCommon
 			BufferedImage image = ImageIO.read(new ByteArrayInputStream(packet.imageData));
 			//System.out.println(image);
 			ClientMapChunk chunk = ClientMapDimension.current.getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
-			chunk.relativeTimeClaimed = packet.relativeTimeClaimed;
-			chunk.relativeTimeForceLoaded = packet.relativeTimeForceLoaded;
 			Date now = new Date();
-			chunk.claimedDate = new Date(now.getTime() - chunk.relativeTimeClaimed);
-			chunk.forceLoadedDate = packet.forceLoaded ? new Date(now.getTime() - chunk.relativeTimeForceLoaded) : null;
+			chunk.claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
+			chunk.forceLoadedDate = packet.forceLoaded && chunk.claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
 			chunk.color = packet.color;
 			chunk.formattedOwner = packet.owner == null ? "" : packet.owner.getFormattedText();
 			boolean updateRegion = false;

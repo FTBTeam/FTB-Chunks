@@ -192,10 +192,10 @@ public class ChunkScreen extends GuiBase
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
 		PlayerEntity player = Minecraft.getInstance().player;
-		int cx = player.chunkCoordX;
-		int cz = player.chunkCoordZ;
-		int startX = cx - FTBChunks.TILE_OFFSET;
-		int startZ = cz - FTBChunks.TILE_OFFSET;
+		int pcx = player.chunkCoordX;
+		int pcz = player.chunkCoordZ;
+		int startX = pcx - FTBChunks.TILE_OFFSET;
+		int startZ = pcz - FTBChunks.TILE_OFFSET;
 
 		int r = 70;
 		int g = 70;
@@ -233,52 +233,84 @@ public class ChunkScreen extends GuiBase
 			tessellator.draw();
 
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-			boolean anyForceLoaded = false;
 
-			for (ChunkButton chunkButton : chunkButtons)
+			for (ChunkButton button : chunkButtons)
 			{
-				if (chunkButton.chunk.forceLoadedDate != null)
+				ClientMapChunk chunk = button.chunk;
+
+				if (chunk.claimedDate == null)
 				{
-					anyForceLoaded = true;
-					break;
+					continue;
+				}
+
+				int cr = (chunk.color >> 16) & 255;
+				int cg = (chunk.color >> 8) & 255;
+				int cb = (chunk.color >> 0) & 255;
+
+				int cx = button.getX();
+				int cy = button.getY();
+
+				rect(buffer, cx, cy, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE, cr, cg, cb, 100);
+
+				int borders = 15;
+
+				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(0, -1))))
+				{
+					rect(buffer, cx, cy, FTBChunks.TILE_SIZE, 1, cr, cg, cb, 255);
+				}
+
+				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(0, 1))))
+				{
+					rect(buffer, cx, cy + FTBChunks.TILE_SIZE - 1, FTBChunks.TILE_SIZE, 1, cr, cg, cb, 255);
+				}
+
+				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(-1, 0))))
+				{
+					rect(buffer, cx, cy, 1, FTBChunks.TILE_SIZE, cr, cg, cb, 255);
+				}
+
+				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(1, 0))))
+				{
+					rect(buffer, cx + FTBChunks.TILE_SIZE - 1, cy, 1, FTBChunks.TILE_SIZE, cr, cg, cb, 255);
 				}
 			}
 
 			tessellator.draw();
 
-			if (anyForceLoaded)
+			buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+
+			for (ChunkButton button : chunkButtons)
 			{
-				buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+				ClientMapChunk chunk = button.chunk;
 
-				for (ChunkButton chunkButton : chunkButtons)
+				if (chunk.forceLoadedDate == null)
 				{
-					if (chunkButton.chunk.forceLoadedDate != null)
-					{
-						int lx = sx + (FTBChunks.TILE_OFFSET + (cx - startX)) * FTBChunks.TILE_SIZE;
-						int lz = sy + (FTBChunks.TILE_OFFSET + (cz - startZ)) * FTBChunks.TILE_SIZE;
-
-						buffer.pos(lx, lz, 0).color(255, 0, 0, 100).endVertex();
-						buffer.pos(lx + FTBChunks.TILE_SIZE, lz + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
-
-						buffer.pos(lx + FTBChunks.TILE_SIZE / 2D, lz, 0).color(255, 0, 0, 100).endVertex();
-						buffer.pos(lx + FTBChunks.TILE_SIZE, lz + FTBChunks.TILE_SIZE / 2D, 0).color(255, 0, 0, 100).endVertex();
-
-						buffer.pos(lx, lz + FTBChunks.TILE_SIZE / 2D, 0).color(255, 0, 0, 100).endVertex();
-						buffer.pos(lx + FTBChunks.TILE_SIZE / 2D, lz + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
-					}
+					continue;
 				}
 
-				tessellator.draw();
+				int cx = button.getX();
+				int cy = button.getY();
+
+				buffer.pos(cx, cy, 0).color(255, 0, 0, 100).endVertex();
+				buffer.pos(cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
+
+				buffer.pos(cx + FTBChunks.TILE_SIZE / 2F, cy, 0).color(255, 0, 0, 100).endVertex();
+				buffer.pos(cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
+
+				buffer.pos(cx, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
+				buffer.pos(cx + FTBChunks.TILE_SIZE / 2F, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
 			}
+
+			tessellator.draw();
 		}
 
 		GlStateManager.enableTexture();
 		GlStateManager.lineWidth(1F);
 
-		if (cx >= startX && cz >= startZ && cx < startX + FTBChunks.MINIMAP_SIZE && cz < startZ + FTBChunks.MINIMAP_SIZE)
+		if (pcx >= startX && pcz >= startZ && pcx < startX + FTBChunks.MINIMAP_SIZE && pcz < startZ + FTBChunks.MINIMAP_SIZE)
 		{
-			double x1 = ((cx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));
-			double z1 = ((cz - startZ) * 16D + MathUtils.mod(player.getPosZ(), 16D));
+			double x1 = ((pcx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));
+			double z1 = ((pcz - startZ) * 16D + MathUtils.mod(player.getPosZ(), 16D));
 
 			RenderSystem.pushMatrix();
 			RenderSystem.translated(sx + x1 * FTBChunks.TILE_SIZE / 16D, sy + z1 * FTBChunks.TILE_SIZE / 16D, 0D);

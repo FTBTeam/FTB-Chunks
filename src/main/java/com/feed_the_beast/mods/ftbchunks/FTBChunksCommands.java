@@ -5,13 +5,11 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
+import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointMode;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import com.feed_the_beast.mods.ftbchunks.impl.map.MapDimension;
-import com.feed_the_beast.mods.ftbchunks.impl.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -108,27 +106,15 @@ public class FTBChunksCommands
 								.executes(context -> exportSvg(context.getSource()))
 						)
 				)
-				.then(Commands.literal("ally_whitelist")
-						.requires(source -> source.hasPermissionLevel(2))
-						.then(Commands.literal("true")
-								.requires(source -> source.hasPermissionLevel(2))
-								.executes(context -> allyWhitelist(context.getSource(), true))
-						)
-						.then(Commands.literal("false")
-								.requires(source -> source.hasPermissionLevel(2))
-								.executes(context -> allyWhitelist(context.getSource(), false))
-						)
-				)
-				.then(Commands.literal("refresh_entire_map")
-						.requires(source -> source.hasPermissionLevel(2))
-						.executes(context -> refreshEntireMap())
-				)
 				.then(Commands.literal("waypoints")
 						.then(Commands.literal("add")
 								.executes(context -> addWaypoint(context.getSource().asPlayer(), "Waypoint"))
 								.then(Commands.argument("name", StringArgumentType.greedyString())
 										.executes(context -> addWaypoint(context.getSource().asPlayer(), StringArgumentType.getString(context, "name")))
 								)
+						)
+						.then(Commands.literal("delete_death_points")
+								.executes(context -> deleteDeathPoints(context.getSource().asPlayer()))
 						)
 				)
 		);
@@ -312,37 +298,6 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private int allyWhitelist(CommandSource source, boolean b) throws CommandSyntaxException
-	{
-		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(source.asPlayer());
-		data.alliesWhitelist = b;
-		data.save();
-		source.sendFeedback(new StringTextComponent("Changed ally mode to " + (b ? "whitelist" : "blacklist")), false);
-		return 1;
-	}
-
-	private int refreshEntireMap()
-	{
-		for (MapDimension dimension : FTBChunksAPIImpl.manager.map.dimensions.values())
-		{
-			for (MapRegion region : dimension.regions.values())
-			{
-				region.save = true;
-
-				try
-				{
-					region.run();
-				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-				}
-			}
-		}
-
-		return 1;
-	}
-
 	private int addWaypoint(ServerPlayerEntity player, String name)
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
@@ -350,7 +305,7 @@ public class FTBChunksCommands
 		Waypoint waypoint = new Waypoint();
 		waypoint.name = name;
 		waypoint.dimension = player.dimension;
-		waypoint.mode = WaypointMode.PRIVATE;
+		waypoint.mode = PrivacyMode.PRIVATE;
 		waypoint.x = MathHelper.floor(player.getPosX());
 		waypoint.y = MathHelper.floor(player.getPosY() + 2);
 		waypoint.z = MathHelper.floor(player.getPosZ());
@@ -360,6 +315,19 @@ public class FTBChunksCommands
 		data.save();
 
 		SendWaypoints.send(player);
+		return 1;
+	}
+
+	private int deleteDeathPoints(ServerPlayerEntity player)
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+
+		if (data.waypoints.removeIf(waypoint -> waypoint.type == WaypointType.DEATH))
+		{
+			data.save();
+			SendWaypoints.send(player);
+		}
+
 		return 1;
 	}
 }

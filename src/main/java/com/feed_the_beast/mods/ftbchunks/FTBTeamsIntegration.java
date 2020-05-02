@@ -4,7 +4,6 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbteams.api.FTBTeamsAPI;
 import com.feed_the_beast.mods.ftbteams.api.Team;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nullable;
@@ -15,13 +14,13 @@ import java.util.Optional;
  */
 public class FTBTeamsIntegration
 {
-	public static boolean isTeamMember(ClaimedChunkPlayerData data, ServerPlayerEntity player)
+	public static boolean isTeamMember(GameProfile profile, GameProfile profile2)
 	{
-		Optional<Team> team1 = FTBTeamsAPI.INSTANCE.getManager().getTeam(new GameProfile(data.getUuid(), data.getName()));
+		Optional<Team> team1 = FTBTeamsAPI.INSTANCE.getManager().getTeam(profile);
 
 		if (team1.isPresent())
 		{
-			Optional<Team> team2 = FTBTeamsAPI.INSTANCE.getManager().getTeam(player);
+			Optional<Team> team2 = FTBTeamsAPI.INSTANCE.getManager().getTeam(profile2);
 			return team2.isPresent() && team1.get().equals(team2.get());
 		}
 

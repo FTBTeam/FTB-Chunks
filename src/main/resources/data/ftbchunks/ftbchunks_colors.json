@@ -7,7 +7,8 @@
 	"minecraft:gravel": "#77706D",
 	"minecraft:grass": "#549954",
 	"minecraft:grass_path": "#9E8B41",
-	"minecraft:torch": "#FFA530",
+	"minecraft:redstone_torch": "#FF0000",
+	"minecraft:redstone_wall_torch": "#FF0000",
 	"minecraft:netherrack": "#7A3535",
 	"minecraft:nether_quartz_ore": "#7A3535",
 	"minecraft:poppy": "#993333",
@@ -41,5 +42,8 @@
 	"minecraft:magma_block": "#BE6D40",
 	"minecraft:glowstone": "#F7E5BA",
 	"minecraft:red_mushroom": "#6A0E0A",
-	"minecraft:brown_mushroom": "#55341E"
+	"minecraft:brown_mushroom": "#55341E",
+	"minecraft:ice": "#91B6F7",
+	"minecraft:packed_ice": "#91B6F7",
+	"minecraft:blue_ice": "#91B6F7"
 }

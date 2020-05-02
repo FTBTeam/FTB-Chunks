@@ -90,7 +90,7 @@ public class SendPlayerListPacket
 	public static void send(ServerPlayerEntity player)
 	{
 		ClaimedChunkPlayerDataImpl self = FTBChunksAPIImpl.manager.getData(player);
-		int allyMode = FTBChunksConfig.allyMode == AllyMode.FORCED_ALL ? 2 : FTBChunksConfig.allyMode == AllyMode.FORCED_NONE ? 3 : self.alliesWhitelist ? 0 : 1;
+		int allyMode = FTBChunksConfig.allyMode == AllyMode.FORCED_ALL ? 2 : FTBChunksConfig.allyMode == AllyMode.FORCED_NONE ? 3 : 0;
 
 		List<NetPlayer> players = new ArrayList<>();
 		ClaimedChunkPlayerDataImpl server = FTBChunksAPIImpl.manager.getServerData();

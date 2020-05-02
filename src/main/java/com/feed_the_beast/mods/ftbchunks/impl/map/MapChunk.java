@@ -1,8 +1,13 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.RedstoneTorchBlock;
+import net.minecraft.block.TallGrassBlock;
+import net.minecraft.block.TorchBlock;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.chunk.IChunk;
 
 import javax.annotation.Nullable;
@@ -109,12 +114,28 @@ public class MapChunk
 				}
 			}
 
-			if (state.getBlock() != Blocks.GRASS && state.getBlock() != Blocks.TALL_GRASS && !state.getBlock().isAir(state, chunk.getWorldForge(), currentBlockPos))
+			if (!skipBlock(state, chunk.getWorldForge(), currentBlockPos))
 			{
 				return by;
 			}
 		}
 
 		return -1;
+	}
+
+	public static boolean skipBlock(BlockState state, IWorld world, BlockPos pos)
+	{
+		Block b = state.getBlock();
+
+		if (b instanceof TallGrassBlock)
+		{
+			return true;
+		}
+		else if (b instanceof TorchBlock)
+		{
+			return !(b instanceof RedstoneTorchBlock);
+		}
+
+		return b.isAir(state, world, pos);
 	}
 }

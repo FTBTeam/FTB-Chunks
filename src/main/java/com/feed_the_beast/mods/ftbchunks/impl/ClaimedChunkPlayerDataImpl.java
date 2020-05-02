@@ -11,8 +11,8 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkEvent;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
+import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointMode;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
@@ -52,8 +52,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public int color;
 	private final Map<String, ClaimedChunkGroupImpl> groups;
 	public final Set<UUID> allies;
-	public boolean alliesWhitelist;
+	public PrivacyMode blockBreakMode;
+	public PrivacyMode blockInteractMode;
 	public final List<Waypoint> waypoints;
+	public PrivacyMode minimapMode;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -67,8 +69,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		color = 0;
 		groups = new HashMap<>();
 		allies = new HashSet<>();
-		alliesWhitelist = true;
+		blockBreakMode = PrivacyMode.ALLIES;
+		blockInteractMode = PrivacyMode.ALLIES;
 		waypoints = new ArrayList<>();
+		minimapMode = PrivacyMode.ALLIES;
 	}
 
 	@Override
@@ -319,11 +323,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 	public boolean isTeamMember(@Nullable Entity entity)
 	{
-		return entity instanceof ServerPlayerEntity && FTBChunks.teamsMod && FTBTeamsIntegration.isTeamMember(this, (ServerPlayerEntity) entity);
+		return entity instanceof ServerPlayerEntity && FTBChunks.teamsMod && FTBTeamsIntegration.isTeamMember(getProfile(), ((ServerPlayerEntity) entity).getGameProfile());
 	}
 
 	@Override
-	public boolean isAlly(ServerPlayerEntity player)
+	public boolean isAlly(ServerPlayerEntity p)
 	{
 		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL)
 		{
@@ -333,8 +337,38 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return false;
 		}
+		else if (getUuid().equals(p.getUniqueID()))
+		{
+			return true;
+		}
+		else if (allies.contains(p.getUniqueID()))
+		{
+			return true;
+		}
+		else if (isTeamMember(p))
+		{
+			return true;
+		}
 
-		return getUuid().equals(player.getUniqueID()) || getName().equals(player.getGameProfile().getName()) || alliesWhitelist == allies.contains(player.getUniqueID()) || isTeamMember(player);
+		return getName().equals(p.getGameProfile().getName());
+	}
+
+	public boolean canUse(ServerPlayerEntity p, PrivacyMode mode)
+	{
+		if (mode == PrivacyMode.PUBLIC)
+		{
+			return true;
+		}
+		else if (p.getServer().isSinglePlayer())
+		{
+			return true;
+		}
+		else if (mode == PrivacyMode.ALLIES)
+		{
+			return isAlly(p);
+		}
+
+		return false;
 	}
 
 	public JsonObject toJson()
@@ -361,7 +395,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 
 		json.add("allies", alliesJson);
-		json.addProperty("allies_whitelist", alliesWhitelist);
+
+		json.addProperty("block_break_mode", blockBreakMode.name());
+		json.addProperty("block_interact_mode", blockInteractMode.name());
+		json.addProperty("minimap_mode", minimapMode.name());
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -446,14 +483,19 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			}
 		}
 
-		if (json.has("allies_whitelist"))
+		if (json.has("block_break_mode"))
 		{
-			alliesWhitelist = json.get("allies_whitelist").getAsBoolean();
+			blockBreakMode = PrivacyMode.get(json.get("block_break_mode").getAsString());
 		}
-		else
+
+		if (json.has("block_interact_mode"))
 		{
-			alliesWhitelist = true;
-			save();
+			blockInteractMode = PrivacyMode.get(json.get("block_interact_mode").getAsString());
+		}
+
+		if (json.has("minimap_mode"))
+		{
+			minimapMode = PrivacyMode.get(json.get("minimap_mode").getAsString());
 		}
 
 		if (json.has("chunks"))
@@ -522,7 +564,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 				w.y = o.get("y").getAsInt();
 				w.z = o.get("z").getAsInt();
 				w.color = o.get("color").getAsInt();
-				w.mode = WaypointMode.valueOf(o.get("mode").getAsString().toUpperCase());
+				w.mode = PrivacyMode.valueOf(o.get("mode").getAsString().toUpperCase());
 				w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
 				waypoints.add(w);
 			}

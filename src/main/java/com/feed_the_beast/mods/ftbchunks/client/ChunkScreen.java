@@ -13,7 +13,6 @@ import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
@@ -32,12 +31,10 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Util;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -151,7 +148,8 @@ public class ChunkScreen extends GuiBase
 
 		addAll(chunkButtons);
 		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket(player.chunkCoordX - FTBChunks.TILE_OFFSET, player.chunkCoordZ - FTBChunks.TILE_OFFSET, player.chunkCoordX + FTBChunks.TILE_OFFSET, player.chunkCoordZ + FTBChunks.TILE_OFFSET));
-		add(new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())).setPosAndSize(2, 2, 16, 16));
+		add(new SimpleButton(this, I18n.format("ftbchunks.gui.large_map"), GuiIcons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
+		add(new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())).setPosAndSize(1, 19, 16, 16));
 	}
 
 	@Override
@@ -170,17 +168,10 @@ public class ChunkScreen extends GuiBase
 	@Override
 	public boolean keyPressed(Key key)
 	{
-		if (key.is(GLFW.GLFW_KEY_X))
+		if (key.is(GLFW.GLFW_KEY_F))
 		{
-			try
-			{
-				Path path = ClientMapDimension.current.exportHTML();
-				Util.getOSType().openURI(path.toUri());
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace();
-			}
+			new LargeMapScreen().openGui();
+			return true;
 		}
 
 		return super.keyPressed(key);
@@ -191,11 +182,6 @@ public class ChunkScreen extends GuiBase
 	{
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
-		PlayerEntity player = Minecraft.getInstance().player;
-		int pcx = player.chunkCoordX;
-		int pcz = player.chunkCoordZ;
-		int startX = pcx - FTBChunks.TILE_OFFSET;
-		int startZ = pcz - FTBChunks.TILE_OFFSET;
 
 		int r = 70;
 		int g = 70;
@@ -307,29 +293,6 @@ public class ChunkScreen extends GuiBase
 		GlStateManager.enableTexture();
 		GlStateManager.lineWidth(1F);
 
-		if (pcx >= startX && pcz >= startZ && pcx < startX + FTBChunks.MINIMAP_SIZE && pcz < startZ + FTBChunks.MINIMAP_SIZE)
-		{
-			double x1 = ((pcx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));
-			double z1 = ((pcz - startZ) * 16D + MathUtils.mod(player.getPosZ(), 16D));
-
-			RenderSystem.pushMatrix();
-			RenderSystem.translated(sx + x1 * FTBChunks.TILE_SIZE / 16D, sy + z1 * FTBChunks.TILE_SIZE / 16D, 0D);
-			RenderSystem.rotatef(player.rotationYaw + 180F, 0F, 0F, 1F);
-			RenderSystem.color4f(1F, 1F, 1F, 1F);
-
-			Minecraft.getInstance().getTextureManager().bindTexture(FTBChunksClient.MAP_ICONS);
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-			buffer.pos(-8.5, -8, 0).color(255, 255, 255, 100).tex(0F / 16F, 0F / 16F).endVertex();
-			buffer.pos(-8.5, 8, 0).color(255, 255, 255, 100).tex(0F / 16F, 1F / 16F).endVertex();
-			buffer.pos(7.5, 8, 0).color(255, 255, 255, 100).tex(1F / 16F, 1F / 16F).endVertex();
-			buffer.pos(7.5, -8, 0).color(255, 255, 255, 100).tex(1F / 16F, 0F / 16F).endVertex();
-			tessellator.draw();
-
-			// https://minotar.net/avatar/<short uuid>/16
-
-			RenderSystem.popMatrix();
-		}
-
 		SendGeneralData d = FTBChunksClient.generalData;
 
 		if (d != null)
@@ -339,7 +302,6 @@ public class ChunkScreen extends GuiBase
 			list.add((d.claimed > d.maxClaimed ? TextFormatting.RED : d.claimed == d.maxClaimed ? TextFormatting.YELLOW : TextFormatting.GREEN) + "" + d.claimed + " / " + d.maxClaimed);
 			list.add(I18n.format("ftbchunks.gui.force_loaded"));
 			list.add((d.loaded > d.maxLoaded ? TextFormatting.RED : d.loaded == d.maxLoaded ? TextFormatting.YELLOW : TextFormatting.GREEN) + "" + d.loaded + " / " + d.maxLoaded);
-			list.add("Large map WIP! Press X");
 
 			for (int i = 0; i < list.size(); i++)
 			{

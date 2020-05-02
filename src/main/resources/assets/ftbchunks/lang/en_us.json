@@ -7,5 +7,9 @@
 	"ftbchunks.gui.force_loaded": "Force loaded",
 	"ftbchunks.gui.allies": "Allies",
 	"ftbchunks.gui.ally_whitelist": "Ally Whitelist",
-	"ftbchunks.gui.ally_blacklist": "Ally Blacklist"
+	"ftbchunks.gui.ally_blacklist": "Ally Blacklist",
+	"ftbchunks.gui.large_map": "Large Map",
+	"ftbchunks.gui.claimed_chunks": "Claimed Chunks",
+	"ftbchunks.gui.waypoints": "Waypoints",
+	"ftbchunks.gui.settings": "Settings"
 }

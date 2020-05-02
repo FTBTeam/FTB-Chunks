@@ -46,7 +46,7 @@ public class MapManager
 
 	public void queueUpdate(World world, XZ pos, ServerPlayerEntity player)
 	{
-		queueUpdate(world, pos, (task, changed) -> task.send(p -> p == player));
+		queueUpdate(world, pos, (task, changed) -> task.send(new CanSeeMap(player)));
 	}
 
 	public void queueSend(World world, XZ pos, Predicate<ServerPlayerEntity> sendTo)

@@ -1,8 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointMode;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
@@ -25,6 +25,7 @@ public class SendWaypoints
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 		List<Waypoint> waypoints = new ArrayList<>(data.waypoints);
+		// TODO: Dynamic waypoints like spawn, homes, etc.
 
 		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendWaypoints(waypoints));
 	}
@@ -50,7 +51,7 @@ public class SendWaypoints
 			w.y = buf.readVarInt();
 			w.z = buf.readVarInt();
 			w.color = buf.readInt();
-			w.mode = WaypointMode.VALUES[buf.readByte()];
+			w.mode = PrivacyMode.VALUES[buf.readByte()];
 			w.type = WaypointType.VALUES[buf.readByte()];
 			waypoints.add(w);
 		}

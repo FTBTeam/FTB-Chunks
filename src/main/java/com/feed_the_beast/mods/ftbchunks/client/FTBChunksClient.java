@@ -67,7 +67,31 @@ public class FTBChunksClient extends FTBChunksCommon
 
 	public static void openGui()
 	{
-		new ChunkScreen().openGui();
+		new LargeMapScreen().openGui();
+	}
+
+	public static void saveAllRegions()
+	{
+		for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
+		{
+			for (ClientMapRegion region : dimension.regions.values())
+			{
+				if (region.saveImage)
+				{
+					EXECUTOR_SERVICE.submit(() -> {
+						if (Files.notExists(dimension.directory))
+						{
+							Files.createDirectories(dimension.directory);
+						}
+
+						region.getImage().write(dimension.directory.resolve(region.pos.x + "," + region.pos.z + ",map.png"));
+						return null;
+					});
+
+					region.saveImage = false;
+				}
+			}
+		}
 	}
 
 	@Override
@@ -201,27 +225,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		if (nextRegionSave == 0L || now >= nextRegionSave)
 		{
 			nextRegionSave = now + 3000L;
-
-			for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
-			{
-				for (ClientMapRegion region : dimension.regions.values())
-				{
-					if (region.saveImage)
-					{
-						EXECUTOR_SERVICE.submit(() -> {
-							if (Files.notExists(dimension.directory))
-							{
-								Files.createDirectories(dimension.directory);
-							}
-
-							region.getImage().write(dimension.directory.resolve(region.pos.x + "," + region.pos.z + ",map.png"));
-							return null;
-						});
-
-						region.saveImage = false;
-					}
-				}
-			}
+			saveAllRegions();
 		}
 
 		if (minimapTextureId == -1)
@@ -380,15 +384,4 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 	}
-
-	/*
-	@SubscribeEvent
-	public void chunkChange(EntityEvent.EnteringChunk event)
-	{
-		if (event.getEntity() instanceof ClientPlayerEntity && (event.getOldChunkX() != event.getNewChunkX() || event.getOldChunkZ() != event.getNewChunkZ()))
-		{
-			updateMinimap = true;
-		}
-	}
-	 */
 }

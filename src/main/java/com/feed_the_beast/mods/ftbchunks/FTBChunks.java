@@ -3,8 +3,8 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
+import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointMode;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
@@ -614,7 +614,7 @@ public class FTBChunks
 			Waypoint w = new Waypoint();
 			w.name = "Death #" + player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
 			w.dimension = player.dimension;
-			w.mode = WaypointMode.ALLIES;
+			w.mode = PrivacyMode.ALLIES;
 			w.type = WaypointType.DEATH;
 			w.x = MathHelper.floor(player.getPosX());
 			w.y = MathHelper.floor(player.getPosY());

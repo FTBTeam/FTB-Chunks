@@ -45,5 +45,6 @@
 	"minecraft:brown_mushroom": "#55341E",
 	"minecraft:ice": "#91B6F7",
 	"minecraft:packed_ice": "#91B6F7",
-	"minecraft:blue_ice": "#91B6F7"
+	"minecraft:blue_ice": "#91B6F7",
+	"#minecraft:flower_pots": "#683A2D"
 }

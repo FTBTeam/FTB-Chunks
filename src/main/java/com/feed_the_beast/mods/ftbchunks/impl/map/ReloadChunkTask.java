@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 /**
  * @author LatvianModder
  */
-public class ReloadChunkTask implements Runnable
+public class ReloadChunkTask implements MapTask
 {
 	public interface Callback
 	{

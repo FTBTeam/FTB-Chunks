@@ -44,7 +44,6 @@ import java.util.UUID;
 public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 {
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
-	public static final Gson GSON_PRETTY = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 
 	public final MinecraftServer server;
 	public UUID serverId;
@@ -151,7 +150,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 			{
 				try (Writer writer = Files.newBufferedWriter(data.file))
 				{
-					ClaimedChunkManagerImpl.GSON_PRETTY.toJson(data.toJson(), writer);
+					ClaimedChunkManagerImpl.GSON.toJson(data.toJson(), writer);
 				}
 				catch (Exception ex)
 				{
@@ -179,7 +178,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json")))
 			{
-				ClaimedChunkManagerImpl.GSON_PRETTY.toJson(array, writer);
+				ClaimedChunkManagerImpl.GSON.toJson(array, writer);
 			}
 			catch (Exception ex)
 			{

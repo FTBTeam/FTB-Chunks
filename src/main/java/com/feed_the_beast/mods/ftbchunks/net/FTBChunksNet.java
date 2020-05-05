@@ -23,14 +23,17 @@ public class FTBChunksNet
 				.simpleChannel();
 
 		MAIN.registerMessage(1, RequestMapDataPacket.class, RequestMapDataPacket::write, RequestMapDataPacket::new, RequestMapDataPacket::handle);
-		MAIN.registerMessage(2, RequestMapDataPacket.class, RequestMapDataPacket::write, RequestMapDataPacket::new, RequestMapDataPacket::handle);
-		MAIN.registerMessage(3, LoginData.class, LoginData::write, LoginData::new, LoginData::handle);
+		//MAIN.registerMessage(2, RequestMapDataPacket.class, RequestMapDataPacket::write, RequestMapDataPacket::new, RequestMapDataPacket::handle);
+		MAIN.registerMessage(3, LoginDataPacket.class, LoginDataPacket::write, LoginDataPacket::new, LoginDataPacket::handle);
 		MAIN.registerMessage(4, RequestChunkChangePacket.class, RequestChunkChangePacket::write, RequestChunkChangePacket::new, RequestChunkChangePacket::handle);
 		MAIN.registerMessage(5, RequestPlayerListPacket.class, RequestPlayerListPacket::write, RequestPlayerListPacket::new, RequestPlayerListPacket::handle);
 		MAIN.registerMessage(6, SendPlayerListPacket.class, SendPlayerListPacket::write, SendPlayerListPacket::new, SendPlayerListPacket::handle);
 		MAIN.registerMessage(7, RequestAllyStatusChangePacket.class, RequestAllyStatusChangePacket::write, RequestAllyStatusChangePacket::new, RequestAllyStatusChangePacket::handle);
-		MAIN.registerMessage(8, SendChunk.class, SendChunk::write, SendChunk::new, SendChunk::handle);
-		MAIN.registerMessage(9, SendGeneralData.class, SendGeneralData::write, SendGeneralData::new, SendGeneralData::handle);
-		MAIN.registerMessage(10, SendWaypoints.class, SendWaypoints::write, SendWaypoints::new, SendWaypoints::handle);
+		MAIN.registerMessage(8, SendChunkPacket.class, SendChunkPacket::write, SendChunkPacket::new, SendChunkPacket::handle);
+		MAIN.registerMessage(9, SendGeneralDataPacket.class, SendGeneralDataPacket::write, SendGeneralDataPacket::new, SendGeneralDataPacket::handle);
+		MAIN.registerMessage(10, SendWaypointsPacket.class, SendWaypointsPacket::write, SendWaypointsPacket::new, SendWaypointsPacket::handle);
+		MAIN.registerMessage(11, DeleteWaypointPacket.class, DeleteWaypointPacket::write, DeleteWaypointPacket::new, DeleteWaypointPacket::handle);
+		MAIN.registerMessage(12, ChangeWaypointColorPacket.class, ChangeWaypointColorPacket::write, ChangeWaypointColorPacket::new, ChangeWaypointColorPacket::handle);
+		MAIN.registerMessage(13, ChangeWaypointNamePacket.class, ChangeWaypointNamePacket::write, ChangeWaypointNamePacket::new, ChangeWaypointNamePacket::handle);
 	}
 }

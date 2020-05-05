@@ -4,7 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
-import com.feed_the_beast.mods.ftbchunks.net.SendChunk;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -22,7 +22,7 @@ import java.util.function.Predicate;
 /**
  * @author LatvianModder
  */
-public class SendChunkTask implements Runnable
+public class SendChunkTask implements MapTask
 {
 	private final World world;
 	private final XZ chunkPosition;
@@ -113,7 +113,8 @@ public class SendChunkTask implements Runnable
 			e.printStackTrace();
 		}
 
-		SendChunk packet = new SendChunk();
+		SendChunkPacket packet = new SendChunkPacket();
+		packet.dimension = world.dimension.getType();
 		packet.x = chunkPosition.x;
 		packet.z = chunkPosition.z;
 		packet.imageData = baos.toByteArray();

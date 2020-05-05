@@ -9,7 +9,7 @@ import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestChunkChangePacket;
 import com.feed_the_beast.mods.ftbchunks.net.RequestMapDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
-import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
+import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
@@ -293,7 +293,7 @@ public class ChunkScreen extends GuiBase
 		GlStateManager.enableTexture();
 		GlStateManager.lineWidth(1F);
 
-		SendGeneralData d = FTBChunksClient.generalData;
+		SendGeneralDataPacket d = FTBChunksClient.generalData;
 
 		if (d != null)
 		{

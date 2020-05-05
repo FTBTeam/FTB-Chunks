@@ -10,16 +10,16 @@ import java.util.function.Supplier;
 /**
  * @author LatvianModder
  */
-public class LoginData
+public class LoginDataPacket
 {
 	public final UUID serverId;
 
-	public LoginData(UUID id)
+	public LoginDataPacket(UUID id)
 	{
 		serverId = id;
 	}
 
-	LoginData(PacketBuffer buf)
+	LoginDataPacket(PacketBuffer buf)
 	{
 		serverId = new UUID(buf.readLong(), buf.readLong());
 	}

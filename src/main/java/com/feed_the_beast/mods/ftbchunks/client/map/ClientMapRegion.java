@@ -104,4 +104,14 @@ public class ClientMapRegion
 			image = null;
 		}
 	}
+
+	public void saveNow() throws Exception
+	{
+		if (Files.notExists(dimension.directory))
+		{
+			Files.createDirectories(dimension.directory);
+		}
+
+		getImage().write(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png"));
+	}
 }

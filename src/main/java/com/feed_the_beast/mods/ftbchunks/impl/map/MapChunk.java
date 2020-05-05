@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
+import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -53,7 +54,7 @@ public class MapChunk
 		if (height[i] != b)
 		{
 			height[i] = b;
-			region.save = true;
+			region.save();
 			return true;
 		}
 
@@ -81,7 +82,7 @@ public class MapChunk
 			red[i] = r;
 			green[i] = g;
 			blue[i] = b;
-			region.save = true;
+			region.save();
 			return true;
 		}
 
@@ -128,6 +129,10 @@ public class MapChunk
 		Block b = state.getBlock();
 
 		if (b instanceof TallGrassBlock)
+		{
+			return true;
+		}
+		else if (b instanceof AbstractButtonBlock)
 		{
 			return true;
 		}

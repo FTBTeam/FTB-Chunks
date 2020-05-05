@@ -1,10 +1,13 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
+import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 
 import java.nio.file.Files;
@@ -55,8 +58,8 @@ public class RegionMapPanel extends Panel
 
 		regionMinX -= 1;
 		regionMinZ -= 1;
-		regionMaxX += 1;
-		regionMaxZ += 1;
+		regionMaxX += 2;
+		regionMaxZ += 2;
 	}
 
 	public void scrollTo(double x, double y)
@@ -80,7 +83,7 @@ public class RegionMapPanel extends Panel
 	@Override
 	public void addWidgets()
 	{
-		FTBChunksClient.saveAllRegions();
+		FTBChunksClient.saveAllRegions(false);
 
 		try
 		{
@@ -98,6 +101,16 @@ public class RegionMapPanel extends Panel
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
+		}
+
+		for (Waypoint waypoint : largeMap.dimension.waypoints)
+		{
+			add(new WaypointButton(this, waypoint));
+		}
+
+		for (AbstractClientPlayerEntity player : Minecraft.getInstance().world.getPlayers())
+		{
+			add(new PlayerButton(this, player));
 		}
 
 		alignWidgets();
@@ -125,9 +138,29 @@ public class RegionMapPanel extends Panel
 				double qw = 1D;
 				double qh = 1D;
 
-				double x = (qx - regionMinX - qw / 2D) * z;
-				double y = (qy - regionMinZ - qh / 2D) * z;
+				double x = (qx - regionMinX) * z;
+				double y = (qy - regionMinZ) * z;
 				w.setPosAndSize((int) x, (int) y, (int) (z * qw), (int) (z * qh));
+			}
+			else if (w instanceof WaypointButton)
+			{
+				double qx = ((WaypointButton) w).waypoint.x / 512D;
+				double qy = ((WaypointButton) w).waypoint.z / 512D;
+				int s = Math.max(4, z / 128);
+
+				double x = (qx - regionMinX) * z - s / 2D;
+				double y = (qy - regionMinZ) * z - s / 2D;
+				w.setPosAndSize((int) x, (int) y, s, s);
+			}
+			else if (w instanceof PlayerButton)
+			{
+				double qx = ((PlayerButton) w).playerX / 512D;
+				double qy = ((PlayerButton) w).playerZ / 512D;
+				int s = Math.max(4, z / 128);
+
+				double x = (qx - regionMinX) * z - s / 2D;
+				double y = (qy - regionMinZ) * z - s / 2D;
+				w.setPosAndSize((int) x, (int) y, s, s);
 			}
 		}
 
@@ -147,8 +180,8 @@ public class RegionMapPanel extends Panel
 
 		regionX = (parent.getMouseX() - px) / (double) largeMap.scrollWidth * dx + regionMinX;
 		regionZ = (parent.getMouseY() - py) / (double) largeMap.scrollHeight * dy + regionMinZ;
-		blockX = MathHelper.floor((regionX + 0.5D) * 512D);
-		blockZ = MathHelper.floor((regionZ + 0.5D) * 512D);
+		blockX = MathHelper.floor(regionX * 512D);
+		blockZ = MathHelper.floor(regionZ * 512D);
 
 		/*
 		double x1 = ((pcx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));

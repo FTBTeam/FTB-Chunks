@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -22,7 +23,7 @@ public class FTBChunksConfig
 
 	public static void init()
 	{
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(FTBChunksConfig::reload);
+		FMLJavaModLoadingContext.get().getModEventBus().register(FTBChunksConfig.class);
 
 		server = new ForgeConfigSpec.Builder().configure(ServerConfig::new);
 
@@ -30,6 +31,7 @@ public class FTBChunksConfig
 		modLoadingContext.registerConfig(ModConfig.Type.SERVER, server.getRight());
 	}
 
+	@SubscribeEvent
 	public static void reload(ModConfig.ModConfigEvent event)
 	{
 		ModConfig config = event.getConfig();

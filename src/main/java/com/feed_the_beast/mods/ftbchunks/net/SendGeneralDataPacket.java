@@ -14,11 +14,11 @@ import java.util.function.Supplier;
 /**
  * @author LatvianModder
  */
-public class SendGeneralData
+public class SendGeneralDataPacket
 {
 	public static void send(ServerPlayerEntity player)
 	{
-		SendGeneralData data = new SendGeneralData();
+		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
 		data.maxClaimed = FTBChunksConfig.getMaxClaimedChunks(player);
 		data.maxLoaded = FTBChunksConfig.getMaxForceLoadedChunks(player);
@@ -41,11 +41,11 @@ public class SendGeneralData
 	public int maxClaimed;
 	public int maxLoaded;
 
-	public SendGeneralData()
+	public SendGeneralDataPacket()
 	{
 	}
 
-	SendGeneralData(PacketBuffer buf)
+	SendGeneralDataPacket(PacketBuffer buf)
 	{
 		claimed = buf.readVarInt();
 		loaded = buf.readVarInt();

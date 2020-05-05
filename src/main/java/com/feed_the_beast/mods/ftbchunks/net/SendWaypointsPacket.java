@@ -14,30 +14,31 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
  * @author LatvianModder
  */
-public class SendWaypoints
+public class SendWaypointsPacket
 {
 	public static void send(ServerPlayerEntity player)
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
-		List<Waypoint> waypoints = new ArrayList<>(data.waypoints);
+		List<Waypoint> waypoints = new ArrayList<>(data.waypoints.values());
 		// TODO: Dynamic waypoints like spawn, homes, etc.
 
-		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendWaypoints(waypoints));
+		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendWaypointsPacket(waypoints));
 	}
 
 	public List<Waypoint> waypoints;
 
-	public SendWaypoints(List<Waypoint> w)
+	public SendWaypointsPacket(List<Waypoint> w)
 	{
 		waypoints = w;
 	}
 
-	SendWaypoints(PacketBuffer buf)
+	SendWaypointsPacket(PacketBuffer buf)
 	{
 		int s = buf.readVarInt();
 		waypoints = new ArrayList<>(s);
@@ -45,8 +46,9 @@ public class SendWaypoints
 		for (int i = 0; i < s; i++)
 		{
 			Waypoint w = new Waypoint();
+			w.id = new UUID(buf.readLong(), buf.readLong());
 			w.name = buf.readString(100);
-			w.dimension = DimensionType.byName(buf.readResourceLocation());
+			w.dimension = DimensionType.getById(buf.readVarInt());
 			w.x = buf.readVarInt();
 			w.y = buf.readVarInt();
 			w.z = buf.readVarInt();
@@ -63,8 +65,10 @@ public class SendWaypoints
 
 		for (Waypoint w : waypoints)
 		{
+			buf.writeLong(w.id.getMostSignificantBits());
+			buf.writeLong(w.id.getLeastSignificantBits());
 			buf.writeString(w.name, 100);
-			buf.writeResourceLocation(DimensionType.getKey(w.dimension));
+			buf.writeVarInt(w.dimension.getId());
 			buf.writeVarInt(w.x);
 			buf.writeVarInt(w.y);
 			buf.writeVarInt(w.z);

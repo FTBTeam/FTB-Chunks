@@ -1,10 +1,10 @@
 package com.feed_the_beast.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbchunks.net.LoginData;
-import com.feed_the_beast.mods.ftbchunks.net.SendChunk;
-import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
+import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
+import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 
 /**
  * @author LatvianModder
@@ -15,19 +15,19 @@ public class FTBChunksCommon
 	{
 	}
 
-	public void login(LoginData loginData)
+	public void login(LoginDataPacket loginData)
 	{
 	}
 
-	public void updateGeneralData(SendGeneralData packet)
+	public void updateGeneralData(SendGeneralDataPacket packet)
 	{
 	}
 
-	public void updateChunk(SendChunk packet)
+	public void updateChunk(SendChunkPacket packet)
 	{
 	}
 
-	public void updateWaypoints(SendWaypoints packet)
+	public void updateWaypoints(SendWaypointsPacket packet)
 	{
 	}
 

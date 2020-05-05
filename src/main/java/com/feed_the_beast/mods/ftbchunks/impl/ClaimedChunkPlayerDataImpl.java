@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +55,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public final Set<UUID> allies;
 	public PrivacyMode blockBreakMode;
 	public PrivacyMode blockInteractMode;
-	public final List<Waypoint> waypoints;
+	public final Map<UUID, Waypoint> waypoints;
 	public PrivacyMode minimapMode;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
@@ -71,7 +72,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		allies = new HashSet<>();
 		blockBreakMode = PrivacyMode.ALLIES;
 		blockInteractMode = PrivacyMode.ALLIES;
-		waypoints = new ArrayList<>();
+		waypoints = new LinkedHashMap<>();
 		minimapMode = PrivacyMode.ALLIES;
 	}
 
@@ -396,9 +397,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		json.add("allies", alliesJson);
 
-		json.addProperty("block_break_mode", blockBreakMode.name());
-		json.addProperty("block_interact_mode", blockInteractMode.name());
-		json.addProperty("minimap_mode", minimapMode.name());
+		json.addProperty("block_break_mode", blockBreakMode.name);
+		json.addProperty("block_interact_mode", blockInteractMode.name);
+		json.addProperty("minimap_mode", minimapMode.name);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -435,18 +436,19 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		JsonArray waypointArray = new JsonArray();
 
-		for (Waypoint waypoint : waypoints)
+		for (Waypoint w : waypoints.values())
 		{
-			JsonObject waypointJson = new JsonObject();
-			waypointJson.addProperty("name", waypoint.name);
-			waypointJson.addProperty("dimension", DimensionType.getKey(waypoint.dimension).toString());
-			waypointJson.addProperty("x", waypoint.x);
-			waypointJson.addProperty("y", waypoint.y);
-			waypointJson.addProperty("z", waypoint.z);
-			waypointJson.addProperty("color", waypoint.color);
-			waypointJson.addProperty("mode", waypoint.mode.name().toLowerCase());
-			waypointJson.addProperty("type", waypoint.type.name().toLowerCase());
-			waypointArray.add(waypointJson);
+			JsonObject o = new JsonObject();
+			o.addProperty("id", UUIDTypeAdapter.fromUUID(w.id));
+			o.addProperty("name", w.name);
+			o.addProperty("dimension", DimensionType.getKey(w.dimension).toString());
+			o.addProperty("x", w.x);
+			o.addProperty("y", w.y);
+			o.addProperty("z", w.z);
+			o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
+			o.addProperty("mode", w.mode.name);
+			o.addProperty("type", w.type.name().toLowerCase());
+			waypointArray.add(o);
 		}
 
 		json.add("waypoints", waypointArray);
@@ -559,14 +561,32 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					continue;
 				}
 
+				if (o.has("id"))
+				{
+					w.id = UUIDTypeAdapter.fromString(o.get("id").getAsString());
+				}
+				else
+				{
+					save();
+				}
+
 				w.name = o.get("name").getAsString();
 				w.x = o.get("x").getAsInt();
 				w.y = o.get("y").getAsInt();
 				w.z = o.get("z").getAsInt();
-				w.color = o.get("color").getAsInt();
-				w.mode = PrivacyMode.valueOf(o.get("mode").getAsString().toUpperCase());
+				w.color = 0;
+
+				try
+				{
+					w.color = Integer.decode(o.get("color").getAsString());
+				}
+				catch (Exception ex)
+				{
+				}
+
+				w.mode = PrivacyMode.get(o.get("mode").getAsString());
 				w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
-				waypoints.add(w);
+				waypoints.put(w.id, w);
 			}
 		}
 		else

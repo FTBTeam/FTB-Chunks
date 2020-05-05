@@ -12,11 +12,12 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.impl.map.MapRegion;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
-import com.feed_the_beast.mods.ftbchunks.net.LoginData;
-import com.feed_the_beast.mods.ftbchunks.net.SendGeneralData;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
+import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.Gson;
@@ -37,15 +38,14 @@ import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
@@ -179,12 +179,33 @@ public class FTBChunks
 				{
 					if (entry.getValue().isJsonPrimitive())
 					{
-						Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
 						Color4I color = Color4I.fromJson(entry.getValue());
 
-						if (block != Blocks.AIR && !color.isEmpty())
+						if (color.isEmpty())
 						{
-							FTBChunksAPIImpl.COLOR_MAP.put(block, color);
+							continue;
+						}
+
+						if (entry.getKey().startsWith("#"))
+						{
+							Tag<Block> tag = BlockTags.getCollection().get(new ResourceLocation(entry.getKey().substring(1)));
+
+							if (tag != null)
+							{
+								for (Block block : tag.getAllElements())
+								{
+									FTBChunksAPIImpl.COLOR_MAP.put(block, color);
+								}
+							}
+						}
+						else
+						{
+							Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
+
+							if (block != Blocks.AIR)
+							{
+								FTBChunksAPIImpl.COLOR_MAP.put(block, color);
+							}
 						}
 					}
 				}
@@ -222,13 +243,7 @@ public class FTBChunks
 
 			if (FTBChunksAPIImpl.manager.map != null)
 			{
-				for (MapRegion region : FTBChunksAPIImpl.manager.map.getDimension(event.getWorld().getDimension().getType()).regions.values())
-				{
-					if (region.save)
-					{
-						region.run();
-					}
-				}
+				FTBChunksAPIImpl.manager.map.getDimension(event.getWorld().getDimension().getType()).regions.values().removeIf(MapRegion::saveNow);
 			}
 		}
 	}
@@ -245,23 +260,16 @@ public class FTBChunks
 			data.save();
 		}
 
-		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new LoginData(FTBChunksAPIImpl.manager.serverId));
-		SendGeneralData.send(player);
-		SendWaypoints.send(player);
+		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new LoginDataPacket(FTBChunksAPIImpl.manager.serverId));
+		SendGeneralDataPacket.send(player);
+		SendWaypointsPacket.send(player);
 
 		for (XZ sp : RELATIVE_SPIRAL_POSITIONS)
 		{
 			int x = player.chunkCoordX + sp.x;
 			int z = player.chunkCoordZ + sp.z;
-
-			IChunk chunk = event.getEntity().world.getChunk(x, z, ChunkStatus.FULL, true);
-
-			if (chunk instanceof Chunk)
-			{
-				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(x, z), player);
-			}
+			FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(x, z), player);
 		}
-
 	}
 
 	private boolean isValidPlayer(@Nullable Entity entity)
@@ -527,17 +535,22 @@ public class FTBChunks
 	{
 		if (event.phase == TickEvent.Phase.START)
 		{
-			if (FTBChunksAPIImpl.manager.map.ticks % 5L == 1L)
+			if (FTBChunksAPIImpl.manager.map.ticks % 4L == 1L)
 			{
-				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), Math.max(50, FTBChunksAPIImpl.manager.map.taskQueue.size() / 10));
+				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), MathHelper.clamp(FTBChunksAPIImpl.manager.map.taskQueue.size() / 10, 50, 200));
 
 				for (int i = 0; i < s; i++)
 				{
-					Runnable r = FTBChunksAPIImpl.manager.map.taskQueue.pollFirst();
+					MapTask r = FTBChunksAPIImpl.manager.map.taskQueue.pollFirst();
 
 					if (r != null)
 					{
 						r.run();
+
+						if (r.cancelOtherTasks())
+						{
+							break;
+						}
 					}
 				}
 			}
@@ -619,10 +632,28 @@ public class FTBChunks
 			w.x = MathHelper.floor(player.getPosX());
 			w.y = MathHelper.floor(player.getPosY());
 			w.z = MathHelper.floor(player.getPosZ());
-			data.waypoints.add(w);
+			data.waypoints.put(w.id, w);
 			data.save();
 
-			SendWaypoints.send(player);
+			SendWaypointsPacket.send(player);
+		}
+	}
+
+	@SubscribeEvent
+	public void changedDimension(PlayerEvent.PlayerChangedDimensionEvent event)
+	{
+		if (!(event.getPlayer() instanceof ServerPlayerEntity))
+		{
+			return;
+		}
+
+		final ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+
+		for (XZ sp : RELATIVE_SPIRAL_POSITIONS)
+		{
+			int x = player.chunkCoordX + sp.x;
+			int z = player.chunkCoordZ + sp.z;
+			FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(x, z), player);
 		}
 	}
 }

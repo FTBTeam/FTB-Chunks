@@ -18,7 +18,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHelper;
-import net.minecraft.client.gui.toasts.SystemToast;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -27,7 +26,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
@@ -117,16 +115,16 @@ public class LargeMapScreen extends GuiBase
 	{
 		add(regionPanel);
 
-		add(new ColorWidget(this, backgroundColor.withAlpha(150), null).setPosAndSize(0, 0, 18, 55));
+		add(new ColorWidget(this, backgroundColor.withAlpha(150), null).setPosAndSize(0, 0, 18, 55 - 18)); // TODO: Re-add waypoints button
 		add(new ColorWidget(this, backgroundColor.withAlpha(150), null).setPosAndSize(0, height - 38, 18, 38));
 
 		add(claimChunksButton = new SimpleButton(this, I18n.format("ftbchunks.gui.claimed_chunks"), GuiIcons.MAP, (b, m) -> new ChunkScreen().openGui()));
+		/*
 		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.waypoints"), GuiIcons.BEACON, (b, m) -> {
 			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
 		}));
-		add(settingsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> {
-			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
-		}));
+		 */
+		add(settingsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
 		add(alliesButton = new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
 
 		add(dimensionButton = new SimpleButton(this, dimension.directory.getFileName().toString(), GuiIcons.GLOBE, (b, m) -> {
@@ -158,7 +156,7 @@ public class LargeMapScreen extends GuiBase
 	{
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		alliesButton.setPosAndSize(1, 19, 16, 16);
-		waypointsButton.setPosAndSize(1, 37, 16, 16);
+		//waypointsButton.setPosAndSize(1, 37, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 	}
@@ -192,8 +190,12 @@ public class LargeMapScreen extends GuiBase
 	{
 		if (key.is(GLFW.GLFW_KEY_T))
 		{
-			ClientUtils.execClientCommand("/teleport " + regionPanel.blockX + " ~2 " + regionPanel.blockZ, false);
-			closeGui(false);
+			if (dimension == ClientMapDimension.current)
+			{
+				ClientUtils.execClientCommand("/teleport " + regionPanel.blockX + " ~2 " + regionPanel.blockZ, false);
+				closeGui(false);
+			}
+
 			return true;
 		}
 		else if (key.is(GLFW.GLFW_KEY_W))
@@ -202,9 +204,7 @@ public class LargeMapScreen extends GuiBase
 		}
 		else if (key.is(GLFW.GLFW_KEY_SPACE))
 		{
-			PlayerEntity p = Minecraft.getInstance().player;
-			regionPanel.resetScroll();
-			regionPanel.scrollTo(p.chunkCoordX / 32D - 0.5D, p.chunkCoordZ / 32D - 0.5D);
+			movedToPlayer = false;
 			return true;
 		}
 
@@ -218,7 +218,7 @@ public class LargeMapScreen extends GuiBase
 		{
 			PlayerEntity p = Minecraft.getInstance().player;
 			regionPanel.resetScroll();
-			regionPanel.scrollTo(p.chunkCoordX / 32D - 0.5D, p.chunkCoordZ / 32D - 0.5D);
+			regionPanel.scrollTo(p.chunkCoordX / 32D, p.chunkCoordZ / 32D);
 			movedToPlayer = true;
 		}
 
@@ -269,8 +269,8 @@ public class LargeMapScreen extends GuiBase
 		buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
 
 		int s = getRegionButtonSize();
-		double ox = -regionPanel.getScrollX() % s + s / 2D;
-		double oy = -regionPanel.getScrollY() % s + s / 2D;
+		double ox = -regionPanel.getScrollX() % s;
+		double oy = -regionPanel.getScrollY() % s;
 
 		for (int gx = 0; gx <= (w / s) + 1; gx++)
 		{

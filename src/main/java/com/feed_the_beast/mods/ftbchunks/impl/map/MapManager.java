@@ -18,7 +18,7 @@ public class MapManager
 {
 	public final ClaimedChunkManagerImpl manager;
 	public final Map<DimensionType, MapDimension> dimensions;
-	public final ArrayDeque<Runnable> taskQueue;
+	public final ArrayDeque<MapTask> taskQueue;
 	public long ticks;
 
 	public MapManager(ClaimedChunkManagerImpl m)
@@ -39,9 +39,14 @@ public class MapManager
 		return getDimension(pos.dimension).getRegion(XZ.regionFromChunk(pos.x, pos.z)).access().getChunk(XZ.of(pos.x, pos.z));
 	}
 
+	public void queue(MapTask task)
+	{
+		taskQueue.addLast(task);
+	}
+
 	public void queueUpdate(World world, XZ pos, ReloadChunkTask.Callback callback)
 	{
-		taskQueue.addLast(new ReloadChunkTask(world, pos, callback));
+		queue(new ReloadChunkTask(world, pos, callback));
 	}
 
 	public void queueUpdate(World world, XZ pos, ServerPlayerEntity player)
@@ -51,6 +56,6 @@ public class MapManager
 
 	public void queueSend(World world, XZ pos, Predicate<ServerPlayerEntity> sendTo)
 	{
-		taskQueue.addLast(new SendChunkTask(world, pos, sendTo));
+		queue(new SendChunkTask(world, pos, sendTo));
 	}
 }

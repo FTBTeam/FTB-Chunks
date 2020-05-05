@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.net;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -10,8 +11,9 @@ import java.util.function.Supplier;
 /**
  * @author LatvianModder
  */
-public class SendChunk
+public class SendChunkPacket
 {
+	public DimensionType dimension;
 	public int x, z;
 	public byte[] imageData;
 	public int color;
@@ -20,12 +22,13 @@ public class SendChunk
 	public long relativeTimeForceLoaded;
 	public boolean forceLoaded;
 
-	public SendChunk()
+	public SendChunkPacket()
 	{
 	}
 
-	SendChunk(PacketBuffer buf)
+	SendChunkPacket(PacketBuffer buf)
 	{
+		dimension = DimensionType.getById(buf.readVarInt());
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		imageData = buf.readByteArray();
@@ -46,6 +49,7 @@ public class SendChunk
 
 	void write(PacketBuffer buf)
 	{
+		buf.writeVarInt(dimension.getId());
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
 		buf.writeByteArray(imageData);

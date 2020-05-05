@@ -10,7 +10,7 @@ import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypoints;
+import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
@@ -22,12 +22,14 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.DimensionArgument;
+import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 
@@ -95,17 +97,6 @@ public class FTBChunksCommands
 								)
 						)
 				)
-				.then(Commands.literal("export")
-						.requires(source -> source.hasPermissionLevel(2))
-						.then(Commands.literal("json")
-								.requires(source -> source.hasPermissionLevel(2))
-								.executes(context -> exportJson(context.getSource()))
-						)
-						.then(Commands.literal("svg")
-								.requires(source -> source.hasPermissionLevel(2))
-								.executes(context -> exportSvg(context.getSource()))
-						)
-				)
 				.then(Commands.literal("waypoints")
 						.then(Commands.literal("add")
 								.executes(context -> addWaypoint(context.getSource().asPlayer(), "Waypoint"))
@@ -115,6 +106,35 @@ public class FTBChunksCommands
 						)
 						.then(Commands.literal("delete_death_points")
 								.executes(context -> deleteDeathPoints(context.getSource().asPlayer()))
+						)
+				)
+				.then(Commands.literal("admin")
+						.requires(source -> source.hasPermissionLevel(2))
+						.then(Commands.literal("export")
+								.requires(source -> source.hasPermissionLevel(2))
+								.then(Commands.literal("json")
+										.requires(source -> source.hasPermissionLevel(2))
+										.executes(context -> exportJson(context.getSource()))
+								)
+								.then(Commands.literal("svg")
+										.requires(source -> source.hasPermissionLevel(2))
+										.executes(context -> exportSvg(context.getSource()))
+								)
+						)
+						.then(Commands.literal("clear_task_queue")
+								.requires(source -> source.hasPermissionLevel(4))
+								.executes(context -> clearTaskQueue(context.getSource()))
+						)
+						.then(Commands.literal("pregenerate_entire_map")
+								.requires(source -> source.hasPermissionLevel(4))
+								.executes(context -> pregenMap(context.getSource()))
+						)
+						.then(Commands.literal("send_entire_map")
+								.requires(source -> source.hasPermissionLevel(4))
+								.then(Commands.argument("players", EntityArgument.players())
+										.requires(source -> source.hasPermissionLevel(4))
+										.executes(context -> sendMap(context.getSource(), EntityArgument.getPlayers(context, "players")))
+								)
 						)
 				)
 		);
@@ -302,19 +322,19 @@ public class FTBChunksCommands
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
-		Waypoint waypoint = new Waypoint();
-		waypoint.name = name;
-		waypoint.dimension = player.dimension;
-		waypoint.mode = PrivacyMode.PRIVATE;
-		waypoint.x = MathHelper.floor(player.getPosX());
-		waypoint.y = MathHelper.floor(player.getPosY() + 2);
-		waypoint.z = MathHelper.floor(player.getPosZ());
-		waypoint.color = Color4I.hsb(player.world.rand.nextFloat(), 1F, 1F).rgb();
-		waypoint.type = WaypointType.DEFAULT;
-		data.waypoints.add(waypoint);
+		Waypoint w = new Waypoint();
+		w.name = name;
+		w.dimension = player.dimension;
+		w.mode = PrivacyMode.PRIVATE;
+		w.x = MathHelper.floor(player.getPosX());
+		w.y = MathHelper.floor(player.getPosY() + 2);
+		w.z = MathHelper.floor(player.getPosZ());
+		w.color = Color4I.hsb(player.world.rand.nextFloat(), 1F, 1F).rgb();
+		w.type = WaypointType.DEFAULT;
+		data.waypoints.put(w.id, w);
 		data.save();
 
-		SendWaypoints.send(player);
+		SendWaypointsPacket.send(player);
 		return 1;
 	}
 
@@ -322,10 +342,42 @@ public class FTBChunksCommands
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
-		if (data.waypoints.removeIf(waypoint -> waypoint.type == WaypointType.DEATH))
+		if (data.waypoints.values().removeIf(waypoint -> waypoint.type == WaypointType.DEATH))
 		{
 			data.save();
-			SendWaypoints.send(player);
+			SendWaypointsPacket.send(player);
+		}
+
+		return 1;
+	}
+
+	private int clearTaskQueue(CommandSource source)
+	{
+		FTBChunksAPIImpl.manager.map.taskQueue.clear();
+		return 1;
+	}
+
+	private int pregenMap(CommandSource source)
+	{
+		source.sendFeedback(new StringTextComponent("WIP!"), false);
+		/*
+		if (!source.getServer().isSinglePlayer())
+		{
+			source.getServer().getPlayerList().getPlayers().forEach(p -> p.connection.disconnect(new StringTextComponent(source.getName() + " started world map pre-generation!")));
+		}
+
+		ServerWorld world = source.getWorld();
+		source.getServer().getPlayerList().sendMessage(new StringTextComponent("Pregen started for '" + world.getDimension().getType().getRegistryName() + "'").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+		FTBChunksAPIImpl.manager.map.queue(new PregenMapRegionTask(world));
+		 */
+		return 1;
+	}
+
+	private int sendMap(CommandSource source, Collection<ServerPlayerEntity> players)
+	{
+		for (ServerPlayerEntity p : players)
+		{
+			p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map to entire map to you, be prepared for lag!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
 		}
 
 		return 1;

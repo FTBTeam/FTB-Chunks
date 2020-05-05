@@ -1,5 +1,11 @@
 {
+	"ftbchunks": "FTB Chunks",
+	"ftbchunks.minimap": "Minimap",
+	"ftbchunks.minimap_scale": "Minimap Scale",
+	"ftbchunks.minimap_waypoints": "Minimap Waypoints",
+	"ftbchunks.minimap_player_heads": "Minimap Player Heads",
 	"sidebar_button.ftbchunks.chunks": "FTB Chunks",
+	"key.ftbchunks.map": "Open FTB Chunks Map",
 	"wilderness": "Wilderness",
 	"ftbchunks.no_server_mod": "FTB Chunks requires mod on server!",
 	"ftbchunks.already_claimed": "Chunk is already claimed by %s",

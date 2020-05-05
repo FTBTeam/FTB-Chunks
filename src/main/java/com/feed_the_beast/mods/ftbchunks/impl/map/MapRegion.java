@@ -14,12 +14,12 @@ import java.util.Map;
 /**
  * @author LatvianModder
  */
-public class MapRegion implements Runnable
+public class MapRegion
 {
 	public final MapDimension dimension;
 	public final XZ pos;
 	public final Map<XZ, MapChunk> chunks;
-	public boolean save;
+	private boolean save;
 	public long lastAccess = 0L;
 
 	MapRegion(MapDimension d, XZ p)
@@ -97,12 +97,16 @@ public class MapRegion implements Runnable
 		return chunks.computeIfAbsent(chunkPos, p -> new MapChunk(this, p));
 	}
 
-	@Override
-	public void run()
+	public void save()
+	{
+		save = true;
+	}
+
+	public boolean saveNow()
 	{
 		if (!save)
 		{
-			return;
+			return true;
 		}
 
 		save = false;
@@ -143,7 +147,7 @@ public class MapRegion implements Runnable
 			{
 				ex.printStackTrace();
 				FTBChunks.LOGGER.info("Failed to save chunk " + c.pos + " in " + pos + ": " + ex);
-				return;
+				return false;
 			}
 		}
 
@@ -157,5 +161,6 @@ public class MapRegion implements Runnable
 		}
 
 		FTBChunks.LOGGER.debug("Saved region " + pos + " - " + chunks.size() + " chunks");
+		return false;
 	}
 }

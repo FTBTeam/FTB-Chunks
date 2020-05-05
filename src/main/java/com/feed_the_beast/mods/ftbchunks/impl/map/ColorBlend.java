@@ -11,8 +11,10 @@ import net.minecraft.world.World;
 public enum ColorBlend
 {
 	WATER((w, p) -> w.getBiome(p).getWaterColor()),
-	GRASS((w, p) -> w.getBiome(p).getGrassColor(p.getX() + 0.5D, p.getZ() + 0.5D)),
-	FOLIAGE((w, p) -> w.getBiome(p).getFoliageColor());
+	//GRASS((w, p) -> w.getBiome(p).getGrassColor(p.getX() + 0.5D, p.getZ() + 0.5D)),
+	GRASS((w, p) -> 0xFF7BB262),
+	//FOLIAGE((w, p) -> w.getBiome(p).getFoliageColor());
+	FOLIAGE((w, p) -> 0xFF559934);
 
 	public final MapColorGetter colorGetter;
 

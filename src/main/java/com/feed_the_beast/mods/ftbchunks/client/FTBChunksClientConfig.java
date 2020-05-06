@@ -23,6 +23,7 @@ public class FTBChunksClientConfig
 	public static boolean minimapXYZ;
 	public static boolean minimapBiome;
 	public static boolean minimapBlur;
+	public static boolean minimapCompass;
 
 	private static Pair<ClientConfig, ForgeConfigSpec> client;
 
@@ -52,6 +53,7 @@ public class FTBChunksClientConfig
 			minimapXYZ = c.minimapXYZ.get();
 			minimapBiome = c.minimapBiome.get();
 			minimapBlur = c.minimapBlur.get();
+			minimapCompass = c.minimapCompass.get();
 		}
 	}
 
@@ -65,6 +67,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue minimapXYZ;
 		public final ForgeConfigSpec.BooleanValue minimapBiome;
 		public final ForgeConfigSpec.BooleanValue minimapBlur;
+		public final ForgeConfigSpec.BooleanValue minimapCompass;
 
 		private ClientConfig(ForgeConfigSpec.Builder builder)
 		{
@@ -107,6 +110,11 @@ public class FTBChunksClientConfig
 					.comment("Blurs minimap")
 					.translation("ftbchunks.minimap_blur")
 					.define("minimap_blur", true);
+
+			minimapCompass = builder
+					.comment("Adds NWSE compass inside minimap")
+					.translation("ftbchunks.minimap_compass")
+					.define("minimap_compass", true);
 		}
 	}
 
@@ -152,6 +160,11 @@ public class FTBChunksClientConfig
 		group.addBool("minimap_blur", minimapBlur, v -> {
 			client.getLeft().minimapBlur.set(v);
 			minimapBlur = v;
+		}, true);
+
+		group.addBool("minimap_compass", minimapCompass, v -> {
+			client.getLeft().minimapCompass.set(v);
+			minimapCompass = v;
 		}, true);
 
 		GuiEditConfig gui = new GuiEditConfig(group);

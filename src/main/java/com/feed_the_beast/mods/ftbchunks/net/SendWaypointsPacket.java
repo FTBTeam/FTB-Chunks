@@ -25,7 +25,26 @@ public class SendWaypointsPacket
 	public static void send(ServerPlayerEntity player)
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
-		List<Waypoint> waypoints = new ArrayList<>(data.waypoints.values());
+		List<Waypoint> waypoints = new ArrayList<>();
+
+		for (ClaimedChunkPlayerDataImpl d : FTBChunksAPIImpl.manager.playerData.values())
+		{
+			for (Waypoint w : d.waypoints.values())
+			{
+				if (d == data || w.privacy == PrivacyMode.PUBLIC || w.privacy == PrivacyMode.ALLIES && w.playerData.isAlly(player))
+				{
+					Waypoint w1 = w.copy();
+
+					if (d != data)
+					{
+						w1.owner = d.getName();
+					}
+
+					waypoints.add(w1);
+				}
+			}
+		}
+
 		// TODO: Dynamic waypoints like spawn, homes, etc.
 
 		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new SendWaypointsPacket(waypoints));
@@ -45,8 +64,7 @@ public class SendWaypointsPacket
 
 		for (int i = 0; i < s; i++)
 		{
-			Waypoint w = new Waypoint();
-			w.id = new UUID(buf.readLong(), buf.readLong());
+			Waypoint w = new Waypoint(null, new UUID(buf.readLong(), buf.readLong()));
 			w.name = buf.readString(100);
 			w.owner = buf.readString(100);
 			w.dimension = DimensionType.getById(buf.readVarInt());
@@ -54,7 +72,7 @@ public class SendWaypointsPacket
 			w.y = buf.readVarInt();
 			w.z = buf.readVarInt();
 			w.color = buf.readInt();
-			w.mode = PrivacyMode.VALUES[buf.readByte()];
+			w.privacy = PrivacyMode.VALUES[buf.readByte()];
 			w.type = WaypointType.VALUES[buf.readByte()];
 			waypoints.add(w);
 		}
@@ -75,7 +93,7 @@ public class SendWaypointsPacket
 			buf.writeVarInt(w.y);
 			buf.writeVarInt(w.z);
 			buf.writeInt(w.color);
-			buf.writeByte(w.mode.ordinal());
+			buf.writeByte(w.privacy.ordinal());
 			buf.writeByte(w.type.ordinal());
 		}
 	}

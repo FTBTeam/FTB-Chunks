@@ -68,6 +68,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author LatvianModder
@@ -508,14 +509,14 @@ public class FTBChunks
 
 						if (posSet.add(pos))
 						{
-							FTBChunksAPIImpl.manager.map.queueUpdate(player.world, pos, player);
+							FTBChunksAPIImpl.manager.map.getChunk(player.world.dimension.getType(), pos).weakUpdate = true;
 						}
 					}
 				}
 			}
 			else
 			{
-				FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.chunkFromBlock(event.getPos()), player);
+				FTBChunksAPIImpl.manager.map.getChunk(player.world.dimension.getType(), XZ.chunkFromBlock(event.getPos())).weakUpdate = true;
 			}
 		}
 	}
@@ -526,7 +527,7 @@ public class FTBChunks
 		if (event.getPlayer() instanceof ServerPlayerEntity)
 		{
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
-			FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.chunkFromBlock(event.getPos()), player);
+			FTBChunksAPIImpl.manager.map.getChunk(player.world.dimension.getType(), XZ.chunkFromBlock(event.getPos())).weakUpdate = true;
 		}
 	}
 
@@ -538,11 +539,10 @@ public class FTBChunks
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
 			ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
-			Waypoint w = new Waypoint();
+			Waypoint w = new Waypoint(data, UUID.randomUUID());
 			w.name = "Death #" + player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-			w.owner = data.getName();
 			w.dimension = player.dimension;
-			w.mode = PrivacyMode.ALLIES;
+			w.privacy = PrivacyMode.ALLIES;
 			w.type = WaypointType.DEATH;
 			w.x = MathHelper.floor(player.getPosX());
 			w.y = MathHelper.floor(player.getPosY());

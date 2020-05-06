@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author LatvianModder
@@ -128,10 +129,6 @@ public class FTBChunksCommands
 						.then(Commands.literal("clear_task_queue")
 								.requires(source -> source.hasPermissionLevel(4))
 								.executes(context -> clearTaskQueue(context.getSource()))
-						)
-						.then(Commands.literal("pregenerate_entire_map")
-								.requires(source -> source.hasPermissionLevel(4))
-								.executes(context -> pregenMap(context.getSource()))
 						)
 						.then(Commands.literal("send_entire_map")
 								.requires(source -> source.hasPermissionLevel(4))
@@ -326,16 +323,24 @@ public class FTBChunksCommands
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
-		Waypoint w = new Waypoint();
+		Waypoint w = new Waypoint(data, UUID.randomUUID());
 		w.name = name;
-		w.owner = data.getName();
 		w.dimension = player.dimension;
-		w.mode = PrivacyMode.PRIVATE;
+		w.privacy = PrivacyMode.PRIVATE;
 		w.x = MathHelper.floor(player.getPosX());
 		w.y = MathHelper.floor(player.getPosY() + 2);
 		w.z = MathHelper.floor(player.getPosZ());
-		w.color = Color4I.hsb(player.world.rand.nextFloat(), 1F, 1F).rgb();
-		w.type = WaypointType.DEFAULT;
+
+		if (w.name.toLowerCase().startsWith("home") || w.name.toLowerCase().startsWith("house") || w.name.toLowerCase().startsWith("base"))
+		{
+			w.type = WaypointType.HOME;
+		}
+		else
+		{
+			w.color = Color4I.hsb(player.world.rand.nextFloat(), 1F, 1F).rgb();
+			w.type = WaypointType.DEFAULT;
+		}
+
 		data.waypoints.put(w.id, w);
 		data.save();
 
@@ -358,6 +363,7 @@ public class FTBChunksCommands
 
 	private int clearTaskQueue(CommandSource source)
 	{
+		source.sendFeedback(new StringTextComponent("Cleared " + FTBChunksAPIImpl.manager.map.taskQueue.size() + " tasks!"), true);
 		FTBChunksAPIImpl.manager.map.taskQueue.clear();
 		return 1;
 	}
@@ -380,11 +386,6 @@ public class FTBChunksCommands
 
 	private int sendMap(CommandSource source, Collection<ServerPlayerEntity> players)
 	{
-		for (ServerPlayerEntity p : players)
-		{
-			p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map to entire map to you, be prepared for lag!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
-		}
-
 		ServerWorld world = source.getWorld();
 
 		MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType());
@@ -400,15 +401,29 @@ public class FTBChunksCommands
 						.map(name -> name.split(","))
 						.filter(name -> name.length == 3)
 						.map(name -> dimension.getRegion(XZ.of(Integer.parseInt(name[0]), Integer.parseInt(name[1]))))
-						.forEach(region -> region.chunks.values().forEach(chunk -> {
-							chunks[0]++;
-							FTBChunksAPIImpl.manager.map.queueSend(world, chunk.getActualPos(), players::contains);
-						}));
+						.forEach(region -> {
+							region.chunks.values().forEach(chunk -> {
+								chunks[0]++;
+								FTBChunksAPIImpl.manager.map.queueSend(world, chunk.getActualPos(), players::contains);
+							});
+
+							FTBChunksAPIImpl.manager.map.queue(() -> {
+								for (ServerPlayerEntity p : players)
+								{
+									p.sendStatusMessage(new StringTextComponent(FTBChunksAPIImpl.manager.map.taskQueue.size() + " chunks left").applyTextStyle(TextFormatting.LIGHT_PURPLE), true);
+								}
+							});
+						});
+
+				for (ServerPlayerEntity p : players)
+				{
+					p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map (" + chunks[0] + " chunks) to entire map to you, be prepared for lag!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+				}
 
 				FTBChunksAPIImpl.manager.map.queue(() -> {
 					for (ServerPlayerEntity p : players)
 					{
-						p.sendMessage(new StringTextComponent("Map received (" + chunks[0] + " chunks)!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+						p.sendMessage(new StringTextComponent("Map received!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
 					}
 				});
 			}

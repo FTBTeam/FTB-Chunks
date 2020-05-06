@@ -5,6 +5,7 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
+import com.mojang.datafixers.util.Either;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -17,7 +18,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -35,14 +38,48 @@ public class SendChunkTask implements MapTask
 		sendTo = p;
 	}
 
+	private static Either<IChunk, MapChunk> getChunkForHeight(World world, int x, int z)
+	{
+		MapRegion region = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType()).getRegion(XZ.regionFromChunk(x, z));
+		MapChunk mapChunk = region.chunks.get(XZ.of(x & 31, z & 31));
+
+		if (mapChunk != null)
+		{
+			return Either.right(mapChunk);
+		}
+
+		return Either.left(world.getChunk(x, z, ChunkStatus.FULL, true));
+	}
+
+	private static int getHeight(Either<IChunk, MapChunk> chunk, BlockPos.Mutable currentBlockPos, int x, int z, int topY)
+	{
+		if (chunk.left().isPresent())
+		{
+			return MapChunk.getHeight(chunk.left().get(), currentBlockPos, x, z, topY);
+		}
+		else if (chunk.right().isPresent())
+		{
+			return chunk.right().get().getHeight(x & 15, z & 15);
+		}
+
+		return 0;
+	}
+
 	@Override
 	public void run()
 	{
+		List<ServerPlayerEntity> players = FTBChunksAPIImpl.manager.server.getPlayerList().getPlayers().stream().filter(sendTo).collect(Collectors.toList());
+
+		if (players.isEmpty())
+		{
+			return;
+		}
+
 		ChunkDimPos chunkDimPos = chunkPosition.dim(world.dimension.getType());
 		MapChunk c = FTBChunksAPIImpl.manager.map.getChunk(chunkDimPos);
-		IChunk cn = world.getChunk(chunkDimPos.x, chunkDimPos.z - 1, ChunkStatus.FULL, true);
-		IChunk ce = world.getChunk(chunkDimPos.x - 1, chunkDimPos.z, ChunkStatus.FULL, true);
-		IChunk cne = world.getChunk(chunkDimPos.x - 1, chunkDimPos.z - 1, ChunkStatus.FULL, true);
+		Either<IChunk, MapChunk> cn = getChunkForHeight(world, chunkDimPos.x, chunkDimPos.z - 1);
+		Either<IChunk, MapChunk> ce = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z);
+		Either<IChunk, MapChunk> cne = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z - 1);
 
 		int topY = world.getActualHeight() + 1;
 		BlockPos.Mutable currentBlockPos = new BlockPos.Mutable();
@@ -55,17 +92,17 @@ public class SendChunkTask implements MapTask
 		{
 			for (int x = 0; x < 16; x++)
 			{
-				heightMap[x + 1][z + 1] = c.height[x + z * 16] & 0xFF;
+				heightMap[x + 1][z + 1] = c.getHeight(x, z);
 			}
 		}
 
 		for (int i = 0; i < 16; i++)
 		{
-			heightMap[i + 1][0] = MapChunk.getHeight(cn, currentBlockPos, blockX + i, blockZ - 1, topY);
-			heightMap[0][i + 1] = MapChunk.getHeight(ce, currentBlockPos, blockX - 1, blockZ + i, topY);
+			heightMap[i + 1][0] = getHeight(cn, currentBlockPos, blockX + i, blockZ - 1, topY);
+			heightMap[0][i + 1] = getHeight(ce, currentBlockPos, blockX - 1, blockZ + i, topY);
 		}
 
-		heightMap[0][0] = MapChunk.getHeight(cne, currentBlockPos, blockX - 1, blockZ - 1, topY);
+		heightMap[0][0] = getHeight(cne, currentBlockPos, blockX - 1, blockZ - 1, topY);
 
 		BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 
@@ -135,12 +172,9 @@ public class SendChunkTask implements MapTask
 			}
 		}
 
-		for (ServerPlayerEntity player : FTBChunksAPIImpl.manager.server.getPlayerList().getPlayers())
+		for (ServerPlayerEntity player : players)
 		{
-			if (sendTo.test(player))
-			{
-				FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), packet);
-			}
+			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), packet);
 		}
 	}
 }

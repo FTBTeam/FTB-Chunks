@@ -81,14 +81,8 @@ public class ReloadChunkTask implements MapTask
 
 				if (by == -1)
 				{
-					data.setRGB(wx, wz, 0);
-					data.setHeight(wx, wz, 0);
+					data.setHRGB(wx, wz, 0);
 					continue;
-				}
-
-				if (data.setHeight(wx, wz, by))
-				{
-					changed = true;
 				}
 
 				BlockState state = chunk.getBlockState(currentBlockPos);
@@ -146,7 +140,7 @@ public class ReloadChunkTask implements MapTask
 					color = Color4I.rgb(state.getMaterialColor(world, currentBlockPos).colorValue);
 				}
 
-				if (data.setRGB(wx, wz, color.rgb()))
+				if (data.setHRGB(wx, wz, (by << 24) | color.rgb()))
 				{
 					changed = true;
 				}

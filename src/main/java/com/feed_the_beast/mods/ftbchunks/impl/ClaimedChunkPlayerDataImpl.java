@@ -446,7 +446,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			o.addProperty("y", w.y);
 			o.addProperty("z", w.z);
 			o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
-			o.addProperty("mode", w.mode.name);
+			o.addProperty("privacy", w.privacy.name);
 			o.addProperty("type", w.type.name().toLowerCase());
 			waypointArray.add(o);
 		}
@@ -552,41 +552,42 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			for (JsonElement e : json.get("waypoints").getAsJsonArray())
 			{
 				JsonObject o = e.getAsJsonObject();
-				Waypoint w = new Waypoint();
+				DimensionType dim = DimensionType.byName(new ResourceLocation(o.get("dimension").getAsString()));
 
-				w.dimension = DimensionType.byName(new ResourceLocation(o.get("dimension").getAsString()));
-
-				if (w.dimension == null)
+				if (dim == null)
 				{
 					continue;
 				}
 
-				if (o.has("id"))
-				{
-					w.id = UUIDTypeAdapter.fromString(o.get("id").getAsString());
-				}
-				else
-				{
-					save();
-				}
-
+				Waypoint w = new Waypoint(this, o.has("id") ? UUIDTypeAdapter.fromString(o.get("id").getAsString()) : UUID.randomUUID());
+				w.dimension = dim;
 				w.name = o.get("name").getAsString();
-				w.owner = getName();
 				w.x = o.get("x").getAsInt();
 				w.y = o.get("y").getAsInt();
 				w.z = o.get("z").getAsInt();
-				w.color = 0;
+				w.color = 0xFFFFFF;
 
-				try
+				if (o.has("color"))
 				{
-					w.color = Integer.decode(o.get("color").getAsString());
-				}
-				catch (Exception ex)
-				{
+					try
+					{
+						w.color = Integer.decode(o.get("color").getAsString());
+					}
+					catch (Exception ex)
+					{
+					}
 				}
 
-				w.mode = PrivacyMode.get(o.get("mode").getAsString());
-				w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
+				if (o.has("privacy"))
+				{
+					w.privacy = PrivacyMode.get(o.get("privacy").getAsString());
+				}
+
+				if (o.has("type"))
+				{
+					w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
+				}
+
 				waypoints.put(w.id, w);
 			}
 		}

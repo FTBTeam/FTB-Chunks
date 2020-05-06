@@ -36,5 +36,6 @@ public class FTBChunksNet
 		MAIN.registerMessage(12, ChangeWaypointColorPacket.class, ChangeWaypointColorPacket::write, ChangeWaypointColorPacket::new, ChangeWaypointColorPacket::handle);
 		MAIN.registerMessage(13, ChangeWaypointNamePacket.class, ChangeWaypointNamePacket::write, ChangeWaypointNamePacket::new, ChangeWaypointNamePacket::handle);
 		MAIN.registerMessage(14, TeleportFromMapPacket.class, TeleportFromMapPacket::write, TeleportFromMapPacket::new, TeleportFromMapPacket::handle);
+		MAIN.registerMessage(15, ChangeWaypointPrivacyPacket.class, ChangeWaypointPrivacyPacket::write, ChangeWaypointPrivacyPacket::new, ChangeWaypointPrivacyPacket::handle);
 	}
 }

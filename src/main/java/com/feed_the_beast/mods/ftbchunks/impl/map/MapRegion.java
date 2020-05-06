@@ -21,6 +21,7 @@ public class MapRegion
 	public final Map<XZ, MapChunk> chunks;
 	private boolean save;
 	public long lastAccess = 0L;
+	private BufferedImage image;
 
 	MapRegion(MapDimension d, XZ p)
 	{
@@ -32,53 +33,54 @@ public class MapRegion
 
 	public MapRegion load()
 	{
-		Path file = dimension.directory.resolve(pos.x + "," + pos.z + ",map.png");
+		BufferedImage image = getImage();
 
-		if (Files.notExists(file))
+		for (int cz = 0; cz < 32; cz++)
 		{
-			return this;
-		}
-
-		try (InputStream is = Files.newInputStream(file))
-		{
-			BufferedImage image = ImageIO.read(is);
-
-			if (image.getWidth() == 512 && image.getHeight() == 512)
+			for (int cx = 0; cx < 32; cx++)
 			{
-				for (int cz = 0; cz < 32; cz++)
+				if (image.getRGB(cx * 16, cz * 16) != 0)
 				{
-					for (int cx = 0; cx < 32; cx++)
-					{
-						if (image.getRGB(cx * 16, cz * 16) != 0)
-						{
-							MapChunk chunk = new MapChunk(this, XZ.of(cx, cz));
-
-							for (int z = 0; z < 16; z++)
-							{
-								for (int x = 0; x < 16; x++)
-								{
-									int i = x + z * 16;
-									int c = image.getRGB(cx * 16 + x, cz * 16 + z);
-									chunk.height[i] = (byte) (c >> 24);
-									chunk.red[i] = (byte) (c >> 16);
-									chunk.green[i] = (byte) (c >> 8);
-									chunk.blue[i] = (byte) (c >> 0);
-								}
-							}
-
-							chunks.put(chunk.pos, chunk);
-						}
-					}
+					MapChunk chunk = new MapChunk(this, XZ.of(cx, cz));
+					chunks.put(chunk.pos, chunk);
 				}
 			}
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
 		}
 
 		FTBChunks.LOGGER.debug("Loaded region " + pos + " - " + chunks.size() + " chunks");
 		return this;
+	}
+
+	public BufferedImage getImage()
+	{
+		if (image == null)
+		{
+			Path file = dimension.directory.resolve(pos.x + "," + pos.z + ",map.png");
+
+			if (Files.exists(file))
+			{
+				try (InputStream is = Files.newInputStream(file))
+				{
+					image = ImageIO.read(is);
+
+					if (image.getWidth() != 512 || image.getHeight() != 512)
+					{
+						image = null;
+					}
+				}
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+
+			if (image == null)
+			{
+				image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+			}
+		}
+
+		return image;
 	}
 
 	public MapRegion access()
@@ -104,6 +106,15 @@ public class MapRegion
 
 	public boolean saveNow()
 	{
+		for (MapChunk chunk : chunks.values())
+		{
+			if (chunk.weakUpdate)
+			{
+				dimension.manager.queueSend(dimension.manager.manager.server.getWorld(dimension.dimension), chunk.getActualPos(), serverPlayerEntity -> true);
+				chunk.weakUpdate = false;
+			}
+		}
+
 		if (!save)
 		{
 			return true;
@@ -123,37 +134,9 @@ public class MapRegion
 			}
 		}
 
-		BufferedImage mapImg = new BufferedImage(16 * 32, 16 * 32, BufferedImage.TYPE_INT_ARGB);
-
-		for (MapChunk c : chunks.values())
-		{
-			try
-			{
-				for (int i = 0; i < 256; i++)
-				{
-					int h = c.height[i] & 0xFF;
-					int r = c.red[i] & 0xFF;
-					int g = c.green[i] & 0xFF;
-					int b = c.blue[i] & 0xFF;
-
-					int x = c.pos.x * 16 + (i % 16);
-					int y = c.pos.z * 16 + (i / 16);
-					int col = (h << 24) | (r << 16) | (g << 8) | b;
-
-					mapImg.setRGB(x, y, col);
-				}
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace();
-				FTBChunks.LOGGER.info("Failed to save chunk " + c.pos + " in " + pos + ": " + ex);
-				return false;
-			}
-		}
-
 		try (OutputStream out = Files.newOutputStream(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png")))
 		{
-			ImageIO.write(mapImg, "PNG", out);
+			ImageIO.write(getImage(), "PNG", out);
 		}
 		catch (Exception ex)
 		{

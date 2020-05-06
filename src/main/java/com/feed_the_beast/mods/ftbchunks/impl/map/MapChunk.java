@@ -26,63 +26,34 @@ public class MapChunk
 
 	public final MapRegion region;
 	public final XZ pos;
-	public final byte[] height, red, green, blue;
-	public final int color;
 	public boolean loaded;
+	public boolean weakUpdate;
 
 	MapChunk(MapRegion r, XZ p)
 	{
 		region = r;
 		pos = p;
-		height = new byte[256];
-		red = new byte[256];
-		green = new byte[256];
-		blue = new byte[256];
-		color = 0xFF000000;
 		loaded = false;
+		weakUpdate = false;
 	}
 
 	public int getHeight(int x, int z)
 	{
-		return height[index(x, z)] & 0xFF;
-	}
-
-	public boolean setHeight(int x, int z, int h)
-	{
-		byte b = (byte) h;
-		int i = index(x, z);
-
-		if (height[i] != b)
-		{
-			height[i] = b;
-			region.save();
-			return true;
-		}
-
-		return false;
+		return (region.getImage().getRGB(pos.x * 16 + x, pos.z * 16 + z) >> 24) & 0xFF;
 	}
 
 	public int getRGB(int x, int z)
 	{
-		int i = index(x, z);
-		int r = red[i] & 0xFF;
-		int g = green[i] & 0xFF;
-		int b = blue[i] & 0xFF;
-		return 0xFF000000 | (r << 16) | (g << 8) | b;
+		return 0xFF000000 | region.getImage().getRGB(pos.x * 16 + x, pos.z * 16 + z);
 	}
 
-	public boolean setRGB(int x, int z, int rgb)
+	public boolean setHRGB(int x, int z, int hrgb)
 	{
-		int i = index(x, z);
-		byte r = (byte) (rgb >> 16);
-		byte g = (byte) (rgb >> 8);
-		byte b = (byte) rgb;
+		int c = region.getImage().getRGB(pos.x * 16 + x, pos.z * 16 + z);
 
-		if (red[i] != r || green[i] != g || blue[i] != b)
+		if (c != hrgb)
 		{
-			red[i] = r;
-			green[i] = g;
-			blue[i] = b;
+			region.getImage().setRGB(pos.x * 16 + x, pos.z * 16 + z, hrgb);
 			region.save();
 			return true;
 		}

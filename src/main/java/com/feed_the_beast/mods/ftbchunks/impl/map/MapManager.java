@@ -34,6 +34,11 @@ public class MapManager
 		return dimensions.computeIfAbsent(dim, d -> new MapDimension(this, d));
 	}
 
+	public MapChunk getChunk(DimensionType dim, XZ chunkPos)
+	{
+		return getDimension(dim).getRegion(XZ.regionFromChunk(chunkPos.x, chunkPos.z)).access().getChunk(chunkPos);
+	}
+
 	public MapChunk getChunk(ChunkDimPos pos)
 	{
 		return getDimension(pos.dimension).getRegion(XZ.regionFromChunk(pos.x, pos.z)).access().getChunk(XZ.of(pos.x, pos.z));

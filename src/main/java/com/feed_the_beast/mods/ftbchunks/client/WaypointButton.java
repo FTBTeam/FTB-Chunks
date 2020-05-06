@@ -17,6 +17,7 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,11 @@ public class WaypointButton extends Widget
 	public void addMouseOverText(List<String> list)
 	{
 		list.add(waypoint.name);
+
+		if (!waypoint.owner.isEmpty())
+		{
+			list.add(TextFormatting.GRAY + waypoint.owner);
+		}
 	}
 
 	@Override
@@ -56,23 +62,23 @@ public class WaypointButton extends Widget
 			contextMenu.add(new ContextMenuItem(waypoint.name, icon, () -> {}));
 			contextMenu.add(ContextMenuItem.SEPARATOR);
 
+			contextMenu.add(new ContextMenuItem(I18n.format("gui.rename"), GuiIcons.CHAT, () -> {
+				ConfigString config = new ConfigString();
+				config.defaultValue = "";
+				config.value = waypoint.name;
+				config.onClicked(MouseButton.LEFT, b -> {
+					if (b)
+					{
+						waypoint.name = config.value;
+						FTBChunksNet.MAIN.sendToServer(new ChangeWaypointNamePacket(waypoint.id, waypoint.name));
+					}
+
+					openGui();
+				});
+			}));
+
 			if (waypoint.type == WaypointType.DEFAULT)
 			{
-				contextMenu.add(new ContextMenuItem(I18n.format("gui.rename"), GuiIcons.CHAT, () -> {
-					ConfigString config = new ConfigString();
-					config.defaultValue = "";
-					config.value = waypoint.name;
-					config.onClicked(MouseButton.LEFT, b -> {
-						if (b)
-						{
-							waypoint.name = config.value;
-							FTBChunksNet.MAIN.sendToServer(new ChangeWaypointNamePacket(waypoint.id, waypoint.name));
-						}
-
-						openGui();
-					});
-				}));
-
 				contextMenu.add(new ContextMenuItem("Change Color", GuiIcons.COLOR_RGB, () -> {
 					Color4I col = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F);
 					icon = Icon.getIcon(waypoint.type.texture).withTint(col);
@@ -80,6 +86,12 @@ public class WaypointButton extends Widget
 					contextMenu.get(0).icon = icon;
 				}).setCloseMenu(false));
 			}
+
+			/*
+			contextMenu.add(new ContextMenuItem("Change Privacy", GuiIcons.COLOR_RGB, () -> {
+				FTBChunksNet.MAIN.sendToServer(new ChangeWaypointPrivacyPacket(waypoint.id, col.rgba()));
+			}).setCloseMenu(false));
+			 */
 
 			contextMenu.add(new ContextMenuItem(I18n.format("gui.remove"), GuiIcons.REMOVE, () -> {
 				((LargeMapScreen) getGui()).dimension.waypoints.remove(waypoint);

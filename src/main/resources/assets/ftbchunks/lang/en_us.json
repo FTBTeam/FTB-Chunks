@@ -8,6 +8,7 @@
 	"ftbchunks.minimap_xyz": "Minimap XYZ",
 	"ftbchunks.minimap_biome": "Minimap Biome",
 	"ftbchunks.minimap_blur": "Minimap Blur",
+	"ftbchunks.minimap_compass": "Minimap Compass",
 	"sidebar_button.ftbchunks.chunks": "FTB Chunks",
 	"key.ftbchunks.map": "Open FTB Chunks Map",
 	"wilderness": "Wilderness",

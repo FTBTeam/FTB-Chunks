@@ -394,23 +394,26 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		RenderSystem.enableTexture();
 
-		for (int face = 0; face < 4; face++)
+		if (FTBChunksClientConfig.minimapCompass)
 		{
-			double d = s / 2.2D;
+			for (int face = 0; face < 4; face++)
+			{
+				double d = s / 2.2D;
 
-			double angle = (-mc.player.rotationYawHead - 180D - face * 90D) * Math.PI / 180D;
+				double angle = (-mc.player.rotationYawHead - 180D - face * 90D) * Math.PI / 180D;
 
-			double wx = x + s / 2D + Math.cos(angle) * d;
-			double wy = y + s / 2D + Math.sin(angle) * d;
-			double ws = s / 32D;
+				double wx = x + s / 2D + Math.cos(angle) * d;
+				double wy = y + s / 2D + Math.sin(angle) * d;
+				double ws = s / 32D;
 
-			mc.textureManager.bindTexture(COMPASS[face]);
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-			buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-			buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-			buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-			buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
-			tessellator.draw();
+				mc.textureManager.bindTexture(COMPASS[face]);
+				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+				buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+				buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+				buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+				buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+				tessellator.draw();
+			}
 		}
 
 		if (FTBChunksClientConfig.minimapWaypoints && !ClientMapDimension.current.waypoints.isEmpty())

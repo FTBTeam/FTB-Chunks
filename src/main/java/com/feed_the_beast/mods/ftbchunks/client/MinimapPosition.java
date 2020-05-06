@@ -43,6 +43,6 @@ public enum MinimapPosition
 			return (h - s) / 2;
 		}
 
-		return h - s - 3;
+		return h - s - 18;
 	}
 }

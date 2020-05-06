@@ -18,29 +18,15 @@ import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BucketItem;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResource;
-import net.minecraft.resources.IResourceManager;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
@@ -73,14 +59,10 @@ import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -136,81 +118,9 @@ public class FTBChunks
 	public void serverAboutToStart(FMLServerAboutToStartEvent event)
 	{
 		FTBChunksAPIImpl.manager = new ClaimedChunkManagerImpl(event.getServer());
-
-		event.getServer().getResourceManager().addReloadListener(new ReloadListener<JsonObject>()
-		{
-			@Override
-			protected JsonObject prepare(IResourceManager resourceManager, IProfiler profiler)
-			{
-				Gson gson = new GsonBuilder().setLenient().create();
-				JsonObject object = new JsonObject();
-
-				try
-				{
-					for (IResource resource : resourceManager.getAllResources(new ResourceLocation("ftbchunks", "ftbchunks_colors.json")))
-					{
-						try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))
-						{
-							for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet())
-							{
-								object.add(entry.getKey(), entry.getValue());
-							}
-						}
-						catch (Exception ex)
-						{
-							ex.printStackTrace();
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-				}
-
-				return object;
-			}
-
-			@Override
-			protected void apply(JsonObject object, IResourceManager resourceManager, IProfiler profiler)
-			{
-				FTBChunksAPIImpl.COLOR_MAP.clear();
-
-				for (Map.Entry<String, JsonElement> entry : object.entrySet())
-				{
-					if (entry.getValue().isJsonPrimitive())
-					{
-						Color4I color = Color4I.fromJson(entry.getValue());
-
-						if (color.isEmpty())
-						{
-							continue;
-						}
-
-						if (entry.getKey().startsWith("#"))
-						{
-							Tag<Block> tag = BlockTags.getCollection().get(new ResourceLocation(entry.getKey().substring(1)));
-
-							if (tag != null)
-							{
-								for (Block block : tag.getAllElements())
-								{
-									FTBChunksAPIImpl.COLOR_MAP.put(block, color);
-								}
-							}
-						}
-						else
-						{
-							Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
-
-							if (block != Blocks.AIR)
-							{
-								FTBChunksAPIImpl.COLOR_MAP.put(block, color);
-							}
-						}
-					}
-				}
-			}
-		});
+		event.getServer().getResourceManager().addReloadListener(new ColorMapLoader());
+		event.getServer().getResourceManager().addReloadListener(new GrassColorLoader());
+		event.getServer().getResourceManager().addReloadListener(new FoliageColorLoader());
 	}
 
 	@SubscribeEvent
@@ -535,7 +445,7 @@ public class FTBChunks
 	{
 		if (event.phase == TickEvent.Phase.START)
 		{
-			if (FTBChunksAPIImpl.manager.map.ticks % 4L == 1L)
+			if (FTBChunksAPIImpl.manager.map.taskQueueTicks % 4L == 1L)
 			{
 				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), MathHelper.clamp(FTBChunksAPIImpl.manager.map.taskQueue.size() / 10, 50, 200));
 
@@ -552,10 +462,14 @@ public class FTBChunks
 							break;
 						}
 					}
+					else
+					{
+						break;
+					}
 				}
 			}
 
-			FTBChunksAPIImpl.manager.map.ticks++;
+			FTBChunksAPIImpl.manager.map.taskQueueTicks++;
 		}
 	}
 

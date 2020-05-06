@@ -56,10 +56,10 @@ public class RegionMapPanel extends Panel
 			regionMinX = regionMinZ = regionMaxX = regionMaxZ = 0;
 		}
 
-		regionMinX -= 1;
-		regionMinZ -= 1;
-		regionMaxX += 2;
-		regionMaxZ += 2;
+		regionMinX -= 100;
+		regionMinZ -= 100;
+		regionMaxX += 101;
+		regionMaxZ += 101;
 	}
 
 	public void scrollTo(double x, double y)
@@ -83,7 +83,7 @@ public class RegionMapPanel extends Panel
 	@Override
 	public void addWidgets()
 	{
-		FTBChunksClient.saveAllRegions(false);
+		FTBChunksClient.saveAllRegions();
 
 		try
 		{
@@ -110,7 +110,10 @@ public class RegionMapPanel extends Panel
 
 		for (AbstractClientPlayerEntity player : Minecraft.getInstance().world.getPlayers())
 		{
-			add(new PlayerButton(this, player));
+			if (player.dimension == largeMap.dimension.dimension)
+			{
+				add(new PlayerButton(this, player));
+			}
 		}
 
 		alignWidgets();

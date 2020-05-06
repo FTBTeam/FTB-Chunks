@@ -33,31 +33,37 @@ public class RegionTextureData
 		if (id == 0)
 		{
 			id = TextureUtil.generateTextureId();
-			FTBChunksClient.EXECUTOR_SERVICE.submit(() -> {
-				final NativeImage image = NativeImage.read(Files.newInputStream(largeMap.dimension.directory.resolve(pos.x + "," + pos.z + ",map.png")));
-
-				for (int iy = 0; iy < 512; iy++)
+			FTBChunksClient.taskQueue.addLast(() -> {
+				try
 				{
-					for (int ix = 0; ix < 512; ix++)
+					final NativeImage image = NativeImage.read(Files.newInputStream(largeMap.dimension.directory.resolve(pos.x + "," + pos.z + ",map.png")));
+
+					for (int iy = 0; iy < 512; iy++)
 					{
-						if (image.getPixelRGBA(ix, iy) == 0xFF000000)
+						for (int ix = 0; ix < 512; ix++)
 						{
-							image.setPixelRGBA(ix, iy, 0);
+							if (image.getPixelRGBA(ix, iy) == 0xFF000000)
+							{
+								image.setPixelRGBA(ix, iy, 0);
+							}
 						}
 					}
+
+					Minecraft.getInstance().runAsync(() -> {
+						if (id != 0)
+						{
+							TextureUtil.prepareImage(id, 512, 512);
+							image.uploadTextureSub(0, 0, 0, false);
+							loaded = true;
+						}
+
+						image.close();
+					});
 				}
-
-				Minecraft.getInstance().runAsync(() -> {
-					if (id != 0)
-					{
-						TextureUtil.prepareImage(id, 512, 512);
-						image.uploadTextureSub(0, 0, 0, false);
-						loaded = true;
-					}
-
-					image.close();
-				});
-				return null;
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
+				}
 			});
 		}
 

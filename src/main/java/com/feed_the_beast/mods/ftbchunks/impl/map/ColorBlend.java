@@ -1,9 +1,16 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
+import com.feed_the_beast.mods.ftbchunks.FoliageColorLoader;
+import com.feed_the_beast.mods.ftbchunks.GrassColorLoader;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.CubeCoordinateIterator;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.DarkForestBiome;
+import net.minecraft.world.biome.DarkForestHillsBiome;
+import net.minecraft.world.biome.SwampBiome;
+import net.minecraft.world.biome.SwampHillsBiome;
 
 /**
  * @author LatvianModder
@@ -11,10 +18,52 @@ import net.minecraft.world.World;
 public enum ColorBlend
 {
 	WATER((w, p) -> w.getBiome(p).getWaterColor()),
-	//GRASS((w, p) -> w.getBiome(p).getGrassColor(p.getX() + 0.5D, p.getZ() + 0.5D)),
-	GRASS((w, p) -> 0xFF7BB262),
-	//FOLIAGE((w, p) -> w.getBiome(p).getFoliageColor());
-	FOLIAGE((w, p) -> 0xFF559934);
+	GRASS((w, p) -> {
+		if (GrassColorLoader.map.length != 65536)
+		{
+			return 0xFF7BB262;
+		}
+
+		Biome biome = w.getBiome(p);
+
+		if (biome instanceof SwampBiome || biome instanceof SwampHillsBiome)
+		{
+			double d0 = Biome.INFO_NOISE.noiseAt((p.getX() + 0.5D) * 0.0225D, (p.getZ() + 0.5D) * 0.0225D, false);
+			return d0 < -0.1D ? 5011004 : 6975545;
+		}
+
+		float temperature = MathHelper.clamp(biome.getDefaultTemperature(), 0F, 1F);
+		float humidity = MathHelper.clamp(biome.getDownfall(), 0F, 1F) * temperature;
+		int i = (int) ((1F - temperature) * 255F);
+		int j = (int) ((1F - humidity) * 255F);
+		int col = GrassColorLoader.map[j << 8 | i];
+
+		if (biome instanceof DarkForestBiome || biome instanceof DarkForestHillsBiome)
+		{
+			return (col & 16711422) + 2634762 >> 1;
+		}
+
+		return col;
+	}),
+	FOLIAGE((w, p) -> {
+		if (FoliageColorLoader.map.length != 65536)
+		{
+			return 0xFF559934;
+		}
+
+		Biome biome = w.getBiome(p);
+
+		if (biome instanceof SwampBiome || biome instanceof SwampHillsBiome)
+		{
+			return 6975545;
+		}
+
+		float temperature = MathHelper.clamp(biome.getDefaultTemperature(), 0F, 1F);
+		float humidity = MathHelper.clamp(biome.getDownfall(), 0F, 1F) * temperature;
+		int i = (int) ((1F - temperature) * 255F);
+		int j = (int) ((1F - humidity) * 255F);
+		return FoliageColorLoader.map[j << 8 | i];
+	});
 
 	public final MapColorGetter colorGetter;
 

@@ -9,6 +9,7 @@ import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.impl.map.ColorBlend;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
@@ -31,9 +32,12 @@ import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
@@ -41,6 +45,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -50,10 +55,9 @@ import org.lwjgl.opengl.GL11;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author LatvianModder
@@ -64,7 +68,8 @@ public class FTBChunksClient extends FTBChunksCommon
 	public static final ResourceLocation MAP_ICONS = new ResourceLocation("textures/map/map_icons.png");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
-	public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
+	public static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
+	private static long taskQueueTicks = 0L;
 
 	public static KeyBinding openMapKey;
 
@@ -90,7 +95,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		new LargeMapScreen().openGui();
 	}
 
-	public static void saveAllRegions(boolean instant)
+	public static void saveAllRegions()
 	{
 		for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
 		{
@@ -98,25 +103,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			{
 				if (region.saveImage)
 				{
-					if (instant)
-					{
-						try
-						{
-							region.saveNow();
-						}
-						catch (Exception ex)
-						{
-							ex.printStackTrace();
-						}
-					}
-					else
-					{
-						EXECUTOR_SERVICE.submit(() -> {
-							region.saveNow();
-							return null;
-						});
-					}
-
+					taskQueue.addLast(region);
 					region.saveImage = false;
 				}
 			}
@@ -126,11 +113,6 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void login(LoginDataPacket loginData)
 	{
-		if (ClientMapManager.inst != null)
-		{
-			ClientMapManager.inst.release();
-		}
-
 		ClientMapManager.inst = new ClientMapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/map/" + loginData.serverId));
 		ClientMapDimension.current = ClientMapManager.inst.getDimension(Minecraft.getInstance().world.dimension.getType());
 		updateMinimap = true;
@@ -256,7 +238,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.player == null)
+		if (mc.player == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
 		{
 			return;
 		}
@@ -276,7 +258,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		if (nextRegionSave == 0L || now >= nextRegionSave)
 		{
 			nextRegionSave = now + 60000L;
-			saveAllRegions(false);
+			saveAllRegions();
 		}
 
 		if (minimapTextureId == -1)
@@ -450,7 +432,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					d = s / 2D;
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - player.getPosZ(), mc.player.getPosX() - player.getPosZ()) + (-mc.player.rotationYaw) * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getPosZ() - player.getPosZ(), mc.player.getPosX() - player.getPosX()) + (-mc.player.rotationYaw) * Math.PI / 180D;
 
 				double wx = x + s / 2D + Math.cos(angle) * d;
 				double wy = y + s / 2D + Math.sin(angle) * d;
@@ -461,6 +443,7 @@ public class FTBChunksClient extends FTBChunksCommon
 
 				TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
 				Texture t = texturemanager.getTexture(texture);
+
 				if (t == null)
 				{
 					t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/16", ImageIcon.MISSING_IMAGE);
@@ -476,16 +459,72 @@ public class FTBChunksClient extends FTBChunksCommon
 				tessellator.draw();
 			}
 		}
+
+		RenderSystem.pushMatrix();
+		RenderSystem.translated(x + s / 2D, y + s + 3D, 0D);
+
+		String cs = MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ());
+		String bs = I18n.format(mc.world.getBiome(new BlockPos(mc.player)).getTranslationKey());
+		int csw = mc.fontRenderer.getStringWidth(cs);
+		int bsw = mc.fontRenderer.getStringWidth(bs);
+
+		RenderSystem.scaled(0.5D * scale, 0.5D * scale, 1D);
+
+		mc.fontRenderer.drawStringWithShadow(cs, -csw / 2F, 0, 0xFFFFFFFF);
+		mc.fontRenderer.drawStringWithShadow(bs, -bsw / 2F, 10, 0xFFFFFFFF);
+
+		RenderSystem.popMatrix();
 	}
 
 	@SubscribeEvent
-	public static void loggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
+	public void loggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
 	{
 		if (ClientMapManager.inst != null)
 		{
-			saveAllRegions(true);
+			saveAllRegions();
+
+			MapTask t;
+
+			while ((t = taskQueue.pollFirst()) != null)
+			{
+				t.run();
+			}
+
 			ClientMapManager.inst.release();
 			ClientMapManager.inst = null;
+		}
+	}
+
+	@SubscribeEvent
+	public void clientTick(TickEvent.ClientTickEvent event)
+	{
+		if (event.phase == TickEvent.Phase.START && ClientMapManager.inst != null && Minecraft.getInstance().world != null)
+		{
+			if (taskQueueTicks % 4L == 1L)
+			{
+				int s = Math.min(taskQueue.size(), MathHelper.clamp(taskQueue.size() / 10, 50, 200));
+
+				for (int i = 0; i < s; i++)
+				{
+					MapTask r = taskQueue.pollFirst();
+
+					if (r != null)
+					{
+						r.run();
+
+						if (r.cancelOtherTasks())
+						{
+							break;
+						}
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			taskQueueTicks++;
 		}
 	}
 }

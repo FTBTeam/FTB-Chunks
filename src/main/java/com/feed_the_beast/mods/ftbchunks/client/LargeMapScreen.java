@@ -130,7 +130,7 @@ public class LargeMapScreen extends GuiBase
 		add(dimensionButton = new SimpleButton(this, dimension.directory.getFileName().toString(), GuiIcons.GLOBE, (b, m) -> {
 			List<DimensionType> types = Registry.DIMENSION_TYPE.stream().filter(t -> {
 				ResourceLocation id = DimensionType.getKey(t);
-				return Files.exists(dimension.manager.directory.resolve(id.getNamespace() + "_" + id.getPath()));
+				return id != null && Files.exists(dimension.manager.directory.resolve(id.getNamespace() + "_" + id.getPath()));
 			}).collect(Collectors.toList());
 
 			int i = types.indexOf(dimension.dimension);

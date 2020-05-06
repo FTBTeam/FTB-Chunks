@@ -128,7 +128,7 @@ public class MapChunk
 	{
 		Block b = state.getBlock();
 
-		if (b instanceof TallGrassBlock)
+		if (b == Blocks.TALL_GRASS || b == Blocks.LARGE_FERN || b instanceof TallGrassBlock)
 		{
 			return true;
 		}

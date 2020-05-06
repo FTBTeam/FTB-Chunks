@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import net.minecraft.client.renderer.texture.NativeImage;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 /**
  * @author LatvianModder
  */
-public class ClientMapRegion
+public class ClientMapRegion implements MapTask
 {
 	private static final int NO_CHUNK = NativeImage.getCombined(255, 0, 0, 0);
 
@@ -105,13 +106,21 @@ public class ClientMapRegion
 		}
 	}
 
-	public void saveNow() throws Exception
+	@Override
+	public void run()
 	{
-		if (Files.notExists(dimension.directory))
+		try
 		{
-			Files.createDirectories(dimension.directory);
-		}
+			if (Files.notExists(dimension.directory))
+			{
+				Files.createDirectories(dimension.directory);
+			}
 
-		getImage().write(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png"));
+			getImage().write(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png"));
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
 	}
 }

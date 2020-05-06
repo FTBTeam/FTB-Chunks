@@ -19,14 +19,14 @@ public class MapManager
 	public final ClaimedChunkManagerImpl manager;
 	public final Map<DimensionType, MapDimension> dimensions;
 	public final ArrayDeque<MapTask> taskQueue;
-	public long ticks;
+	public long taskQueueTicks;
 
 	public MapManager(ClaimedChunkManagerImpl m)
 	{
 		manager = m;
 		dimensions = new HashMap<>();
 		taskQueue = new ArrayDeque<>();
-		ticks = 0L;
+		taskQueueTicks = 0L;
 	}
 
 	public MapDimension getDimension(DimensionType dim)

@@ -4,6 +4,7 @@ import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.FireBlock;
 import net.minecraft.block.RedstoneTorchBlock;
 import net.minecraft.block.TallGrassBlock;
 import net.minecraft.block.TorchBlock;
@@ -132,6 +133,10 @@ public class MapChunk
 		{
 			return true;
 		}
+		else if (b instanceof FireBlock)
+		{
+			return true;
+		}
 		else if (b instanceof AbstractButtonBlock)
 		{
 			return true;
@@ -142,5 +147,10 @@ public class MapChunk
 		}
 
 		return b.isAir(state, world, pos);
+	}
+
+	public XZ getActualPos()
+	{
+		return XZ.of((region.pos.x << 5) + pos.x, (region.pos.z << 5) + pos.z);
 	}
 }

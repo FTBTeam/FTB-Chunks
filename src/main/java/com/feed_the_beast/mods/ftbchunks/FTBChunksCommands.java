@@ -10,6 +10,8 @@ import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.impl.map.MapDimension;
+import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -31,8 +33,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -324,6 +328,7 @@ public class FTBChunksCommands
 
 		Waypoint w = new Waypoint();
 		w.name = name;
+		w.owner = data.getName();
 		w.dimension = player.dimension;
 		w.mode = PrivacyMode.PRIVATE;
 		w.x = MathHelper.floor(player.getPosX());
@@ -378,6 +383,39 @@ public class FTBChunksCommands
 		for (ServerPlayerEntity p : players)
 		{
 			p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map to entire map to you, be prepared for lag!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+		}
+
+		ServerWorld world = source.getWorld();
+
+		MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType());
+
+		if (Files.exists(dimension.directory))
+		{
+			try
+			{
+				int[] chunks = new int[1];
+				Files.list(dimension.directory)
+						.map(path -> path.getFileName().toString())
+						.filter(name -> name.endsWith(".png"))
+						.map(name -> name.split(","))
+						.filter(name -> name.length == 3)
+						.map(name -> dimension.getRegion(XZ.of(Integer.parseInt(name[0]), Integer.parseInt(name[1]))))
+						.forEach(region -> region.chunks.values().forEach(chunk -> {
+							chunks[0]++;
+							FTBChunksAPIImpl.manager.map.queueSend(world, chunk.getActualPos(), players::contains);
+						}));
+
+				FTBChunksAPIImpl.manager.map.queue(() -> {
+					for (ServerPlayerEntity p : players)
+					{
+						p.sendMessage(new StringTextComponent("Map received (" + chunks[0] + " chunks)!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+					}
+				});
+			}
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 
 		return 1;

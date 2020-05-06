@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
@@ -15,14 +16,14 @@ import java.nio.file.Files;
  */
 public class RegionTextureData
 {
-	public final LargeMapScreen largeMap;
+	public final ClientMapDimension dimension;
 	public final XZ pos;
 	public int id;
 	public boolean loaded;
 
 	public RegionTextureData(LargeMapScreen l, XZ p)
 	{
-		largeMap = l;
+		dimension = l.dimension;
 		pos = p;
 		id = 0;
 		loaded = false;
@@ -33,10 +34,11 @@ public class RegionTextureData
 		if (id == 0)
 		{
 			id = TextureUtil.generateTextureId();
+
 			FTBChunksClient.taskQueue.addLast(() -> {
 				try
 				{
-					final NativeImage image = NativeImage.read(Files.newInputStream(largeMap.dimension.directory.resolve(pos.x + "," + pos.z + ",map.png")));
+					final NativeImage image = NativeImage.read(Files.newInputStream(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png")));
 
 					for (int iy = 0; iy < 512; iy++)
 					{

@@ -223,7 +223,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_CLAIMED;
 		}
-		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer() && !isTeamMember(source.getEntity()))
+		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer())
 		{
 			return ClaimResults.NOT_OWNER;
 		}
@@ -571,6 +571,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 				}
 
 				w.name = o.get("name").getAsString();
+				w.owner = getName();
 				w.x = o.get("x").getAsInt();
 				w.y = o.get("y").getAsInt();
 				w.z = o.get("z").getAsInt();

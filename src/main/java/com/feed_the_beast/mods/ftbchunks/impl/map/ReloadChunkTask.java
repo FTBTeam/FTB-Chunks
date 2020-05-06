@@ -54,9 +54,8 @@ public class ReloadChunkTask implements MapTask
 	public void run()
 	{
 		MapChunk data = FTBChunksAPIImpl.manager.map.getChunk(chunkPosition.dim(world.dimension.getType()));
-		int cx = data.pos.x + (data.region.pos.x << 5);
-		int cz = data.pos.z + (data.region.pos.z << 5);
-		IChunk ichunk = world.getChunk(cx, cz, ChunkStatus.FULL, true);
+		XZ c = data.getActualPos();
+		IChunk ichunk = world.getChunk(c.x, c.z, ChunkStatus.FULL, true);
 
 		if (!(ichunk instanceof Chunk))
 		{
@@ -66,8 +65,8 @@ public class ReloadChunkTask implements MapTask
 		Chunk chunk = (Chunk) ichunk;
 
 		BlockPos.Mutable currentBlockPos = new BlockPos.Mutable(0, 0, 0);
-		int x = cx << 4;
-		int z = cz << 4;
+		int x = c.x << 4;
+		int z = c.z << 4;
 		boolean changed = false;
 
 		try

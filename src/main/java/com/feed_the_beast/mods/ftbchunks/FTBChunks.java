@@ -540,6 +540,7 @@ public class FTBChunks
 
 			Waypoint w = new Waypoint();
 			w.name = "Death #" + player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+			w.owner = data.getName();
 			w.dimension = player.dimension;
 			w.mode = PrivacyMode.ALLIES;
 			w.type = WaypointType.DEATH;

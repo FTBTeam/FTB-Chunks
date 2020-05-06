@@ -1,9 +1,13 @@
 {
 	"ftbchunks": "FTB Chunks",
+	"ftbchunks.noise": "Noise",
 	"ftbchunks.minimap": "Minimap",
 	"ftbchunks.minimap_scale": "Minimap Scale",
 	"ftbchunks.minimap_waypoints": "Minimap Waypoints",
 	"ftbchunks.minimap_player_heads": "Minimap Player Heads",
+	"ftbchunks.minimap_xyz": "Minimap XYZ",
+	"ftbchunks.minimap_biome": "Minimap Biome",
+	"ftbchunks.minimap_blur": "Minimap Blur",
 	"sidebar_button.ftbchunks.chunks": "FTB Chunks",
 	"key.ftbchunks.map": "Open FTB Chunks Map",
 	"wilderness": "Wilderness",

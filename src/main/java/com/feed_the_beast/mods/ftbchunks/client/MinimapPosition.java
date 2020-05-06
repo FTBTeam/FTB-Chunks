@@ -26,23 +26,23 @@ public enum MinimapPosition
 	{
 		if (posX == 0)
 		{
-			return 3;
+			return 5;
 		}
 
-		return w - s - 3;
+		return w - s - 5;
 	}
 
 	public int getY(int h, int s)
 	{
 		if (posY == 0)
 		{
-			return 3;
+			return 5;
 		}
 		else if (posY == 1)
 		{
 			return (h - s) / 2;
 		}
 
-		return h - s - 18;
+		return h - s - 20;
 	}
 }

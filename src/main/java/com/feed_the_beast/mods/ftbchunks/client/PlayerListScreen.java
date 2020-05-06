@@ -24,6 +24,8 @@ public class PlayerListScreen extends GuiButtonListBase
 
 	public PlayerListScreen(List<SendPlayerListPacket.NetPlayer> p, int a)
 	{
+		setHasSearchBox(true);
+
 		players = p;
 		allyMode = a;
 

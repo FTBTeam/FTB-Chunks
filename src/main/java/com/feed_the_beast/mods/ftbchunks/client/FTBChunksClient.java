@@ -20,7 +20,6 @@ import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.widget.CustomClickEvent;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
@@ -68,6 +67,13 @@ public class FTBChunksClient extends FTBChunksCommon
 	public static final ResourceLocation MAP_ICONS = new ResourceLocation("textures/map/map_icons.png");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
+	public static final ResourceLocation[] COMPASS = {
+			new ResourceLocation("ftbchunks:textures/compass_e.png"),
+			new ResourceLocation("ftbchunks:textures/compass_n.png"),
+			new ResourceLocation("ftbchunks:textures/compass_w.png"),
+			new ResourceLocation("ftbchunks:textures/compass_s.png"),
+	};
+
 	public static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	private static long taskQueueTicks = 0L;
 
@@ -75,8 +81,6 @@ public class FTBChunksClient extends FTBChunksCommon
 
 	public static int minimapTextureId = -1;
 	private static int currentPlayerChunkX, currentPlayerChunkZ;
-	public static boolean blur = true;
-	public static float noise = 0.05F;
 
 	private boolean updateMinimap = false;
 	public static SendGeneralDataPacket generalData;
@@ -151,9 +155,9 @@ public class FTBChunksClient extends FTBChunksCommon
 
 					int nc = image.getRGB(x, z);
 
-					if (noise != 0F)
+					if (FTBChunksClientConfig.noise != 0D)
 					{
-						nc = ColorBlend.addBrightness(nc, random.nextFloat() * noise - noise / 2F);
+						nc = ColorBlend.addBrightness(nc, (float) (random.nextFloat() * FTBChunksClientConfig.noise - FTBChunksClientConfig.noise / 2D));
 					}
 
 					int h = (nc >> 24) & 0xFF;
@@ -271,7 +275,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		RenderSystem.enableTexture();
 		RenderSystem.bindTexture(minimapTextureId);
 
-		if (blur)
+		if (FTBChunksClientConfig.minimapBlur)
 		{
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
@@ -324,11 +328,6 @@ public class FTBChunksClient extends FTBChunksCommon
 		int y = FTBChunksClientConfig.minimap.getY(mc.getMainWindow().getScaledHeight(), s);
 		int z = 0;
 
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.enableCull();
-		RenderSystem.color4f(1F, 1F, 1F, 1F);
-
 		double border = 0D;
 
 		Tessellator tessellator = Tessellator.getInstance();
@@ -340,13 +339,18 @@ public class FTBChunksClient extends FTBChunksCommon
 		float offX = (float) ((mc.player.getPosX() / 16D - currentPlayerChunkX - 0.5D) / (double) FTBChunks.TILES);
 		float offY = (float) ((mc.player.getPosZ() / 16D - currentPlayerChunkZ - 0.5D) / (double) FTBChunks.TILES);
 
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.enableCull();
+		RenderSystem.color4f(1F, 1F, 1F, 1F);
 		RenderSystem.enableTexture();
+		RenderSystem.enableDepthTest();
 
 		RenderSystem.pushMatrix();
 		RenderSystem.translated(x + s / 2D, y + s / 2D, 0D);
-		RenderSystem.rotatef(-mc.player.rotationYaw + 180F, 0F, 0F, 1F);
 
-		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.SRC_COLOR, GlStateManager.DestFactor.ZERO);
+		// See AdvancementTabGui
+		RenderSystem.colorMask(false, false, false, false);
 		mc.getTextureManager().bindTexture(CIRCLE_MASK);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
 		buffer.pos(-s / 2D + border, -s / 2D + border, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
@@ -354,8 +358,11 @@ public class FTBChunksClient extends FTBChunksCommon
 		buffer.pos(s / 2D - border, s / 2D - border, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
 		buffer.pos(s / 2D - border, -s / 2D + border, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 		tessellator.draw();
+		RenderSystem.colorMask(true, true, true, true);
 
-		RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_ALPHA, GlStateManager.DestFactor.ONE_MINUS_DST_ALPHA);
+		RenderSystem.rotatef(-mc.player.rotationYaw + 180F, 0F, 0F, 1F);
+
+		RenderSystem.depthFunc(GL11.GL_GEQUAL);
 		RenderSystem.bindTexture(minimapTextureId);
 
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
@@ -365,6 +372,8 @@ public class FTBChunksClient extends FTBChunksCommon
 		buffer.pos(s / 2D - border, -s / 2D + border, z).color(255, 255, 255, 255).tex(f1 + offX, f0 + offY).endVertex();
 		tessellator.draw();
 		RenderSystem.popMatrix();
+
+		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
 		RenderSystem.defaultBlendFunc();
 		mc.getTextureManager().bindTexture(CIRCLE_BORDER);
@@ -384,6 +393,25 @@ public class FTBChunksClient extends FTBChunksCommon
 		tessellator.draw();
 
 		RenderSystem.enableTexture();
+
+		for (int face = 0; face < 4; face++)
+		{
+			double d = s / 2.2D;
+
+			double angle = (-mc.player.rotationYawHead - 180D - face * 90D) * Math.PI / 180D;
+
+			double wx = x + s / 2D + Math.cos(angle) * d;
+			double wy = y + s / 2D + Math.sin(angle) * d;
+			double ws = s / 32D;
+
+			mc.textureManager.bindTexture(COMPASS[face]);
+			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+			buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+			buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+			buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+			buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+			tessellator.draw();
+		}
 
 		if (FTBChunksClientConfig.minimapWaypoints && !ClientMapDimension.current.waypoints.isEmpty())
 		{
@@ -460,20 +488,28 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 
-		RenderSystem.pushMatrix();
-		RenderSystem.translated(x + s / 2D, y + s + 3D, 0D);
+		if (FTBChunksClientConfig.minimapXYZ || FTBChunksClientConfig.minimapBiome)
+		{
+			RenderSystem.pushMatrix();
+			RenderSystem.translated(x + s / 2D, y + s + 5D, 0D);
+			RenderSystem.scaled(0.5D * scale, 0.5D * scale, 1D);
 
-		String cs = MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ());
-		String bs = I18n.format(mc.world.getBiome(new BlockPos(mc.player)).getTranslationKey());
-		int csw = mc.fontRenderer.getStringWidth(cs);
-		int bsw = mc.fontRenderer.getStringWidth(bs);
+			if (FTBChunksClientConfig.minimapXYZ)
+			{
+				String cs = MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ());
+				int csw = mc.fontRenderer.getStringWidth(cs);
+				mc.fontRenderer.drawStringWithShadow(cs, -csw / 2F, 0, 0xFFFFFFFF);
+			}
 
-		RenderSystem.scaled(0.5D * scale, 0.5D * scale, 1D);
+			if (FTBChunksClientConfig.minimapBiome)
+			{
+				String bs = I18n.format(mc.world.getBiome(new BlockPos(mc.player)).getTranslationKey());
+				int bsw = mc.fontRenderer.getStringWidth(bs);
+				mc.fontRenderer.drawStringWithShadow(bs, -bsw / 2F, FTBChunksClientConfig.minimapXYZ ? 10 : 0, 0xFFFFFFFF);
+			}
 
-		mc.fontRenderer.drawStringWithShadow(cs, -csw / 2F, 0, 0xFFFFFFFF);
-		mc.fontRenderer.drawStringWithShadow(bs, -bsw / 2F, 10, 0xFFFFFFFF);
-
-		RenderSystem.popMatrix();
+			RenderSystem.popMatrix();
+		}
 	}
 
 	@SubscribeEvent

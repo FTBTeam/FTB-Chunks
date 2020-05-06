@@ -48,6 +48,7 @@ public class SendWaypointsPacket
 			Waypoint w = new Waypoint();
 			w.id = new UUID(buf.readLong(), buf.readLong());
 			w.name = buf.readString(100);
+			w.owner = buf.readString(100);
 			w.dimension = DimensionType.getById(buf.readVarInt());
 			w.x = buf.readVarInt();
 			w.y = buf.readVarInt();
@@ -68,6 +69,7 @@ public class SendWaypointsPacket
 			buf.writeLong(w.id.getMostSignificantBits());
 			buf.writeLong(w.id.getLeastSignificantBits());
 			buf.writeString(w.name, 100);
+			buf.writeString(w.owner, 100);
 			buf.writeVarInt(w.dimension.getId());
 			buf.writeVarInt(w.x);
 			buf.writeVarInt(w.y);

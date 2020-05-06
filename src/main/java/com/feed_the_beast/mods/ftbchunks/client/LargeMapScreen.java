@@ -4,8 +4,8 @@ import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
+import com.feed_the_beast.mods.ftbchunks.net.TeleportFromMapPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
@@ -192,7 +192,7 @@ public class LargeMapScreen extends GuiBase
 		{
 			if (dimension == ClientMapDimension.current)
 			{
-				ClientUtils.execClientCommand("/teleport " + regionPanel.blockX + " ~2 " + regionPanel.blockZ, false);
+				FTBChunksNet.MAIN.sendToServer(new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ));
 				closeGui(false);
 			}
 

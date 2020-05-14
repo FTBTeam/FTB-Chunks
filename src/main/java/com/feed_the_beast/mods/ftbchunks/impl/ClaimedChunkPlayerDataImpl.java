@@ -24,6 +24,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.dimension.DimensionType;
@@ -99,7 +100,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	{
 		if (color == 0)
 		{
-			color = java.awt.Color.HSBtoRGB(MathUtils.RAND.nextFloat(), 0.65F, 1F);
+			color = MathHelper.hsvToRGB(MathUtils.RAND.nextFloat(), 0.65F, 1F);
 			save();
 		}
 

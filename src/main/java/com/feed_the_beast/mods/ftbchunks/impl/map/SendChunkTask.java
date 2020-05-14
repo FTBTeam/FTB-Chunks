@@ -5,7 +5,6 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
-import com.mojang.datafixers.util.Either;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -27,6 +26,12 @@ import java.util.stream.Collectors;
  */
 public class SendChunkTask implements MapTask
 {
+	private static class EitherChunk
+	{
+		private IChunk chunk;
+		public MapChunk mapChunk;
+	}
+
 	private final World world;
 	private final XZ chunkPosition;
 	private final Predicate<ServerPlayerEntity> sendTo;
@@ -38,31 +43,36 @@ public class SendChunkTask implements MapTask
 		sendTo = p;
 	}
 
-	private static Either<IChunk, MapChunk> getChunkForHeight(World world, int x, int z)
+	private static EitherChunk getChunkForHeight(World world, int x, int z)
 	{
+		EitherChunk e = new EitherChunk();
 		MapRegion region = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType()).getRegion(XZ.regionFromChunk(x, z));
 		MapChunk mapChunk = region.chunks.get(XZ.of(x & 31, z & 31));
 
 		if (mapChunk != null)
 		{
-			return Either.right(mapChunk);
+			e.mapChunk = mapChunk;
+		}
+		else
+		{
+			e.chunk = world.getChunk(x, z, ChunkStatus.FULL, false);
 		}
 
-		return Either.left(world.getChunk(x, z, ChunkStatus.FULL, true));
+		return e;
 	}
 
-	private static int getHeight(Either<IChunk, MapChunk> chunk, BlockPos.Mutable currentBlockPos, int x, int z, int topY)
+	private static int getHeight(EitherChunk e, BlockPos.Mutable currentBlockPos, int x, int z, int topY)
 	{
-		if (chunk.left().isPresent())
+		if (e.mapChunk != null)
 		{
-			return MapChunk.getHeight(chunk.left().get(), currentBlockPos, x, z, topY);
+			return e.mapChunk.getHeight(x & 15, z & 15);
 		}
-		else if (chunk.right().isPresent())
+		else if (e.chunk != null)
 		{
-			return chunk.right().get().getHeight(x & 15, z & 15);
+			return MapChunk.getHeight(e.chunk, currentBlockPos, x, z, topY);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	@Override
@@ -77,9 +87,9 @@ public class SendChunkTask implements MapTask
 
 		ChunkDimPos chunkDimPos = chunkPosition.dim(world.dimension.getType());
 		MapChunk c = FTBChunksAPIImpl.manager.map.getChunk(chunkDimPos);
-		Either<IChunk, MapChunk> cn = getChunkForHeight(world, chunkDimPos.x, chunkDimPos.z - 1);
-		Either<IChunk, MapChunk> ce = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z);
-		Either<IChunk, MapChunk> cne = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z - 1);
+		EitherChunk cn = getChunkForHeight(world, chunkDimPos.x, chunkDimPos.z - 1);
+		EitherChunk ce = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z);
+		EitherChunk cne = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z - 1);
 
 		int topY = world.getActualHeight() + 1;
 		BlockPos.Mutable currentBlockPos = new BlockPos.Mutable();

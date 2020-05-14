@@ -34,6 +34,10 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.monster.IMob;
+import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -92,6 +96,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		FTBChunksClientConfig.init();
 		openMapKey = new KeyBinding("key.ftbchunks.map", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
 		ClientRegistry.registerKeyBinding(openMapKey);
+		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(new EntityIcons());
 	}
 
 	public static void openGui()
@@ -252,9 +257,9 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		if (ClientMapDimension.current == null || ClientMapDimension.current.dimension != Minecraft.getInstance().world.getDimension().getType())
+		if (ClientMapDimension.current == null || ClientMapDimension.current.dimension != mc.world.getDimension().getType())
 		{
-			ClientMapDimension.current = ClientMapManager.inst.getDimension(Minecraft.getInstance().world.getDimension().getType());
+			ClientMapDimension.current = ClientMapManager.inst.getDimension(mc.world.getDimension().getType());
 		}
 
 		long now = System.currentTimeMillis();
@@ -447,6 +452,59 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 
+		if (FTBChunksClientConfig.minimapEntities)
+		{
+			for (Entity entity : mc.world.getAllEntities())
+			{
+				if (entity instanceof AbstractClientPlayerEntity || entity.getType().getClassification() == EntityClassification.MISC)
+				{
+					continue;
+				}
+
+				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), entity.getPosX(), entity.getPosZ()) / 3.2D * scale;
+
+				if (d > s / 2D)
+				{
+					continue;
+				}
+
+				ResourceLocation texture = EntityIcons.ENTITY_ICONS.get(entity.getType());
+
+				if (texture == EntityIcons.INVISIBLE)
+				{
+					continue;
+				}
+				else if (texture == null || !FTBChunksClientConfig.minimapEntityHeads)
+				{
+					if (entity instanceof IMob)
+					{
+						texture = EntityIcons.HOSTILE;
+					}
+					else
+					{
+						texture = EntityIcons.NORMAL;
+					}
+				}
+
+				double angle = Math.atan2(mc.player.getPosZ() - entity.getPosZ(), mc.player.getPosX() - entity.getPosX()) + (-mc.player.rotationYaw) * Math.PI / 180D;
+
+				double wx = x + s / 2D + Math.cos(angle) * d;
+				double wy = y + s / 2D + Math.sin(angle) * d;
+				double ws = s / (FTBChunksClientConfig.minimapLargeEntities ? 32D : 48D);
+
+				mc.getTextureManager().bindTexture(texture);
+				RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+
+				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+				buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+				buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+				buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+				buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+				tessellator.draw();
+			}
+		}
+
 		if (FTBChunksClientConfig.minimapPlayerHeads && mc.world.getPlayers().size() > 1)
 		{
 			for (AbstractClientPlayerEntity player : mc.world.getPlayers())
@@ -472,7 +530,7 @@ public class FTBChunksClient extends FTBChunksCommon
 				String uuid = UUIDTypeAdapter.fromUUID(player.getUniqueID());
 				ResourceLocation texture = new ResourceLocation("head", uuid);
 
-				TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
+				TextureManager texturemanager = mc.getTextureManager();
 				Texture t = texturemanager.getTexture(texture);
 
 				if (t == null)

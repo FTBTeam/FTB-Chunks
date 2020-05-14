@@ -111,7 +111,7 @@ public class FTBChunks
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++)
 		{
-			RELATIVE_SPIRAL_POSITIONS[i] = XZ.of(MathUtils.getSpiralPoint(i));
+			RELATIVE_SPIRAL_POSITIONS[i] = XZ.of(MathUtils.getSpiralPoint(i + 1));
 		}
 	}
 

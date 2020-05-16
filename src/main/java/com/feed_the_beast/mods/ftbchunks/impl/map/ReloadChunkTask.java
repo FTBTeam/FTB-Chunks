@@ -150,7 +150,10 @@ public class ReloadChunkTask implements MapTask
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
+			if (ex != null)
+			{
+				ex.printStackTrace();
+			}
 		}
 
 		callback.accept(this, changed);

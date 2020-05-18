@@ -9,6 +9,7 @@ import net.minecraft.block.GrassBlock;
 import net.minecraft.block.LeavesBlock;
 import net.minecraft.block.RedstoneWireBlock;
 import net.minecraft.block.VineBlock;
+import net.minecraft.block.material.MaterialColor;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
@@ -137,7 +138,8 @@ public class ReloadChunkTask implements MapTask
 
 				if (color == null)
 				{
-					color = Color4I.rgb(state.getMaterialColor(world, currentBlockPos).colorValue);
+					MaterialColor materialColor = state.getMaterialColor(world, currentBlockPos);
+					color = materialColor == null ? Color4I.RED : Color4I.rgb(materialColor.colorValue);
 				}
 
 				if (data.setHRGB(wx, wz, (by << 24) | color.rgb()))
@@ -150,10 +152,7 @@ public class ReloadChunkTask implements MapTask
 		}
 		catch (Exception ex)
 		{
-			if (ex != null)
-			{
-				ex.printStackTrace();
-			}
+			ex.printStackTrace();
 		}
 
 		callback.accept(this, changed);

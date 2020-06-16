@@ -3,7 +3,7 @@
 	"ftbchunks.noise": "Noise",
 	"ftbchunks.minimap": "Minimap",
 	"ftbchunks.minimap_scale": "Minimap Scale",
-	"ftbchunks.minimap_circle": "Minimap Circle",
+	"ftbchunks.minimap_locked_north": "Minimap Locked North",
 	"ftbchunks.minimap_waypoints": "Minimap Waypoints",
 	"ftbchunks.minimap_entities": "Minimap Entities",
 	"ftbchunks.minimap_entity_heads": "Minimap Entity Heads",

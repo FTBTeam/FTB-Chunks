@@ -68,9 +68,9 @@ import java.util.Random;
 public class FTBChunksClient extends FTBChunksCommon
 {
 	private static final ResourceLocation BUTTON_ID = new ResourceLocation("ftbchunks:open_gui");
-	public static final ResourceLocation MAP_ICONS = new ResourceLocation("textures/map/map_icons.png");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
+	public static final ResourceLocation PLAYER = new ResourceLocation("ftbchunks:textures/player.png");
 	public static final ResourceLocation[] COMPASS = {
 			new ResourceLocation("ftbchunks:textures/compass_e.png"),
 			new ResourceLocation("ftbchunks:textures/compass_n.png"),
@@ -327,6 +327,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		}
 
 		double scale = FTBChunksClientConfig.minimapScale * 4D / mc.getMainWindow().getGuiScaleFactor();
+		double minimapRotation = (FTBChunksClientConfig.minimapLockedNorth ? 180D : -mc.player.rotationYaw) % 360D;
 
 		int s = (int) (64D * scale);
 		int x = FTBChunksClientConfig.minimap.getX(mc.getMainWindow().getScaledWidth(), s);
@@ -365,7 +366,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		tessellator.draw();
 		RenderSystem.colorMask(true, true, true, true);
 
-		RenderSystem.rotatef(-mc.player.rotationYaw + 180F, 0F, 0F, 1F);
+		RenderSystem.rotatef((float) (minimapRotation + 180D), 0F, 0F, 1F);
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
 		RenderSystem.bindTexture(minimapTextureId);
@@ -405,7 +406,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			{
 				double d = s / 2.2D;
 
-				double angle = (-mc.player.rotationYawHead - 180D - face * 90D) * Math.PI / 180D;
+				double angle = (minimapRotation + 180D - face * 90D) * Math.PI / 180D;
 
 				double wx = x + s / 2D + Math.cos(angle) * d;
 				double wy = y + s / 2D + Math.sin(angle) * d;
@@ -432,7 +433,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					d = s / 2D;
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z, mc.player.getPosX() - waypoint.x) + (-mc.player.rotationYaw) * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z, mc.player.getPosX() - waypoint.x) + minimapRotation * Math.PI / 180D;
 
 				double wx = x + s / 2D + Math.cos(angle) * d;
 				double wy = y + s / 2D + Math.sin(angle) * d;
@@ -486,7 +487,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					}
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - entity.getPosZ(), mc.player.getPosX() - entity.getPosX()) + (-mc.player.rotationYaw) * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getPosZ() - entity.getPosZ(), mc.player.getPosX() - entity.getPosX()) + minimapRotation * Math.PI / 180D;
 
 				double wx = x + s / 2D + Math.cos(angle) * d;
 				double wy = y + s / 2D + Math.sin(angle) * d;
@@ -521,7 +522,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					d = s / 2D;
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - player.getPosZ(), mc.player.getPosX() - player.getPosX()) + (-mc.player.rotationYaw) * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getPosZ() - player.getPosZ(), mc.player.getPosX() - player.getPosX()) + minimapRotation * Math.PI / 180D;
 
 				double wx = x + s / 2D + Math.cos(angle) * d;
 				double wy = y + s / 2D + Math.sin(angle) * d;
@@ -547,6 +548,26 @@ public class FTBChunksClient extends FTBChunksCommon
 				buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 				tessellator.draw();
 			}
+		}
+
+		if (FTBChunksClientConfig.minimapLockedNorth)
+		{
+			double ws = s / 32D;
+
+			mc.getTextureManager().bindTexture(PLAYER);
+			RenderSystem.pushMatrix();
+			RenderSystem.translated(x + s / 2D, y + s / 2D, z);
+			RenderSystem.rotatef(mc.player.rotationYaw + 180F, 0F, 0F, 1F);
+			RenderSystem.scaled(s / 16D, s / 16D, 1D);
+
+			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+			buffer.pos(-1, -1, 0).color(255, 255, 255, 200).tex(0F, 0F).endVertex();
+			buffer.pos(-1, 1, 0).color(255, 255, 255, 200).tex(0F, 1F).endVertex();
+			buffer.pos(1, 1, 0).color(255, 255, 255, 200).tex(1F, 1F).endVertex();
+			buffer.pos(1, -1, 0).color(255, 255, 255, 200).tex(1F, 0F).endVertex();
+			tessellator.draw();
+
+			RenderSystem.popMatrix();
 		}
 
 		if (FTBChunksClientConfig.minimapXYZ || FTBChunksClientConfig.minimapBiome)

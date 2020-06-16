@@ -18,7 +18,7 @@ public class FTBChunksClientConfig
 	public static double noise;
 	public static MinimapPosition minimap;
 	public static double minimapScale;
-	public static boolean minimapCircle;
+	public static boolean minimapLockedNorth;
 	public static boolean minimapWaypoints;
 	public static boolean minimapPlayerHeads;
 	public static boolean minimapEntities;
@@ -52,7 +52,7 @@ public class FTBChunksClientConfig
 			noise = c.noise.get();
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
-			minimapCircle = c.minimapCircle.get();
+			minimapLockedNorth = c.minimapLockedNorth.get();
 			minimapWaypoints = c.minimapWaypoints.get();
 			minimapPlayerHeads = c.minimapPlayerHeads.get();
 			minimapEntities = c.minimapEntities.get();
@@ -70,7 +70,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.DoubleValue noise;
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
-		public final ForgeConfigSpec.BooleanValue minimapCircle;
+		public final ForgeConfigSpec.BooleanValue minimapLockedNorth;
 		public final ForgeConfigSpec.BooleanValue minimapWaypoints;
 		public final ForgeConfigSpec.BooleanValue minimapEntities;
 		public final ForgeConfigSpec.BooleanValue minimapEntityHeads;
@@ -98,10 +98,10 @@ public class FTBChunksClientConfig
 					.translation("ftbchunks.minimap_scale")
 					.defineInRange("minimap_scale", 1D, 0.25D, 4D);
 
-			minimapCircle = builder
-					.comment("Minimap will be circular instead of square")
-					.translation("ftbchunks.minimap_circle")
-					.define("minimap_circle", false);
+			minimapLockedNorth = builder
+					.comment("Minimap will not rotate")
+					.translation("ftbchunks.minimap_locked_north")
+					.define("minimap_locked_north", false);
 
 			minimapWaypoints = builder
 					.comment("Show waypoints on minimap")
@@ -169,10 +169,10 @@ public class FTBChunksClientConfig
 			minimapScale = v;
 		}, 1D, 0.25D, 4D);
 
-		//group.addBool("minimap_circle", minimapCircle, v -> {
-		//	client.getLeft().minimapCircle.set(v);
-		//	minimapCircle = v;
-		//}, false);
+		group.addBool("minimap_locked_north", minimapLockedNorth, v -> {
+			client.getLeft().minimapLockedNorth.set(v);
+			minimapLockedNorth = v;
+		}, false);
 
 		group.addBool("minimap_waypoints", minimapWaypoints, v -> {
 			client.getLeft().minimapWaypoints.set(v);

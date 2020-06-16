@@ -72,11 +72,9 @@ minecraft {
 	}
 }
 
-/*
 configurations.all {
-	transitive = false
+	resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
-*/
 
 repositories {
 	mavenLocal()
@@ -88,15 +86,23 @@ dependencies {
 	minecraft "net.minecraftforge:forge:${forge_version}"
 	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-gui-library:${ftb_gui_library_version}") {
 		transitive = false
+		changing = true
 	}))
 	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-teams:${ftb_teams_version}") {
 		transitive = false
+		changing = true
 	}))
 	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-ranks:${ftb_ranks_version}") {
 		transitive = false
+		changing = true
 	}))
-	compileOnly(fg.deobf(project.dependencies.create("dev.latvian.mods:kubejs:${kubejs_version}") {
+	//compileOnly(fg.deobf(project.dependencies.create("dev.latvian.mods:kubejs:${kubejs_version}") {
+	//	transitive = false
+	//	changing = true
+	//}))
+	runtimeOnly(fg.deobf(project.dependencies.create("com.sunekaer.mods:YAMDA:${yamda_version}") {
 		transitive = false
+		changing = true
 	}))
 }
 

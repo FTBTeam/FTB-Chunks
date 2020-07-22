@@ -31,7 +31,7 @@ public class SendWaypointsPacket
 		{
 			for (Waypoint w : d.waypoints.values())
 			{
-				if (d == data || w.privacy == PrivacyMode.PUBLIC || w.privacy == PrivacyMode.ALLIES && w.playerData.isAlly(player))
+				if (d == data || w.privacy == PrivacyMode.PUBLIC/* || w.privacy == PrivacyMode.ALLIES && w.playerData.isAlly(player)*/)
 				{
 					Waypoint w1 = w.copy();
 

@@ -1,7 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
-import com.feed_the_beast.mods.ftbchunks.FTBChunks;
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -47,7 +45,7 @@ public class MapRegion
 			}
 		}
 
-		FTBChunks.LOGGER.debug("Loaded region " + pos + " - " + chunks.size() + " chunks");
+		// FTBChunks.LOGGER.debug("Loaded region " + pos + " - " + chunks.size() + " chunks");
 		return this;
 	}
 
@@ -143,7 +141,7 @@ public class MapRegion
 			ex.printStackTrace();
 		}
 
-		FTBChunks.LOGGER.debug("Saved region " + pos + " - " + chunks.size() + " chunks");
+		// FTBChunks.LOGGER.debug("Saved region " + pos + " - " + chunks.size() + " chunks");
 		return false;
 	}
 }

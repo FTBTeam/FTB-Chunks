@@ -1,6 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
-import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.block.BlockState;
@@ -148,7 +147,7 @@ public class ReloadChunkTask implements MapTask
 				}
 			}
 
-			FTBChunks.LOGGER.debug("Reloaded chunk " + data.pos + " in " + data.region.pos + " (" + FTBChunksAPIImpl.manager.map.taskQueue.size() + " tasks left)");
+			// FTBChunks.LOGGER.debug("Reloaded chunk " + data.pos + " in " + data.region.pos + " (" + FTBChunksAPIImpl.manager.map.taskQueue.size() + " tasks left)");
 		}
 		catch (Exception ex)
 		{

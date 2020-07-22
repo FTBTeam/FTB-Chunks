@@ -1,6 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.impl.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import net.minecraft.client.renderer.texture.NativeImage;
@@ -71,7 +70,7 @@ public class ClientMapRegion implements MapTask
 			ex.printStackTrace();
 		}
 
-		FTBChunks.LOGGER.debug("Loaded client region " + pos + " - " + chunks.size() + " chunks");
+		// FTBChunks.LOGGER.debug("Loaded client region " + pos + " - " + chunks.size() + " chunks");
 		return this;
 	}
 

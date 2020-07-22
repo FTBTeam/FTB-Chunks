@@ -54,7 +54,7 @@ public class PlayerButton extends Widget
 		Texture t = texturemanager.getTexture(texture);
 		if (t == null)
 		{
-			t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/16", ImageIcon.MISSING_IMAGE);
+			t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/8", ImageIcon.MISSING_IMAGE);
 			texturemanager.loadTexture(texture, t);
 		}
 

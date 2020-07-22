@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
@@ -12,7 +13,9 @@ import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
+import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
+import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
@@ -23,14 +26,18 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.Texture;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -180,6 +187,13 @@ public class ChunkScreen extends GuiBase
 	@Override
 	public void drawBackground(Theme theme, int x, int y, int w, int h)
 	{
+		TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		PlayerEntity player = Minecraft.getInstance().player;
+		int startX = player.chunkCoordX - FTBChunks.TILE_OFFSET;
+		int startZ = player.chunkCoordZ - FTBChunks.TILE_OFFSET;
+
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
 
@@ -189,8 +203,6 @@ public class ChunkScreen extends GuiBase
 		int a = 100;
 
 		RenderSystem.lineWidth(Math.max(2.5F, (float) Minecraft.getInstance().getMainWindow().getFramebufferWidth() / 1920.0F * 2.5F));
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
 
 		RenderSystem.enableTexture();
 		RenderSystem.bindTexture(FTBChunksClient.minimapTextureId);
@@ -292,6 +304,26 @@ public class ChunkScreen extends GuiBase
 
 		GlStateManager.enableTexture();
 		GlStateManager.lineWidth(1F);
+
+		String uuid = UUIDTypeAdapter.fromUUID(player.getUniqueID());
+		ResourceLocation headTextureLocation = new ResourceLocation("uuid", uuid);
+		Texture headTexture = texturemanager.getTexture(headTextureLocation);
+		if (headTexture == null)
+		{
+			headTexture = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/8", ImageIcon.MISSING_IMAGE);
+			texturemanager.loadTexture(headTextureLocation, headTexture);
+		}
+
+		double hx = sx + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getPosX(), 16D);
+		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getPosZ(), 16D);
+
+		RenderSystem.bindTexture(headTexture.getGlTextureId());
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+		buffer.pos(hx - 4, hy + 4, 0.0D).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+		buffer.pos(hx + 4, hy + 4, 0.0D).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+		buffer.pos(hx + 4, hy - 4, 0.0D).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+		buffer.pos(hx - 4, hy - 4, 0.0D).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+		tessellator.draw();
 
 		SendGeneralDataPacket d = FTBChunksClient.generalData;
 

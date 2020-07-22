@@ -202,6 +202,13 @@ public class FTBChunksClient extends FTBChunksCommon
 		{
 			ClientMapManager.inst.getDimension(waypoint.dimension).waypoints.add(waypoint);
 		}
+
+		LargeMapScreen screen = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
+
+		if (screen != null)
+		{
+			screen.refreshWidgets();
+		}
 	}
 
 	@Override

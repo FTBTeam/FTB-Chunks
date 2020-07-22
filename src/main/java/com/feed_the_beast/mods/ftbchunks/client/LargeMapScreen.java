@@ -5,11 +5,13 @@ import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.TeleportFromMapPacket;
+import com.feed_the_beast.mods.ftbguilibrary.config.ConfigString;
+import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfigFromString;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
+import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
-import com.feed_the_beast.mods.ftbguilibrary.widget.ColorWidget;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
@@ -115,15 +117,25 @@ public class LargeMapScreen extends GuiBase
 	{
 		add(regionPanel);
 
-		add(new ColorWidget(this, backgroundColor.withAlpha(150), null).setPosAndSize(0, 0, 18, 55 - 18)); // TODO: Re-add waypoints button
-		add(new ColorWidget(this, backgroundColor.withAlpha(150), null).setPosAndSize(0, height - 38, 18, 38));
-
 		add(claimChunksButton = new SimpleButton(this, I18n.format("ftbchunks.gui.claimed_chunks"), GuiIcons.MAP, (b, m) -> new ChunkScreen().openGui()));
 		/*
 		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.waypoints"), GuiIcons.BEACON, (b, m) -> {
 			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
 		}));
 		 */
+
+		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
+			ConfigString name = new ConfigString();
+			new GuiEditConfigFromString<>(name, set -> {
+				if (set)
+				{
+					ClientUtils.execClientCommand("/ftbchunks waypoints add " + name.value, false);
+				}
+
+				openGui();
+			}).openGui();
+		}));
+
 		add(settingsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
 		add(alliesButton = new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
 
@@ -156,7 +168,7 @@ public class LargeMapScreen extends GuiBase
 	{
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		alliesButton.setPosAndSize(1, 19, 16, 16);
-		//waypointsButton.setPosAndSize(1, 37, 16, 16);
+		waypointsButton.setPosAndSize(1, 37, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 	}

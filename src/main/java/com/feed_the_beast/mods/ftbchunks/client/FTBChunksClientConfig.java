@@ -101,7 +101,7 @@ public class FTBChunksClientConfig
 			minimapLockedNorth = builder
 					.comment("Minimap will not rotate")
 					.translation("ftbchunks.minimap_locked_north")
-					.define("minimap_locked_north", false);
+					.define("minimap_locked_north", true);
 
 			minimapWaypoints = builder
 					.comment("Show waypoints on minimap")

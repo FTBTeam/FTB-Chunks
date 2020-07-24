@@ -64,10 +64,16 @@ public class ClientMapRegion implements MapTask
 					}
 				}
 			}
+			else
+			{
+				image.close();
+				image = null;
+			}
 		}
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
+			image = null;
 		}
 
 		// FTBChunks.LOGGER.debug("Loaded client region " + pos + " - " + chunks.size() + " chunks");

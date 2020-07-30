@@ -1,12 +1,15 @@
 package com.feed_the_beast.mods.ftbchunks.api;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -14,32 +17,61 @@ import java.util.Objects;
  */
 public class ChunkDimPos implements Comparable<ChunkDimPos>
 {
-	public final DimensionType dimension;
+	public static String getID(@Nullable DimensionType type)
+	{
+		if (type == null)
+		{
+			return "";
+		}
+
+		ResourceLocation id = type.getRegistryName();
+
+		if (id == null)
+		{
+			id = DimensionType.getKey(type);
+		}
+
+		return id == null ? "" : id.toString();
+	}
+
+	public static String getID(@Nullable IWorld world)
+	{
+		return world == null ? "" : getID(world.getDimension().getType());
+	}
+
+	@Nullable
+	public static ServerWorld getWorld(MinecraftServer server, String id)
+	{
+		DimensionType type = id.isEmpty() ? null : DimensionType.byName(new ResourceLocation(id));
+		return type == null ? null : server.getWorld(type);
+	}
+
+	public final String dimension;
 	public final int x;
 	public final int z;
 	private ChunkPos chunkPos;
 	private int hash;
 
-	public ChunkDimPos(DimensionType dim, int _x, int _z)
+	public ChunkDimPos(String dim, int _x, int _z)
 	{
 		dimension = dim;
 		x = _x;
 		z = _z;
 	}
 
-	public ChunkDimPos(DimensionType dim, ChunkPos pos)
+	public ChunkDimPos(String dim, ChunkPos pos)
 	{
 		this(dim, pos.x, pos.z);
 	}
 
 	public ChunkDimPos(IWorld world, BlockPos pos)
 	{
-		this(world.getDimension().getType(), pos.getX() >> 4, pos.getZ() >> 4);
+		this(Objects.requireNonNull(getID(world)), pos.getX() >> 4, pos.getZ() >> 4);
 	}
 
 	public ChunkDimPos(Entity entity)
 	{
-		this(entity.dimension, MathHelper.floor(entity.getPosX()) >> 4, MathHelper.floor(entity.getPosZ()) >> 4);
+		this(entity.world, entity.getPosition());
 	}
 
 	public ChunkPos getChunkPos()
@@ -55,7 +87,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 	@Override
 	public String toString()
 	{
-		return "[" + DimensionType.getKey(dimension) + ":" + x + ":" + z + "]";
+		return "[" + dimension + ":" + x + ":" + z + "]";
 	}
 
 	@Override
@@ -84,7 +116,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 		else if (obj instanceof ChunkDimPos)
 		{
 			ChunkDimPos p = (ChunkDimPos) obj;
-			return dimension == p.dimension && x == p.x && z == p.z;
+			return dimension.equals(p.dimension) && x == p.x && z == p.z;
 		}
 
 		return false;
@@ -93,7 +125,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 	@Override
 	public int compareTo(ChunkDimPos o)
 	{
-		int i = dimension.getRegistryName().compareTo(o.dimension.getRegistryName());
+		int i = dimension.compareTo(o.dimension);
 		return i == 0 ? Long.compare(getChunkPos().asLong(), o.getChunkPos().asLong()) : i;
 	}
 

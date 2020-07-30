@@ -14,7 +14,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.w3c.dom.Document;
@@ -382,7 +381,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 	public void exportSvg()
 	{
-		HashMap<DimensionType, ArrayList<ClaimedChunk>> chunkMap = new HashMap<>();
+		HashMap<String, ArrayList<ClaimedChunk>> chunkMap = new HashMap<>();
 
 		for (ClaimedChunk chunk : FTBChunksAPIImpl.manager.getAllClaimedChunks())
 		{
@@ -391,9 +390,9 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		long sec = Instant.now().getEpochSecond();
 
-		for (Map.Entry<DimensionType, ArrayList<ClaimedChunk>> entry : chunkMap.entrySet())
+		for (Map.Entry<String, ArrayList<ClaimedChunk>> entry : chunkMap.entrySet())
 		{
-			try (Writer writer = Files.newBufferedWriter(localDirectory.resolve(entry.getKey().getRegistryName().toString().replaceAll("\\W", "_") + ".svg")))
+			try (Writer writer = Files.newBufferedWriter(localDirectory.resolve(entry.getKey().replace(':', '_') + ".svg")))
 			{
 				DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();

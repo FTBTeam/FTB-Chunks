@@ -1,7 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.api;
 
-import net.minecraft.world.dimension.DimensionType;
-
 import javax.annotation.Nullable;
 import java.util.UUID;
 
@@ -17,7 +15,7 @@ public class Waypoint
 	public int x = 0;
 	public int y = 0;
 	public int z = 0;
-	public DimensionType dimension = DimensionType.OVERWORLD;
+	public String dimension = "minecraft:overworld";
 	public PrivacyMode privacy = PrivacyMode.PRIVATE;
 	public int color = 0xFFFFFF;
 	public WaypointType type = WaypointType.DEFAULT;

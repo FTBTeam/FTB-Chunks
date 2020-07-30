@@ -28,11 +28,9 @@ import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 
@@ -92,12 +90,12 @@ public class FTBChunksCommands
 						.executes(context -> unloadAll(context.getSource(), Collections.singleton(context.getSource().asPlayer().getGameProfile())))
 				)
 				.then(Commands.literal("info")
-						.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getWorld().dimension.getType(), new ChunkPos(new BlockPos(context.getSource().getPos())))))
+						.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getWorld(), new BlockPos(context.getSource().getPos()))))
 						.then(Commands.argument("x", IntegerArgumentType.integer())
 								.then(Commands.argument("z", IntegerArgumentType.integer())
-										.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getWorld().dimension.getType(), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
+										.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getWorld(), new BlockPos(IntegerArgumentType.getInteger(context, "x"), 0, IntegerArgumentType.getInteger(context, "z")))))
 										.then(Commands.argument("dimension", DimensionArgument.getDimension())
-												.executes(context -> info(context.getSource(), new ChunkDimPos(DimensionArgument.getDimensionArgument(context, "dimension"), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
+												.executes(context -> info(context.getSource(), new ChunkDimPos(ChunkDimPos.getID(DimensionArgument.getDimensionArgument(context, "dimension")), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
 										)
 								)
 						)
@@ -145,14 +143,13 @@ public class FTBChunksCommands
 
 	private interface ChunkCallback
 	{
-
 		void accept(ClaimedChunkPlayerData data, ChunkDimPos pos) throws CommandSyntaxException;
 	}
 
 	private void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
 	{
 		ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(source.asPlayer());
-		DimensionType type = source.getWorld().dimension.getType();
+		String dimId = ChunkDimPos.getID(source.getWorld());
 		int ox = MathHelper.floor(source.getPos().x) >> 4;
 		int oz = MathHelper.floor(source.getPos().z) >> 4;
 		List<ChunkDimPos> list = new ArrayList<>();
@@ -161,7 +158,7 @@ public class FTBChunksCommands
 		{
 			for (int x = -r; x <= r; x++)
 			{
-				list.add(new ChunkDimPos(type, ox + x, oz + z));
+				list.add(new ChunkDimPos(dimId, ox + x, oz + z));
 			}
 		}
 
@@ -325,7 +322,7 @@ public class FTBChunksCommands
 
 		Waypoint w = new Waypoint(data, UUID.randomUUID());
 		w.name = name;
-		w.dimension = player.dimension;
+		w.dimension = ChunkDimPos.getID(player.world);
 		w.privacy = PrivacyMode.PRIVATE;
 		w.x = MathHelper.floor(player.getPosX());
 		w.y = MathHelper.floor(player.getPosY() + 2);
@@ -388,7 +385,7 @@ public class FTBChunksCommands
 	{
 		ServerWorld world = source.getWorld();
 
-		MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType());
+		MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world);
 
 		if (Files.exists(dimension.directory))
 		{

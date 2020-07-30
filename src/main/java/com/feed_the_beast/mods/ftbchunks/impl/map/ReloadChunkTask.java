@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
+import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.block.BlockState;
@@ -53,7 +54,14 @@ public class ReloadChunkTask implements MapTask
 	@SuppressWarnings("deprecation")
 	public void run()
 	{
-		MapChunk data = FTBChunksAPIImpl.manager.map.getChunk(chunkPosition.dim(world.dimension.getType()));
+		String dimId = ChunkDimPos.getID(world);
+
+		if (dimId.isEmpty())
+		{
+			return;
+		}
+
+		MapChunk data = FTBChunksAPIImpl.manager.map.getChunk(dimId, chunkPosition);
 		XZ c = data.getActualPos();
 		IChunk ichunk = world.getChunk(c.x, c.z, ChunkStatus.FULL, true);
 

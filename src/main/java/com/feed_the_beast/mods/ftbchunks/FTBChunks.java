@@ -154,7 +154,7 @@ public class FTBChunks
 
 			if (FTBChunksAPIImpl.manager.map != null)
 			{
-				FTBChunksAPIImpl.manager.map.getDimension(event.getWorld().getDimension().getType()).regions.values().removeIf(MapRegion::saveNow);
+				FTBChunksAPIImpl.manager.map.getDimension(event.getWorld()).regions.values().removeIf(MapRegion::saveNow);
 			}
 		}
 	}
@@ -403,7 +403,7 @@ public class FTBChunks
 				case JOCKEY:
 				case PATROL:
 				{
-					ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld().getDimension().getType(), MathHelper.floor(event.getX()), MathHelper.floor(event.getZ())));
+					ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), new BlockPos(event.getX(), event.getY(), event.getZ())));
 
 					if (chunk != null && !chunk.canEntitySpawn(event.getEntity()))
 					{
@@ -509,14 +509,14 @@ public class FTBChunks
 
 						if (posSet.add(pos))
 						{
-							FTBChunksAPIImpl.manager.map.getChunk(player.world.dimension.getType(), pos).weakUpdate = true;
+							FTBChunksAPIImpl.manager.map.getChunk(pos.dim(player.world)).weakUpdate = true;
 						}
 					}
 				}
 			}
 			else
 			{
-				FTBChunksAPIImpl.manager.map.getChunk(player.world.dimension.getType(), XZ.chunkFromBlock(event.getPos())).weakUpdate = true;
+				FTBChunksAPIImpl.manager.map.getChunk(XZ.chunkFromBlock(event.getPos()).dim(player.world)).weakUpdate = true;
 			}
 		}
 	}
@@ -527,7 +527,7 @@ public class FTBChunks
 		if (event.getPlayer() instanceof ServerPlayerEntity)
 		{
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
-			FTBChunksAPIImpl.manager.map.getChunk(player.world.dimension.getType(), XZ.chunkFromBlock(event.getPos())).weakUpdate = true;
+			FTBChunksAPIImpl.manager.map.getChunk(XZ.chunkFromBlock(event.getPos()).dim(player.world)).weakUpdate = true;
 		}
 	}
 
@@ -541,7 +541,7 @@ public class FTBChunks
 
 			Waypoint w = new Waypoint(data, UUID.randomUUID());
 			w.name = "Death #" + player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-			w.dimension = player.dimension;
+			w.dimension = ChunkDimPos.getID(player.world);
 			w.privacy = PrivacyMode.ALLIES;
 			w.type = WaypointType.DEATH;
 			w.x = MathHelper.floor(player.getPosX());

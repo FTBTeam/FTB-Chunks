@@ -46,7 +46,7 @@ public class SendChunkTask implements MapTask
 	private static EitherChunk getChunkForHeight(World world, int x, int z)
 	{
 		EitherChunk e = new EitherChunk();
-		MapRegion region = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType()).getRegion(XZ.regionFromChunk(x, z));
+		MapRegion region = FTBChunksAPIImpl.manager.map.getDimension(world).getRegion(XZ.regionFromChunk(x, z));
 		MapChunk mapChunk = region.chunks.get(XZ.of(x & 31, z & 31));
 
 		if (mapChunk != null)
@@ -85,11 +85,17 @@ public class SendChunkTask implements MapTask
 			return;
 		}
 
-		ChunkDimPos chunkDimPos = chunkPosition.dim(world.dimension.getType());
-		MapChunk c = FTBChunksAPIImpl.manager.map.getChunk(chunkDimPos);
-		EitherChunk cn = getChunkForHeight(world, chunkDimPos.x, chunkDimPos.z - 1);
-		EitherChunk ce = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z);
-		EitherChunk cne = getChunkForHeight(world, chunkDimPos.x - 1, chunkDimPos.z - 1);
+		String dimId = ChunkDimPos.getID(world);
+
+		if (dimId.isEmpty())
+		{
+			return;
+		}
+
+		MapChunk c = FTBChunksAPIImpl.manager.map.getChunk(dimId, chunkPosition);
+		EitherChunk cn = getChunkForHeight(world, chunkPosition.x, chunkPosition.z - 1);
+		EitherChunk ce = getChunkForHeight(world, chunkPosition.x - 1, chunkPosition.z);
+		EitherChunk cne = getChunkForHeight(world, chunkPosition.x - 1, chunkPosition.z - 1);
 
 		int topY = world.getActualHeight() + 1;
 		BlockPos.Mutable currentBlockPos = new BlockPos.Mutable();
@@ -161,7 +167,7 @@ public class SendChunkTask implements MapTask
 		}
 
 		SendChunkPacket packet = new SendChunkPacket();
-		packet.dimension = world.dimension.getType();
+		packet.dimension = dimId;
 		packet.x = chunkPosition.x;
 		packet.z = chunkPosition.z;
 		packet.imageData = baos.toByteArray();

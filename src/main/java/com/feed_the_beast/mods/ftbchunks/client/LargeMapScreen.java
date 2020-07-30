@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
+import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
@@ -10,12 +11,14 @@ import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfigFromString;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
+import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
+import com.google.common.collect.Streams;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -25,9 +28,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
@@ -139,11 +140,11 @@ public class LargeMapScreen extends GuiBase
 		add(settingsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
 		add(alliesButton = new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
 
-		add(dimensionButton = new SimpleButton(this, dimension.directory.getFileName().toString(), GuiIcons.GLOBE, (b, m) -> {
-			List<DimensionType> types = Registry.DIMENSION_TYPE.stream().filter(t -> {
-				ResourceLocation id = DimensionType.getKey(t);
-				return id != null && Files.exists(dimension.manager.directory.resolve(id.getNamespace() + "_" + id.getPath()));
-			}).collect(Collectors.toList());
+		add(dimensionButton = new SimpleButton(this, dimension.dimension.substring(dimension.dimension.indexOf(':') + 1).replace('_', ' '), GuiIcons.GLOBE, (b, m) -> {
+			List<String> types = Streams.stream(DimensionType.getAll())
+					.map(ChunkDimPos::getID)
+					.filter(id -> !id.isEmpty() && Files.exists(dimension.manager.directory.resolve(id.replace(':', '_'))))
+					.collect(Collectors.toList());
 
 			int i = types.indexOf(dimension.dimension);
 
@@ -156,7 +157,8 @@ public class LargeMapScreen extends GuiBase
 
 				regionTextures.clear();
 
-				dimension = dimension.manager.getDimension(types.get((i + 1) % types.size()));
+				dimension = dimension.manager.getDimension(types.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), types.size())));
+
 				refreshWidgets();
 				movedToPlayer = false;
 			}

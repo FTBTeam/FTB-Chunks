@@ -31,10 +31,11 @@ public class PregenMapRegionTask implements MapTask, ReloadChunkTask.Callback
 
 			if (!regionFolder.exists() || !regionFolder.isDirectory())
 			{
+				world.getServer().getPlayerList().sendMessage(new StringTextComponent("Map pre-generation is done!"));
 				return;
 			}
 
-			MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world.getDimension().getType());
+			MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world);
 			List<ChunkPos> chunks = new ArrayList<>();
 
 			for (File file : regionFolder.listFiles())

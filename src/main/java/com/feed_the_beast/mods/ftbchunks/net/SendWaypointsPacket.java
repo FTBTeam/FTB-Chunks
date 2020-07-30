@@ -8,7 +8,6 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -67,7 +66,7 @@ public class SendWaypointsPacket
 			Waypoint w = new Waypoint(null, new UUID(buf.readLong(), buf.readLong()));
 			w.name = buf.readString(100);
 			w.owner = buf.readString(100);
-			w.dimension = DimensionType.getById(buf.readVarInt());
+			w.dimension = buf.readString(100);
 			w.x = buf.readVarInt();
 			w.y = buf.readVarInt();
 			w.z = buf.readVarInt();
@@ -88,7 +87,7 @@ public class SendWaypointsPacket
 			buf.writeLong(w.id.getLeastSignificantBits());
 			buf.writeString(w.name, 100);
 			buf.writeString(w.owner, 100);
-			buf.writeVarInt(w.dimension.getId());
+			buf.writeString(w.dimension, 100);
 			buf.writeVarInt(w.x);
 			buf.writeVarInt(w.y);
 			buf.writeVarInt(w.z);

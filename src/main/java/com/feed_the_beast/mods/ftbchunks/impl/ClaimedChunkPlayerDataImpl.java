@@ -23,11 +23,9 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.dimension.DimensionType;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -406,7 +404,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		for (ClaimedChunk chunk : getClaimedChunks())
 		{
-			String dim = DimensionType.getKey(chunk.getPos().dimension).toString();
+			String dim = chunk.getPos().dimension;
 			JsonElement e = chunksJson.get(dim);
 
 			if (e == null || e.isJsonNull())
@@ -442,7 +440,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			JsonObject o = new JsonObject();
 			o.addProperty("id", UUIDTypeAdapter.fromUUID(w.id));
 			o.addProperty("name", w.name);
-			o.addProperty("dimension", DimensionType.getKey(w.dimension).toString());
+			o.addProperty("dimension", w.dimension);
 			o.addProperty("x", w.x);
 			o.addProperty("y", w.y);
 			o.addProperty("z", w.z);
@@ -505,20 +503,13 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			for (Map.Entry<String, JsonElement> entry : json.get("chunks").getAsJsonObject().entrySet())
 			{
-				DimensionType dimension = DimensionType.byName(new ResourceLocation(entry.getKey()));
-
-				if (dimension == null)
-				{
-					continue;
-				}
-
 				for (JsonElement e : entry.getValue().getAsJsonArray())
 				{
 					JsonObject o = e.getAsJsonObject();
 					int x = o.get("x").getAsInt();
 					int z = o.get("z").getAsInt();
 
-					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(dimension, x, z));
+					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(entry.getKey(), x, z));
 
 					if (o.has("time"))
 					{
@@ -553,15 +544,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			for (JsonElement e : json.get("waypoints").getAsJsonArray())
 			{
 				JsonObject o = e.getAsJsonObject();
-				DimensionType dim = DimensionType.byName(new ResourceLocation(o.get("dimension").getAsString()));
-
-				if (dim == null)
-				{
-					continue;
-				}
 
 				Waypoint w = new Waypoint(this, o.has("id") ? UUIDTypeAdapter.fromString(o.get("id").getAsString()) : UUID.randomUUID());
-				w.dimension = dim;
+				w.dimension = o.get("dimension").getAsString();
 				w.name = o.get("name").getAsString();
 				w.x = o.get("x").getAsInt();
 				w.y = o.get("y").getAsInt();

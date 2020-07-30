@@ -1,5 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.impl.map;
 
+import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
+import net.minecraft.world.server.ServerWorld;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -108,7 +111,13 @@ public class MapRegion
 		{
 			if (chunk.weakUpdate)
 			{
-				dimension.manager.queueSend(dimension.manager.manager.server.getWorld(dimension.dimension), chunk.getActualPos(), serverPlayerEntity -> true);
+				ServerWorld world = ChunkDimPos.getWorld(dimension.manager.manager.server, dimension.dimension);
+
+				if (world != null)
+				{
+					dimension.manager.queueSend(world, chunk.getActualPos(), serverPlayerEntity -> true);
+				}
+
 				chunk.weakUpdate = false;
 			}
 		}

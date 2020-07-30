@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
+import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
@@ -123,7 +124,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	public void login(LoginDataPacket loginData)
 	{
 		ClientMapManager.inst = new ClientMapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/map/" + loginData.serverId));
-		ClientMapDimension.current = ClientMapManager.inst.getDimension(Minecraft.getInstance().world.dimension.getType());
+		ClientMapDimension.current = ClientMapManager.inst.getDimension(ChunkDimPos.getID(Minecraft.getInstance().world));
 		updateMinimap = true;
 	}
 
@@ -264,9 +265,11 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		if (ClientMapDimension.current == null || ClientMapDimension.current.dimension != mc.world.getDimension().getType())
+		String dimId = ChunkDimPos.getID(mc.world);
+
+		if (ClientMapDimension.current == null || !ClientMapDimension.current.dimension.equals(dimId))
 		{
-			ClientMapDimension.current = ClientMapManager.inst.getDimension(mc.world.getDimension().getType());
+			ClientMapDimension.current = ClientMapManager.inst.getDimension(dimId);
 		}
 
 		long now = System.currentTimeMillis();

@@ -3,7 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.impl.map;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.IWorld;
 
 /**
  * @author LatvianModder
@@ -78,9 +78,14 @@ public class XZ
 		return "[" + x + ", " + z + "]";
 	}
 
-	public ChunkDimPos dim(DimensionType type)
+	public ChunkDimPos dim(String type)
 	{
 		return new ChunkDimPos(type, x, z);
+	}
+
+	public ChunkDimPos dim(IWorld world)
+	{
+		return dim(ChunkDimPos.getID(world));
 	}
 
 	public XZ offset(int ox, int oz)

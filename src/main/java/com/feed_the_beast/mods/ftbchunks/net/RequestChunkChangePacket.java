@@ -70,7 +70,7 @@ public class RequestChunkChangePacket
 			{
 				case 0:
 					consumer = pos -> {
-						ClaimResult result = data.claim(source, pos.dim(player.dimension), false);
+						ClaimResult result = data.claim(source, pos.dim(player.world), false);
 
 						if (result.isSuccess())
 						{
@@ -79,11 +79,11 @@ public class RequestChunkChangePacket
 					};
 					break;
 				case 1:
-					consumer = pos -> data.unclaim(source, pos.dim(player.dimension), false);
+					consumer = pos -> data.unclaim(source, pos.dim(player.world), false);
 					break;
 				case 2:
 					consumer = pos -> {
-						ClaimResult result = data.load(source, pos.dim(player.dimension), false);
+						ClaimResult result = data.load(source, pos.dim(player.world), false);
 
 						if (result.isSuccess())
 						{
@@ -92,7 +92,7 @@ public class RequestChunkChangePacket
 					};
 					break;
 				case 3:
-					consumer = pos -> data.unload(source, pos.dim(player.dimension), false);
+					consumer = pos -> data.unload(source, pos.dim(player.world), false);
 					break;
 				default:
 					FTBChunks.LOGGER.warn("Unknown chunk action ID: " + action);

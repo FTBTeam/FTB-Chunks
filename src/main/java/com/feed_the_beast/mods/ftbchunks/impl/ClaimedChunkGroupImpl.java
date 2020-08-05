@@ -60,6 +60,6 @@ public class ClaimedChunkGroupImpl implements ClaimedChunkGroup
 
 	public void fromJson(JsonObject json)
 	{
-		customName = json.has("custom_name") ? ITextComponent.Serializer.fromJson(json.get("custom_name")) : null;
+		customName = json.has("custom_name") ? ITextComponent.Serializer.func_240641_a_(json.get("custom_name")) : null;
 	}
 }

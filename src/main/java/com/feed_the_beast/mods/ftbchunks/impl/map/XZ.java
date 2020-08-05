@@ -2,8 +2,8 @@ package com.feed_the_beast.mods.ftbchunks.impl.map;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.IWorld;
+import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.world.World;
 
 /**
  * @author LatvianModder
@@ -25,7 +25,7 @@ public class XZ
 		return of(x >> 4, z >> 4);
 	}
 
-	public static XZ chunkFromBlock(Vec3i pos)
+	public static XZ chunkFromBlock(Vector3i pos)
 	{
 		return chunkFromBlock(pos.getX(), pos.getZ());
 	}
@@ -83,7 +83,7 @@ public class XZ
 		return new ChunkDimPos(type, x, z);
 	}
 
-	public ChunkDimPos dim(IWorld world)
+	public ChunkDimPos dim(World world)
 	{
 		return dim(ChunkDimPos.getID(world));
 	}

@@ -24,6 +24,7 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.util.UUIDTypeAdapter;
@@ -34,11 +35,13 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -60,7 +63,7 @@ public class ChunkScreen extends GuiBase
 
 		public ChunkButton(Panel panel, XZ xz)
 		{
-			super(panel, "", Icon.EMPTY);
+			super(panel, StringTextComponent.EMPTY, Icon.EMPTY);
 			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
 			chunkPos = xz;
 		}
@@ -72,7 +75,7 @@ public class ChunkScreen extends GuiBase
 		}
 
 		@Override
-		public void drawBackground(Theme theme, int x, int y, int w, int h)
+		public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 		{
 			if (isMouseOver() || selectedChunks.contains(chunkPos))
 			{
@@ -87,34 +90,34 @@ public class ChunkScreen extends GuiBase
 
 		@Override
 		@SuppressWarnings("deprecation")
-		public void addMouseOverText(List<String> list)
+		public void addMouseOverText(List<ITextProperties> list)
 		{
-			if (chunk != null && !chunk.formattedOwner.isEmpty())
+			if (chunk != null && chunk.owner != StringTextComponent.EMPTY)
 			{
-				list.add(chunk.formattedOwner);
+				list.add(chunk.owner);
 
 				Date date = new Date();
 
 				if (Screen.hasAltDown())
 				{
-					list.add(TextFormatting.GRAY + chunk.claimedDate.toLocaleString());
+					list.add(new StringTextComponent(chunk.claimedDate.toLocaleString()).mergeStyle(TextFormatting.GRAY));
 				}
 				else
 				{
-					list.add(TextFormatting.GRAY + ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago");
+					list.add(new StringTextComponent(ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").mergeStyle(TextFormatting.GRAY));
 				}
 
 				if (chunk.forceLoadedDate != null)
 				{
-					list.add(TextFormatting.RED + I18n.format("ftbchunks.gui.force_loaded"));
+					list.add(new TranslationTextComponent("ftbchunks.gui.force_loaded").mergeStyle(TextFormatting.RED));
 
 					if (Screen.hasAltDown())
 					{
-						list.add(TextFormatting.GRAY + chunk.forceLoadedDate.toLocaleString());
+						list.add(new StringTextComponent(chunk.forceLoadedDate.toLocaleString()).mergeStyle(TextFormatting.GRAY));
 					}
 					else
 					{
-						list.add(TextFormatting.GRAY + ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago");
+						list.add(new StringTextComponent(ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").mergeStyle(TextFormatting.GRAY));
 					}
 				}
 			}
@@ -155,8 +158,8 @@ public class ChunkScreen extends GuiBase
 
 		addAll(chunkButtons);
 		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket(player.chunkCoordX - FTBChunks.TILE_OFFSET, player.chunkCoordZ - FTBChunks.TILE_OFFSET, player.chunkCoordX + FTBChunks.TILE_OFFSET, player.chunkCoordZ + FTBChunks.TILE_OFFSET));
-		add(new SimpleButton(this, I18n.format("ftbchunks.gui.large_map"), GuiIcons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
-		add(new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())).setPosAndSize(1, 19, 16, 16));
+		add(new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.large_map"), GuiIcons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
+		add(new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())).setPosAndSize(1, 19, 16, 16));
 	}
 
 	@Override
@@ -185,7 +188,7 @@ public class ChunkScreen extends GuiBase
 	}
 
 	@Override
-	public void drawBackground(Theme theme, int x, int y, int w, int h)
+	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
 		TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
 		Tessellator tessellator = Tessellator.getInstance();
@@ -329,15 +332,15 @@ public class ChunkScreen extends GuiBase
 
 		if (d != null)
 		{
-			List<String> list = new ArrayList<>(4);
-			list.add(I18n.format("ftbchunks.gui.claimed"));
-			list.add((d.claimed > d.maxClaimed ? TextFormatting.RED : d.claimed == d.maxClaimed ? TextFormatting.YELLOW : TextFormatting.GREEN) + "" + d.claimed + " / " + d.maxClaimed);
-			list.add(I18n.format("ftbchunks.gui.force_loaded"));
-			list.add((d.loaded > d.maxLoaded ? TextFormatting.RED : d.loaded == d.maxLoaded ? TextFormatting.YELLOW : TextFormatting.GREEN) + "" + d.loaded + " / " + d.maxLoaded);
+			List<ITextProperties> list = new ArrayList<>(4);
+			list.add(new TranslationTextComponent("ftbchunks.gui.claimed"));
+			list.add(new StringTextComponent(d.claimed + " / " + d.maxClaimed).mergeStyle(d.claimed > d.maxClaimed ? TextFormatting.RED : d.claimed == d.maxClaimed ? TextFormatting.YELLOW : TextFormatting.GREEN));
+			list.add(new TranslationTextComponent("ftbchunks.gui.force_loaded"));
+			list.add(new StringTextComponent(d.loaded + " / " + d.maxLoaded).mergeStyle(d.loaded > d.maxLoaded ? TextFormatting.RED : d.loaded == d.maxLoaded ? TextFormatting.YELLOW : TextFormatting.GREEN));
 
 			for (int i = 0; i < list.size(); i++)
 			{
-				theme.drawString(list.get(i), 3, getScreen().getScaledHeight() - 10 * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
+				theme.drawString(matrixStack, list.get(i), 3, getScreen().getScaledHeight() - 10 * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
 			}
 		}
 	}

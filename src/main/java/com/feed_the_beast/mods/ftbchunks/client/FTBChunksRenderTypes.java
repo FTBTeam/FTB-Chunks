@@ -14,7 +14,7 @@ public class FTBChunksRenderTypes extends RenderState
 {
 	public static final RenderType WAYPOINTS = RenderType.makeType("ftbchunks_waypoints", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 256, RenderType.State.getBuilder()
 			.line(new LineState(OptionalDouble.empty()))
-			.layer(PROJECTION_LAYERING)
+			.layer(NO_LAYERING)
 			.transparency(TRANSLUCENT_TRANSPARENCY)
 			.writeMask(COLOR_DEPTH_WRITE)
 			.cull(CULL_ENABLED)

@@ -27,12 +27,15 @@ import net.minecraft.command.arguments.DimensionArgument;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 import java.nio.file.Files;
 import java.time.Instant;
@@ -46,11 +49,13 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
+@Mod.EventBusSubscriber
 public class FTBChunksCommands
 {
-	public FTBChunksCommands(FMLServerStartingEvent event)
+	@SubscribeEvent
+	public static void registerCommands(RegisterCommandsEvent event)
 	{
-		LiteralCommandNode<CommandSource> command = event.getCommandDispatcher().register(Commands.literal("ftbchunks")
+		LiteralCommandNode<CommandSource> command = event.getDispatcher().register(Commands.literal("ftbchunks")
 				.then(Commands.literal("claim")
 						.executes(context -> claim(context.getSource(), 0))
 						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
@@ -138,7 +143,7 @@ public class FTBChunksCommands
 				)
 		);
 
-		event.getCommandDispatcher().register(Commands.literal("chunks").redirect(command));
+		event.getDispatcher().register(Commands.literal("chunks").redirect(command));
 	}
 
 	private interface ChunkCallback
@@ -146,7 +151,7 @@ public class FTBChunksCommands
 		void accept(ClaimedChunkPlayerData data, ChunkDimPos pos) throws CommandSyntaxException;
 	}
 
-	private void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
+	private static void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
 	{
 		ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(source.asPlayer());
 		String dimId = ChunkDimPos.getID(source.getWorld());
@@ -170,7 +175,7 @@ public class FTBChunksCommands
 		}
 	}
 
-	private int claim(CommandSource source, int r) throws CommandSyntaxException
+	private static int claim(CommandSource source, int r) throws CommandSyntaxException
 	{
 		int[] success = new int[1];
 		Instant time = Instant.now();
@@ -190,7 +195,7 @@ public class FTBChunksCommands
 		return success[0];
 	}
 
-	private int unclaim(CommandSource source, int r) throws CommandSyntaxException
+	private static int unclaim(CommandSource source, int r) throws CommandSyntaxException
 	{
 		int[] success = new int[1];
 
@@ -206,7 +211,7 @@ public class FTBChunksCommands
 		return success[0];
 	}
 
-	private int load(CommandSource source, int r) throws CommandSyntaxException
+	private static int load(CommandSource source, int r) throws CommandSyntaxException
 	{
 		int[] success = new int[1];
 		Instant time = Instant.now();
@@ -226,7 +231,7 @@ public class FTBChunksCommands
 		return success[0];
 	}
 
-	private int unload(CommandSource source, int r) throws CommandSyntaxException
+	private static int unload(CommandSource source, int r) throws CommandSyntaxException
 	{
 		int[] success = new int[1];
 
@@ -242,7 +247,7 @@ public class FTBChunksCommands
 		return success[0];
 	}
 
-	private int unclaimAll(CommandSource source, Collection<GameProfile> players)
+	private static int unclaimAll(CommandSource source, Collection<GameProfile> players)
 	{
 		for (GameProfile profile : players)
 		{
@@ -262,7 +267,7 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private int unloadAll(CommandSource source, Collection<GameProfile> players)
+	private static int unloadAll(CommandSource source, Collection<GameProfile> players)
 	{
 		for (GameProfile profile : players)
 		{
@@ -280,7 +285,7 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private int info(CommandSource source, ChunkDimPos pos)
+	private static int info(CommandSource source, ChunkDimPos pos)
 	{
 		source.sendFeedback(new StringTextComponent("Location: " + pos), true);
 
@@ -302,21 +307,21 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private int exportJson(CommandSource source)
+	private static int exportJson(CommandSource source)
 	{
 		FTBChunksAPIImpl.manager.exportJson();
 		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/all.json!"), true);
 		return 1;
 	}
 
-	private int exportSvg(CommandSource source)
+	private static int exportSvg(CommandSource source)
 	{
 		FTBChunksAPIImpl.manager.exportSvg();
 		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/<dimension>.svg!"), true);
 		return 1;
 	}
 
-	private int addWaypoint(ServerPlayerEntity player, String name)
+	private static int addWaypoint(ServerPlayerEntity player, String name)
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
@@ -345,7 +350,7 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private int deleteDeathPoints(ServerPlayerEntity player)
+	private static int deleteDeathPoints(ServerPlayerEntity player)
 	{
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
@@ -358,30 +363,14 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private int clearTaskQueue(CommandSource source)
+	private static int clearTaskQueue(CommandSource source)
 	{
 		source.sendFeedback(new StringTextComponent("Cleared " + FTBChunksAPIImpl.manager.map.taskQueue.size() + " tasks!"), true);
 		FTBChunksAPIImpl.manager.map.taskQueue.clear();
 		return 1;
 	}
 
-	private int pregenMap(CommandSource source)
-	{
-		source.sendFeedback(new StringTextComponent("WIP!"), false);
-		/*
-		if (!source.getServer().isSinglePlayer())
-		{
-			source.getServer().getPlayerList().getPlayers().forEach(p -> p.connection.disconnect(new StringTextComponent(source.getName() + " started world map pre-generation!")));
-		}
-
-		ServerWorld world = source.getWorld();
-		source.getServer().getPlayerList().sendMessage(new StringTextComponent("Pregen started for '" + world.getDimension().getType().getRegistryName() + "'").applyTextStyle(TextFormatting.LIGHT_PURPLE));
-		FTBChunksAPIImpl.manager.map.queue(new PregenMapRegionTask(world));
-		 */
-		return 1;
-	}
-
-	private int sendMap(CommandSource source, Collection<ServerPlayerEntity> players)
+	private static int sendMap(CommandSource source, Collection<ServerPlayerEntity> players)
 	{
 		ServerWorld world = source.getWorld();
 
@@ -407,20 +396,20 @@ public class FTBChunksCommands
 							FTBChunksAPIImpl.manager.map.queue(() -> {
 								for (ServerPlayerEntity p : players)
 								{
-									p.sendStatusMessage(new StringTextComponent(FTBChunksAPIImpl.manager.map.taskQueue.size() + " chunks left").applyTextStyle(TextFormatting.LIGHT_PURPLE), true);
+									p.sendStatusMessage(new StringTextComponent(FTBChunksAPIImpl.manager.map.taskQueue.size() + " chunks left").mergeStyle(TextFormatting.LIGHT_PURPLE), true);
 								}
 							});
 						});
 
 				for (ServerPlayerEntity p : players)
 				{
-					p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map (" + chunks[0] + " chunks) to entire map to you, be prepared for lag!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+					p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map (" + chunks[0] + " chunks) to entire map to you, be prepared for lag!").mergeStyle(TextFormatting.LIGHT_PURPLE), Util.DUMMY_UUID);
 				}
 
 				FTBChunksAPIImpl.manager.map.queue(() -> {
 					for (ServerPlayerEntity p : players)
 					{
-						p.sendMessage(new StringTextComponent("Map received!").applyTextStyle(TextFormatting.LIGHT_PURPLE));
+						p.sendMessage(new StringTextComponent("Map received!").mergeStyle(TextFormatting.LIGHT_PURPLE), Util.DUMMY_UUID);
 					}
 				});
 			}

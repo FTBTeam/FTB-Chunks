@@ -79,7 +79,7 @@ public class ReloadChunkTask implements MapTask
 
 		try
 		{
-			int topY = world.getActualHeight() + 1;
+			int topY = world.func_234938_ad_() + 1;
 
 			for (int wi = 0; wi < 256; wi++)
 			{

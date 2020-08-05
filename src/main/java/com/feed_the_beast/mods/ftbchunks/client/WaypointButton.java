@@ -16,8 +16,11 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
-import net.minecraft.client.resources.I18n;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,18 +41,18 @@ public class WaypointButton extends Widget
 	}
 
 	@Override
-	public void addMouseOverText(List<String> list)
+	public void addMouseOverText(List<ITextProperties> list)
 	{
-		list.add(waypoint.name);
+		list.add(new StringTextComponent(waypoint.name));
 
 		if (!waypoint.owner.isEmpty())
 		{
-			list.add(TextFormatting.GRAY + waypoint.owner);
+			list.add(new StringTextComponent(waypoint.owner).mergeStyle(TextFormatting.GRAY));
 		}
 	}
 
 	@Override
-	public void draw(Theme theme, int x, int y, int w, int h)
+	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
 		icon.draw(x, y, w, h);
 	}
@@ -59,10 +62,10 @@ public class WaypointButton extends Widget
 		if (isMouseOver() && button.isRight())
 		{
 			List<ContextMenuItem> contextMenu = new ArrayList<>();
-			contextMenu.add(new ContextMenuItem(waypoint.name, icon, () -> {}));
+			contextMenu.add(new ContextMenuItem(new StringTextComponent(waypoint.name), icon, () -> {}));
 			contextMenu.add(ContextMenuItem.SEPARATOR);
 
-			contextMenu.add(new ContextMenuItem(I18n.format("gui.rename"), GuiIcons.CHAT, () -> {
+			contextMenu.add(new ContextMenuItem(new TranslationTextComponent("gui.rename"), GuiIcons.CHAT, () -> {
 				ConfigString config = new ConfigString();
 				config.defaultValue = "";
 				config.value = waypoint.name;
@@ -79,7 +82,7 @@ public class WaypointButton extends Widget
 
 			if (waypoint.type == WaypointType.DEFAULT)
 			{
-				contextMenu.add(new ContextMenuItem("Change Color", GuiIcons.COLOR_RGB, () -> {
+				contextMenu.add(new ContextMenuItem(new StringTextComponent("Change Color"), GuiIcons.COLOR_RGB, () -> {
 					Color4I col = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F);
 					icon = Icon.getIcon(waypoint.type.texture).withTint(col);
 					FTBChunksNet.MAIN.sendToServer(new ChangeWaypointColorPacket(waypoint.id, col.rgba()));
@@ -93,7 +96,7 @@ public class WaypointButton extends Widget
 			}).setCloseMenu(false));
 			 */
 
-			contextMenu.add(new ContextMenuItem(I18n.format("gui.remove"), GuiIcons.REMOVE, () -> {
+			contextMenu.add(new ContextMenuItem(new TranslationTextComponent("gui.remove"), GuiIcons.REMOVE, () -> {
 				((LargeMapScreen) getGui()).dimension.waypoints.remove(waypoint);
 				parent.widgets.remove(this);
 				FTBChunksNet.MAIN.sendToServer(new DeleteWaypointPacket(waypoint.id));

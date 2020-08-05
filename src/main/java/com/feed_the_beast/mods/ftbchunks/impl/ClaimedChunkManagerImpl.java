@@ -15,6 +15,7 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -30,6 +31,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,11 +79,13 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		inited = true;
 
 		long nanos = System.nanoTime();
-		dataDirectory = world.getSaveHandler().getWorldDirectory().toPath().resolve("data/ftbchunks");
+		dataDirectory = world.getServer().func_240776_a_(FolderName.field_237253_i_).resolve("data/ftbchunks");
 		localDirectory = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks");
 
 		try
 		{
+			dataDirectory = dataDirectory.toRealPath();
+
 			if (Files.notExists(dataDirectory))
 			{
 				Files.createDirectories(dataDirectory);
@@ -113,7 +117,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		}
 		else
 		{
-			try (Writer writer = Files.newBufferedWriter(infoFile))
+			try (Writer writer = Files.newBufferedWriter(infoFile, StandardOpenOption.CREATE))
 			{
 				JsonObject json = new JsonObject();
 				json.addProperty("id", serverId.toString());
@@ -147,7 +151,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		{
 			if (data.shouldSave)
 			{
-				try (Writer writer = Files.newBufferedWriter(data.file))
+				try (Writer writer = Files.newBufferedWriter(data.file, StandardOpenOption.CREATE))
 				{
 					ClaimedChunkManagerImpl.GSON.toJson(data.toJson(), writer);
 				}
@@ -175,7 +179,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				array.add(json);
 			}
 
-			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json")))
+			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json"), StandardOpenOption.CREATE))
 			{
 				ClaimedChunkManagerImpl.GSON.toJson(array, writer);
 			}
@@ -369,7 +373,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		json.add("players", playersJson);
 
-		try (Writer writer = Files.newBufferedWriter(localDirectory.resolve("all.json")))
+		try (Writer writer = Files.newBufferedWriter(localDirectory.resolve("all.json"), StandardOpenOption.CREATE))
 		{
 			ClaimedChunkManagerImpl.GSON.toJson(json, writer);
 		}
@@ -392,7 +396,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		for (Map.Entry<String, ArrayList<ClaimedChunk>> entry : chunkMap.entrySet())
 		{
-			try (Writer writer = Files.newBufferedWriter(localDirectory.resolve(entry.getKey().replace(':', '_') + ".svg")))
+			try (Writer writer = Files.newBufferedWriter(localDirectory.resolve(entry.getKey().replace(':', '_') + ".svg"), StandardOpenOption.CREATE))
 			{
 				DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();

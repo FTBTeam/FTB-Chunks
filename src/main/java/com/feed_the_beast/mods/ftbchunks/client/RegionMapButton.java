@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
+import com.mojang.blaze3d.matrix.MatrixStack;
 
 /**
  * @author LatvianModder
@@ -20,7 +21,7 @@ public class RegionMapButton extends Widget
 	}
 
 	@Override
-	public void draw(Theme theme, int x, int y, int w, int h)
+	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
 		tex.draw(x, y, w, h);
 	}

@@ -21,6 +21,7 @@ import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.widget.CustomClickEvent;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
@@ -40,8 +41,10 @@ import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
@@ -145,7 +148,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			chunk.claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
 			chunk.forceLoadedDate = packet.forceLoaded && chunk.claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
 			chunk.color = packet.color;
-			chunk.formattedOwner = packet.owner == null ? "" : packet.owner.getFormattedText();
+			chunk.owner = packet.owner == null ? StringTextComponent.EMPTY : packet.owner;
 			boolean updateRegion = false;
 			Random random = new Random(packet.x * 31L + packet.z);
 
@@ -254,6 +257,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	public void renderGameOverlay(RenderGameOverlayEvent.Post event)
 	{
 		Minecraft mc = Minecraft.getInstance();
+		MatrixStack matrixStack = event.getMatrixStack();
 
 		if (mc.player == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
 		{
@@ -336,15 +340,15 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		double scale = FTBChunksClientConfig.minimapScale * 4D / mc.getMainWindow().getGuiScaleFactor();
-		double minimapRotation = (FTBChunksClientConfig.minimapLockedNorth ? 180D : -mc.player.rotationYaw) % 360D;
+		float scale = (float) (FTBChunksClientConfig.minimapScale * 4D / mc.getMainWindow().getGuiScaleFactor());
+		float minimapRotation = (FTBChunksClientConfig.minimapLockedNorth ? 180F : -mc.player.rotationYaw) % 360F;
 
 		int s = (int) (64D * scale);
 		int x = FTBChunksClientConfig.minimap.getX(mc.getMainWindow().getScaledWidth(), s);
 		int y = FTBChunksClientConfig.minimap.getY(mc.getMainWindow().getScaledHeight(), s);
 		int z = 0;
 
-		double border = 0D;
+		float border = 0F;
 
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
@@ -362,50 +366,55 @@ public class FTBChunksClient extends FTBChunksCommon
 		RenderSystem.enableTexture();
 		RenderSystem.enableDepthTest();
 
-		RenderSystem.pushMatrix();
-		RenderSystem.translated(x + s / 2D, y + s / 2D, 0D);
+		matrixStack.push();
+		matrixStack.translate(x + s / 2D, y + s / 2D, 0D);
+
+		Matrix4f m = matrixStack.getLast().getMatrix();
 
 		// See AdvancementTabGui
 		RenderSystem.colorMask(false, false, false, false);
 		mc.getTextureManager().bindTexture(CIRCLE_MASK);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(-s / 2D + border, -s / 2D + border, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-		buffer.pos(-s / 2D + border, s / 2D - border, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-		buffer.pos(s / 2D - border, s / 2D - border, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-		buffer.pos(s / 2D - border, -s / 2D + border, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+		buffer.pos(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+		buffer.pos(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+		buffer.pos(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+		buffer.pos(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 		tessellator.draw();
 		RenderSystem.colorMask(true, true, true, true);
 
-		RenderSystem.rotatef((float) (minimapRotation + 180D), 0F, 0F, 1F);
+		matrixStack.rotate(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
 		RenderSystem.bindTexture(minimapTextureId);
 
+		m = matrixStack.getLast().getMatrix();
+
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(-s / 2D + border, -s / 2D + border, z).color(255, 255, 255, 255).tex(f0 + offX, f0 + offY).endVertex();
-		buffer.pos(-s / 2D + border, s / 2D - border, z).color(255, 255, 255, 255).tex(f0 + offX, f1 + offY).endVertex();
-		buffer.pos(s / 2D - border, s / 2D - border, z).color(255, 255, 255, 255).tex(f1 + offX, f1 + offY).endVertex();
-		buffer.pos(s / 2D - border, -s / 2D + border, z).color(255, 255, 255, 255).tex(f1 + offX, f0 + offY).endVertex();
+		buffer.pos(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, 255).tex(f0 + offX, f0 + offY).endVertex();
+		buffer.pos(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, 255).tex(f0 + offX, f1 + offY).endVertex();
+		buffer.pos(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, 255).tex(f1 + offX, f1 + offY).endVertex();
+		buffer.pos(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, 255).tex(f1 + offX, f0 + offY).endVertex();
 		tessellator.draw();
-		RenderSystem.popMatrix();
+
+		matrixStack.pop();
 
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
 		RenderSystem.defaultBlendFunc();
 		mc.getTextureManager().bindTexture(CIRCLE_BORDER);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(x, y, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-		buffer.pos(x, y + s, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-		buffer.pos(x + s, y + s, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-		buffer.pos(x + s, y, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+		buffer.pos(m, x, y, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+		buffer.pos(m, x, y + s, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+		buffer.pos(m, x + s, y + s, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+		buffer.pos(m, x + s, y, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 		tessellator.draw();
 
 		RenderSystem.disableTexture();
 		buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-		buffer.pos(x + s / 2D, y + 0, z).color(0, 0, 0, 30).endVertex();
-		buffer.pos(x + s / 2D, y + s, z).color(0, 0, 0, 30).endVertex();
-		buffer.pos(x + 0, y + s / 2D, z).color(0, 0, 0, 30).endVertex();
-		buffer.pos(x + s, y + s / 2D, z).color(0, 0, 0, 30).endVertex();
+		buffer.pos(m, x + s / 2F, y + 0, z).color(0, 0, 0, 30).endVertex();
+		buffer.pos(m, x + s / 2F, y + s, z).color(0, 0, 0, 30).endVertex();
+		buffer.pos(m, x + 0, y + s / 2F, z).color(0, 0, 0, 30).endVertex();
+		buffer.pos(m, x + s, y + s / 2F, z).color(0, 0, 0, 30).endVertex();
 		tessellator.draw();
 
 		RenderSystem.enableTexture();
@@ -418,16 +427,18 @@ public class FTBChunksClient extends FTBChunksCommon
 
 				double angle = (minimapRotation + 180D - face * 90D) * Math.PI / 180D;
 
-				double wx = x + s / 2D + Math.cos(angle) * d;
-				double wy = y + s / 2D + Math.sin(angle) * d;
-				double ws = s / 32D;
+				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
+				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
+				float ws = s / 32F;
+
+				m = matrixStack.getLast().getMatrix();
 
 				mc.textureManager.bindTexture(COMPASS[face]);
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-				buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-				buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-				buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 				tessellator.draw();
 			}
 		}
@@ -445,20 +456,22 @@ public class FTBChunksClient extends FTBChunksCommon
 
 				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z, mc.player.getPosX() - waypoint.x) + minimapRotation * Math.PI / 180D;
 
-				double wx = x + s / 2D + Math.cos(angle) * d;
-				double wy = y + s / 2D + Math.sin(angle) * d;
-				double ws = s / 32D;
+				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
+				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
+				float ws = s / 32F;
 
 				int r = (waypoint.color >> 16) & 0xFF;
 				int g = (waypoint.color >> 8) & 0xFF;
 				int b = (waypoint.color >> 0) & 0xFF;
 
+				m = matrixStack.getLast().getMatrix();
+
 				mc.getTextureManager().bindTexture(waypoint.type.texture);
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(wx - ws, wy - ws, z).color(r, g, b, 255).tex(0F, 0F).endVertex();
-				buffer.pos(wx - ws, wy + ws, z).color(r, g, b, 255).tex(0F, 1F).endVertex();
-				buffer.pos(wx + ws, wy + ws, z).color(r, g, b, 255).tex(1F, 1F).endVertex();
-				buffer.pos(wx + ws, wy - ws, z).color(r, g, b, 255).tex(1F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy - ws, z).color(r, g, b, 255).tex(0F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy + ws, z).color(r, g, b, 255).tex(0F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy + ws, z).color(r, g, b, 255).tex(1F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy - ws, z).color(r, g, b, 255).tex(1F, 0F).endVertex();
 				tessellator.draw();
 			}
 		}
@@ -499,19 +512,21 @@ public class FTBChunksClient extends FTBChunksCommon
 
 				double angle = Math.atan2(mc.player.getPosZ() - entity.getPosZ(), mc.player.getPosX() - entity.getPosX()) + minimapRotation * Math.PI / 180D;
 
-				double wx = x + s / 2D + Math.cos(angle) * d;
-				double wy = y + s / 2D + Math.sin(angle) * d;
-				double ws = s / (FTBChunksClientConfig.minimapLargeEntities ? 32D : 48D);
+				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
+				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
+				float ws = s / (FTBChunksClientConfig.minimapLargeEntities ? 32F : 48F);
+
+				m = matrixStack.getLast().getMatrix();
 
 				mc.getTextureManager().bindTexture(texture);
 				RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 				RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-				buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-				buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-				buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 				tessellator.draw();
 			}
 		}
@@ -534,9 +549,9 @@ public class FTBChunksClient extends FTBChunksCommon
 
 				double angle = Math.atan2(mc.player.getPosZ() - player.getPosZ(), mc.player.getPosX() - player.getPosX()) + minimapRotation * Math.PI / 180D;
 
-				double wx = x + s / 2D + Math.cos(angle) * d;
-				double wy = y + s / 2D + Math.sin(angle) * d;
-				double ws = s / 32D;
+				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
+				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
+				float ws = s / 32F;
 
 				String uuid = UUIDTypeAdapter.fromUUID(player.getUniqueID());
 				ResourceLocation texture = new ResourceLocation("head", uuid);
@@ -550,57 +565,58 @@ public class FTBChunksClient extends FTBChunksCommon
 					texturemanager.loadTexture(texture, t);
 				}
 
+				m = matrixStack.getLast().getMatrix();
+
 				RenderSystem.bindTexture(t.getGlTextureId());
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-				buffer.pos(wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-				buffer.pos(wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-				buffer.pos(wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
+				buffer.pos(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
+				buffer.pos(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
 				tessellator.draw();
 			}
 		}
 
 		if (FTBChunksClientConfig.minimapLockedNorth)
 		{
-			double ws = s / 32D;
-
 			mc.getTextureManager().bindTexture(PLAYER);
-			RenderSystem.pushMatrix();
-			RenderSystem.translated(x + s / 2D, y + s / 2D, z);
-			RenderSystem.rotatef(mc.player.rotationYaw + 180F, 0F, 0F, 1F);
-			RenderSystem.scaled(s / 16D, s / 16D, 1D);
+			matrixStack.push();
+			matrixStack.translate(x + s / 2D, y + s / 2D, z);
+			matrixStack.rotate(Vector3f.ZP.rotationDegrees(mc.player.rotationYaw + 180F));
+			matrixStack.scale(s / 16F, s / 16F, 1F);
+			m = matrixStack.getLast().getMatrix();
 
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-			buffer.pos(-1, -1, 0).color(255, 255, 255, 200).tex(0F, 0F).endVertex();
-			buffer.pos(-1, 1, 0).color(255, 255, 255, 200).tex(0F, 1F).endVertex();
-			buffer.pos(1, 1, 0).color(255, 255, 255, 200).tex(1F, 1F).endVertex();
-			buffer.pos(1, -1, 0).color(255, 255, 255, 200).tex(1F, 0F).endVertex();
+			buffer.pos(m, -1, -1, 0).color(255, 255, 255, 200).tex(0F, 0F).endVertex();
+			buffer.pos(m, -1, 1, 0).color(255, 255, 255, 200).tex(0F, 1F).endVertex();
+			buffer.pos(m, 1, 1, 0).color(255, 255, 255, 200).tex(1F, 1F).endVertex();
+			buffer.pos(m, 1, -1, 0).color(255, 255, 255, 200).tex(1F, 0F).endVertex();
 			tessellator.draw();
 
-			RenderSystem.popMatrix();
+			matrixStack.pop();
 		}
 
 		if (FTBChunksClientConfig.minimapXYZ || FTBChunksClientConfig.minimapBiome)
 		{
-			RenderSystem.pushMatrix();
-			RenderSystem.translated(x + s / 2D, y + s + 5D, 0D);
-			RenderSystem.scaled(0.5D * scale, 0.5D * scale, 1D);
+			matrixStack.push();
+			matrixStack.translate(x + s / 2D, y + s + 5D, 0D);
+			matrixStack.scale((float) (0.5D * scale), (float) (0.5D * scale), 1F);
 
 			if (FTBChunksClientConfig.minimapXYZ)
 			{
 				String cs = MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ());
 				int csw = mc.fontRenderer.getStringWidth(cs);
-				mc.fontRenderer.drawStringWithShadow(cs, -csw / 2F, 0, 0xFFFFFFFF);
+				mc.fontRenderer.drawStringWithShadow(matrixStack, cs, -csw / 2F, 0, 0xFFFFFFFF);
 			}
 
 			if (FTBChunksClientConfig.minimapBiome)
 			{
-				String bs = I18n.format(mc.world.getBiome(new BlockPos(mc.player)).getTranslationKey());
+				String bs = I18n.format(mc.world.getBiome(mc.player.getPosition()).getTranslationKey());
 				int bsw = mc.fontRenderer.getStringWidth(bs);
-				mc.fontRenderer.drawStringWithShadow(bs, -bsw / 2F, FTBChunksClientConfig.minimapXYZ ? 10 : 0, 0xFFFFFFFF);
+				mc.fontRenderer.drawStringWithShadow(matrixStack, bs, -bsw / 2F, FTBChunksClientConfig.minimapXYZ ? 10 : 0, 0xFFFFFFFF);
 			}
 
-			RenderSystem.popMatrix();
+			matrixStack.pop();
 		}
 	}
 

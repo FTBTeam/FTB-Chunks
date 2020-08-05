@@ -1,6 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
@@ -18,18 +17,17 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
-import com.google.common.collect.Streams;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHelper;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -118,14 +116,14 @@ public class LargeMapScreen extends GuiBase
 	{
 		add(regionPanel);
 
-		add(claimChunksButton = new SimpleButton(this, I18n.format("ftbchunks.gui.claimed_chunks"), GuiIcons.MAP, (b, m) -> new ChunkScreen().openGui()));
+		add(claimChunksButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.claimed_chunks"), GuiIcons.MAP, (b, m) -> new ChunkScreen().openGui()));
 		/*
 		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.waypoints"), GuiIcons.BEACON, (b, m) -> {
 			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
 		}));
 		 */
 
-		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
+		add(waypointsButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
 			ConfigString name = new ConfigString();
 			new GuiEditConfigFromString<>(name, set -> {
 				if (set)
@@ -137,30 +135,34 @@ public class LargeMapScreen extends GuiBase
 			}).openGui();
 		}));
 
-		add(settingsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
-		add(alliesButton = new SimpleButton(this, I18n.format("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
+		add(settingsButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
+		add(alliesButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
 
-		add(dimensionButton = new SimpleButton(this, dimension.dimension.substring(dimension.dimension.indexOf(':') + 1).replace('_', ' '), GuiIcons.GLOBE, (b, m) -> {
-			List<String> types = Streams.stream(DimensionType.getAll())
-					.map(ChunkDimPos::getID)
-					.filter(id -> !id.isEmpty() && Files.exists(dimension.manager.directory.resolve(id.replace(':', '_'))))
-					.collect(Collectors.toList());
-
-			int i = types.indexOf(dimension.dimension);
-
-			if (i != -1)
+		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.substring(dimension.dimension.indexOf(':') + 1).replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
+			try
 			{
-				for (RegionTextureData data : regionTextures.values())
+				List<String> types = Files.list(dimension.manager.directory)
+						.map(path -> path.getFileName().toString())
+						.filter(id -> !id.isEmpty() && Files.exists(dimension.manager.directory.resolve(id.replace(':', '_'))))
+						.collect(Collectors.toList());
+
+				int i = types.indexOf(dimension.dimension);
+
+				if (i != -1)
 				{
-					data.release();
+					for (RegionTextureData data : regionTextures.values())
+					{
+						data.release();
+					}
+
+					regionTextures.clear();
+					dimension = dimension.manager.getDimension(types.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), types.size())));
+					refreshWidgets();
+					movedToPlayer = false;
 				}
-
-				regionTextures.clear();
-
-				dimension = dimension.manager.getDimension(types.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), types.size())));
-
-				refreshWidgets();
-				movedToPlayer = false;
+			}
+			catch (Exception ex)
+			{
 			}
 		}));
 	}
@@ -226,7 +228,7 @@ public class LargeMapScreen extends GuiBase
 	}
 
 	@Override
-	public boolean drawDefaultBackground()
+	public boolean drawDefaultBackground(MatrixStack matrixStack)
 	{
 		if (!movedToPlayer)
 		{
@@ -241,7 +243,7 @@ public class LargeMapScreen extends GuiBase
 	}
 
 	@Override
-	public void drawBackground(Theme theme, int x, int y, int w, int h)
+	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
 		if (grabbed != 0)
 		{
@@ -303,16 +305,16 @@ public class LargeMapScreen extends GuiBase
 	}
 
 	@Override
-	public void drawForeground(Theme theme, int x, int y, int w, int h)
+	public void drawForeground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
 		String coords = "X: " + regionPanel.blockX + ", Z: " + regionPanel.blockZ;
 		int coordsw = theme.getStringWidth(coords) / 2;
 
 		backgroundColor.withAlpha(150).draw(x + (w - coordsw) / 2, y + h - 6, coordsw + 4, h);
-		RenderSystem.pushMatrix();
-		RenderSystem.translatef(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
-		RenderSystem.scalef(0.5F, 0.5F, 1F);
-		theme.drawString(coords, 0, 0, Theme.SHADOW);
-		RenderSystem.popMatrix();
+		matrixStack.push();
+		matrixStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
+		matrixStack.scale(0.5F, 0.5F, 1F);
+		theme.drawString(matrixStack, coords, 0, 0, Theme.SHADOW);
+		matrixStack.pop();
 	}
 }

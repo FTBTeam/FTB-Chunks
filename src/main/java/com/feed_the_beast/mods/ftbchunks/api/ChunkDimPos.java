@@ -2,11 +2,12 @@ package com.feed_the_beast.mods.ftbchunks.api;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
 import javax.annotation.Nullable;
@@ -17,33 +18,20 @@ import java.util.Objects;
  */
 public class ChunkDimPos implements Comparable<ChunkDimPos>
 {
-	public static String getID(@Nullable DimensionType type)
+	public static String getID(@Nullable RegistryKey<World> type)
 	{
-		if (type == null)
-		{
-			return "";
-		}
-
-		ResourceLocation id = type.getRegistryName();
-
-		if (id == null)
-		{
-			id = DimensionType.getKey(type);
-		}
-
-		return id == null ? "" : id.toString();
+		return type == null ? "" : type.getRegistryName().toString();
 	}
 
-	public static String getID(@Nullable IWorld world)
+	public static String getID(@Nullable World world)
 	{
-		return world == null ? "" : getID(world.getDimension().getType());
+		return world == null ? "" : getID(world.func_234923_W_());
 	}
 
 	@Nullable
 	public static ServerWorld getWorld(MinecraftServer server, String id)
 	{
-		DimensionType type = id.isEmpty() ? null : DimensionType.byName(new ResourceLocation(id));
-		return type == null ? null : server.getWorld(type);
+		return server.getWorld(RegistryKey.func_240902_a_(Registry.WORLD_KEY).apply(new ResourceLocation(id)));
 	}
 
 	public final String dimension;
@@ -64,7 +52,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 		this(dim, pos.x, pos.z);
 	}
 
-	public ChunkDimPos(IWorld world, BlockPos pos)
+	public ChunkDimPos(World world, BlockPos pos)
 	{
 		this(Objects.requireNonNull(getID(world)), pos.getX() >> 4, pos.getZ() >> 4);
 	}

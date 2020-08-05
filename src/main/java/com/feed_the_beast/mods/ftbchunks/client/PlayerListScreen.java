@@ -9,8 +9,10 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleTextButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.WidgetType;
-import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.List;
 
@@ -32,16 +34,16 @@ public class PlayerListScreen extends GuiButtonListBase
 		switch (allyMode)
 		{
 			case 0:
-				setTitle(I18n.format("ftbchunks.gui.ally_whitelist"));
+				setTitle(new TranslationTextComponent("ftbchunks.gui.ally_whitelist"));
 				break;
 			case 1:
-				setTitle(I18n.format("ftbchunks.gui.ally_blacklist"));
+				setTitle(new TranslationTextComponent("ftbchunks.gui.ally_blacklist"));
 				break;
 			case 2:
-				setTitle("Forced whitelist");
+				setTitle(new StringTextComponent("Forced whitelist"));
 				break;
 			case 3:
-				setTitle("Forced blacklist");
+				setTitle(new StringTextComponent("Forced blacklist"));
 				break;
 		}
 	}
@@ -51,15 +53,15 @@ public class PlayerListScreen extends GuiButtonListBase
 	{
 		for (SendPlayerListPacket.NetPlayer p : players)
 		{
-			panel.add(new SimpleTextButton(panel, (p.isFake() ? TextFormatting.YELLOW : TextFormatting.WHITE) + p.name, p.isAlly() ? GuiIcons.REMOVE : GuiIcons.ADD)
+			panel.add(new SimpleTextButton(panel, new StringTextComponent(p.name).mergeStyle(p.isFake() ? TextFormatting.YELLOW : TextFormatting.WHITE), p.isAlly() ? GuiIcons.REMOVE : GuiIcons.ADD)
 			{
 				@Override
-				public void addMouseOverText(List<String> list)
+				public void addMouseOverText(List<ITextProperties> list)
 				{
 					if (p.isFake())
 					{
-						list.add("Fake player");
-						list.add("UUID: " + p.uuid);
+						list.add(new StringTextComponent("Fake player"));
+						list.add(new StringTextComponent("UUID: " + p.uuid));
 					}
 				}
 

@@ -38,7 +38,7 @@ public class TeleportFromMapPacket
 	{
 		context.get().enqueueWork(() -> {
 			ServerPlayerEntity p = context.get().getSender();
-			int topY = p.world.getActualHeight() + 1;
+			int topY = p.world.func_234938_ad_() + 1; //getActualHeight
 			int y = MapChunk.getHeight(p.world.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true), new BlockPos.Mutable(), x, z, topY) + 2;
 
 			try

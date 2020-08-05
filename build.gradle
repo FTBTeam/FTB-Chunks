@@ -7,7 +7,7 @@ buildscript {
 	}
 	dependencies {
 		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.1.0'
+		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.+'
 		classpath 'com.wynprice.cursemaven:CurseMaven:1.2.+'
 	}
 }
@@ -100,10 +100,10 @@ dependencies {
 	//	transitive = false
 	//	changing = true
 	//}))
-	runtimeOnly(fg.deobf(project.dependencies.create("com.sunekaer.mods:YAMDA:${yamda_version}") {
-		transitive = false
-		changing = true
-	}))
+	//runtimeOnly(fg.deobf(project.dependencies.create("com.sunekaer.mods:YAMDA:${yamda_version}") {
+	//	transitive = false
+	//	changing = true
+	//}))
 }
 
 jar {

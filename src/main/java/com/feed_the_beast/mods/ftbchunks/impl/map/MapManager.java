@@ -3,7 +3,6 @@ package com.feed_the_beast.mods.ftbchunks.impl.map;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import java.util.ArrayDeque;
@@ -35,7 +34,7 @@ public class MapManager
 		return dimensions.computeIfAbsent(dim, d -> new MapDimension(this, d));
 	}
 
-	public MapDimension getDimension(IWorld world)
+	public MapDimension getDimension(World world)
 	{
 		return getDimension(Objects.requireNonNull(ChunkDimPos.getID(world)));
 	}

@@ -97,7 +97,7 @@ public class SendChunkTask implements MapTask
 		EitherChunk ce = getChunkForHeight(world, chunkPosition.x - 1, chunkPosition.z);
 		EitherChunk cne = getChunkForHeight(world, chunkPosition.x - 1, chunkPosition.z - 1);
 
-		int topY = world.getActualHeight() + 1;
+		int topY = world.func_234938_ad_() + 1;
 		BlockPos.Mutable currentBlockPos = new BlockPos.Mutable();
 		int blockX = chunkPosition.x << 4;
 		int blockZ = chunkPosition.z << 4;

@@ -2,6 +2,8 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.util.Date;
 
@@ -16,7 +18,7 @@ public class ClientMapChunk
 	public Date claimedDate;
 	public Date forceLoadedDate;
 	public int color;
-	public String formattedOwner;
+	public ITextComponent owner;
 
 	public ClientMapChunk(ClientMapRegion r, XZ p)
 	{
@@ -26,7 +28,7 @@ public class ClientMapChunk
 		claimedDate = null;
 		forceLoadedDate = null;
 		color = 0;
-		formattedOwner = "";
+		owner = StringTextComponent.EMPTY;
 	}
 
 	public int getRGB(int x, int z)
@@ -40,6 +42,6 @@ public class ClientMapChunk
 
 	public boolean connects(ClientMapChunk chunk)
 	{
-		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && formattedOwner.equals(chunk.formattedOwner);
+		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && owner.equals(chunk.owner);
 	}
 }

@@ -13,7 +13,7 @@ import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -76,7 +76,7 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 
 				if (entry.getKey().startsWith("#"))
 				{
-					Tag<Block> tag = BlockTags.getCollection().get(new ResourceLocation(entry.getKey().substring(1)));
+					ITag<Block> tag = BlockTags.getCollection().get(new ResourceLocation(entry.getKey().substring(1)));
 
 					if (tag != null)
 					{

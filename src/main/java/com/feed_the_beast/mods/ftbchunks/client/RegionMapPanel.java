@@ -7,6 +7,7 @@ import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.util.math.MathHelper;
@@ -174,9 +175,9 @@ public class RegionMapPanel extends Panel
 	}
 
 	@Override
-	public void draw(Theme theme, int x, int y, int w, int h)
+	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		super.draw(theme, x, y, w, h);
+		super.draw(matrixStack, theme, x, y, w, h);
 
 		int dx = (regionMaxX - regionMinX);
 		int dy = (regionMaxZ - regionMinZ);
@@ -251,8 +252,8 @@ public class RegionMapPanel extends Panel
 	}
 
 	@Override
-	public void drawBackground(Theme theme, int x, int y, int w, int h)
+	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		super.drawBackground(theme, x, y, w, h);
+		super.drawBackground(matrixStack, theme, x, y, w, h);
 	}
 }

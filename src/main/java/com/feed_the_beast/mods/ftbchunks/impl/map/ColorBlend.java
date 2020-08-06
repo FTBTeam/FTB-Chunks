@@ -17,7 +17,7 @@ import net.minecraft.world.biome.SwampHillsBiome;
  */
 public enum ColorBlend
 {
-	WATER((w, p) -> w.getBiome(p).getWaterColor()),
+	WATER((w, p) -> w.getBiome(p).func_235089_q_().waterColor),
 	GRASS((w, p) -> {
 		if (GrassColorLoader.map.length != 65536)
 		{

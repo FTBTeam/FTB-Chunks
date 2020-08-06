@@ -172,7 +172,7 @@ public class FTBChunksClientConfig
 		group.addBool("minimap_locked_north", minimapLockedNorth, v -> {
 			client.getLeft().minimapLockedNorth.set(v);
 			minimapLockedNorth = v;
-		}, false);
+		}, true);
 
 		group.addBool("minimap_waypoints", minimapWaypoints, v -> {
 			client.getLeft().minimapWaypoints.set(v);

@@ -45,6 +45,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
@@ -480,7 +481,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		{
 			for (Entity entity : mc.world.getAllEntities())
 			{
-				if (entity instanceof AbstractClientPlayerEntity || entity.getType().getClassification() == EntityClassification.MISC)
+				if (entity instanceof AbstractClientPlayerEntity || entity.getType().getClassification() == EntityClassification.MISC || entity.getPosY() < entity.world.getHeight(Heightmap.Type.WORLD_SURFACE, MathHelper.floor(entity.getPosX()), MathHelper.floor(entity.getPosZ())) - 10)
 				{
 					continue;
 				}

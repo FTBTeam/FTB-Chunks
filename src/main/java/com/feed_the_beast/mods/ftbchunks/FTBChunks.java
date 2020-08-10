@@ -17,6 +17,7 @@ import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
@@ -33,6 +34,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.FakePlayer;
@@ -96,8 +98,7 @@ public class FTBChunks
 		instance = this;
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
 		MinecraftForge.EVENT_BUS.register(this);
-		//noinspection Convert2MethodRef
-		proxy = DistExecutor.runForDist(() -> () -> new FTBChunksClient(), () -> () -> new FTBChunksCommon());
+		proxy = DistExecutor.safeRunForDist(() -> FTBChunksClient::new, () -> FTBChunksCommon::new);
 		proxy.init();
 		FTBChunksAPI.INSTANCE = new FTBChunksAPIImpl();
 		FTBChunksConfig.init();
@@ -186,10 +187,17 @@ public class FTBChunks
 			int z = player.chunkCoordZ + sp.z;
 			FTBChunksAPIImpl.manager.map.queueUpdate(player.world, XZ.of(x, z), player);
 		}
+
+		SendVisiblePlayerListPacket.sendAll();
 	}
 
 	private boolean isValidPlayer(@Nullable Entity entity)
 	{
+		if (FTBChunksConfig.disableProtection)
+		{
+			return false;
+		}
+
 		if (entity instanceof ServerPlayerEntity)
 		{
 			if (entity instanceof FakePlayer)
@@ -340,6 +348,20 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
+	public void farmlandTrample(BlockEvent.FarmlandTrampleEvent event)
+	{
+		if (event.getWorld() instanceof ServerWorld && isValidPlayer(event.getEntity()))
+		{
+			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((ServerWorld) event.getWorld(), event.getPos()));
+
+			if (chunk != null)
+			{
+				event.setCanceled(true);
+			}
+		}
+	}
+
+	@SubscribeEvent
 	public void chunkChange(EntityEvent.EnteringChunk event)
 	{
 		if (event.getEntity() instanceof FakePlayer || !(event.getEntity() instanceof ServerPlayerEntity))
@@ -454,9 +476,14 @@ public class FTBChunks
 	{
 		if (event.phase == TickEvent.Phase.START)
 		{
-			if (FTBChunksAPIImpl.manager.map.taskQueueTicks % 4L == 1L)
+			if (FTBChunksAPIImpl.manager.map.taskQueueTicks % 100L == 0L)
 			{
-				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), MathHelper.clamp(FTBChunksAPIImpl.manager.map.taskQueue.size() / 10, 50, 200));
+				SendVisiblePlayerListPacket.sendAll();
+			}
+
+			if (FTBChunksAPIImpl.manager.map.taskQueueTicks % FTBChunksConfig.taskQueueTicks == 1L)
+			{
+				int s = Math.min(FTBChunksAPIImpl.manager.map.taskQueue.size(), MathHelper.clamp(FTBChunksAPIImpl.manager.map.taskQueue.size() / 10, FTBChunksConfig.taskQueueMin, FTBChunksConfig.taskQueueMax));
 
 				for (int i = 0; i < s; i++)
 				{
@@ -548,7 +575,7 @@ public class FTBChunks
 			ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
 			Waypoint w = new Waypoint(data, UUID.randomUUID());
-			w.name = "Death #" + player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+			w.name = "Death #" + (player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS)) + 1);
 			w.dimension = ChunkDimPos.getID(player.world);
 			w.privacy = PrivacyMode.ALLIES;
 			w.type = WaypointType.DEATH;

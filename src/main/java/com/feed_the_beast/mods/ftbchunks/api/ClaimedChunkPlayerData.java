@@ -54,6 +54,8 @@ public interface ClaimedChunkPlayerData
 
 	void save();
 
+	boolean isExplicitAlly(ServerPlayerEntity player);
+
 	boolean isAlly(ServerPlayerEntity player);
 
 	default ITextComponent getDisplayName()

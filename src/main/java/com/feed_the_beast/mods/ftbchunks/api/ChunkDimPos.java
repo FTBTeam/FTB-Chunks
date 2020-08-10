@@ -20,7 +20,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 {
 	public static String getID(@Nullable RegistryKey<World> type)
 	{
-		return type == null ? "" : type.getRegistryName().toString();
+		return type == null ? "" : type.func_240901_a_().toString();
 	}
 
 	public static String getID(@Nullable World world)

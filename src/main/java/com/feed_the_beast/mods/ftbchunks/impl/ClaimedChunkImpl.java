@@ -79,21 +79,16 @@ public class ClaimedChunkImpl implements ClaimedChunk
 		forceLoaded = time;
 	}
 
-	private boolean isAlly(ServerPlayerEntity player)
+	@Override
+	public boolean canEdit(ServerPlayerEntity player, BlockState state)
 	{
-		return player.getServer().isSinglePlayer() || player.hasPermissionLevel(2) || playerData.isAlly(player);
+		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || player.hasPermissionLevel(2);
 	}
 
 	@Override
-	public boolean canEdit(ServerPlayerEntity player, BlockState blockState)
+	public boolean canInteract(ServerPlayerEntity player, BlockState state)
 	{
-		return isAlly(player) || FTBChunksAPIImpl.EDIT_TAG.contains(blockState.getBlock());
-	}
-
-	@Override
-	public boolean canInteract(ServerPlayerEntity player, BlockState blockState)
-	{
-		return isAlly(player) || FTBChunksAPIImpl.INTERACT_TAG.contains(blockState.getBlock());
+		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || player.hasPermissionLevel(2);
 	}
 
 	@Override

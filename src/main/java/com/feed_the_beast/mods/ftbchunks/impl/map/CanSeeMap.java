@@ -25,6 +25,6 @@ public class CanSeeMap implements Predicate<ServerPlayerEntity>
 	@Override
 	public boolean test(ServerPlayerEntity p)
 	{
-		return player == p || data.canUse(p, data.minimapMode) || (FTBChunks.ranksMod ? FTBRanksIntegration.canSeeMap(p) : p.hasPermissionLevel(2));
+		return player == p || data.canUse(p, data.minimapMode, true) || (FTBChunks.ranksMod ? FTBRanksIntegration.canSeeMap(p) : p.hasPermissionLevel(2));
 	}
 }

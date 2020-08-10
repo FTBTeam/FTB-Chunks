@@ -52,13 +52,15 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public int color;
 	private final Map<String, ClaimedChunkGroupImpl> groups;
 	public final Set<UUID> allies;
-	public PrivacyMode blockBreakMode;
+	public PrivacyMode blockEditMode;
 	public PrivacyMode blockInteractMode;
 	public final Map<UUID, Waypoint> waypoints;
 	public PrivacyMode minimapMode;
+	public PrivacyMode locationMode;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
+	public HashSet<PlayerLocation> cachedVisiblePlayers;
 
 	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, Path f, UUID id)
 	{
@@ -69,10 +71,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		color = 0;
 		groups = new HashMap<>();
 		allies = new HashSet<>();
-		blockBreakMode = PrivacyMode.ALLIES;
+		blockEditMode = PrivacyMode.ALLIES;
 		blockInteractMode = PrivacyMode.ALLIES;
 		waypoints = new LinkedHashMap<>();
 		minimapMode = PrivacyMode.ALLIES;
+		locationMode = PrivacyMode.ALLIES;
 	}
 
 	@Override
@@ -327,17 +330,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	}
 
 	@Override
-	public boolean isAlly(ServerPlayerEntity p)
+	public boolean isExplicitAlly(ServerPlayerEntity p)
 	{
-		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL)
-		{
-			return true;
-		}
-		else if (FTBChunksConfig.allyMode == AllyMode.FORCED_NONE)
-		{
-			return false;
-		}
-		else if (getUuid().equals(p.getUniqueID()))
+		if (getUuid().equals(p.getUniqueID()))
 		{
 			return true;
 		}
@@ -353,7 +348,22 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		return getName().equals(p.getGameProfile().getName());
 	}
 
-	public boolean canUse(ServerPlayerEntity p, PrivacyMode mode)
+	@Override
+	public boolean isAlly(ServerPlayerEntity p)
+	{
+		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p.getUniqueID()))
+		{
+			return true;
+		}
+		else if (FTBChunksConfig.allyMode == AllyMode.FORCED_NONE)
+		{
+			return false;
+		}
+
+		return isExplicitAlly(p);
+	}
+
+	public boolean canUse(ServerPlayerEntity p, PrivacyMode mode, boolean explicit)
 	{
 		if (mode == PrivacyMode.PUBLIC)
 		{
@@ -365,7 +375,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 		else if (mode == PrivacyMode.ALLIES)
 		{
-			return isAlly(p);
+			return explicit ? isExplicitAlly(p) : isAlly(p);
 		}
 
 		return false;
@@ -396,9 +406,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		json.add("allies", alliesJson);
 
-		json.addProperty("block_break_mode", blockBreakMode.name);
+		json.addProperty("block_edit_mode", blockEditMode.name);
 		json.addProperty("block_interact_mode", blockInteractMode.name);
 		json.addProperty("minimap_mode", minimapMode.name);
+		json.addProperty("location_mode", locationMode.name);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -484,9 +495,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			}
 		}
 
-		if (json.has("block_break_mode"))
+		if (json.has("block_edit_mode"))
 		{
-			blockBreakMode = PrivacyMode.get(json.get("block_break_mode").getAsString());
+			blockEditMode = PrivacyMode.get(json.get("block_edit_mode").getAsString());
 		}
 
 		if (json.has("block_interact_mode"))
@@ -497,6 +508,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		if (json.has("minimap_mode"))
 		{
 			minimapMode = PrivacyMode.get(json.get("minimap_mode").getAsString());
+		}
+
+		if (json.has("location_mode"))
+		{
+			locationMode = PrivacyMode.get(json.get("location_mode").getAsString());
 		}
 
 		if (json.has("chunks"))

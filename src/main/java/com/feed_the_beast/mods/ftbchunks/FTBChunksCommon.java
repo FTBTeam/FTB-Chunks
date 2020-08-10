@@ -4,6 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 
 /**
@@ -32,6 +33,10 @@ public class FTBChunksCommon
 	}
 
 	public void openPlayerList(SendPlayerListPacket packet)
+	{
+	}
+
+	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet)
 	{
 	}
 }

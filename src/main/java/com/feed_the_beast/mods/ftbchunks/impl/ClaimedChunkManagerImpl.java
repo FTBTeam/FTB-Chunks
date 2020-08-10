@@ -44,7 +44,8 @@ import java.util.UUID;
  */
 public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 {
-	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
+	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
+	public static final FolderName DATA_DIR = new FolderName("data/ftbchunks");
 
 	public final MinecraftServer server;
 	public UUID serverId;
@@ -79,13 +80,11 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		inited = true;
 
 		long nanos = System.nanoTime();
-		dataDirectory = world.getServer().func_240776_a_(FolderName.field_237253_i_).resolve("data/ftbchunks");
+		dataDirectory = world.getServer().func_240776_a_(DATA_DIR);
 		localDirectory = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks");
 
 		try
 		{
-			dataDirectory = dataDirectory.toRealPath();
-
 			if (Files.notExists(dataDirectory))
 			{
 				Files.createDirectories(dataDirectory);

@@ -17,7 +17,12 @@ public class FTBChunksConfig
 	public static boolean disableAllFakePlayers;
 	public static int maxClaimedChunks;
 	public static int maxForceLoadedChunks;
+	public static boolean disableProtection;
 	public static AllyMode allyMode;
+
+	public static int taskQueueTicks = 4;
+	public static int taskQueueMin = 50;
+	public static int taskQueueMax = 200;
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
@@ -42,6 +47,7 @@ public class FTBChunksConfig
 			disableAllFakePlayers = c.disableAllFakePlayers.get();
 			maxClaimedChunks = c.maxClaimedChunks.get();
 			maxForceLoadedChunks = c.maxForceLoadedChunks.get();
+			disableProtection = c.disableProtection.get();
 			allyMode = c.allyMode.get();
 		}
 	}
@@ -51,6 +57,7 @@ public class FTBChunksConfig
 		private final ForgeConfigSpec.BooleanValue disableAllFakePlayers;
 		private final ForgeConfigSpec.IntValue maxClaimedChunks;
 		private final ForgeConfigSpec.IntValue maxForceLoadedChunks;
+		private final ForgeConfigSpec.BooleanValue disableProtection;
 		private final ForgeConfigSpec.EnumValue<AllyMode> allyMode;
 
 		private ServerConfig(ForgeConfigSpec.Builder builder)
@@ -69,6 +76,11 @@ public class FTBChunksConfig
 					.comment("Max force loaded chunks.")
 					.translation("ftbchunks.general.max_force_loaded_chunks")
 					.defineInRange("max_force_loaded_chunks", 25, 0, Integer.MAX_VALUE);
+
+			disableProtection = builder
+					.comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for forceloading.")
+					.translation("ftbchunks.general.disable_protection")
+					.define("disable_protection", false);
 
 			allyMode = builder
 					.comment("Forced modes won't let players change their ally settings.")

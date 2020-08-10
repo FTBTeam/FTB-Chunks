@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
+import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
@@ -9,6 +10,7 @@ import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
+import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import com.feed_the_beast.mods.ftbchunks.impl.map.ColorBlend;
 import com.feed_the_beast.mods.ftbchunks.impl.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
@@ -16,6 +18,7 @@ import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
@@ -222,6 +225,14 @@ public class FTBChunksClient extends FTBChunksCommon
 		new PlayerListScreen(packet.players, packet.allyMode).openGui();
 	}
 
+	@Override
+	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet)
+	{
+		PlayerLocation.CLIENT_LIST.clear();
+		PlayerLocation.currentDimension = packet.dim;
+		PlayerLocation.CLIENT_LIST.addAll(packet.players);
+	}
+
 	@SubscribeEvent
 	public void customClick(CustomClickEvent event)
 	{
@@ -258,7 +269,6 @@ public class FTBChunksClient extends FTBChunksCommon
 	public void renderGameOverlay(RenderGameOverlayEvent.Post event)
 	{
 		Minecraft mc = Minecraft.getInstance();
-		MatrixStack matrixStack = event.getMatrixStack();
 
 		if (mc.player == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
 		{
@@ -363,12 +373,14 @@ public class FTBChunksClient extends FTBChunksCommon
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
 		RenderSystem.enableCull();
-		RenderSystem.color4f(1F, 1F, 1F, 1F);
 		RenderSystem.enableTexture();
 		RenderSystem.enableDepthTest();
 
+		MatrixStack matrixStack = event.getMatrixStack();
 		matrixStack.push();
-		matrixStack.translate(x + s / 2D, y + s / 2D, 0D);
+		matrixStack.translate(x + s / 2D, y + s / 2D, -10);
+
+		matrixStack.translate(0, 0, 950);
 
 		Matrix4f m = matrixStack.getLast().getMatrix();
 
@@ -383,6 +395,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		tessellator.draw();
 		RenderSystem.colorMask(true, true, true, true);
 
+		matrixStack.translate(0, 0, -950);
 		matrixStack.rotate(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
@@ -398,6 +411,8 @@ public class FTBChunksClient extends FTBChunksCommon
 		tessellator.draw();
 
 		matrixStack.pop();
+
+		m = matrixStack.getLast().getMatrix();
 
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
@@ -645,9 +660,9 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		if (event.phase == TickEvent.Phase.START && ClientMapManager.inst != null && Minecraft.getInstance().world != null)
 		{
-			if (taskQueueTicks % 4L == 1L)
+			if (taskQueueTicks % FTBChunksConfig.taskQueueTicks == 1L)
 			{
-				int s = Math.min(taskQueue.size(), MathHelper.clamp(taskQueue.size() / 10, 50, 200));
+				int s = Math.min(taskQueue.size(), MathHelper.clamp(taskQueue.size() / 10, FTBChunksConfig.taskQueueMin, FTBChunksConfig.taskQueueMax));
 
 				for (int i = 0; i < s; i++)
 				{

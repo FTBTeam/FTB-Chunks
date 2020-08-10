@@ -48,9 +48,9 @@ public interface ClaimedChunk extends ClaimResult
 		return c == 0 ? getPlayerData().getColor() : c;
 	}
 
-	boolean canEdit(ServerPlayerEntity player, BlockState blockState);
+	boolean canEdit(ServerPlayerEntity player, BlockState state);
 
-	boolean canInteract(ServerPlayerEntity player, BlockState blockState);
+	boolean canInteract(ServerPlayerEntity player, BlockState state);
 
 	boolean canEntitySpawn(Entity entity);
 

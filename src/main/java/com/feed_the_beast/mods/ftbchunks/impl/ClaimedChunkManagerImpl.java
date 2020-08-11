@@ -27,6 +27,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -116,7 +117,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		}
 		else
 		{
-			try (Writer writer = Files.newBufferedWriter(infoFile, StandardOpenOption.CREATE))
+			try (Writer writer = Files.newBufferedWriter(infoFile))
 			{
 				JsonObject json = new JsonObject();
 				json.addProperty("id", serverId.toString());
@@ -150,7 +151,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		{
 			if (data.shouldSave)
 			{
-				try (Writer writer = Files.newBufferedWriter(data.file, StandardOpenOption.CREATE))
+				try (Writer writer = Files.newBufferedWriter(data.file))
 				{
 					ClaimedChunkManagerImpl.GSON.toJson(data.toJson(), writer);
 				}
@@ -178,7 +179,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				array.add(json);
 			}
 
-			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json"), StandardOpenOption.CREATE))
+			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json")))
 			{
 				ClaimedChunkManagerImpl.GSON.toJson(array, writer);
 			}
@@ -214,7 +215,16 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				}
 				catch (Exception ex)
 				{
-					ex.printStackTrace();
+					FTBChunks.LOGGER.error("Failed to load " + path + ": " + ex + ". Deleting the file...");
+
+					try
+					{
+						Files.delete(path);
+					}
+					catch (IOException e)
+					{
+						e.printStackTrace();
+					}
 				}
 			});
 		}
@@ -372,7 +382,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		json.add("players", playersJson);
 
-		try (Writer writer = Files.newBufferedWriter(localDirectory.resolve("all.json"), StandardOpenOption.CREATE))
+		try (Writer writer = Files.newBufferedWriter(localDirectory.resolve("all.json")))
 		{
 			ClaimedChunkManagerImpl.GSON.toJson(json, writer);
 		}

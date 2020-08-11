@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author LatvianModder
@@ -18,7 +19,7 @@ public class ClientMapDimension
 	public final ClientMapManager manager;
 	public final String dimension;
 	public final Path directory;
-	public final HashMap<XZ, ClientMapRegion> regions;
+	public final Map<XZ, ClientMapRegion> regions;
 	public final List<Waypoint> waypoints;
 
 	public ClientMapDimension(ClientMapManager m, String id)

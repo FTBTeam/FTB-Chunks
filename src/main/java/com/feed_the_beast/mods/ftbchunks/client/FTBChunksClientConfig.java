@@ -1,6 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapManager;
 import com.feed_the_beast.mods.ftbguilibrary.config.ConfigGroup;
 import com.feed_the_beast.mods.ftbguilibrary.config.NameMap;
 import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfig;
@@ -19,6 +19,9 @@ public class FTBChunksClientConfig
 	public static float noise;
 	public static float shadows;
 	public static boolean chunkGrid;
+	public static boolean reducedColorPalette;
+	public static float saturation;
+
 	public static MinimapPosition minimap;
 	public static double minimapScale;
 	public static boolean minimapLockedNorth;
@@ -31,6 +34,7 @@ public class FTBChunksClientConfig
 	public static boolean minimapBiome;
 	public static boolean minimapBlur;
 	public static boolean minimapCompass;
+	public static int minimapVisibility;
 
 	public static boolean debugInfo;
 	public static int taskQueueTicks = 4;
@@ -60,6 +64,9 @@ public class FTBChunksClientConfig
 			noise = c.noise.get().floatValue();
 			shadows = c.shadows.get().floatValue();
 			chunkGrid = c.chunkGrid.get();
+			reducedColorPalette = c.reducedColorPalette.get();
+			saturation = c.saturation.get().floatValue();
+
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
 			minimapLockedNorth = c.minimapLockedNorth.get();
@@ -72,12 +79,13 @@ public class FTBChunksClientConfig
 			minimapBiome = c.minimapBiome.get();
 			minimapBlur = c.minimapBlur.get();
 			minimapCompass = c.minimapCompass.get();
+			minimapVisibility = c.minimapVisibility.get();
 
 			debugInfo = c.debugInfo.get();
 
-			if (ClientMapManager.inst != null)
+			if (MapManager.inst != null)
 			{
-				ClientMapManager.inst.updateAllRegions(false);
+				MapManager.inst.updateAllRegions(false);
 			}
 		}
 	}
@@ -87,6 +95,9 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.DoubleValue noise;
 		public final ForgeConfigSpec.DoubleValue shadows;
 		public final ForgeConfigSpec.BooleanValue chunkGrid;
+		public final ForgeConfigSpec.BooleanValue reducedColorPalette;
+		public final ForgeConfigSpec.DoubleValue saturation;
+
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
 		public final ForgeConfigSpec.BooleanValue minimapLockedNorth;
@@ -99,6 +110,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue minimapBiome;
 		public final ForgeConfigSpec.BooleanValue minimapBlur;
 		public final ForgeConfigSpec.BooleanValue minimapCompass;
+		public final ForgeConfigSpec.IntValue minimapVisibility;
 
 		public final ForgeConfigSpec.BooleanValue debugInfo;
 
@@ -118,6 +130,16 @@ public class FTBChunksClientConfig
 					.comment("Chunk grid overlay in large map")
 					.translation("ftbchunks.chunk_grid")
 					.define("chunk_grid", false);
+
+			reducedColorPalette = builder
+					.comment("Reduces color palette to 256 colors")
+					.translation("ftbchunks.reduced_color_palette")
+					.define("reduced_color_palette", false);
+
+			saturation = builder
+					.comment("Color intensity")
+					.translation("ftbchunks.saturation")
+					.defineInRange("saturation", 1D, 0D, 1D);
 
 			minimap = builder
 					.comment("Enables minimap to show up in corner")
@@ -179,6 +201,11 @@ public class FTBChunksClientConfig
 					.translation("ftbchunks.minimap_compass")
 					.define("minimap_compass", true);
 
+			minimapVisibility = builder
+					.comment("Minimap visibility")
+					.translation("ftbchunks.minimap_visibility")
+					.defineInRange("minimap_visibility", 255, 0, 255);
+
 			debugInfo = builder
 					.comment("Enables debug info")
 					.translation("ftbchunks.debug_info")
@@ -204,6 +231,16 @@ public class FTBChunksClientConfig
 			client.getLeft().chunkGrid.set(v);
 			chunkGrid = v;
 		}, false);
+
+		group.addBool("reduced_color_palette", reducedColorPalette, v -> {
+			client.getLeft().reducedColorPalette.set(v);
+			reducedColorPalette = v;
+		}, false);
+
+		group.addDouble("saturation", saturation, v -> {
+			client.getLeft().saturation.set(v);
+			saturation = v.floatValue();
+		}, 1D, 0D, 1D);
 
 		group.addEnum("minimap", minimap, v -> {
 			client.getLeft().minimap.set(v);
@@ -277,9 +314,9 @@ public class FTBChunksClientConfig
 				client.getRight().save();
 			}
 
-			if (ClientMapManager.inst != null)
+			if (MapManager.inst != null)
 			{
-				ClientMapManager.inst.updateAllRegions(false);
+				MapManager.inst.updateAllRegions(false);
 			}
 
 			new LargeMapScreen().openGui();

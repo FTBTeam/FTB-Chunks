@@ -5,13 +5,14 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapManager;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.client.map.ReloadChunkTask;
+import com.feed_the_beast.mods.ftbchunks.client.map.SyncRXTask;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
@@ -131,9 +132,9 @@ public class FTBChunksClient extends FTBChunksCommon
 
 	public static void saveAllRegions()
 	{
-		for (ClientMapDimension dimension : ClientMapManager.inst.getDimensions().values())
+		for (MapDimension dimension : MapManager.inst.getDimensions().values())
 		{
-			for (ClientMapRegion region : dimension.getLoadedRegions())
+			for (MapRegion region : dimension.getLoadedRegions())
 			{
 				if (region.saveData)
 				{
@@ -149,24 +150,24 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 
-		if (ClientMapManager.inst.saveData)
+		if (MapManager.inst.saveData)
 		{
-			queue(ClientMapManager.inst);
-			ClientMapManager.inst.saveData = false;
+			queue(MapManager.inst);
+			MapManager.inst.saveData = false;
 		}
 	}
 
 	@Override
 	public void login(LoginDataPacket loginData)
 	{
-		ClientMapManager.inst = new ClientMapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/data/" + loginData.serverId));
+		MapManager.inst = new MapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/data/" + loginData.serverId));
 		updateMinimap = true;
 	}
 
 	@SubscribeEvent
 	public void loggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
 	{
-		if (ClientMapManager.inst != null)
+		if (MapManager.inst != null)
 		{
 			saveAllRegions();
 
@@ -177,9 +178,9 @@ public class FTBChunksClient extends FTBChunksCommon
 				t.runMapTask();
 			}
 
-			ClientMapDimension.updateCurrent();
-			ClientMapManager.inst.release();
-			ClientMapManager.inst = null;
+			MapDimension.updateCurrent();
+			MapManager.inst.release();
+			MapManager.inst = null;
 		}
 	}
 
@@ -192,7 +193,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void updateChunk(SendChunkPacket packet)
 	{
-		ClientMapChunk chunk = ClientMapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
+		MapChunk chunk = MapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
 		Date now = new Date();
 		chunk.claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
 		chunk.forceLoadedDate = packet.forceLoaded && chunk.claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
@@ -203,14 +204,14 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void updateWaypoints(SendWaypointsPacket packet)
 	{
-		for (ClientMapDimension dimension : ClientMapManager.inst.getDimensions().values())
+		for (MapDimension dimension : MapManager.inst.getDimensions().values())
 		{
 			dimension.waypoints.clear();
 		}
 
 		for (Waypoint waypoint : packet.waypoints)
 		{
-			ClientMapManager.inst.getDimension(waypoint.dimension).waypoints.add(waypoint);
+			MapManager.inst.getDimension(waypoint.dimension).waypoints.add(waypoint);
 		}
 
 		LargeMapScreen screen = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
@@ -238,12 +239,18 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void importWorldMap(ServerWorld world)
 	{
-		Minecraft.getInstance().runAsync(() -> importWorldMap(world, ClientMapManager.inst.getDimension(ChunkDimPos.getID(world))));
+		Minecraft.getInstance().runAsync(() -> importWorldMap(world, MapManager.inst.getDimension(ChunkDimPos.getID(world))));
 	}
 
-	private void importWorldMap(ServerWorld world, ClientMapDimension dimension)
+	private void importWorldMap(ServerWorld world, MapDimension dimension)
 	{
 		Minecraft.getInstance().player.sendMessage(new StringTextComponent("WIP!"), Util.DUMMY_UUID);
+	}
+
+	@Override
+	public void syncRegion(byte[] data)
+	{
+		queue(new SyncRXTask(data));
 	}
 
 	@SubscribeEvent
@@ -288,17 +295,17 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		if (ClientMapManager.inst == null)
+		if (MapManager.inst == null)
 		{
 			return;
 		}
 
-		ClientMapDimension dim = ClientMapDimension.getCurrent();
+		MapDimension dim = MapDimension.getCurrent();
 
 		if (!dim.dimension.equals(ChunkDimPos.getID(mc.world)))
 		{
-			ClientMapDimension.updateCurrent();
-			dim = ClientMapDimension.getCurrent();
+			MapDimension.updateCurrent();
+			dim = MapDimension.getCurrent();
 		}
 
 		long now = System.currentTimeMillis();
@@ -351,7 +358,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					int ox = cx + mx - FTBChunks.TILE_OFFSET;
 					int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
-					ClientMapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
+					MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
 					region.getMapImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, FTBChunksClientConfig.minimapBlur, false, false, false);
 				}
 			}
@@ -374,6 +381,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		int z = 0;
 
 		float border = 0F;
+		int alpha = FTBChunksClientConfig.minimapVisibility;
 
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
@@ -418,27 +426,26 @@ public class FTBChunksClient extends FTBChunksCommon
 		m = matrixStack.getLast().getMatrix();
 
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, 255).tex(f0 + offX, f0 + offY).endVertex();
-		buffer.pos(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, 255).tex(f0 + offX, f1 + offY).endVertex();
-		buffer.pos(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, 255).tex(f1 + offX, f1 + offY).endVertex();
-		buffer.pos(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, 255).tex(f1 + offX, f0 + offY).endVertex();
+		buffer.pos(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, alpha).tex(f0 + offX, f0 + offY).endVertex();
+		buffer.pos(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, alpha).tex(f0 + offX, f1 + offY).endVertex();
+		buffer.pos(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, alpha).tex(f1 + offX, f1 + offY).endVertex();
+		buffer.pos(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, alpha).tex(f1 + offX, f0 + offY).endVertex();
 		tessellator.draw();
 
 		matrixStack.pop();
 
 		RenderSystem.disableDepthTest();
+		RenderSystem.depthFunc(GL11.GL_LEQUAL);
+		RenderSystem.defaultBlendFunc();
 
 		m = matrixStack.getLast().getMatrix();
 
-		RenderSystem.depthFunc(GL11.GL_LEQUAL);
-
-		RenderSystem.defaultBlendFunc();
 		mc.getTextureManager().bindTexture(CIRCLE_BORDER);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(m, x, y, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-		buffer.pos(m, x, y + s, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-		buffer.pos(m, x + s, y + s, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-		buffer.pos(m, x + s, y, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
+		buffer.pos(m, x, y, z).color(255, 255, 255, alpha).tex(0F, 0F).endVertex();
+		buffer.pos(m, x, y + s, z).color(255, 255, 255, alpha).tex(0F, 1F).endVertex();
+		buffer.pos(m, x + s, y + s, z).color(255, 255, 255, alpha).tex(1F, 1F).endVertex();
+		buffer.pos(m, x + s, y, z).color(255, 255, 255, alpha).tex(1F, 0F).endVertex();
 		tessellator.draw();
 
 		RenderSystem.disableTexture();
@@ -642,7 +649,7 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		if (FTBChunksClientConfig.debugInfo)
 		{
-			MINIMAP_TEXT_LIST.add("Task queue: " + taskQueue.size());
+			MINIMAP_TEXT_LIST.add("Queued tasks: " + taskQueue.size());
 		}
 
 		if (!MINIMAP_TEXT_LIST.isEmpty())
@@ -677,7 +684,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	@SubscribeEvent
 	public void clientTick(TickEvent.ClientTickEvent event)
 	{
-		if (event.phase == TickEvent.Phase.START && ClientMapManager.inst != null && Minecraft.getInstance().world != null)
+		if (event.phase == TickEvent.Phase.START && MapManager.inst != null && Minecraft.getInstance().world != null)
 		{
 			if (taskQueueTicks % FTBChunksClientConfig.taskQueueTicks == 1L)
 			{
@@ -701,7 +708,7 @@ public class FTBChunksClient extends FTBChunksCommon
 				{
 					tasks[i] = taskQueue.pollFirst();
 
-					if (tasks[i] == null)
+					if (tasks[i] == null || tasks[i].cancelOtherTasks())
 					{
 						break;
 					}
@@ -710,7 +717,10 @@ public class FTBChunksClient extends FTBChunksCommon
 				EXECUTOR_SERVICE.execute(() -> {
 					for (MapTask task : tasks)
 					{
-						task.runMapTask();
+						if (task != null)
+						{
+							task.runMapTask();
+						}
 					}
 				});
 			}

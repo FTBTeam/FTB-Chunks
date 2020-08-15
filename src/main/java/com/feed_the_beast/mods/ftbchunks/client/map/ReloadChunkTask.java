@@ -18,19 +18,19 @@ public class ReloadChunkTask implements MapTask
 {
 	public final World world;
 	public final ChunkPos pos;
-	private final ClientMapManager manager;
+	private final MapManager manager;
 
 	public ReloadChunkTask(World w, ChunkPos p)
 	{
 		world = w;
 		pos = p;
-		manager = ClientMapManager.inst;
+		manager = MapManager.inst;
 	}
 
 	@Override
 	public void runMapTask()
 	{
-		if (ClientMapManager.inst != manager)
+		if (MapManager.inst != manager)
 		{
 			return;
 		}
@@ -49,7 +49,7 @@ public class ReloadChunkTask implements MapTask
 			return;
 		}
 
-		ClientMapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getChunk(XZ.of(pos));
+		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getChunk(XZ.of(pos));
 
 		int topY = world.func_234938_ad_() + 1;
 		BlockPos.Mutable blockPos = new BlockPos.Mutable();
@@ -65,7 +65,7 @@ public class ReloadChunkTask implements MapTask
 				int wx = wi % 16;
 				int wz = wi / 16;
 				blockPos.setPos(blockX + wx, topY, blockZ + wz);
-				int by = MathHelper.clamp(ClientMapChunk.setHeight(ichunk, blockPos).getY(), 1, 255);
+				int by = MathHelper.clamp(MapChunk.setHeight(ichunk, blockPos).getY(), 1, 255);
 				blockPos.setY(by);
 				BlockState state = ichunk.getBlockState(blockPos);
 				//Biome biome = chunk.getBiomes().getNoiseBiome(blockPos.getX() >> 2, 0, blockPos.getZ() >> 2);

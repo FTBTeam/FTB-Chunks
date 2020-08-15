@@ -2,8 +2,8 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
@@ -86,7 +86,7 @@ public class RegionMapPanel extends Panel
 	@Override
 	public void addWidgets()
 	{
-		for (ClientMapRegion region : largeMap.dimension.getRegions().values())
+		for (MapRegion region : largeMap.dimension.getRegions().values())
 		{
 			add(new RegionMapButton(this, region));
 		}
@@ -177,11 +177,11 @@ public class RegionMapPanel extends Panel
 		blockZ = MathHelper.floor(regionZ * 512D);
 		blockY = 0;
 
-		ClientMapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+		MapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
 
 		if (r != null)
 		{
-			ClientMapChunk c = r.getChunks().get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+			MapChunk c = r.getChunks().get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
 
 			if (c != null)
 			{

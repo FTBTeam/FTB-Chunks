@@ -7,4 +7,9 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 public interface MapTask
 {
 	void runMapTask();
+
+	default boolean cancelOtherTasks()
+	{
+		return false;
+	}
 }

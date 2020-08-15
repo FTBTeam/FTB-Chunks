@@ -1,5 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
+import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -11,28 +13,28 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class ClientMapManager implements MapTask
+public class MapManager implements MapTask
 {
-	public static ClientMapManager inst;
+	public static MapManager inst;
 
 	public final UUID serverId;
 	public final Path directory;
-	private Map<String, ClientMapDimension> dimensions;
+	private Map<String, MapDimension> dimensions;
 	public boolean saveData;
 
-	public ClientMapManager(UUID id, Path dir)
+	public MapManager(UUID id, Path dir)
 	{
 		serverId = id;
 		directory = dir;
 		saveData = false;
 	}
 
-	public Collection<ClientMapDimension> getLoadedDimensions()
+	public Collection<MapDimension> getLoadedDimensions()
 	{
 		return dimensions == null ? Collections.emptyList() : dimensions.values();
 	}
 
-	public Map<String, ClientMapDimension> getDimensions()
+	public Map<String, MapDimension> getDimensions()
 	{
 		if (dimensions == null)
 		{
@@ -62,7 +64,7 @@ public class ClientMapManager implements MapTask
 
 						if (s.length() >= 3)
 						{
-							dimensions.put(s, new ClientMapDimension(this, s));
+							dimensions.put(s, new MapDimension(this, s));
 						}
 					}
 				}
@@ -80,14 +82,14 @@ public class ClientMapManager implements MapTask
 		return dimensions;
 	}
 
-	public ClientMapDimension getDimension(String dim)
+	public MapDimension getDimension(String dim)
 	{
-		return dimensions.computeIfAbsent(dim, d -> new ClientMapDimension(this, d).created());
+		return dimensions.computeIfAbsent(dim, d -> new MapDimension(this, d).created());
 	}
 
 	public void release()
 	{
-		for (ClientMapDimension dimension : getLoadedDimensions())
+		for (MapDimension dimension : getLoadedDimensions())
 		{
 			dimension.release();
 		}
@@ -97,13 +99,15 @@ public class ClientMapManager implements MapTask
 
 	public void updateAllRegions(boolean save)
 	{
-		for (ClientMapDimension dimension : getDimensions().values())
+		for (MapDimension dimension : getDimensions().values())
 		{
-			for (ClientMapRegion region : dimension.getRegions().values())
+			for (MapRegion region : dimension.getRegions().values())
 			{
 				region.update(save);
 			}
 		}
+
+		FTBChunksClient.updateMinimap = true;
 	}
 
 	@Override

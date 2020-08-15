@@ -22,9 +22,9 @@ import java.util.Date;
 /**
  * @author LatvianModder
  */
-public class ClientMapChunk
+public class MapChunk
 {
-	public final ClientMapRegion region;
+	public final MapRegion region;
 	public final XZ pos;
 	public long modified;
 
@@ -33,7 +33,7 @@ public class ClientMapChunk
 	public int color;
 	public ITextComponent owner;
 
-	public ClientMapChunk(ClientMapRegion r, XZ p)
+	public MapChunk(MapRegion r, XZ p)
 	{
 		region = r;
 		pos = p;
@@ -55,7 +55,7 @@ public class ClientMapChunk
 		return (a << 24) | (r << 16) | (g << 8) | b;
 	}
 
-	public boolean connects(ClientMapChunk chunk)
+	public boolean connects(MapChunk chunk)
 	{
 		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && owner.equals(chunk.owner);
 	}
@@ -74,7 +74,7 @@ public class ClientMapChunk
 	{
 		int c0 = getHRGB(x, z);
 
-		if (c0 != c)
+		//if (c0 != c)
 		{
 			int a = (c >> 24) & 0xFF;
 			int r = (c >> 16) & 0xFF;
@@ -132,7 +132,7 @@ public class ClientMapChunk
 			return true;
 		}
 
-		return false;
+		//return false;
 	}
 
 	public static boolean skipBlock(BlockState state, IWorld world, BlockPos pos)
@@ -199,13 +199,13 @@ public class ClientMapChunk
 		return pos;
 	}
 
-	public ClientMapChunk created()
+	public MapChunk created()
 	{
 		region.update(true);
 		return this;
 	}
 
-	public ClientMapChunk offset(int x, int z)
+	public MapChunk offset(int x, int z)
 	{
 		return region.dimension.getChunk(getActualPos().offset(x, z));
 	}

@@ -1,8 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
@@ -59,7 +59,7 @@ public class ChunkScreen extends GuiBase
 	public class ChunkButton extends Button
 	{
 		public final XZ chunkPos;
-		public ClientMapChunk chunk;
+		public MapChunk chunk;
 
 		public ChunkButton(Panel panel, XZ xz)
 		{
@@ -124,7 +124,7 @@ public class ChunkScreen extends GuiBase
 		}
 	}
 
-	public ClientMapDimension dimension = ClientMapDimension.getCurrent();
+	public MapDimension dimension = MapDimension.getCurrent();
 	public List<ChunkButton> chunkButtons;
 	public Set<XZ> selectedChunks;
 
@@ -238,7 +238,7 @@ public class ChunkScreen extends GuiBase
 
 			for (ChunkButton button : chunkButtons)
 			{
-				ClientMapChunk chunk = button.chunk;
+				MapChunk chunk = button.chunk;
 
 				if (chunk.claimedDate == null)
 				{
@@ -283,7 +283,7 @@ public class ChunkScreen extends GuiBase
 
 			for (ChunkButton button : chunkButtons)
 			{
-				ClientMapChunk chunk = button.chunk;
+				MapChunk chunk = button.chunk;
 
 				if (chunk.forceLoadedDate == null)
 				{

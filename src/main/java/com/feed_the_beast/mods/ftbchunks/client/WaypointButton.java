@@ -17,6 +17,7 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -49,6 +50,9 @@ public class WaypointButton extends Widget
 		{
 			list.add(new StringTextComponent(waypoint.owner).mergeStyle(TextFormatting.GRAY));
 		}
+
+		long dist = (long) MathUtils.dist(Minecraft.getInstance().player.getPosX(), Minecraft.getInstance().player.getPosZ(), waypoint.x, waypoint.z);
+		list.add(new StringTextComponent(dist + " m").mergeStyle(TextFormatting.GRAY));
 	}
 
 	@Override

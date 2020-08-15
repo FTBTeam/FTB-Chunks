@@ -1,6 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -43,18 +43,18 @@ public class LargeMapScreen extends GuiBase
 
 	public RegionMapPanel regionPanel;
 	public int zoom = 256;
-	public ClientMapDimension dimension;
+	public MapDimension dimension;
 	public int scrollWidth = 0;
 	public int scrollHeight = 0;
 	public int prevMouseX, prevMouseY;
 	public int grabbed = 0;
 	public boolean movedToPlayer = false;
-	public Button claimChunksButton, dimensionButton, waypointsButton, settingsButton, alliesButton;
+	public Button claimChunksButton, dimensionButton, waypointsButton, settingsButton, alliesButton, syncButton;
 
 	public LargeMapScreen()
 	{
 		regionPanel = new RegionMapPanel(this);
-		dimension = ClientMapDimension.getCurrent();
+		dimension = MapDimension.getCurrent();
 		regionPanel.setScrollX(0D);
 		regionPanel.setScrollY(0D);
 	}
@@ -104,6 +104,7 @@ public class LargeMapScreen extends GuiBase
 		}));
 		 */
 
+		add(alliesButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
 		add(waypointsButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
 			ConfigString name = new ConfigString();
 			new GuiEditConfigFromString<>(name, set -> {
@@ -116,13 +117,12 @@ public class LargeMapScreen extends GuiBase
 			}).openGui();
 		}));
 
-		add(settingsButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
-		add(alliesButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
+		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), GuiIcons.REFRESH, (b, m) -> dimension.sync()));
 
 		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.substring(dimension.dimension.indexOf(':') + 1).replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
 			try
 			{
-				List<ClientMapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
+				List<MapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
 				int i = list.indexOf(dimension);
 
 				if (i != -1)
@@ -136,6 +136,8 @@ public class LargeMapScreen extends GuiBase
 			{
 			}
 		}));
+
+		add(settingsButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
 	}
 
 	@Override
@@ -144,8 +146,9 @@ public class LargeMapScreen extends GuiBase
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		alliesButton.setPosAndSize(1, 19, 16, 16);
 		waypointsButton.setPosAndSize(1, 37, 16, 16);
-		settingsButton.setPosAndSize(1, height - 18, 16, 16);
+		syncButton.setPosAndSize(1, 55, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
+		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 	}
 
 	@Override
@@ -177,7 +180,7 @@ public class LargeMapScreen extends GuiBase
 	{
 		if (key.is(GLFW.GLFW_KEY_T))
 		{
-			if (dimension == ClientMapDimension.getCurrent())
+			if (dimension == MapDimension.getCurrent())
 			{
 				FTBChunksNet.MAIN.sendToServer(new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ));
 				closeGui(false);
@@ -283,38 +286,6 @@ public class LargeMapScreen extends GuiBase
 	@Override
 	public void drawForeground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		if (FTBChunksClientConfig.chunkGrid && zoom >= 128)
-		{
-			GlStateManager.disableTexture();
-			Tessellator tessellator = Tessellator.getInstance();
-			BufferBuilder buffer = tessellator.getBuffer();
-			int r = 70;
-			int g = 70;
-			int b = 70;
-			int a = 100;
-
-			buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-
-			int s = getRegionButtonSize() / 32;
-			double ox = -regionPanel.getScrollX() % s;
-			double oy = -regionPanel.getScrollY() % s;
-
-			for (int gx = 0; gx <= (w / s) + 1; gx++)
-			{
-				buffer.pos(x + ox + gx * s, y, 0).color(r, g, b, a).endVertex();
-				buffer.pos(x + ox + gx * s, y + h, 0).color(r, g, b, a).endVertex();
-			}
-
-			for (int gy = 0; gy <= (h / s) + 1; gy++)
-			{
-				buffer.pos(x, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
-				buffer.pos(x + w, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
-			}
-
-			tessellator.draw();
-			GlStateManager.enableTexture();
-		}
-
 		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == 0 ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
 		int coordsw = theme.getStringWidth(coords) / 2;
 

@@ -3,10 +3,12 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClientConfig;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
+import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.TextureUtil;
 
+import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -25,11 +27,13 @@ import java.util.zip.GZIPOutputStream;
 /**
  * @author LatvianModder
  */
-public class ClientMapRegion implements MapTask
+public class MapRegion implements MapTask
 {
-	public final ClientMapDimension dimension;
+	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
+
+	public final MapDimension dimension;
 	public final XZ pos;
-	private Map<XZ, ClientMapChunk> chunks;
+	private Map<XZ, MapChunk> chunks;
 	private NativeImage dataImage;
 	public boolean saveData;
 	private NativeImage mapImage;
@@ -37,7 +41,7 @@ public class ClientMapRegion implements MapTask
 	private int mapImageTextureId;
 	public boolean mapImageLoaded;
 
-	public ClientMapRegion(ClientMapDimension d, XZ p)
+	public MapRegion(MapDimension d, XZ p)
 	{
 		dimension = d;
 		pos = p;
@@ -49,13 +53,13 @@ public class ClientMapRegion implements MapTask
 		mapImageLoaded = false;
 	}
 
-	public ClientMapRegion created()
+	public MapRegion created()
 	{
 		dimension.saveData = true;
 		return this;
 	}
 
-	public Map<XZ, ClientMapChunk> getChunks()
+	public Map<XZ, MapChunk> getChunks()
 	{
 		if (chunks == null)
 		{
@@ -78,7 +82,7 @@ public class ClientMapRegion implements MapTask
 						int z = stream.readByte();
 						long m = stream.readLong();
 
-						ClientMapChunk c = new ClientMapChunk(this, XZ.of(x, z));
+						MapChunk c = new MapChunk(this, XZ.of(x, z));
 						c.modified = m;
 						chunks.put(c.pos, c);
 					}
@@ -150,11 +154,13 @@ public class ClientMapRegion implements MapTask
 					}
 				}
 
+				float[] hsb = new float[3];
+
 				for (int cz = 0; cz < 32; cz++)
 				{
 					for (int cx = 0; cx < 32; cx++)
 					{
-						ClientMapChunk c = chunks.get(XZ.of(cx, cz));
+						MapChunk c = chunks.get(XZ.of(cx, cz));
 						Random random = new Random(pos.asLong() ^ (c == null ? 0L : c.pos.asLong()));
 
 						for (int z = 0; z < 16; z++)
@@ -171,6 +177,21 @@ public class ClientMapRegion implements MapTask
 								else
 								{
 									int col = dataImgMap[ax + 1][az + 1];
+
+									if (FTBChunksClientConfig.reducedColorPalette)
+									{
+										col = ColorUtils.reduce(col);
+									}
+
+									if (FTBChunksClientConfig.saturation < 1F)
+									{
+										int r = (col >> 16) & 0xFF;
+										int g = (col >> 8) & 0xFF;
+										int b = (col >> 0) & 0xFF;
+										Color.RGBtoHSB(r, g, b, hsb);
+										hsb[1] *= FTBChunksClientConfig.saturation;
+										col = Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
+									}
 
 									float addedBrightness = 0F;
 
@@ -202,6 +223,11 @@ public class ClientMapRegion implements MapTask
 									if (addedBrightness != 0F)
 									{
 										col = ColorUtils.addBrightness(col, addedBrightness);
+									}
+
+									if (FTBChunksClientConfig.chunkGrid && (x == 0 || z == 0))
+									{
+										col = Color4I.rgb(col).withTint(GRID_COLOR).rgba();
 									}
 
 									if (col == 0xFF000000)
@@ -253,14 +279,14 @@ public class ClientMapRegion implements MapTask
 		return mapImageTextureId;
 	}
 
-	public ClientMapChunk getChunk(XZ pos)
+	public MapChunk getChunk(XZ pos)
 	{
 		if (pos.x != (pos.x & 31) || pos.z != (pos.z & 31))
 		{
 			pos = XZ.of(pos.x & 31, pos.z & 31);
 		}
 
-		return getChunks().computeIfAbsent(pos, p -> new ClientMapChunk(this, p).created());
+		return getChunks().computeIfAbsent(pos, p -> new MapChunk(this, p).created());
 	}
 
 	public void release()
@@ -307,7 +333,7 @@ public class ClientMapRegion implements MapTask
 				Files.createDirectories(dimension.directory);
 			}
 
-			List<ClientMapChunk> chunkList = getChunks().values().stream().filter(c -> c.modified > 0L).collect(Collectors.toList());
+			List<MapChunk> chunkList = getChunks().values().stream().filter(c -> c.modified > 0L).collect(Collectors.toList());
 
 			if (chunkList.isEmpty())
 			{
@@ -320,7 +346,7 @@ public class ClientMapRegion implements MapTask
 				stream.writeByte(1);
 				stream.writeShort(chunkList.size());
 
-				for (ClientMapChunk chunk : chunkList)
+				for (MapChunk chunk : chunkList)
 				{
 					stream.writeByte(chunk.pos.x);
 					stream.writeByte(chunk.pos.z);
@@ -348,7 +374,7 @@ public class ClientMapRegion implements MapTask
 		FTBChunksClient.updateMinimap = true;
 	}
 
-	public ClientMapRegion offset(int x, int z)
+	public MapRegion offset(int x, int z)
 	{
 		return dimension.getRegion(pos.offset(x, z));
 	}

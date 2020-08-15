@@ -1,6 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
@@ -13,9 +13,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
  */
 public class RegionMapButton extends Widget
 {
-	public final ClientMapRegion region;
+	public final MapRegion region;
 
-	public RegionMapButton(RegionMapPanel pa, ClientMapRegion r)
+	public RegionMapButton(RegionMapPanel pa, MapRegion r)
 	{
 		super(pa);
 		region = r;

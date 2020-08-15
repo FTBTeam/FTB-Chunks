@@ -17,9 +17,4 @@ public class FTBRanksIntegration
 	{
 		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_force_loaded").asNumber().orElse(def).intValue(), 0);
 	}
-
-	public static boolean canSeeMap(ServerPlayerEntity player)
-	{
-		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.see_all_map").asBoolean().orElseGet(() -> player.hasPermissionLevel(2));
-	}
 }

@@ -11,7 +11,10 @@ import net.minecraft.block.LeavesBlock;
 import net.minecraft.block.RedstoneWireBlock;
 import net.minecraft.block.VineBlock;
 import net.minecraft.block.material.MaterialColor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockDisplayReader;
@@ -21,6 +24,7 @@ import net.minecraft.world.biome.BiomeColors;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.chunk.IChunk;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +33,8 @@ import java.util.Map;
  */
 public class ColorUtils
 {
-	public static Map<Block, Color4I> COLOR_MAP = new HashMap<>();
+	public static final Map<Block, Color4I> COLOR_MAP = new HashMap<>();
+	public static int[] reducedColorPalette = null;
 
 	public static int addBrightness(int c, float f)
 	{
@@ -46,10 +51,60 @@ public class ColorUtils
 
 	public static int reduce(int c)
 	{
-		float f = (c & 0xFF) / 255F;
-		int c1 = (int) (f * 32F);
-		float f1 = c1 / 32F;
-		return (int) (f1 * 255F);
+		if (reducedColorPalette == null)
+		{
+			reducedColorPalette = new int[0];
+
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/reduced_color_palette.png")).getInputStream())
+			{
+				NativeImage image = NativeImage.read(stream);
+				int w = image.getWidth();
+				int h = image.getHeight();
+
+				reducedColorPalette = new int[w * h];
+
+				for (int x = 0; x < w; x++)
+				{
+					for (int y = 0; y < h; y++)
+					{
+						int col = image.getPixelRGBA(x, y);
+						reducedColorPalette[x + y * w] = (NativeImage.getRed(col) << 16) | (NativeImage.getGreen(col) << 8) | NativeImage.getBlue(col);
+					}
+				}
+
+				image.close();
+			}
+			catch (Exception ex)
+			{
+			}
+		}
+
+		if (reducedColorPalette.length == 0)
+		{
+			return c;
+		}
+
+		int r = (c >> 16) & 0xFF;
+		int g = (c >> 8) & 0xFF;
+		int b = (c >> 0) & 0xFF;
+		long prevDist = Long.MAX_VALUE;
+		int colr = 0;
+
+		for (int col : reducedColorPalette)
+		{
+			long dr = r - ((col >> 16) & 0xFF);
+			long dg = g - ((col >> 8) & 0xFF);
+			long db = b - ((col >> 0) & 0xFF);
+			long d = dr * dr + dg * dg + db * db;
+
+			if (d < prevDist)
+			{
+				prevDist = d;
+				colr = col;
+			}
+		}
+
+		return 0xFF000000 | colr;
 	}
 
 	public static Color4I getColorRaw(BlockState state, IBlockDisplayReader world, BlockPos pos)

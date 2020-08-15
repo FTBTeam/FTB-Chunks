@@ -44,4 +44,8 @@ public class FTBChunksCommon
 	public void importWorldMap(ServerWorld world)
 	{
 	}
+
+	public void syncRegion(byte[] data)
+	{
+	}
 }

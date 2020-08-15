@@ -3,6 +3,8 @@
 	"ftbchunks.noise": "Noise",
 	"ftbchunks.shadows": "Shadows",
 	"ftbchunks.chunk_grid": "Chunk Grid",
+	"ftbchunks.reduced_color_palette": "Reduced Color Palette",
+	"ftbchunks.saturation": "Saturation",
 	"ftbchunks.debug_info": "Debug Info",
 	"ftbchunks.minimap": "Minimap",
 	"ftbchunks.minimap_scale": "Minimap Scale",
@@ -30,5 +32,6 @@
 	"ftbchunks.gui.claimed_chunks": "Claimed Chunks",
 	"ftbchunks.gui.waypoints": "Waypoints",
 	"ftbchunks.gui.add_waypoint": "Add Waypoint",
-	"ftbchunks.gui.settings": "Settings"
+	"ftbchunks.gui.settings": "Settings",
+	"ftbchunks.gui.sync": "Sync with Allies"
 }

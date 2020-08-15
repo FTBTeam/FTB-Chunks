@@ -38,5 +38,7 @@ public class FTBChunksNet
 		MAIN.registerMessage(14, TeleportFromMapPacket.class, TeleportFromMapPacket::write, TeleportFromMapPacket::new, TeleportFromMapPacket::handle);
 		MAIN.registerMessage(15, ChangeWaypointPrivacyPacket.class, ChangeWaypointPrivacyPacket::write, ChangeWaypointPrivacyPacket::new, ChangeWaypointPrivacyPacket::handle);
 		MAIN.registerMessage(16, SendVisiblePlayerListPacket.class, SendVisiblePlayerListPacket::write, SendVisiblePlayerListPacket::new, SendVisiblePlayerListPacket::handle);
+		MAIN.registerMessage(17, SyncTXPacket.class, SyncTXPacket::write, SyncTXPacket::new, SyncTXPacket::handle);
+		MAIN.registerMessage(18, SyncRXPacket.class, SyncRXPacket::write, SyncRXPacket::new, SyncRXPacket::handle);
 	}
 }

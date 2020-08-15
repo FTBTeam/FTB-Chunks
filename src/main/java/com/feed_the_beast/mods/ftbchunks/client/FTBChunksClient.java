@@ -1,19 +1,19 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
+import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
-import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
+import com.feed_the_beast.mods.ftbchunks.client.map.ReloadChunkTask;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
-import com.feed_the_beast.mods.ftbchunks.impl.map.ColorBlend;
-import com.feed_the_beast.mods.ftbchunks.impl.map.MapTask;
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
@@ -29,9 +29,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
+import net.minecraft.client.gui.screen.IngameMenuScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
@@ -44,11 +44,16 @@ import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
@@ -57,24 +62,27 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Random;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author LatvianModder
  */
 public class FTBChunksClient extends FTBChunksCommon
 {
+	public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 	private static final ResourceLocation BUTTON_ID = new ResourceLocation("ftbchunks:open_gui");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
@@ -86,17 +94,25 @@ public class FTBChunksClient extends FTBChunksCommon
 			new ResourceLocation("ftbchunks:textures/compass_s.png"),
 	};
 
-	public static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
+	private static final List<String> MINIMAP_TEXT_LIST = new ArrayList<>(3);
+
+	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	private static long taskQueueTicks = 0L;
+	public static final HashSet<ChunkPos> rerenderCache = new HashSet<>();
+
+	public static void queue(MapTask task)
+	{
+		taskQueue.addLast(task);
+	}
 
 	public static KeyBinding openMapKey;
 
 	public static int minimapTextureId = -1;
 	private static int currentPlayerChunkX, currentPlayerChunkZ;
 
-	private boolean updateMinimap = false;
+	public static boolean updateMinimap = false;
 	public static SendGeneralDataPacket generalData;
-	private long nextRegionSave = 0L;
+	private static long nextRegionSave = 0L;
 
 	public void init()
 	{
@@ -105,6 +121,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		openMapKey = new KeyBinding("key.ftbchunks.map", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
 		ClientRegistry.registerKeyBinding(openMapKey);
 		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(new EntityIcons());
+		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(new ColorMapLoader());
 	}
 
 	public static void openGui()
@@ -114,25 +131,56 @@ public class FTBChunksClient extends FTBChunksCommon
 
 	public static void saveAllRegions()
 	{
-		for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
+		for (ClientMapDimension dimension : ClientMapManager.inst.getDimensions().values())
 		{
-			for (ClientMapRegion region : dimension.regions.values())
+			for (ClientMapRegion region : dimension.getLoadedRegions())
 			{
-				if (region.saveImage)
+				if (region.saveData)
 				{
-					taskQueue.addLast(region);
-					region.saveImage = false;
+					queue(region);
+					region.saveData = false;
 				}
 			}
+
+			if (dimension.saveData)
+			{
+				queue(dimension);
+				dimension.saveData = false;
+			}
+		}
+
+		if (ClientMapManager.inst.saveData)
+		{
+			queue(ClientMapManager.inst);
+			ClientMapManager.inst.saveData = false;
 		}
 	}
 
 	@Override
 	public void login(LoginDataPacket loginData)
 	{
-		ClientMapManager.inst = new ClientMapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/map/" + loginData.serverId));
-		ClientMapDimension.current = ClientMapManager.inst.getDimension(ChunkDimPos.getID(Minecraft.getInstance().world));
+		ClientMapManager.inst = new ClientMapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/data/" + loginData.serverId));
 		updateMinimap = true;
+	}
+
+	@SubscribeEvent
+	public void loggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
+	{
+		if (ClientMapManager.inst != null)
+		{
+			saveAllRegions();
+
+			MapTask t;
+
+			while ((t = taskQueue.pollFirst()) != null)
+			{
+				t.runMapTask();
+			}
+
+			ClientMapDimension.updateCurrent();
+			ClientMapManager.inst.release();
+			ClientMapManager.inst = null;
+		}
 	}
 
 	@Override
@@ -144,64 +192,18 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void updateChunk(SendChunkPacket packet)
 	{
-		try
-		{
-			BufferedImage image = ImageIO.read(new ByteArrayInputStream(packet.imageData));
-			ClientMapChunk chunk = ClientMapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
-			Date now = new Date();
-			chunk.claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
-			chunk.forceLoadedDate = packet.forceLoaded && chunk.claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
-			chunk.color = packet.color;
-			chunk.owner = packet.owner == null ? StringTextComponent.EMPTY : packet.owner;
-			boolean updateRegion = false;
-			Random random = new Random(packet.x * 31L + packet.z);
-
-			for (int z = 0; z < 16; z++)
-			{
-				for (int x = 0; x < 16; x++)
-				{
-					int c = chunk.region.getImage().getPixelRGBA(chunk.pos.x * 16 + x, chunk.pos.z * 16 + z);
-					int h0 = NativeImage.getAlpha(c);
-					int r0 = NativeImage.getRed(c);
-					int g0 = NativeImage.getGreen(c);
-					int b0 = NativeImage.getBlue(c);
-
-					int nc = image.getRGB(x, z);
-
-					if (FTBChunksClientConfig.noise != 0D)
-					{
-						nc = ColorBlend.addBrightness(nc, (float) (random.nextFloat() * FTBChunksClientConfig.noise - FTBChunksClientConfig.noise / 2D));
-					}
-
-					int h = (nc >> 24) & 0xFF;
-					int r = (nc >> 16) & 0xFF;
-					int g = (nc >> 8) & 0xFF;
-					int b = (nc >> 0) & 0xFF;
-
-					if (h0 != h || r0 != r || g0 != g || b0 != b)
-					{
-						chunk.region.getImage().setPixelRGBA(chunk.pos.x * 16 + x, chunk.pos.z * 16 + z, NativeImage.getCombined(h, b, g, r));
-						updateRegion = true;
-					}
-				}
-			}
-
-			if (updateRegion)
-			{
-				chunk.region.saveImage = true;
-				updateMinimap = true;
-			}
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-		}
+		ClientMapChunk chunk = ClientMapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
+		Date now = new Date();
+		chunk.claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
+		chunk.forceLoadedDate = packet.forceLoaded && chunk.claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
+		chunk.color = packet.color;
+		chunk.owner = packet.owner == null ? StringTextComponent.EMPTY : packet.owner;
 	}
 
 	@Override
 	public void updateWaypoints(SendWaypointsPacket packet)
 	{
-		for (ClientMapDimension dimension : ClientMapManager.inst.dimensions.values())
+		for (ClientMapDimension dimension : ClientMapManager.inst.getDimensions().values())
 		{
 			dimension.waypoints.clear();
 		}
@@ -231,6 +233,17 @@ public class FTBChunksClient extends FTBChunksCommon
 		PlayerLocation.CLIENT_LIST.clear();
 		PlayerLocation.currentDimension = packet.dim;
 		PlayerLocation.CLIENT_LIST.addAll(packet.players);
+	}
+
+	@Override
+	public void importWorldMap(ServerWorld world)
+	{
+		Minecraft.getInstance().runAsync(() -> importWorldMap(world, ClientMapManager.inst.getDimension(ChunkDimPos.getID(world))));
+	}
+
+	private void importWorldMap(ServerWorld world, ClientMapDimension dimension)
+	{
+		Minecraft.getInstance().player.sendMessage(new StringTextComponent("WIP!"), Util.DUMMY_UUID);
 	}
 
 	@SubscribeEvent
@@ -280,11 +293,12 @@ public class FTBChunksClient extends FTBChunksCommon
 			return;
 		}
 
-		String dimId = ChunkDimPos.getID(mc.world);
+		ClientMapDimension dim = ClientMapDimension.getCurrent();
 
-		if (ClientMapDimension.current == null || !ClientMapDimension.current.dimension.equals(dimId))
+		if (!dim.dimension.equals(ChunkDimPos.getID(mc.world)))
 		{
-			ClientMapDimension.current = ClientMapManager.inst.getDimension(dimId);
+			ClientMapDimension.updateCurrent();
+			dim = ClientMapDimension.getCurrent();
 		}
 
 		long now = System.currentTimeMillis();
@@ -337,8 +351,8 @@ public class FTBChunksClient extends FTBChunksCommon
 					int ox = cx + mx - FTBChunks.TILE_OFFSET;
 					int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
-					ClientMapRegion region = ClientMapDimension.current.getRegion(XZ.regionFromChunk(ox, oz));
-					region.getImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, false, false);
+					ClientMapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
+					region.getMapImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, FTBChunksClientConfig.minimapBlur, false, false, false);
 				}
 			}
 
@@ -459,9 +473,9 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 
-		if (FTBChunksClientConfig.minimapWaypoints && !ClientMapDimension.current.waypoints.isEmpty())
+		if (FTBChunksClientConfig.minimapWaypoints && !dim.waypoints.isEmpty())
 		{
-			for (Waypoint waypoint : ClientMapDimension.current.waypoints)
+			for (Waypoint waypoint : dim.waypoints)
 			{
 				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x, waypoint.z) / 3.2D * scale;
 
@@ -612,24 +626,34 @@ public class FTBChunksClient extends FTBChunksCommon
 			matrixStack.pop();
 		}
 
-		if (FTBChunksClientConfig.minimapXYZ || FTBChunksClientConfig.minimapBiome)
+		MINIMAP_TEXT_LIST.clear();
+
+		if (FTBChunksClientConfig.minimapXYZ)
+		{
+			MINIMAP_TEXT_LIST.add(MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ()));
+		}
+
+		if (FTBChunksClientConfig.minimapBiome)
+		{
+			MINIMAP_TEXT_LIST.add(I18n.format(mc.world.getBiome(mc.player.getPosition()).getTranslationKey()));
+		}
+
+		if (FTBChunksClientConfig.debugInfo)
+		{
+			MINIMAP_TEXT_LIST.add("Task queue: " + taskQueue.size());
+		}
+
+		if (!MINIMAP_TEXT_LIST.isEmpty())
 		{
 			matrixStack.push();
 			matrixStack.translate(x + s / 2D, y + s + 5D, 0D);
 			matrixStack.scale((float) (0.5D * scale), (float) (0.5D * scale), 1F);
 
-			if (FTBChunksClientConfig.minimapXYZ)
+			for (int i = 0; i < MINIMAP_TEXT_LIST.size(); i++)
 			{
-				String cs = MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ());
-				int csw = mc.fontRenderer.getStringWidth(cs);
-				mc.fontRenderer.drawStringWithShadow(matrixStack, cs, -csw / 2F, 0, 0xFFFFFFFF);
-			}
-
-			if (FTBChunksClientConfig.minimapBiome)
-			{
-				String bs = I18n.format(mc.world.getBiome(mc.player.getPosition()).getTranslationKey());
+				String bs = MINIMAP_TEXT_LIST.get(i);
 				int bsw = mc.fontRenderer.getStringWidth(bs);
-				mc.fontRenderer.drawStringWithShadow(matrixStack, bs, -bsw / 2F, FTBChunksClientConfig.minimapXYZ ? 10 : 0, 0xFFFFFFFF);
+				mc.fontRenderer.drawStringWithShadow(matrixStack, bs, -bsw / 2F, i * 10, 0xFFFFFFFF);
 			}
 
 			matrixStack.pop();
@@ -637,21 +661,12 @@ public class FTBChunksClient extends FTBChunksCommon
 	}
 
 	@SubscribeEvent
-	public void loggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
+	public void screenOpened(GuiScreenEvent.InitGuiEvent.Pre event)
 	{
-		if (ClientMapManager.inst != null)
+		if (event.getGui() instanceof IngameMenuScreen)
 		{
+			nextRegionSave = System.currentTimeMillis() + 60000L;
 			saveAllRegions();
-
-			MapTask t;
-
-			while ((t = taskQueue.pollFirst()) != null)
-			{
-				t.run();
-			}
-
-			ClientMapManager.inst.release();
-			ClientMapManager.inst = null;
 		}
 	}
 
@@ -660,31 +675,52 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		if (event.phase == TickEvent.Phase.START && ClientMapManager.inst != null && Minecraft.getInstance().world != null)
 		{
-			if (taskQueueTicks % FTBChunksConfig.taskQueueTicks == 1L)
+			if (taskQueueTicks % FTBChunksClientConfig.taskQueueTicks == 1L)
 			{
-				int s = Math.min(taskQueue.size(), MathHelper.clamp(taskQueue.size() / 10, FTBChunksConfig.taskQueueMin, FTBChunksConfig.taskQueueMax));
+				if (!rerenderCache.isEmpty())
+				{
+					World world = Minecraft.getInstance().world;
+
+					for (ChunkPos pos : rerenderCache)
+					{
+						queue(new ReloadChunkTask(world, pos));
+					}
+
+					rerenderCache.clear();
+				}
+
+				int s = Math.min(taskQueue.size(), MathHelper.clamp(taskQueue.size() / 10, FTBChunksClientConfig.taskQueueMin, FTBChunksClientConfig.taskQueueMax));
+
+				MapTask[] tasks = new MapTask[s];
 
 				for (int i = 0; i < s; i++)
 				{
-					MapTask r = taskQueue.pollFirst();
+					tasks[i] = taskQueue.pollFirst();
 
-					if (r != null)
-					{
-						r.run();
-
-						if (r.cancelOtherTasks())
-						{
-							break;
-						}
-					}
-					else
+					if (tasks[i] == null)
 					{
 						break;
 					}
 				}
+
+				EXECUTOR_SERVICE.execute(() -> {
+					for (MapTask task : tasks)
+					{
+						task.runMapTask();
+					}
+				});
 			}
 
 			taskQueueTicks++;
+		}
+	}
+
+	@SubscribeEvent
+	public void chunkLoaded(ChunkEvent.Load event)
+	{
+		if (event.getWorld() instanceof World && event.getChunk() instanceof Chunk && event.getWorld().isRemote())
+		{
+			// queue(new ReloadChunkTask((World) event.getWorld(), event.getChunk().getPos()));
 		}
 	}
 }

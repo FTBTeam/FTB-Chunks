@@ -5,6 +5,9 @@
 		"minecraft:tall_seagrass",
 		"minecraft:sea_pickle",
 		"minecraft:kelp",
-		"minecraft:kelp_plant"
+		"minecraft:kelp_plant",
+		"#minecraft:corals",
+		"#minecraft:coral_blocks",
+		"#minecraft:wall_corals"
 	]
 }

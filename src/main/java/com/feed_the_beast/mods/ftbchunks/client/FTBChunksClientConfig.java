@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapManager;
 import com.feed_the_beast.mods.ftbguilibrary.config.ConfigGroup;
 import com.feed_the_beast.mods.ftbguilibrary.config.NameMap;
 import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfig;
@@ -15,7 +16,9 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class FTBChunksClientConfig
 {
-	public static double noise;
+	public static float noise;
+	public static float shadows;
+	public static boolean chunkGrid;
 	public static MinimapPosition minimap;
 	public static double minimapScale;
 	public static boolean minimapLockedNorth;
@@ -28,6 +31,11 @@ public class FTBChunksClientConfig
 	public static boolean minimapBiome;
 	public static boolean minimapBlur;
 	public static boolean minimapCompass;
+
+	public static boolean debugInfo;
+	public static int taskQueueTicks = 4;
+	public static int taskQueueMin = 20;
+	public static int taskQueueMax = 100;
 
 	private static Pair<ClientConfig, ForgeConfigSpec> client;
 
@@ -49,7 +57,9 @@ public class FTBChunksClientConfig
 		if (config.getSpec() == client.getRight())
 		{
 			ClientConfig c = client.getLeft();
-			noise = c.noise.get();
+			noise = c.noise.get().floatValue();
+			shadows = c.shadows.get().floatValue();
+			chunkGrid = c.chunkGrid.get();
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
 			minimapLockedNorth = c.minimapLockedNorth.get();
@@ -62,12 +72,21 @@ public class FTBChunksClientConfig
 			minimapBiome = c.minimapBiome.get();
 			minimapBlur = c.minimapBlur.get();
 			minimapCompass = c.minimapCompass.get();
+
+			debugInfo = c.debugInfo.get();
+
+			if (ClientMapManager.inst != null)
+			{
+				ClientMapManager.inst.updateAllRegions(false);
+			}
 		}
 	}
 
 	private static class ClientConfig
 	{
 		public final ForgeConfigSpec.DoubleValue noise;
+		public final ForgeConfigSpec.DoubleValue shadows;
+		public final ForgeConfigSpec.BooleanValue chunkGrid;
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
 		public final ForgeConfigSpec.BooleanValue minimapLockedNorth;
@@ -81,12 +100,24 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue minimapBlur;
 		public final ForgeConfigSpec.BooleanValue minimapCompass;
 
+		public final ForgeConfigSpec.BooleanValue debugInfo;
+
 		private ClientConfig(ForgeConfigSpec.Builder builder)
 		{
 			noise = builder
 					.comment("Noise added to map to make it look less plastic")
 					.translation("ftbchunks.noise")
 					.defineInRange("noise", 0.05D, 0D, 0.5D);
+
+			shadows = builder
+					.comment("Shadow intensity")
+					.translation("ftbchunks.shadows")
+					.defineInRange("shadows", 0.1D, 0D, 0.3D);
+
+			chunkGrid = builder
+					.comment("Chunk grid overlay in large map")
+					.translation("ftbchunks.chunk_grid")
+					.define("chunk_grid", false);
 
 			minimap = builder
 					.comment("Enables minimap to show up in corner")
@@ -147,6 +178,11 @@ public class FTBChunksClientConfig
 					.comment("Adds NWSE compass inside minimap")
 					.translation("ftbchunks.minimap_compass")
 					.define("minimap_compass", true);
+
+			debugInfo = builder
+					.comment("Enables debug info")
+					.translation("ftbchunks.debug_info")
+					.define("debug_info", false);
 		}
 	}
 
@@ -156,8 +192,18 @@ public class FTBChunksClientConfig
 
 		group.addDouble("noise", noise, v -> {
 			client.getLeft().noise.set(v);
-			noise = v;
+			noise = v.floatValue();
 		}, 0.05D, 0D, 0.5D);
+
+		group.addDouble("shadows", shadows, v -> {
+			client.getLeft().shadows.set(v);
+			shadows = v.floatValue();
+		}, 0.1D, 0D, 0.3D);
+
+		group.addBool("chunk_grid", chunkGrid, v -> {
+			client.getLeft().chunkGrid.set(v);
+			chunkGrid = v;
+		}, false);
 
 		group.addEnum("minimap", minimap, v -> {
 			client.getLeft().minimap.set(v);
@@ -219,6 +265,11 @@ public class FTBChunksClientConfig
 			minimapCompass = v;
 		}, true);
 
+		group.addBool("debug_info", debugInfo, v -> {
+			client.getLeft().debugInfo.set(v);
+			debugInfo = v;
+		}, false);
+
 		GuiEditConfig gui = new GuiEditConfig(group);
 		group.savedCallback = b -> {
 			if (b)
@@ -226,7 +277,12 @@ public class FTBChunksClientConfig
 				client.getRight().save();
 			}
 
-			gui.closeGui(false);
+			if (ClientMapManager.inst != null)
+			{
+				ClientMapManager.inst.updateAllRegions(false);
+			}
+
+			new LargeMapScreen().openGui();
 		};
 
 		gui.openGui();

@@ -2,7 +2,9 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
+import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
@@ -11,8 +13,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.util.math.MathHelper;
-
-import java.nio.file.Files;
 
 /**
  * @author LatvianModder
@@ -24,6 +24,7 @@ public class RegionMapPanel extends Panel
 	public double regionZ = 0;
 	public int regionMinX, regionMinZ, regionMaxX, regionMaxZ;
 	public int blockX = 0;
+	public int blockY = 0;
 	public int blockZ = 0;
 
 	public RegionMapPanel(LargeMapScreen panel)
@@ -43,8 +44,8 @@ public class RegionMapPanel extends Panel
 		{
 			if (w instanceof RegionMapButton)
 			{
-				int qx = ((RegionMapButton) w).pos.x;
-				int qy = ((RegionMapButton) w).pos.z;
+				int qx = ((RegionMapButton) w).region.pos.x;
+				int qy = ((RegionMapButton) w).region.pos.z;
 
 				regionMinX = Math.min(regionMinX, qx);
 				regionMinZ = Math.min(regionMinZ, qy);
@@ -85,24 +86,9 @@ public class RegionMapPanel extends Panel
 	@Override
 	public void addWidgets()
 	{
-		FTBChunksClient.saveAllRegions();
-
-		try
+		for (ClientMapRegion region : largeMap.dimension.getRegions().values())
 		{
-			if (Files.exists(largeMap.dimension.directory))
-			{
-				Files.list(largeMap.dimension.directory)
-						.map(path -> path.getFileName().toString())
-						.filter(name -> name.endsWith(".png"))
-						.map(name -> name.split(","))
-						.filter(name -> name.length == 3)
-						.map(name -> new RegionMapButton(this, XZ.of(Integer.parseInt(name[0]), Integer.parseInt(name[1]))))
-						.forEach(this::add);
-			}
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
+			add(new RegionMapButton(this, region));
 		}
 
 		for (Waypoint waypoint : largeMap.dimension.waypoints)
@@ -140,8 +126,8 @@ public class RegionMapPanel extends Panel
 		{
 			if (w instanceof RegionMapButton)
 			{
-				double qx = ((RegionMapButton) w).pos.x;
-				double qy = ((RegionMapButton) w).pos.z;
+				double qx = ((RegionMapButton) w).region.pos.x;
+				double qy = ((RegionMapButton) w).region.pos.z;
 				double qw = 1D;
 				double qh = 1D;
 
@@ -189,6 +175,19 @@ public class RegionMapPanel extends Panel
 		regionZ = (parent.getMouseY() - py) / (double) largeMap.scrollHeight * dy + regionMinZ;
 		blockX = MathHelper.floor(regionX * 512D);
 		blockZ = MathHelper.floor(regionZ * 512D);
+		blockY = 0;
+
+		ClientMapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+
+		if (r != null)
+		{
+			ClientMapChunk c = r.getChunks().get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+
+			if (c != null)
+			{
+				blockY = c.getHeight(blockX, blockZ);
+			}
+		}
 
 		/*
 		double x1 = ((pcx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));

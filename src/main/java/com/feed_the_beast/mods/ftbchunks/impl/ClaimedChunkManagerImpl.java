@@ -4,7 +4,6 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
-import com.feed_the_beast.mods.ftbchunks.impl.map.MapManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -56,7 +55,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	public boolean saveFakePlayers;
 	public Path dataDirectory;
 	public Path localDirectory;
-	public MapManager map;
 	private boolean inited;
 
 	public ClaimedChunkManagerImpl(MinecraftServer s)
@@ -67,7 +65,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		claimedChunks = new HashMap<>();
 		knownFakePlayers = new HashMap<>();
 		saveFakePlayers = false;
-		map = new MapManager(this);
 		inited = false;
 	}
 

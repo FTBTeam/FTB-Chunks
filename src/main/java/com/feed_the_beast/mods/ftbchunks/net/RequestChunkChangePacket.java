@@ -4,8 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
-import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -102,7 +101,7 @@ public class RequestChunkChangePacket
 			for (XZ pos : chunks)
 			{
 				consumer.accept(pos);
-				FTBChunksAPIImpl.manager.map.queueSend(player.world, pos, p -> p == player);
+				//FIXME: FTBChunksAPIImpl.manager.map.queueSend(player.world, pos, p -> p == player);
 			}
 
 			SendGeneralDataPacket.send(player);

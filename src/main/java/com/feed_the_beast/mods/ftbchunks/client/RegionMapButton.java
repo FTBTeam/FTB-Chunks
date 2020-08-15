@@ -1,28 +1,35 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapRegion;
+import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
+import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 /**
  * @author LatvianModder
  */
 public class RegionMapButton extends Widget
 {
-	public final XZ pos;
-	public final RegionTextureData tex;
+	public final ClientMapRegion region;
 
-	public RegionMapButton(RegionMapPanel pa, XZ ps)
+	public RegionMapButton(RegionMapPanel pa, ClientMapRegion r)
 	{
 		super(pa);
-		pos = ps;
-		tex = pa.largeMap.regionTextures.computeIfAbsent(pos, p -> new RegionTextureData(pa.largeMap, p));
+		region = r;
 	}
 
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		tex.draw(x, y, w, h);
+		int id = region.getMapImageTextureId();
+
+		if (region.mapImageLoaded)
+		{
+			RenderSystem.bindTexture(id);
+			GuiHelper.drawTexturedRect(x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
+		}
 	}
 }

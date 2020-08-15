@@ -1,3 +1,3 @@
 @javax.annotation.ParametersAreNonnullByDefault
 @mcp.MethodsReturnNonnullByDefault
-package com.feed_the_beast.mods.ftbchunks.impl.map;
+package com.feed_the_beast.mods.ftbchunks.mixin;

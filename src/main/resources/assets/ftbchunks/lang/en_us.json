@@ -1,6 +1,9 @@
 {
 	"ftbchunks": "FTB Chunks",
 	"ftbchunks.noise": "Noise",
+	"ftbchunks.shadows": "Shadows",
+	"ftbchunks.chunk_grid": "Chunk Grid",
+	"ftbchunks.debug_info": "Debug Info",
 	"ftbchunks.minimap": "Minimap",
 	"ftbchunks.minimap_scale": "Minimap Scale",
 	"ftbchunks.minimap_locked_north": "Minimap Locked North",

@@ -10,8 +10,6 @@ import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import com.feed_the_beast.mods.ftbchunks.impl.map.MapDimension;
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -24,20 +22,16 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.DimensionArgument;
-import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,30 +110,9 @@ public class FTBChunksCommands
 								.executes(context -> deleteDeathPoints(context.getSource().asPlayer()))
 						)
 				)
-				.then(Commands.literal("admin")
-						.requires(source -> source.hasPermissionLevel(2))
-						.then(Commands.literal("export")
-								.requires(source -> source.hasPermissionLevel(2))
-								.then(Commands.literal("json")
-										.requires(source -> source.hasPermissionLevel(2))
-										.executes(context -> exportJson(context.getSource()))
-								)
-								.then(Commands.literal("svg")
-										.requires(source -> source.hasPermissionLevel(2))
-										.executes(context -> exportSvg(context.getSource()))
-								)
-						)
-						.then(Commands.literal("clear_task_queue")
-								.requires(source -> source.hasPermissionLevel(4))
-								.executes(context -> clearTaskQueue(context.getSource()))
-						)
-						.then(Commands.literal("send_entire_map")
-								.requires(source -> source.hasPermissionLevel(4))
-								.then(Commands.argument("players", EntityArgument.players())
-										.requires(source -> source.hasPermissionLevel(4))
-										.executes(context -> sendMap(context.getSource(), EntityArgument.getPlayers(context, "players")))
-								)
-						)
+				.then(Commands.literal("import_world_map")
+						.requires(source -> source.getServer().isSinglePlayer())
+						.executes(context -> importWorldMap(context.getSource().getWorld()))
 				)
 		);
 
@@ -363,62 +336,9 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private static int clearTaskQueue(CommandSource source)
+	private static int importWorldMap(ServerWorld world)
 	{
-		source.sendFeedback(new StringTextComponent("Cleared " + FTBChunksAPIImpl.manager.map.taskQueue.size() + " tasks!"), true);
-		FTBChunksAPIImpl.manager.map.taskQueue.clear();
-		return 1;
-	}
-
-	private static int sendMap(CommandSource source, Collection<ServerPlayerEntity> players)
-	{
-		ServerWorld world = source.getWorld();
-
-		MapDimension dimension = FTBChunksAPIImpl.manager.map.getDimension(world);
-
-		if (Files.exists(dimension.directory))
-		{
-			try
-			{
-				int[] chunks = new int[1];
-				Files.list(dimension.directory)
-						.map(path -> path.getFileName().toString())
-						.filter(name -> name.endsWith(".png"))
-						.map(name -> name.split(","))
-						.filter(name -> name.length == 3)
-						.map(name -> dimension.getRegion(XZ.of(Integer.parseInt(name[0]), Integer.parseInt(name[1]))))
-						.forEach(region -> {
-							region.chunks.values().forEach(chunk -> {
-								chunks[0]++;
-								FTBChunksAPIImpl.manager.map.queueSend(world, chunk.getActualPos(), players::contains);
-							});
-
-							FTBChunksAPIImpl.manager.map.queue(() -> {
-								for (ServerPlayerEntity p : players)
-								{
-									p.sendStatusMessage(new StringTextComponent(FTBChunksAPIImpl.manager.map.taskQueue.size() + " chunks left").mergeStyle(TextFormatting.LIGHT_PURPLE), true);
-								}
-							});
-						});
-
-				for (ServerPlayerEntity p : players)
-				{
-					p.sendMessage(new StringTextComponent(source.getName() + " is sending entire map (" + chunks[0] + " chunks) to entire map to you, be prepared for lag!").mergeStyle(TextFormatting.LIGHT_PURPLE), Util.DUMMY_UUID);
-				}
-
-				FTBChunksAPIImpl.manager.map.queue(() -> {
-					for (ServerPlayerEntity p : players)
-					{
-						p.sendMessage(new StringTextComponent("Map received!").mergeStyle(TextFormatting.LIGHT_PURPLE), Util.DUMMY_UUID);
-					}
-				});
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace();
-			}
-		}
-
+		FTBChunks.instance.proxy.importWorldMap(world);
 		return 1;
 	}
 }

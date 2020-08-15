@@ -1,6 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.client.map.ColorUtils;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -61,7 +61,7 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 	@Override
 	protected void apply(JsonObject object, IResourceManager resourceManager, IProfiler profiler)
 	{
-		FTBChunksAPIImpl.COLOR_MAP.clear();
+		ColorUtils.COLOR_MAP.clear();
 
 		for (Map.Entry<String, JsonElement> entry : object.entrySet())
 		{
@@ -82,7 +82,7 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 					{
 						for (Block block : tag.getAllElements())
 						{
-							FTBChunksAPIImpl.COLOR_MAP.put(block, color);
+							ColorUtils.COLOR_MAP.put(block, color);
 						}
 					}
 				}
@@ -92,7 +92,7 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 
 					if (block != Blocks.AIR)
 					{
-						FTBChunksAPIImpl.COLOR_MAP.put(block, color);
+						ColorUtils.COLOR_MAP.put(block, color);
 					}
 				}
 			}

@@ -5,7 +5,7 @@ import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
+import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestChunkChangePacket;
 import com.feed_the_beast.mods.ftbchunks.net.RequestMapDataPacket;
@@ -124,6 +124,7 @@ public class ChunkScreen extends GuiBase
 		}
 	}
 
+	public ClientMapDimension dimension = ClientMapDimension.getCurrent();
 	public List<ChunkButton> chunkButtons;
 	public Set<XZ> selectedChunks;
 
@@ -150,7 +151,7 @@ public class ChunkScreen extends GuiBase
 			for (int x = 0; x < FTBChunks.TILES; x++)
 			{
 				ChunkButton button = new ChunkButton(this, XZ.of(startX + x, startZ + z));
-				button.chunk = ClientMapDimension.current.getRegion(XZ.regionFromChunk(startX + x, startZ + z)).getChunk(button.chunkPos);
+				button.chunk = dimension.getRegion(XZ.regionFromChunk(startX + x, startZ + z)).getChunk(button.chunkPos);
 				chunkButtons.add(button);
 				button.setPos(sx + x * FTBChunks.TILE_SIZE, sy + z * FTBChunks.TILE_SIZE);
 			}
@@ -255,22 +256,22 @@ public class ChunkScreen extends GuiBase
 
 				int borders = 15;
 
-				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(0, -1))))
+				if (!chunk.connects(chunk.offset(0, -1)))
 				{
 					rect(buffer, cx, cy, FTBChunks.TILE_SIZE, 1, cr, cg, cb, 255);
 				}
 
-				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(0, 1))))
+				if (!chunk.connects(chunk.offset(0, 1)))
 				{
 					rect(buffer, cx, cy + FTBChunks.TILE_SIZE - 1, FTBChunks.TILE_SIZE, 1, cr, cg, cb, 255);
 				}
 
-				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(-1, 0))))
+				if (!chunk.connects(chunk.offset(-1, 0)))
 				{
 					rect(buffer, cx, cy, 1, FTBChunks.TILE_SIZE, cr, cg, cb, 255);
 				}
 
-				if (!chunk.connects(chunk.region.dimension.getChunk(button.chunkPos.offset(1, 0))))
+				if (!chunk.connects(chunk.offset(1, 0)))
 				{
 					rect(buffer, cx + FTBChunks.TILE_SIZE - 1, cy, 1, FTBChunks.TILE_SIZE, cr, cg, cb, 255);
 				}

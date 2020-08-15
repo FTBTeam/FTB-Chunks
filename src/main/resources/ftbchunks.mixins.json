@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "com.feed_the_beast.mods.ftbchunks.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"refmap": "ftbchunks.refmap.json",
+	"mixins": [
+	],
+	"client": [
+		"ChunkRenderMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"minVersion": "0.8"
+}

@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 public class FTBChunksNet
 {
 	public static SimpleChannel MAIN;
-	private static final String MAIN_VERSION = "2";
+	private static final String MAIN_VERSION = "3";
 
 	public static void init()
 	{

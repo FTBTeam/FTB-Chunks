@@ -14,7 +14,6 @@ public class SendChunkPacket
 {
 	public String dimension;
 	public int x, z;
-	public byte[] imageData;
 	public int color;
 	public ITextComponent owner;
 	public long relativeTimeClaimed;
@@ -30,7 +29,6 @@ public class SendChunkPacket
 		dimension = buf.readString(100);
 		x = buf.readVarInt();
 		z = buf.readVarInt();
-		imageData = buf.readByteArray();
 		color = buf.readInt();
 
 		if (color != 0)
@@ -51,7 +49,6 @@ public class SendChunkPacket
 		buf.writeString(dimension, 100);
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
-		buf.writeByteArray(imageData);
 		buf.writeInt(color);
 
 		if (color != 0)

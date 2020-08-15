@@ -1,4 +1,4 @@
-package com.feed_the_beast.mods.ftbchunks.impl.map;
+package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import net.minecraft.util.math.ChunkPos;
@@ -33,6 +33,11 @@ public class XZ
 	public static XZ regionFromChunk(int x, int z)
 	{
 		return of(x >> 5, z >> 5);
+	}
+
+	public static XZ regionFromChunk(ChunkPos p)
+	{
+		return of(p.x >> 5, p.z >> 5);
 	}
 
 	public static XZ regionFromBlock(int x, int z)
@@ -91,5 +96,10 @@ public class XZ
 	public XZ offset(int ox, int oz)
 	{
 		return of(x + ox, z + oz);
+	}
+
+	public long asLong()
+	{
+		return (long) x & 4294967295L | ((long) z & 4294967295L) << 32L;
 	}
 }

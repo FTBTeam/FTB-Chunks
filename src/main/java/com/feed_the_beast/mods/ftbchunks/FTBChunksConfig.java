@@ -20,10 +20,6 @@ public class FTBChunksConfig
 	public static boolean disableProtection;
 	public static AllyMode allyMode;
 
-	public static int taskQueueTicks = 4;
-	public static int taskQueueMin = 50;
-	public static int taskQueueMax = 200;
-
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
 	public static void init()

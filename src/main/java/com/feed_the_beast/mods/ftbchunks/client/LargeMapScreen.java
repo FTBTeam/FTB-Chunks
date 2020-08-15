@@ -1,7 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.ClientMapDimension;
-import com.feed_the_beast.mods.ftbchunks.impl.map.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -32,10 +31,8 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import java.nio.file.Files;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -46,7 +43,6 @@ public class LargeMapScreen extends GuiBase
 
 	public RegionMapPanel regionPanel;
 	public int zoom = 256;
-	public final HashMap<XZ, RegionTextureData> regionTextures;
 	public ClientMapDimension dimension;
 	public int scrollWidth = 0;
 	public int scrollHeight = 0;
@@ -58,8 +54,7 @@ public class LargeMapScreen extends GuiBase
 	public LargeMapScreen()
 	{
 		regionPanel = new RegionMapPanel(this);
-		regionTextures = new HashMap<>();
-		dimension = ClientMapDimension.current;
+		dimension = ClientMapDimension.getCurrent();
 		regionPanel.setScrollX(0D);
 		regionPanel.setScrollY(0D);
 	}
@@ -98,20 +93,6 @@ public class LargeMapScreen extends GuiBase
 	}
 
 	@Override
-	public void onClosed()
-	{
-		super.onClosed();
-
-		for (RegionTextureData data : regionTextures.values())
-		{
-			data.release();
-		}
-
-		regionTextures.clear();
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
 	public void addWidgets()
 	{
 		add(regionPanel);
@@ -141,22 +122,12 @@ public class LargeMapScreen extends GuiBase
 		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.substring(dimension.dimension.indexOf(':') + 1).replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
 			try
 			{
-				List<String> types = Files.list(dimension.manager.directory)
-						.map(path -> path.getFileName().toString())
-						.filter(id -> !id.isEmpty() && Files.exists(dimension.manager.directory.resolve(id.replace(':', '_'))))
-						.collect(Collectors.toList());
-
-				int i = types.indexOf(dimension.dimension);
+				List<ClientMapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
+				int i = list.indexOf(dimension);
 
 				if (i != -1)
 				{
-					for (RegionTextureData data : regionTextures.values())
-					{
-						data.release();
-					}
-
-					regionTextures.clear();
-					dimension = dimension.manager.getDimension(types.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), types.size())));
+					dimension = list.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), list.size()));
 					refreshWidgets();
 					movedToPlayer = false;
 				}
@@ -206,12 +177,17 @@ public class LargeMapScreen extends GuiBase
 	{
 		if (key.is(GLFW.GLFW_KEY_T))
 		{
-			if (dimension == ClientMapDimension.current)
+			if (dimension == ClientMapDimension.getCurrent())
 			{
 				FTBChunksNet.MAIN.sendToServer(new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ));
 				closeGui(false);
 			}
 
+			return true;
+		}
+		else if (key.is(FTBChunksClient.openMapKey.getKey().getKeyCode()))
+		{
+			closeGui(true);
 			return true;
 		}
 		else if (key.is(GLFW.GLFW_KEY_W))
@@ -234,7 +210,7 @@ public class LargeMapScreen extends GuiBase
 		{
 			PlayerEntity p = Minecraft.getInstance().player;
 			regionPanel.resetScroll();
-			regionPanel.scrollTo(p.chunkCoordX / 32D, p.chunkCoordZ / 32D);
+			regionPanel.scrollTo(p.getPosX() / 512D, p.getPosZ() / 512D);
 			movedToPlayer = true;
 		}
 
@@ -307,7 +283,39 @@ public class LargeMapScreen extends GuiBase
 	@Override
 	public void drawForeground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		String coords = "X: " + regionPanel.blockX + ", Z: " + regionPanel.blockZ;
+		if (FTBChunksClientConfig.chunkGrid && zoom >= 128)
+		{
+			GlStateManager.disableTexture();
+			Tessellator tessellator = Tessellator.getInstance();
+			BufferBuilder buffer = tessellator.getBuffer();
+			int r = 70;
+			int g = 70;
+			int b = 70;
+			int a = 100;
+
+			buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+
+			int s = getRegionButtonSize() / 32;
+			double ox = -regionPanel.getScrollX() % s;
+			double oy = -regionPanel.getScrollY() % s;
+
+			for (int gx = 0; gx <= (w / s) + 1; gx++)
+			{
+				buffer.pos(x + ox + gx * s, y, 0).color(r, g, b, a).endVertex();
+				buffer.pos(x + ox + gx * s, y + h, 0).color(r, g, b, a).endVertex();
+			}
+
+			for (int gy = 0; gy <= (h / s) + 1; gy++)
+			{
+				buffer.pos(x, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
+				buffer.pos(x + w, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
+			}
+
+			tessellator.draw();
+			GlStateManager.enableTexture();
+		}
+
+		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == 0 ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
 		int coordsw = theme.getStringWidth(coords) / 2;
 
 		backgroundColor.withAlpha(150).draw(x + (w - coordsw) / 2, y + h - 6, coordsw + 4, h);

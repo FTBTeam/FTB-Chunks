@@ -3,12 +3,14 @@ buildscript {
 		jcenter()
 		maven { url = 'https://files.minecraftforge.net/maven' }
 		maven { url "https://plugins.gradle.org/m2/" }
+		maven { url "https://dist.creeper.host/Sponge/maven" }
 		mavenCentral()
 	}
 	dependencies {
 		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
 		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.+'
 		classpath 'com.wynprice.cursemaven:CurseMaven:1.2.+'
+		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
 	}
 }
 apply plugin: 'net.minecraftforge.gradle'
@@ -16,6 +18,7 @@ apply plugin: 'eclipse'
 apply plugin: 'com.matthewprenger.cursegradle'
 apply plugin: 'maven'
 apply plugin: 'com.wynprice.cursemaven'
+apply plugin: 'org.spongepowered.mixin'
 
 apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/master/generic/markdown-git-changelog.gradle'
 
@@ -33,6 +36,7 @@ minecraft {
 		client {
 			workingDirectory project.file('run')
 			property 'forge.logging.console.level', 'debug'
+			args '--mixin.config', 'ftbchunks.mixins.json'
 
 			if (project.hasProperty('mc_dev_uuid')) args '--uuid', project.mc_dev_uuid
 			if (project.hasProperty('mc_dev_username')) args '--username', project.mc_dev_username
@@ -49,6 +53,7 @@ minecraft {
 		server {
 			workingDirectory project.file('run')
 			property 'forge.logging.console.level', 'debug'
+			args '--mixin.config', 'ftbchunks.mixins.json'
 
 			mods {
 				ftbchunks {
@@ -60,6 +65,7 @@ minecraft {
 		data {
 			workingDirectory project.file('run')
 			property 'forge.logging.console.level', 'debug'
+			args '--mixin.config', 'ftbchunks.mixins.json'
 
 			args '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/')
 
@@ -109,6 +115,7 @@ dependencies {
 jar {
 	manifest {
 		attributes([
+				"MixinConfigs"            : "ftbchunks.mixins.json",
 				"Specification-Title"     : project.mod_id,
 				"Specification-Vendor"    : project.mod_author,
 				"Specification-Version"   : "1",
@@ -134,4 +141,8 @@ if (ENV.LOCAL_MAVEN) {
 			}
 		}
 	}
+}
+
+mixin {
+	add sourceSets.main, "ftbchunks.refmap.json"
 }

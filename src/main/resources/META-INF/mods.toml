@@ -11,6 +11,7 @@ description='''
 Claim chunks to protect your base from griefers!
 '''
 # logoFile="logo.png"
+license="All Rights Reserved"
 
 [[dependencies.ftbchunks]]
     modId="forge"

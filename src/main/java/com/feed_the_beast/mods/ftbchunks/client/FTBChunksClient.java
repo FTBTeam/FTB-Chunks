@@ -426,6 +426,8 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		matrixStack.pop();
 
+		RenderSystem.disableDepthTest();
+
 		m = matrixStack.getLast().getMatrix();
 
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
@@ -658,6 +660,8 @@ public class FTBChunksClient extends FTBChunksCommon
 
 			matrixStack.pop();
 		}
+
+		RenderSystem.enableDepthTest();
 	}
 
 	@SubscribeEvent

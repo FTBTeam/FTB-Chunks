@@ -89,12 +89,12 @@ public class ColorUtils
 				return getColorRaw(state1, world, pos).withTint(Color4I.rgb(BiomeColors.getWaterColor(world, pos)).withAlpha(220));
 			}
 
-			BlockState state1 = Blocks.SAND.getDefaultState();
+			BlockState state1 = Blocks.GRAVEL.getDefaultState();
 			Biome biome = world.getBiome(pos);
 
-			if (biome == Biomes.OCEAN || biome == Biomes.DEEP_OCEAN || biome == Biomes.DEEP_FROZEN_OCEAN)
+			if (biome == Biomes.LUKEWARM_OCEAN || biome == Biomes.WARM_OCEAN || biome == Biomes.DEEP_LUKEWARM_OCEAN || biome == Biomes.DEEP_WARM_OCEAN)
 			{
-				state1 = Blocks.GRAVEL.getDefaultState();
+				state1 = Blocks.SAND.getDefaultState();
 			}
 
 			return getColorRaw(state1, world, pos).withTint(Color4I.rgb(BiomeColors.getWaterColor(world, pos)).withAlpha(220));

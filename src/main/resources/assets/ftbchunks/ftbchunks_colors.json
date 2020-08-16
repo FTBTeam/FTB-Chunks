@@ -54,5 +54,8 @@
 	"minecraft:bricks": "#AE604B",
 	"minecraft:brick_slab": "#AE604B",
 	"minecraft:brick_stairs": "#AE604B",
-	"minecraft:brick_wall": "#AE604B"
+	"minecraft:brick_wall": "#AE604B",
+	"minecraft:mycelium": "#685260",
+	"minecraft:bamboo": "#659E23",
+	"minecraft:bamboo_sapling": "#659E23"
 }

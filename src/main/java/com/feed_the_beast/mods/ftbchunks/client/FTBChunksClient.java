@@ -5,17 +5,19 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
+import com.feed_the_beast.mods.ftbchunks.client.map.ImportRegionTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapManager;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
+import com.feed_the_beast.mods.ftbchunks.client.map.RegionSyncKey;
 import com.feed_the_beast.mods.ftbchunks.client.map.ReloadChunkTask;
-import com.feed_the_beast.mods.ftbchunks.client.map.SyncRXTask;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.PartialPackets;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
@@ -51,10 +53,12 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
@@ -70,6 +74,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
+import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
@@ -245,12 +250,30 @@ public class FTBChunksClient extends FTBChunksCommon
 	private void importWorldMap(ServerWorld world, MapDimension dimension)
 	{
 		Minecraft.getInstance().player.sendMessage(new StringTextComponent("WIP!"), Util.DUMMY_UUID);
+
+		File dir = world.getServer().func_240776_a_(FolderName.field_237253_i_).toFile();
+		File regFileDirectory = new File(DimensionType.func_236031_a_(world.func_234923_W_(), dir), "region");
+
+		for (File file : regFileDirectory.listFiles())
+		{
+			String n = file.getName();
+
+			if (n.startsWith("r.") && n.endsWith(".mca"))
+			{
+				String[] s = n.substring(2, n.length() - 4).split("\\.");
+				int rx = Integer.parseInt(s[0]);
+				int rz = Integer.parseInt(s[1]);
+				queue(new ImportRegionTask(dimension, file, dir, rx, rz));
+			}
+		}
+
+		queue(() -> Minecraft.getInstance().player.sendMessage(new StringTextComponent("Done importing " + dimension.dimension), Util.DUMMY_UUID));
 	}
 
 	@Override
-	public void syncRegion(byte[] data)
+	public void syncRegion(RegionSyncKey key, int offset, int total, byte[] data)
 	{
-		queue(new SyncRXTask(data));
+		PartialPackets.REGION.read(key, offset, total, data);
 	}
 
 	@SubscribeEvent

@@ -110,11 +110,14 @@ public class FTBChunksCommands
 								.executes(context -> deleteDeathPoints(context.getSource().asPlayer()))
 						)
 				)
-				.then(Commands.literal("import_world_map")
+		);
+		
+		/*
+		.then(Commands.literal("import_world_map")
 						.requires(source -> source.getServer().isSinglePlayer())
 						.executes(context -> importWorldMap(context.getSource().getWorld()))
 				)
-		);
+		 */
 
 		event.getDispatcher().register(Commands.literal("chunks").redirect(command));
 	}

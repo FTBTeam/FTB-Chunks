@@ -1,12 +1,12 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
-import com.feed_the_beast.mods.ftbchunks.net.SyncTXPacket;
+import com.feed_the_beast.mods.ftbchunks.net.PartialPackets;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.DeflaterOutputStream;
 
 /**
  * @author LatvianModder
@@ -27,16 +27,13 @@ public class SyncTXTask implements MapTask
 	{
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out))))
+		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out))))
 		{
-			stream.writeUTF(region.dimension.dimension);
-			stream.writeInt(region.pos.x);
-			stream.writeInt(region.pos.z);
-			stream.writeShort(region.getChunks().size());
-
 			byte[] imgData = region.getDataImage().getBytes();
 			stream.writeInt(imgData.length);
 			stream.write(imgData);
+
+			stream.writeShort(region.getChunks().size());
 
 			for (MapChunk chunk : region.getChunks().values())
 			{
@@ -51,7 +48,7 @@ public class SyncTXTask implements MapTask
 			return;
 		}
 
-		FTBChunksNet.MAIN.sendToServer(new SyncTXPacket(out.toByteArray()));
+		PartialPackets.REGION.write(region.getSyncKey(), out.toByteArray()).forEach(FTBChunksNet.MAIN::sendToServer);
 	}
 
 	@Override

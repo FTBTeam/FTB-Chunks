@@ -6,20 +6,15 @@ import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import net.minecraft.client.Minecraft;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * @author LatvianModder
@@ -82,31 +77,20 @@ public class MapDimension implements MapTask
 				}
 			}
 
-			Path regFile = directory.resolve("dimension.regions");
+			if (!MapIOUtils.read(directory.resolve("dimension.regions"), stream -> {
+				stream.readByte();
+				int version = stream.readByte();
+				int s = stream.readShort();
 
-			if (Files.exists(regFile))
-			{
-				try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(regFile)))))
+				for (int i = 0; i < s; i++)
 				{
-					stream.readByte();
-					int version = stream.readByte();
-					int s = stream.readShort();
+					int x = stream.readByte();
+					int z = stream.readByte();
 
-					for (int i = 0; i < s; i++)
-					{
-						int x = stream.readByte();
-						int z = stream.readByte();
-
-						MapRegion c = new MapRegion(this, XZ.of(x, z));
-						regions.put(c.pos, c);
-					}
+					MapRegion c = new MapRegion(this, XZ.of(x, z));
+					regions.put(c.pos, c);
 				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-				}
-			}
-			else
+			}))
 			{
 				saveData = true;
 			}
@@ -154,8 +138,7 @@ public class MapDimension implements MapTask
 				return;
 			}
 
-			try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(Files.newOutputStream(directory.resolve("dimension.regions"))))))
-			{
+			MapIOUtils.write(directory.resolve("dimension.regions"), stream -> {
 				stream.writeByte(0);
 				stream.writeByte(1);
 				stream.writeShort(regionList.size());
@@ -165,7 +148,7 @@ public class MapDimension implements MapTask
 					stream.writeByte(region.pos.x);
 					stream.writeByte(region.pos.z);
 				}
-			}
+			});
 		}
 		catch (Exception ex)
 		{
@@ -176,10 +159,6 @@ public class MapDimension implements MapTask
 	public void sync()
 	{
 		long now = System.currentTimeMillis();
-
-		for (MapRegion region : getRegions().values())
-		{
-			FTBChunksClient.queue(new SyncTXTask(region, now));
-		}
+		getRegions().values().stream().sorted(Comparator.comparingDouble(MapRegion::distToPlayer)).forEach(region -> FTBChunksClient.queue(new SyncTXTask(region, now)));
 	}
 }

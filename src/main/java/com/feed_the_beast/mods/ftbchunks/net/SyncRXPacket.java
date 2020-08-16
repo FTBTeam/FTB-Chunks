@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.client.map.RegionSyncKey;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -9,28 +10,21 @@ import java.util.function.Supplier;
 /**
  * @author LatvianModder
  */
-public class SyncRXPacket
+public class SyncRXPacket extends SyncTXPacket
 {
-	public final byte[] data;
-
-	public SyncRXPacket(byte[] d)
+	public SyncRXPacket(RegionSyncKey k, int o, int t, byte[] d)
 	{
-		data = d;
+		super(k, o, t, d);
 	}
 
 	SyncRXPacket(PacketBuffer buf)
 	{
-		data = buf.readByteArray(Integer.MAX_VALUE);
-	}
-
-	void write(PacketBuffer buf)
-	{
-		buf.writeByteArray(data);
+		super(buf);
 	}
 
 	void handle(Supplier<NetworkEvent.Context> context)
 	{
-		context.get().enqueueWork(() -> FTBChunks.instance.proxy.syncRegion(data));
+		context.get().enqueueWork(() -> FTBChunks.instance.proxy.syncRegion(key, offset, total, data));
 		context.get().setPacketHandled(true);
 	}
 }

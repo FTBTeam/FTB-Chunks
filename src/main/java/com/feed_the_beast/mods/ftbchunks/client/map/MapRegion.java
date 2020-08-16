@@ -4,15 +4,12 @@ import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClientConfig;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
+import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.TextureUtil;
 
 import java.awt.*;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * @author LatvianModder
@@ -66,12 +61,10 @@ public class MapRegion implements MapTask
 			chunks = new HashMap<>();
 
 			Path mapFile = dimension.directory.resolve(pos.x + "," + pos.z + ",map.png");
-			Path chunksDataFile = dimension.directory.resolve(pos.x + "," + pos.z + ",data.chunks");
 
-			if (Files.exists(mapFile) && Files.exists(chunksDataFile) && Files.isReadable(mapFile) && Files.isReadable(chunksDataFile))
+			if (Files.exists(mapFile) && Files.isReadable(mapFile))
 			{
-				try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(chunksDataFile)))))
-				{
+				if (!MapIOUtils.read(dimension.directory.resolve(pos.x + "," + pos.z + ",data.chunks"), stream -> {
 					stream.readByte();
 					int version = stream.readByte();
 					int s = stream.readShort();
@@ -97,10 +90,9 @@ public class MapRegion implements MapTask
 							dataImage = null;
 						}
 					}
-				}
-				catch (Exception ex)
+				}))
 				{
-					ex.printStackTrace();
+					update(true);
 				}
 			}
 
@@ -340,8 +332,7 @@ public class MapRegion implements MapTask
 				return;
 			}
 
-			try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(Files.newOutputStream(dimension.directory.resolve(pos.x + "," + pos.z + ",data.chunks"))))))
-			{
+			MapIOUtils.write(dimension.directory.resolve(pos.x + "," + pos.z + ",data.chunks"), stream -> {
 				stream.writeByte(0);
 				stream.writeByte(1);
 				stream.writeShort(chunkList.size());
@@ -352,7 +343,7 @@ public class MapRegion implements MapTask
 					stream.writeByte(chunk.pos.z);
 					stream.writeLong(chunk.modified);
 				}
-			}
+			});
 
 			getDataImage().write(dimension.directory.resolve(pos.x + "," + pos.z + ",map.png"));
 		}
@@ -377,5 +368,20 @@ public class MapRegion implements MapTask
 	public MapRegion offset(int x, int z)
 	{
 		return dimension.getRegion(pos.offset(x, z));
+	}
+
+	public RegionSyncKey getSyncKey()
+	{
+		RegionSyncKey key = new RegionSyncKey();
+		key.dim = dimension.dimension;
+		key.x = pos.x;
+		key.z = pos.z;
+		key.random = MathUtils.RAND.nextInt();
+		return key;
+	}
+
+	public double distToPlayer()
+	{
+		return MathUtils.distSq(pos.x * 512D + 256D, pos.z * 512D + 256D, Minecraft.getInstance().player.getPosX(), Minecraft.getInstance().player.getPosZ());
 	}
 }

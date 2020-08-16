@@ -1,24 +1,25 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import net.minecraft.client.renderer.texture.NativeImage;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 /**
  * @author LatvianModder
  */
 public class SyncRXTask implements MapTask
 {
+	public final RegionSyncKey key;
 	public final byte[] data;
 	public final long now;
 
-	public SyncRXTask(byte[] d)
+	public SyncRXTask(RegionSyncKey k, byte[] d)
 	{
+		key = k;
 		data = d;
 		now = System.currentTimeMillis();
 	}
@@ -28,19 +29,17 @@ public class SyncRXTask implements MapTask
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(data);
 
-		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(in))))
+		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(in))))
 		{
-			MapDimension dimension = MapManager.inst.getDimension(stream.readUTF());
-			int rx = stream.readInt();
-			int rz = stream.readInt();
-			MapRegion region = dimension.getRegion(XZ.of(rx, rz));
-			NativeImage dataImage = region.getDataImage();
-			int s = stream.readShort();
+			MapDimension dimension = MapManager.inst.getDimension(key.dim);
+			MapRegion region = dimension.getRegion(XZ.of(key.x, key.z));
 
 			byte[] imgData = new byte[stream.readInt()];
 			stream.read(imgData);
 			NativeImage image = NativeImage.read(new BufferedInputStream(new ByteArrayInputStream(imgData)));
 			boolean changed = false;
+
+			int s = stream.readShort();
 
 			for (int i = 0; i < s; i++)
 			{
@@ -72,8 +71,6 @@ public class SyncRXTask implements MapTask
 			{
 				region.update(true);
 			}
-
-			FTBChunks.LOGGER.info("Received map update from ally: " + region.pos + ", " + data.length + " bytes, changed: " + changed);
 		}
 		catch (Exception ex)
 		{

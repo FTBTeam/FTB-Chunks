@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="[28,)"
 issueTrackerURL="https://github.com/FTBTeam/FTB-Chunks/issues"
+license="All Rights Reserved"
 
 [[mods]]
 modId="ftbchunks"

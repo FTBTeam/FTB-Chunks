@@ -82,24 +82,33 @@ public class MapDimension implements MapTask
 				}
 			}
 
-			try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(directory.resolve("dimension.regions"))))))
+			Path regFile = directory.resolve("dimension.regions");
+
+			if (Files.exists(regFile))
 			{
-				stream.readByte();
-				int version = stream.readByte();
-				int s = stream.readShort();
-
-				for (int i = 0; i < s; i++)
+				try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(regFile)))))
 				{
-					int x = stream.readByte();
-					int z = stream.readByte();
+					stream.readByte();
+					int version = stream.readByte();
+					int s = stream.readShort();
 
-					MapRegion c = new MapRegion(this, XZ.of(x, z));
-					regions.put(c.pos, c);
+					for (int i = 0; i < s; i++)
+					{
+						int x = stream.readByte();
+						int z = stream.readByte();
+
+						MapRegion c = new MapRegion(this, XZ.of(x, z));
+						regions.put(c.pos, c);
+					}
+				}
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
 				}
 			}
-			catch (Exception ex)
+			else
 			{
-				ex.printStackTrace();
+				saveData = true;
 			}
 		}
 
@@ -166,11 +175,11 @@ public class MapDimension implements MapTask
 
 	public void sync()
 	{
-		long start = System.currentTimeMillis();
+		long now = System.currentTimeMillis();
 
 		for (MapRegion region : getRegions().values())
 		{
-			FTBChunksClient.queue(new SyncTXTask(region, start));
+			FTBChunksClient.queue(new SyncTXTask(region, now));
 		}
 	}
 }

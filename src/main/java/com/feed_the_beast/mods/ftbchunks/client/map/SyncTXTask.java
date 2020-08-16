@@ -14,12 +14,12 @@ import java.util.zip.GZIPOutputStream;
 public class SyncTXTask implements MapTask
 {
 	public final MapRegion region;
-	public final long start;
+	public final long now;
 
 	public SyncTXTask(MapRegion r, long s)
 	{
 		region = r;
-		start = s;
+		now = s;
 	}
 
 	@Override
@@ -29,23 +29,25 @@ public class SyncTXTask implements MapTask
 
 		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out))))
 		{
+			stream.writeUTF(region.dimension.dimension);
 			stream.writeInt(region.pos.x);
 			stream.writeInt(region.pos.z);
 			stream.writeShort(region.getChunks().size());
+
+			byte[] imgData = region.getDataImage().getBytes();
+			stream.writeInt(imgData.length);
+			stream.write(imgData);
 
 			for (MapChunk chunk : region.getChunks().values())
 			{
 				stream.writeByte(chunk.pos.x);
 				stream.writeByte(chunk.pos.z);
-				stream.writeLong(start - chunk.modified);
+				stream.writeLong(now - chunk.modified);
 			}
-
-			byte[] imgData = region.getDataImage().getBytes();
-			stream.writeInt(imgData.length);
-			stream.write(imgData);
 		}
 		catch (Exception ex)
 		{
+			ex.printStackTrace();
 			return;
 		}
 

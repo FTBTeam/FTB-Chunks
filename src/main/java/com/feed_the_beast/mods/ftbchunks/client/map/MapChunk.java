@@ -74,7 +74,7 @@ public class MapChunk
 	{
 		int c0 = getHRGB(x, z);
 
-		//if (c0 != c)
+		if (c0 != c)
 		{
 			int a = (c >> 24) & 0xFF;
 			int r = (c >> 16) & 0xFF;
@@ -132,7 +132,7 @@ public class MapChunk
 			return true;
 		}
 
-		//return false;
+		return false;
 	}
 
 	public static boolean skipBlock(BlockState state, IWorld world, BlockPos pos)

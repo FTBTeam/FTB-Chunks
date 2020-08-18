@@ -110,6 +110,7 @@ dependencies {
 	//	transitive = false
 	//	changing = true
 	//}))
+	runtimeOnly fg.deobf(curse.resolve('biomes-o-plenty', project.bop_file))
 }
 
 jar {

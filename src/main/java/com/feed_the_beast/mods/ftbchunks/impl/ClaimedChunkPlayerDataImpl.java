@@ -14,6 +14,8 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
+import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -24,14 +26,18 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -196,6 +202,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_CLAIMED;
 		}
+		else if (FTBChunksConfig.claimDimensionBlacklist.contains(pos.dimension))
+		{
+			return ClaimResults.DIMENSION_FORBIDDEN;
+		}
 		else if (source.getEntity() instanceof ServerPlayerEntity && getClaimedChunks().size() >= FTBChunksConfig.getMaxClaimedChunks((ServerPlayerEntity) source.getEntity()))
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
@@ -247,6 +257,12 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		manager.claimedChunks.remove(pos);
 		new ClaimedChunkEvent.Unclaim.Done(source, chunk).postAndGetResult();
 		chunk.playerData.save();
+
+		SendChunkPacket packet = new SendChunkPacket();
+		packet.dimension = pos.dimension;
+		packet.owner = getUuid();
+		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, null);
+		FTBChunksNet.MAIN.send(PacketDistributor.ALL.noArg(), packet);
 		return chunk;
 	}
 
@@ -599,11 +615,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 	}
 
-	public ITextComponent getDisplayName()
+	public IFormattableTextComponent getDisplayName()
 	{
 		if (FTBChunks.teamsMod)
 		{
-			ITextComponent component = FTBTeamsIntegration.getTeamName(this);
+			IFormattableTextComponent component = FTBTeamsIntegration.getTeamName(this);
 
 			if (component != null)
 			{
@@ -611,6 +627,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			}
 		}
 
-		return new StringTextComponent(getName());
+		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.func_240743_a_(getColor())));
 	}
 }

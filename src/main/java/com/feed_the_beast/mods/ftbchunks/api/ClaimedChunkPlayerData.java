@@ -3,8 +3,10 @@ package com.feed_the_beast.mods.ftbchunks.api;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -58,8 +60,8 @@ public interface ClaimedChunkPlayerData
 
 	boolean isAlly(ServerPlayerEntity player);
 
-	default ITextComponent getDisplayName()
+	default IFormattableTextComponent getDisplayName()
 	{
-		return new StringTextComponent(getName());
+		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.func_240743_a_(getColor() & 0xFFFFFF)));
 	}
 }

@@ -2,12 +2,18 @@ package com.feed_the_beast.mods.ftbchunks;
 
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.Util;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author LatvianModder
@@ -19,6 +25,7 @@ public class FTBChunksConfig
 	public static int maxForceLoadedChunks;
 	public static boolean disableProtection;
 	public static AllyMode allyMode;
+	public static Set<String> claimDimensionBlacklist;
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
@@ -45,6 +52,7 @@ public class FTBChunksConfig
 			maxForceLoadedChunks = c.maxForceLoadedChunks.get();
 			disableProtection = c.disableProtection.get();
 			allyMode = c.allyMode.get();
+			claimDimensionBlacklist = new HashSet<>(c.claimDimensionBlacklist.get());
 		}
 	}
 
@@ -55,6 +63,7 @@ public class FTBChunksConfig
 		private final ForgeConfigSpec.IntValue maxForceLoadedChunks;
 		private final ForgeConfigSpec.BooleanValue disableProtection;
 		private final ForgeConfigSpec.EnumValue<AllyMode> allyMode;
+		private final ForgeConfigSpec.ConfigValue<List<? extends String>> claimDimensionBlacklist;
 
 		private ServerConfig(ForgeConfigSpec.Builder builder)
 		{
@@ -64,12 +73,12 @@ public class FTBChunksConfig
 					.define("disable_fake_players", false);
 
 			maxClaimedChunks = builder
-					.comment("Max claimed chunks.")
+					.comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission")
 					.translation("ftbchunks.general.max_claimed_chunks")
 					.defineInRange("max_claimed_chunks", 500, 0, Integer.MAX_VALUE);
 
 			maxForceLoadedChunks = builder
-					.comment("Max force loaded chunks.")
+					.comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission")
 					.translation("ftbchunks.general.max_force_loaded_chunks")
 					.defineInRange("max_force_loaded_chunks", 25, 0, Integer.MAX_VALUE);
 
@@ -82,6 +91,10 @@ public class FTBChunksConfig
 					.comment("Forced modes won't let players change their ally settings.")
 					.translation("ftbchunks.general.ally_mode")
 					.defineEnum("ally_mode", AllyMode.DEFAULT);
+
+			claimDimensionBlacklist = builder
+					.comment("Blacklist for dimensions where chunks can't be claimed.")
+					.defineList("claim_dimension_blacklist", Util.make(new ArrayList<>(), l -> l.add("minecraft:the_end")), o -> true);
 		}
 	}
 

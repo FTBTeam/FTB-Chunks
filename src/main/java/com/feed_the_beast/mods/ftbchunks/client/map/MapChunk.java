@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -18,6 +19,8 @@ import net.minecraft.world.chunk.IChunk;
 
 import javax.annotation.Nullable;
 import java.util.Date;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author LatvianModder
@@ -28,6 +31,7 @@ public class MapChunk
 	public final XZ pos;
 	public long modified;
 
+	public UUID ownerId;
 	public Date claimedDate;
 	public Date forceLoadedDate;
 	public int color;
@@ -39,6 +43,7 @@ public class MapChunk
 		pos = p;
 		modified = 0L;
 
+		ownerId = null;
 		claimedDate = null;
 		forceLoadedDate = null;
 		color = 0;
@@ -57,7 +62,7 @@ public class MapChunk
 
 	public boolean connects(MapChunk chunk)
 	{
-		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && owner.equals(chunk.owner);
+		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && Objects.equals(ownerId, chunk.ownerId);
 	}
 
 	public XZ getActualPos()
@@ -139,7 +144,7 @@ public class MapChunk
 	{
 		Block b = state.getBlock();
 
-		if (b == Blocks.AIR || b == Blocks.TALL_GRASS || b == Blocks.LARGE_FERN || b instanceof TallGrassBlock)
+		if (b == Blocks.AIR || b == Blocks.TALL_GRASS || b == Blocks.LARGE_FERN || b instanceof TallGrassBlock || b == Blocks.IRON_BARS)
 		{
 			return true;
 		}
@@ -208,5 +213,15 @@ public class MapChunk
 	public MapChunk offset(int x, int z)
 	{
 		return region.dimension.getChunk(getActualPos().offset(x, z));
+	}
+
+	public void updateFrom(Date now, SendChunkPacket.SingleChunk packet)
+	{
+		ownerId = packet.ownerId;
+		claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
+		forceLoadedDate = packet.forceLoaded && claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
+		color = packet.color;
+		owner = packet.owner == null ? StringTextComponent.EMPTY : packet.owner;
+		region.update(false);
 	}
 }

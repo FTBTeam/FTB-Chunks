@@ -4,7 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbteams.api.FTBTeamsAPI;
 import com.feed_the_beast.mods.ftbteams.api.Team;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.IFormattableTextComponent;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -28,8 +28,8 @@ public class FTBTeamsIntegration
 	}
 
 	@Nullable
-	public static ITextComponent getTeamName(ClaimedChunkPlayerData data)
+	public static IFormattableTextComponent getTeamName(ClaimedChunkPlayerData data)
 	{
-		return FTBTeamsAPI.INSTANCE.getManager().getTeam(new GameProfile(data.getUuid(), data.getName())).map(Team::getName).orElse(null);
+		return FTBTeamsAPI.INSTANCE.getManager().getTeam(new GameProfile(data.getUuid(), data.getName())).map(team -> team.getName().deepCopy()).orElse(null);
 	}
 }

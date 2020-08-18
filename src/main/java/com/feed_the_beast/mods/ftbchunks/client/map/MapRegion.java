@@ -4,7 +4,9 @@ import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClientConfig;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
+import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.TextureUtil;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +36,7 @@ public class MapRegion implements MapTask
 	public boolean saveData;
 	private NativeImage mapImage;
 	private boolean updateMapImage;
+	private boolean updateMapTexture;
 	private int mapImageTextureId;
 	public boolean mapImageLoaded;
 
@@ -44,6 +48,7 @@ public class MapRegion implements MapTask
 		saveData = false;
 		mapImage = null;
 		updateMapImage = true;
+		updateMapTexture = true;
 		mapImageTextureId = -1;
 		mapImageLoaded = false;
 	}
@@ -126,12 +131,14 @@ public class MapRegion implements MapTask
 		if (mapImage == null)
 		{
 			mapImage = new NativeImage(NativeImage.PixelFormat.RGBA, 512, 512, true);
+			mapImage.fillAreaRGBA(0, 0, 512, 512, 0);
 			update(false);
 		}
 
 		if (updateMapImage)
 		{
 			updateMapImage = false;
+			mapImageLoaded = false;
 
 			FTBChunksClient.queue(() -> {
 				NativeImage dataImg = getDataImage();
@@ -147,6 +154,7 @@ public class MapRegion implements MapTask
 				}
 
 				float[] hsb = new float[3];
+				UUID ownId = Minecraft.getInstance().player.getUniqueID();
 
 				for (int cz = 0; cz < 32; cz++)
 				{
@@ -154,6 +162,27 @@ public class MapRegion implements MapTask
 					{
 						MapChunk c = chunks.get(XZ.of(cx, cz));
 						Random random = new Random(pos.asLong() ^ (c == null ? 0L : c.pos.asLong()));
+						Color4I claimColor, fullClaimColor;
+						boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
+
+						if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownId.equals(c.ownerId) ? FTBChunksClientConfig.ownClaimedChunksOnMap : FTBChunksClientConfig.claimedChunksOnMap)))
+						{
+							claimColor = Color4I.rgb(c.color).withAlpha(100);
+							fullClaimColor = claimColor.withAlpha(255);
+							claimBarUp = !c.connects(c.offset(0, -1));
+							claimBarDown = !c.connects(c.offset(0, 1));
+							claimBarLeft = !c.connects(c.offset(-1, 0));
+							claimBarRight = !c.connects(c.offset(1, 0));
+						}
+						else
+						{
+							claimColor = Icon.EMPTY;
+							fullClaimColor = Icon.EMPTY;
+							claimBarUp = false;
+							claimBarDown = false;
+							claimBarLeft = false;
+							claimBarRight = false;
+						}
 
 						for (int z = 0; z < 16; z++)
 						{
@@ -168,7 +197,8 @@ public class MapRegion implements MapTask
 								}
 								else
 								{
-									int col = dataImgMap[ax + 1][az + 1];
+									int col0 = dataImgMap[ax + 1][az + 1];
+									Color4I col = Color4I.rgb(NativeImage.getRed(col0), NativeImage.getGreen(col0), NativeImage.getBlue(col0));
 
 									if (FTBChunksClientConfig.reducedColorPalette)
 									{
@@ -177,12 +207,9 @@ public class MapRegion implements MapTask
 
 									if (FTBChunksClientConfig.saturation < 1F)
 									{
-										int r = (col >> 16) & 0xFF;
-										int g = (col >> 8) & 0xFF;
-										int b = (col >> 0) & 0xFF;
-										Color.RGBtoHSB(r, g, b, hsb);
+										Color.RGBtoHSB(col.redi(), col.greeni(), col.bluei(), hsb);
 										hsb[1] *= FTBChunksClientConfig.saturation;
-										col = Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
+										col = Color4I.hsb(hsb[0], hsb[1], hsb[2]);
 									}
 
 									float addedBrightness = 0F;
@@ -219,29 +246,28 @@ public class MapRegion implements MapTask
 
 									if (FTBChunksClientConfig.chunkGrid && (x == 0 || z == 0))
 									{
-										col = Color4I.rgb(col).withTint(GRID_COLOR).rgba();
+										col = col.withTint(GRID_COLOR);
 									}
 
-									if (col == 0xFF000000)
+									if (!claimColor.isEmpty())
 									{
-										col = 0xFF010101;
+										col = col.withTint(claimColor);
 									}
 
-									mapImage.setPixelRGBA(ax, az, 0xFF000000 | col);
+									if ((claimBarUp && z == 0) || (claimBarDown && z == 15) || (claimBarLeft && x == 0) || (claimBarRight && x == 15))
+									{
+										col = fullClaimColor;
+									}
+
+									mapImage.setPixelRGBA(ax, az, NativeImage.getCombined(255, col.bluei(), col.greeni(), col.redi()));
 								}
 							}
 						}
 					}
 				}
 
-				Minecraft.getInstance().runAsync(() -> {
-					if (mapImageTextureId != -1 && mapImage != null)
-					{
-						TextureUtil.prepareImage(mapImageTextureId, 512, 512);
-						mapImage.uploadTextureSub(0, 0, 0, false);
-						mapImageLoaded = true;
-					}
-				});
+				updateMapTexture = true;
+				FTBChunksClient.updateMinimap = true;
 			});
 		}
 
@@ -250,22 +276,26 @@ public class MapRegion implements MapTask
 
 	public int getMapImageTextureId()
 	{
-		if (updateMapImage)
-		{
-			getMapImage();
-		}
-
 		if (mapImageTextureId == -1)
 		{
 			mapImageTextureId = TextureUtil.generateTextureId();
+			TextureUtil.prepareImage(mapImageTextureId, 512, 512);
+		}
+
+		getMapImage();
+
+		if (updateMapTexture)
+		{
 			mapImageLoaded = false;
 
 			Minecraft.getInstance().runAsync(() -> {
-				TextureUtil.prepareImage(mapImageTextureId, 512, 512);
-				update(false);
-				getMapImage().uploadTextureSub(0, 0, 0, false);
+				RenderSystem.bindTexture(mapImageTextureId);
+				mapImage.uploadTextureSub(0, 0, 0, false);
 				mapImageLoaded = true;
+				FTBChunksClient.updateMinimap = true;
 			});
+
+			updateMapTexture = false;
 		}
 
 		return mapImageTextureId;
@@ -362,6 +392,7 @@ public class MapRegion implements MapTask
 		}
 
 		updateMapImage = true;
+		updateMapTexture = true;
 		FTBChunksClient.updateMinimap = true;
 	}
 

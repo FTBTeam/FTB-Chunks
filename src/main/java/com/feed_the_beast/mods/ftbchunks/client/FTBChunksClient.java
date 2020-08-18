@@ -18,6 +18,7 @@ import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.PartialPackets;
+import com.feed_the_beast.mods.ftbchunks.net.SendAllChunksPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
@@ -39,7 +40,6 @@ import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.Entity;
@@ -52,7 +52,11 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -80,15 +84,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author LatvianModder
  */
 public class FTBChunksClient extends FTBChunksCommon
 {
-	public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 	private static final ResourceLocation BUTTON_ID = new ResourceLocation("ftbchunks:open_gui");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
@@ -100,7 +101,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			new ResourceLocation("ftbchunks:textures/compass_s.png"),
 	};
 
-	private static final List<String> MINIMAP_TEXT_LIST = new ArrayList<>(3);
+	private static final List<ITextProperties> MINIMAP_TEXT_LIST = new ArrayList<>(3);
 
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	private static long taskQueueTicks = 0L;
@@ -117,6 +118,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	private static int currentPlayerChunkX, currentPlayerChunkZ;
 
 	public static boolean updateMinimap = false;
+	public static boolean alwaysRenderChunksOnMap = false;
 	public static SendGeneralDataPacket generalData;
 	private static long nextRegionSave = 0L;
 
@@ -198,12 +200,22 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void updateChunk(SendChunkPacket packet)
 	{
-		MapChunk chunk = MapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.x, packet.z)).getChunk(XZ.of(packet.x, packet.z));
+		MapChunk chunk = MapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.chunk.x, packet.chunk.z)).getChunk(XZ.of(packet.chunk.x, packet.chunk.z));
 		Date now = new Date();
-		chunk.claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
-		chunk.forceLoadedDate = packet.forceLoaded && chunk.claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
-		chunk.color = packet.color;
-		chunk.owner = packet.owner == null ? StringTextComponent.EMPTY : packet.owner;
+		chunk.updateFrom(now, packet.chunk);
+	}
+
+	@Override
+	public void updateAllChunks(SendAllChunksPacket packet)
+	{
+		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
+		Date now = new Date();
+
+		for (SendChunkPacket.SingleChunk c : packet.chunks)
+		{
+			MapChunk chunk = dimension.getRegion(XZ.regionFromChunk(c.x, c.z)).getChunk(XZ.of(c.x, c.z));
+			chunk.updateFrom(now, c);
+		}
 	}
 
 	@Override
@@ -390,7 +402,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.gameSettings.showDebugInfo || FTBChunksClientConfig.minimap == MinimapPosition.DISABLED)
+		if (mc.gameSettings.showDebugInfo || FTBChunksClientConfig.minimap == MinimapPosition.DISABLED || FTBChunksClientConfig.minimapVisibility == 0)
 		{
 			return;
 		}
@@ -660,32 +672,46 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		MINIMAP_TEXT_LIST.clear();
 
+		if (FTBChunksClientConfig.minimapZone)
+		{
+			ITextComponent currentChunkOwner = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).owner;
+
+			if (currentChunkOwner != StringTextComponent.EMPTY)
+			{
+				MINIMAP_TEXT_LIST.add(currentChunkOwner);
+			}
+			else
+			{
+				MINIMAP_TEXT_LIST.add(new TranslationTextComponent("wilderness").mergeStyle(TextFormatting.DARK_GREEN));
+			}
+		}
+
 		if (FTBChunksClientConfig.minimapXYZ)
 		{
-			MINIMAP_TEXT_LIST.add(MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ()));
+			MINIMAP_TEXT_LIST.add(new StringTextComponent(MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ())));
 		}
 
 		if (FTBChunksClientConfig.minimapBiome)
 		{
-			MINIMAP_TEXT_LIST.add(I18n.format(mc.world.getBiome(mc.player.getPosition()).getTranslationKey()));
+			MINIMAP_TEXT_LIST.add(new TranslationTextComponent(mc.world.getBiome(mc.player.getPosition()).getTranslationKey()));
 		}
 
 		if (FTBChunksClientConfig.debugInfo)
 		{
-			MINIMAP_TEXT_LIST.add("Queued tasks: " + taskQueue.size());
+			MINIMAP_TEXT_LIST.add(new StringTextComponent("Queued tasks: " + taskQueue.size()));
 		}
 
 		if (!MINIMAP_TEXT_LIST.isEmpty())
 		{
 			matrixStack.push();
-			matrixStack.translate(x + s / 2D, y + s + 5D, 0D);
+			matrixStack.translate(x + s / 2D, y + s + 3D, 0D);
 			matrixStack.scale((float) (0.5D * scale), (float) (0.5D * scale), 1F);
 
 			for (int i = 0; i < MINIMAP_TEXT_LIST.size(); i++)
 			{
-				String bs = MINIMAP_TEXT_LIST.get(i);
-				int bsw = mc.fontRenderer.getStringWidth(bs);
-				mc.fontRenderer.drawStringWithShadow(matrixStack, bs, -bsw / 2F, i * 10, 0xFFFFFFFF);
+				ITextProperties bs = MINIMAP_TEXT_LIST.get(i);
+				int bsw = mc.fontRenderer.func_238414_a_(bs);
+				mc.fontRenderer.func_238407_a_(matrixStack, bs, -bsw / 2F, i * 11, 0xFFFFFFFF);
 			}
 
 			matrixStack.pop();
@@ -737,7 +763,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					}
 				}
 
-				EXECUTOR_SERVICE.execute(() -> {
+				FTBChunks.EXECUTOR_SERVICE.execute(() -> {
 					for (MapTask task : tasks)
 					{
 						if (task != null)

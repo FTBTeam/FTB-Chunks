@@ -21,6 +21,8 @@ public class FTBChunksClientConfig
 	public static boolean chunkGrid;
 	public static boolean reducedColorPalette;
 	public static float saturation;
+	public static boolean claimedChunksOnMap;
+	public static boolean ownClaimedChunksOnMap;
 
 	public static MinimapPosition minimap;
 	public static double minimapScale;
@@ -35,6 +37,7 @@ public class FTBChunksClientConfig
 	public static boolean minimapBlur;
 	public static boolean minimapCompass;
 	public static int minimapVisibility;
+	public static boolean minimapZone;
 
 	public static boolean debugInfo;
 	public static int taskQueueTicks = 4;
@@ -66,6 +69,8 @@ public class FTBChunksClientConfig
 			chunkGrid = c.chunkGrid.get();
 			reducedColorPalette = c.reducedColorPalette.get();
 			saturation = c.saturation.get().floatValue();
+			claimedChunksOnMap = c.claimedChunksOnMap.get();
+			ownClaimedChunksOnMap = c.ownClaimedChunksOnMap.get();
 
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
@@ -80,6 +85,7 @@ public class FTBChunksClientConfig
 			minimapBlur = c.minimapBlur.get();
 			minimapCompass = c.minimapCompass.get();
 			minimapVisibility = c.minimapVisibility.get();
+			minimapZone = c.minimapZone.get();
 
 			debugInfo = c.debugInfo.get();
 
@@ -97,6 +103,8 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue chunkGrid;
 		public final ForgeConfigSpec.BooleanValue reducedColorPalette;
 		public final ForgeConfigSpec.DoubleValue saturation;
+		public final ForgeConfigSpec.BooleanValue claimedChunksOnMap;
+		public final ForgeConfigSpec.BooleanValue ownClaimedChunksOnMap;
 
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
@@ -111,6 +119,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue minimapBlur;
 		public final ForgeConfigSpec.BooleanValue minimapCompass;
 		public final ForgeConfigSpec.IntValue minimapVisibility;
+		public final ForgeConfigSpec.BooleanValue minimapZone;
 
 		public final ForgeConfigSpec.BooleanValue debugInfo;
 
@@ -140,6 +149,16 @@ public class FTBChunksClientConfig
 					.comment("Color intensity")
 					.translation("ftbchunks.saturation")
 					.defineInRange("saturation", 1D, 0D, 1D);
+
+			claimedChunksOnMap = builder
+					.comment("Show claimed chunks on the map")
+					.translation("ftbchunks.claimed_chunks_on_map")
+					.define("claimed_chunks_on_map", true);
+
+			ownClaimedChunksOnMap = builder
+					.comment("Show your own claimed chunks on the map")
+					.translation("ftbchunks.own_claimed_chunks_on_map")
+					.define("own_claimed_chunks_on_map", true);
 
 			minimap = builder
 					.comment("Enables minimap to show up in corner")
@@ -206,6 +225,11 @@ public class FTBChunksClientConfig
 					.translation("ftbchunks.minimap_visibility")
 					.defineInRange("minimap_visibility", 255, 0, 255);
 
+			minimapZone = builder
+					.comment("Show zone (claimed chunk or wilderness) under minimap")
+					.translation("ftbchunks.minimap_zone")
+					.define("minimap_zone", true);
+
 			debugInfo = builder
 					.comment("Enables debug info")
 					.translation("ftbchunks.debug_info")
@@ -241,6 +265,16 @@ public class FTBChunksClientConfig
 			client.getLeft().saturation.set(v);
 			saturation = v.floatValue();
 		}, 1D, 0D, 1D);
+
+		group.addBool("claimed_chunks_on_map", claimedChunksOnMap, v -> {
+			client.getLeft().claimedChunksOnMap.set(v);
+			claimedChunksOnMap = v;
+		}, true);
+
+		group.addBool("own_claimed_chunks_on_map", ownClaimedChunksOnMap, v -> {
+			client.getLeft().ownClaimedChunksOnMap.set(v);
+			ownClaimedChunksOnMap = v;
+		}, true);
 
 		group.addEnum("minimap", minimap, v -> {
 			client.getLeft().minimap.set(v);
@@ -300,6 +334,16 @@ public class FTBChunksClientConfig
 		group.addBool("minimap_compass", minimapCompass, v -> {
 			client.getLeft().minimapCompass.set(v);
 			minimapCompass = v;
+		}, true);
+
+		group.addInt("minimap_visibility", minimapVisibility, v -> {
+			client.getLeft().minimapVisibility.set(v);
+			minimapVisibility = v;
+		}, 255, 0, 255);
+
+		group.addBool("minimap_zone", minimapZone, v -> {
+			client.getLeft().minimapZone.set(v);
+			minimapZone = v;
 		}, true);
 
 		group.addBool("debug_info", debugInfo, v -> {

@@ -2,25 +2,23 @@ package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
+import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.TicketType;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
-import java.util.Comparator;
+import java.util.Date;
 
 /**
  * @author LatvianModder
  */
 public class ClaimedChunkImpl implements ClaimedChunk
 {
-	public static TicketType<ChunkPos> TICKET_TYPE = TicketType.create("ftbchunks", Comparator.comparingLong(ChunkPos::asLong));
-	public static final int MAGIC_NUMBER = 2;
-
 	public final ClaimedChunkPlayerDataImpl playerData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
@@ -64,6 +62,7 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	public void setClaimedTime(Instant t)
 	{
 		time = t;
+		sendUpdateToAll();
 	}
 
 	@Override
@@ -110,6 +109,16 @@ public class ClaimedChunkImpl implements ClaimedChunk
 		if (world != null)
 		{
 			world.forceChunk(getPos().x, getPos().z, load);
+			sendUpdateToAll();
 		}
+	}
+
+	public void sendUpdateToAll()
+	{
+		SendChunkPacket packet = new SendChunkPacket();
+		packet.dimension = pos.dimension;
+		packet.owner = playerData.getUuid();
+		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, this);
+		FTBChunksNet.MAIN.send(PacketDistributor.ALL.noArg(), packet);
 	}
 }

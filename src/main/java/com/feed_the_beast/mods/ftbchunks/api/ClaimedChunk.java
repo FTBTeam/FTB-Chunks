@@ -3,7 +3,9 @@ package com.feed_the_beast.mods.ftbchunks.api;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -65,6 +67,6 @@ public interface ClaimedChunk extends ClaimResult
 			return group.getCustomName();
 		}
 
-		return getPlayerData().getDisplayName();
+		return getPlayerData().getDisplayName().mergeStyle(Style.EMPTY.setColor(Color.func_240743_a_(getColor() & 0xFFFFFF)));
 	}
 }

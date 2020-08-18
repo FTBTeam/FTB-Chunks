@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapManager;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
@@ -128,10 +129,24 @@ public class ChunkScreen extends GuiBase
 	public List<ChunkButton> chunkButtons;
 	public Set<XZ> selectedChunks;
 
+	public ChunkScreen()
+	{
+		FTBChunksClient.alwaysRenderChunksOnMap = true;
+		MapManager.inst.updateAllRegions(false);
+	}
+
 	@Override
 	public boolean onInit()
 	{
 		return setFullscreen();
+	}
+
+	@Override
+	public void onClosed()
+	{
+		FTBChunksClient.alwaysRenderChunksOnMap = false;
+		MapManager.inst.updateAllRegions(false);
+		super.onClosed();
 	}
 
 	@Override
@@ -234,51 +249,6 @@ public class ChunkScreen extends GuiBase
 
 			tessellator.draw();
 
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-
-			for (ChunkButton button : chunkButtons)
-			{
-				MapChunk chunk = button.chunk;
-
-				if (chunk.claimedDate == null)
-				{
-					continue;
-				}
-
-				int cr = (chunk.color >> 16) & 255;
-				int cg = (chunk.color >> 8) & 255;
-				int cb = (chunk.color >> 0) & 255;
-
-				int cx = button.getX();
-				int cy = button.getY();
-
-				rect(buffer, cx, cy, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE, cr, cg, cb, 100);
-
-				int borders = 15;
-
-				if (!chunk.connects(chunk.offset(0, -1)))
-				{
-					rect(buffer, cx, cy, FTBChunks.TILE_SIZE, 1, cr, cg, cb, 255);
-				}
-
-				if (!chunk.connects(chunk.offset(0, 1)))
-				{
-					rect(buffer, cx, cy + FTBChunks.TILE_SIZE - 1, FTBChunks.TILE_SIZE, 1, cr, cg, cb, 255);
-				}
-
-				if (!chunk.connects(chunk.offset(-1, 0)))
-				{
-					rect(buffer, cx, cy, 1, FTBChunks.TILE_SIZE, cr, cg, cb, 255);
-				}
-
-				if (!chunk.connects(chunk.offset(1, 0)))
-				{
-					rect(buffer, cx + FTBChunks.TILE_SIZE - 1, cy, 1, FTBChunks.TILE_SIZE, cr, cg, cb, 255);
-				}
-			}
-
-			tessellator.draw();
-
 			buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
 
 			for (ChunkButton button : chunkButtons)
@@ -344,13 +314,5 @@ public class ChunkScreen extends GuiBase
 				theme.drawString(matrixStack, list.get(i), 3, getScreen().getScaledHeight() - 10 * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
 			}
 		}
-	}
-
-	private void rect(BufferBuilder buffer, int x, int y, int w, int h, int r, int g, int b, int a)
-	{
-		buffer.pos(x, y + h, 0).color(r, g, b, a).endVertex();
-		buffer.pos(x + w, y + h, 0).color(r, g, b, a).endVertex();
-		buffer.pos(x + w, y, 0).color(r, g, b, a).endVertex();
-		buffer.pos(x, y, 0).color(r, g, b, a).endVertex();
 	}
 }

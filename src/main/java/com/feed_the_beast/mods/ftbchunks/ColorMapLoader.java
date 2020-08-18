@@ -33,26 +33,36 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 		Gson gson = new GsonBuilder().setLenient().create();
 		JsonObject object = new JsonObject();
 
-		try
+		for (String namespace : resourceManager.getResourceNamespaces())
 		{
-			for (IResource resource : resourceManager.getAllResources(new ResourceLocation("ftbchunks", "ftbchunks_colors.json")))
+			try
 			{
-				try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))
+				for (IResource resource : resourceManager.getAllResources(new ResourceLocation(namespace, "ftbchunks_block_colors.json")))
 				{
-					for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet())
+					try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))
 					{
-						object.add(entry.getKey(), entry.getValue());
+						for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet())
+						{
+							if (entry.getKey().startsWith("#"))
+							{
+								object.add("#" + namespace + ":" + entry.getKey().substring(1), entry.getValue());
+							}
+							else
+							{
+								object.add(namespace + ":" + entry.getKey(), entry.getValue());
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
 					}
 				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-				}
 			}
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 
 		return object;

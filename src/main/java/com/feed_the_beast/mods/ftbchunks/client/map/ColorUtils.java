@@ -23,6 +23,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeColors;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraftforge.registries.ObjectHolder;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -34,26 +35,33 @@ import java.util.Map;
 public class ColorUtils
 {
 	public static final Map<Block, Color4I> COLOR_MAP = new HashMap<>();
-	public static int[] reducedColorPalette = null;
+	public static Color4I[] reducedColorPalette = null;
+	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
 
-	public static int addBrightness(int c, float f)
+	@ObjectHolder("biomesoplenty:bush")
+	public static Block BOP_BUSH = null;
+
+	@ObjectHolder("biomesoplenty:rainbow_birch_leaves")
+	public static Block BOP_RAINBOW_BIRCH_LEAVES = null;
+
+	public static Color4I addBrightness(Color4I c, float f)
 	{
-		float r = ((c >> 16) & 0xFF) / 255F + f;
-		float g = ((c >> 8) & 0xFF) / 255F + f;
-		float b = ((c >> 0) & 0xFF) / 255F + f;
+		float r = c.redf() + f;
+		float g = c.greenf() + f;
+		float b = c.bluef() + f;
 
 		int ri = MathHelper.clamp((int) (r * 255F), 0, 255);
 		int gi = MathHelper.clamp((int) (g * 255F), 0, 255);
 		int bi = MathHelper.clamp((int) (b * 255F), 0, 255);
 
-		return 0xFF000000 | (ri << 16) | (gi << 8) | bi;
+		return Color4I.rgb(ri, gi, bi);
 	}
 
-	public static int reduce(int c)
+	public static Color4I reduce(Color4I c)
 	{
 		if (reducedColorPalette == null)
 		{
-			reducedColorPalette = new int[0];
+			reducedColorPalette = new Color4I[0];
 
 			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/reduced_color_palette.png")).getInputStream())
 			{
@@ -61,14 +69,14 @@ public class ColorUtils
 				int w = image.getWidth();
 				int h = image.getHeight();
 
-				reducedColorPalette = new int[w * h];
+				reducedColorPalette = new Color4I[w * h];
 
 				for (int x = 0; x < w; x++)
 				{
 					for (int y = 0; y < h; y++)
 					{
 						int col = image.getPixelRGBA(x, y);
-						reducedColorPalette[x + y * w] = (NativeImage.getRed(col) << 16) | (NativeImage.getGreen(col) << 8) | NativeImage.getBlue(col);
+						reducedColorPalette[x + y * w] = Color4I.rgb((NativeImage.getRed(col) << 16) | (NativeImage.getGreen(col) << 8) | NativeImage.getBlue(col));
 					}
 				}
 
@@ -84,30 +92,32 @@ public class ColorUtils
 			return c;
 		}
 
-		int r = (c >> 16) & 0xFF;
-		int g = (c >> 8) & 0xFF;
-		int b = (c >> 0) & 0xFF;
-		long prevDist = Long.MAX_VALUE;
-		int colr = 0;
+		return reducedColorMap.computeIfAbsent(c, col -> {
+			int r = col.redi();
+			int g = col.greeni();
+			int b = col.bluei();
+			long prevDist = Long.MAX_VALUE;
+			Color4I colr = Color4I.BLACK;
 
-		for (int col : reducedColorPalette)
-		{
-			long dr = r - ((col >> 16) & 0xFF);
-			long dg = g - ((col >> 8) & 0xFF);
-			long db = b - ((col >> 0) & 0xFF);
-			long d = dr * dr + dg * dg + db * db;
-
-			if (d < prevDist)
+			for (Color4I rcol : reducedColorPalette)
 			{
-				prevDist = d;
-				colr = col;
-			}
-		}
+				long dr = r - rcol.redi();
+				long dg = g - rcol.greeni();
+				long db = b - rcol.bluei();
+				long d = dr * dr + dg * dg + db * db;
 
-		return 0xFF000000 | colr;
+				if (d < prevDist)
+				{
+					prevDist = d;
+					colr = rcol;
+				}
+			}
+
+			return colr;
+		});
 	}
 
-	public static Color4I getColorRaw(BlockState state, IBlockDisplayReader world, BlockPos pos)
+	private static Color4I getColorRaw(BlockState state, IBlockDisplayReader world, BlockPos pos)
 	{
 		Color4I color = COLOR_MAP.get(state.getBlock());
 
@@ -125,6 +135,13 @@ public class ColorUtils
 		if (state.getBlock() == Blocks.AIR)
 		{
 			return Color4I.BLACK;
+		}
+
+		Color4I colorOverride = COLOR_MAP.get(state.getBlock());
+
+		if (colorOverride != null)
+		{
+			return colorOverride;
 		}
 
 		int by = pos.getY();
@@ -154,20 +171,21 @@ public class ColorUtils
 
 			return getColorRaw(state1, world, pos).withTint(Color4I.rgb(BiomeColors.getWaterColor(world, pos)).withAlpha(220));
 		}
-		else
+		else if (state.getBlock() == BOP_RAINBOW_BIRCH_LEAVES)
 		{
-			if (state.getBlock() instanceof GrassBlock)
-			{
-				return Color4I.rgb(BiomeColors.getGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50));
-			}
-			else if (state.getBlock() instanceof LeavesBlock || state.getBlock() instanceof VineBlock)
-			{
-				return Color4I.rgb(BiomeColors.getFoliageColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50));
-			}
-			else if (state.getBlock() instanceof RedstoneWireBlock)
-			{
-				return redstoneColor(state.get(RedstoneWireBlock.POWER));
-			}
+			return Color4I.hsb((((float) pos.getX() + MathHelper.sin(((float) pos.getZ() + (float) pos.getX()) / 35) * 35) % 150) / 150, 0.6F, 0.5F);
+		}
+		else if (state.getBlock() instanceof GrassBlock)
+		{
+			return Color4I.rgb(BiomeColors.getGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50));
+		}
+		else if (state.getBlock() == BOP_BUSH || state.getBlock() instanceof LeavesBlock || state.getBlock() instanceof VineBlock)
+		{
+			return Color4I.rgb(BiomeColors.getFoliageColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50));
+		}
+		else if (state.getBlock() instanceof RedstoneWireBlock)
+		{
+			return redstoneColor(state.get(RedstoneWireBlock.POWER));
 		}
 
 		return getColorRaw(state, world, pos);

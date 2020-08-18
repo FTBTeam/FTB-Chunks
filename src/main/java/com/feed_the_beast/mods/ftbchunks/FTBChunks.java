@@ -7,6 +7,7 @@ import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
 import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
+import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
@@ -14,6 +15,8 @@ import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendAllChunksPacket;
+import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
@@ -57,15 +60,19 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author LatvianModder
@@ -74,6 +81,7 @@ import java.util.UUID;
 public class FTBChunks
 {
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
+	public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 
 	public static FTBChunks instance;
 	public FTBChunksCommon proxy;
@@ -153,6 +161,23 @@ public class FTBChunks
 		SendGeneralDataPacket.send(player);
 		SendWaypointsPacket.send(player);
 		SendVisiblePlayerListPacket.sendAll();
+
+		Date now = new Date();
+		Map<Pair<String, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+
+		for (ClaimedChunkImpl chunk : FTBChunksAPIImpl.manager.claimedChunks.values())
+		{
+			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.playerData.getUuid()), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
+		}
+
+		for (Map.Entry<Pair<String, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet())
+		{
+			SendAllChunksPacket packet = new SendAllChunksPacket();
+			packet.dimension = entry.getKey().getLeft();
+			packet.owner = entry.getKey().getRight();
+			packet.chunks = entry.getValue();
+			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), packet);
+		}
 	}
 
 	private boolean isValidPlayer(@Nullable Entity entity)
@@ -350,7 +375,7 @@ public class FTBChunks
 
 				if (chunk != null)
 				{
-					player.sendStatusMessage(chunk.getDisplayName().deepCopy().mergeStyle(TextFormatting.AQUA), true);
+					player.sendStatusMessage(chunk.getDisplayName(), true);
 				}
 				else
 				{
@@ -414,56 +439,6 @@ public class FTBChunks
 			}
 		}
 	}
-
-	/*
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void blockPlaceLowest(BlockEvent.EntityPlaceEvent event)
-	{
-		if (event.getWorld().isRemote())
-		{
-			if (event instanceof BlockEvent.EntityMultiPlaceEvent)
-			{
-				HashSet<XZ> posSet = new HashSet<>();
-
-				for (BlockSnapshot snapshot : ((BlockEvent.EntityMultiPlaceEvent) event).getReplacedBlockSnapshots())
-				{
-					if (posSet.add(XZ.chunkFromBlock(snapshot.getPos().getX(), snapshot.getPos().getZ())))
-					{
-						IChunk chunk = event.getWorld().getChunk(snapshot.getPos());
-
-						if (chunk instanceof Chunk)
-						{
-							taskQueue.addLast(new ReloadChunkTask((Chunk) chunk));
-						}
-					}
-				}
-			}
-			else
-			{
-				IChunk chunk = event.getWorld().getChunk(event.getPos());
-
-				if (chunk instanceof Chunk)
-				{
-					taskQueue.addLast(new ReloadChunkTask((Chunk) chunk));
-				}
-			}
-		}
-	}
-
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void blockBreakLowest(BlockEvent.BreakEvent event)
-	{
-		if (event.getWorld().isRemote())
-		{
-			IChunk chunk = event.getWorld().getChunk(event.getPos());
-
-			if (chunk instanceof Chunk)
-			{
-				taskQueue.addLast(new ReloadChunkTask((Chunk) chunk));
-			}
-		}
-	}
-	*/
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void playerDeath(LivingDeathEvent event)

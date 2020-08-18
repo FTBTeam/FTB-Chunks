@@ -13,6 +13,10 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.StringTextComponent;
+
+import java.util.List;
 
 /**
  * @author LatvianModder
@@ -210,6 +214,24 @@ public class RegionMapPanel extends Panel
 
 		RenderSystem.popMatrix();
 		*/
+	}
+
+	@Override
+	public void addMouseOverText(List<ITextProperties> list)
+	{
+		super.addMouseOverText(list);
+
+		MapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+
+		if (r != null)
+		{
+			MapChunk c = r.getChunks().get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+
+			if (c != null && c.owner != StringTextComponent.EMPTY)
+			{
+				list.add(c.owner);
+			}
+		}
 	}
 
 	@Override

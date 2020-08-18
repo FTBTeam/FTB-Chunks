@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 public class FTBChunksNet
 {
 	public static SimpleChannel MAIN;
-	private static final String MAIN_VERSION = "3";
+	private static final String MAIN_VERSION = "4";
 
 	public static void init()
 	{
@@ -23,7 +23,7 @@ public class FTBChunksNet
 				.simpleChannel();
 
 		MAIN.registerMessage(1, RequestMapDataPacket.class, RequestMapDataPacket::write, RequestMapDataPacket::new, RequestMapDataPacket::handle);
-		//MAIN.registerMessage(2, RequestMapDataPacket.class, RequestMapDataPacket::write, RequestMapDataPacket::new, RequestMapDataPacket::handle);
+		MAIN.registerMessage(2, SendAllChunksPacket.class, SendAllChunksPacket::write, SendAllChunksPacket::new, SendAllChunksPacket::handle);
 		MAIN.registerMessage(3, LoginDataPacket.class, LoginDataPacket::write, LoginDataPacket::new, LoginDataPacket::handle);
 		MAIN.registerMessage(4, RequestChunkChangePacket.class, RequestChunkChangePacket::write, RequestChunkChangePacket::new, RequestChunkChangePacket::handle);
 		MAIN.registerMessage(5, RequestPlayerListPacket.class, RequestPlayerListPacket::write, RequestPlayerListPacket::new, RequestPlayerListPacket::handle);

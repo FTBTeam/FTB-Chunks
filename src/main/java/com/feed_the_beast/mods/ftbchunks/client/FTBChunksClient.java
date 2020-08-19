@@ -46,6 +46,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.resources.IReloadableResourceManager;
+import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
@@ -53,12 +55,12 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
@@ -101,7 +103,7 @@ public class FTBChunksClient extends FTBChunksCommon
 			new ResourceLocation("ftbchunks:textures/compass_s.png"),
 	};
 
-	private static final List<ITextProperties> MINIMAP_TEXT_LIST = new ArrayList<>(3);
+	private static final List<ITextComponent> MINIMAP_TEXT_LIST = new ArrayList<>(3);
 
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	private static long taskQueueTicks = 0L;
@@ -693,7 +695,12 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		if (FTBChunksClientConfig.minimapBiome)
 		{
-			MINIMAP_TEXT_LIST.add(new TranslationTextComponent(mc.world.getBiome(mc.player.getPosition()).getTranslationKey()));
+			RegistryKey<Biome> biome = mc.world.func_242406_i(mc.player.getPosition()).orElse(null);
+
+			if (biome != null)
+			{
+				MINIMAP_TEXT_LIST.add(new TranslationTextComponent("biome." + biome.func_240901_a_().getNamespace() + "." + biome.func_240901_a_().getPath()));
+			}
 		}
 
 		if (FTBChunksClientConfig.debugInfo)
@@ -709,8 +716,8 @@ public class FTBChunksClient extends FTBChunksCommon
 
 			for (int i = 0; i < MINIMAP_TEXT_LIST.size(); i++)
 			{
-				ITextProperties bs = MINIMAP_TEXT_LIST.get(i);
-				int bsw = mc.fontRenderer.func_238414_a_(bs);
+				IReorderingProcessor bs = MINIMAP_TEXT_LIST.get(i).func_241878_f();
+				int bsw = mc.fontRenderer.func_243245_a(bs);
 				mc.fontRenderer.func_238407_a_(matrixStack, bs, -bsw / 2F, i * 11, 0xFFFFFFFF);
 			}
 

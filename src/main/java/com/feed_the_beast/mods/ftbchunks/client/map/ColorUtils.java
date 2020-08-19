@@ -14,6 +14,7 @@ import net.minecraft.block.material.MaterialColor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -162,7 +163,7 @@ public class ColorUtils
 			}
 
 			BlockState state1 = Blocks.GRAVEL.getDefaultState();
-			Biome biome = world.getBiome(pos);
+			RegistryKey<Biome> biome = world.func_242406_i(pos).orElse(null);
 
 			if (biome == Biomes.LUKEWARM_OCEAN || biome == Biomes.WARM_OCEAN || biome == Biomes.DEEP_LUKEWARM_OCEAN || biome == Biomes.DEEP_WARM_OCEAN)
 			{

@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
+import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
@@ -18,10 +19,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
 import org.lwjgl.opengl.GL11;
-
-import java.util.List;
 
 /**
  * @author LatvianModder
@@ -46,7 +44,7 @@ public class PlayerButton extends Widget
 	}
 
 	@Override
-	public void addMouseOverText(List<ITextProperties> list)
+	public void addMouseOverText(TooltipList list)
 	{
 		list.add(name);
 	}

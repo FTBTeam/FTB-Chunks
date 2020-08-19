@@ -11,6 +11,7 @@ import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
+import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
 import com.feed_the_beast.mods.ftbguilibrary.widget.ContextMenuItem;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
@@ -18,7 +19,6 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -42,17 +42,17 @@ public class WaypointButton extends Widget
 	}
 
 	@Override
-	public void addMouseOverText(List<ITextProperties> list)
+	public void addMouseOverText(TooltipList list)
 	{
-		list.add(new StringTextComponent(waypoint.name));
+		list.string(waypoint.name);
 
 		if (!waypoint.owner.isEmpty())
 		{
-			list.add(new StringTextComponent(waypoint.owner).mergeStyle(TextFormatting.GRAY));
+			list.styledString(waypoint.owner, TextFormatting.GRAY);
 		}
 
 		long dist = (long) MathUtils.dist(Minecraft.getInstance().player.getPosX(), Minecraft.getInstance().player.getPosZ(), waypoint.x, waypoint.z);
-		list.add(new StringTextComponent(dist + " m").mergeStyle(TextFormatting.GRAY));
+		list.styledString(dist + " m", TextFormatting.GRAY);
 	}
 
 	@Override

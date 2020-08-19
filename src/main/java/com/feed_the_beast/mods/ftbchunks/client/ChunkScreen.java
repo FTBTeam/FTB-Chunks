@@ -18,6 +18,7 @@ import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
+import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
@@ -91,7 +92,7 @@ public class ChunkScreen extends GuiBase
 
 		@Override
 		@SuppressWarnings("deprecation")
-		public void addMouseOverText(List<ITextProperties> list)
+		public void addMouseOverText(TooltipList list)
 		{
 			if (chunk != null && chunk.owner != StringTextComponent.EMPTY)
 			{

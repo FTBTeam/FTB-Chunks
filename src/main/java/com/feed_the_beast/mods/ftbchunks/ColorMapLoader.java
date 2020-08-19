@@ -61,7 +61,6 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 			}
 			catch (Exception ex)
 			{
-				ex.printStackTrace();
 			}
 		}
 

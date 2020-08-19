@@ -12,8 +12,6 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkGroup;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
-import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -40,7 +38,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +57,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public final Set<UUID> allies;
 	public PrivacyMode blockEditMode;
 	public PrivacyMode blockInteractMode;
-	public final Map<UUID, Waypoint> waypoints;
 	public PrivacyMode minimapMode;
 	public PrivacyMode locationMode;
 
@@ -79,7 +75,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		allies = new HashSet<>();
 		blockEditMode = PrivacyMode.ALLIES;
 		blockInteractMode = PrivacyMode.ALLIES;
-		waypoints = new LinkedHashMap<>();
 		minimapMode = PrivacyMode.ALLIES;
 		locationMode = PrivacyMode.ALLIES;
 	}
@@ -460,25 +455,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		json.add("chunks", chunksJson);
 
-		JsonArray waypointArray = new JsonArray();
-
-		for (Waypoint w : waypoints.values())
-		{
-			JsonObject o = new JsonObject();
-			o.addProperty("id", UUIDTypeAdapter.fromUUID(w.id));
-			o.addProperty("name", w.name);
-			o.addProperty("dimension", w.dimension);
-			o.addProperty("x", w.x);
-			o.addProperty("y", w.y);
-			o.addProperty("z", w.z);
-			o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
-			o.addProperty("privacy", w.privacy.name);
-			o.addProperty("type", w.type.name().toLowerCase());
-			waypointArray.add(o);
-		}
-
-		json.add("waypoints", waypointArray);
-
 		return json;
 	}
 
@@ -569,49 +545,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					manager.claimedChunks.put(chunk.pos, chunk);
 				}
 			}
-		}
-
-		if (json.has("waypoints"))
-		{
-			for (JsonElement e : json.get("waypoints").getAsJsonArray())
-			{
-				JsonObject o = e.getAsJsonObject();
-
-				Waypoint w = new Waypoint(this, o.has("id") ? UUIDTypeAdapter.fromString(o.get("id").getAsString()) : UUID.randomUUID());
-				w.dimension = o.get("dimension").getAsString();
-				w.name = o.get("name").getAsString();
-				w.x = o.get("x").getAsInt();
-				w.y = o.get("y").getAsInt();
-				w.z = o.get("z").getAsInt();
-				w.color = 0xFFFFFF;
-
-				if (o.has("color"))
-				{
-					try
-					{
-						w.color = Integer.decode(o.get("color").getAsString());
-					}
-					catch (Exception ex)
-					{
-					}
-				}
-
-				if (o.has("privacy"))
-				{
-					w.privacy = PrivacyMode.get(o.get("privacy").getAsString());
-				}
-
-				if (o.has("type"))
-				{
-					w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
-				}
-
-				waypoints.put(w.id, w);
-			}
-		}
-		else
-		{
-			save();
 		}
 	}
 

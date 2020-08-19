@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 public class FTBChunksNet
 {
 	public static SimpleChannel MAIN;
-	private static final String MAIN_VERSION = "4";
+	private static final String MAIN_VERSION = "5";
 
 	public static void init()
 	{
@@ -31,12 +31,12 @@ public class FTBChunksNet
 		MAIN.registerMessage(7, RequestAllyStatusChangePacket.class, RequestAllyStatusChangePacket::write, RequestAllyStatusChangePacket::new, RequestAllyStatusChangePacket::handle);
 		MAIN.registerMessage(8, SendChunkPacket.class, SendChunkPacket::write, SendChunkPacket::new, SendChunkPacket::handle);
 		MAIN.registerMessage(9, SendGeneralDataPacket.class, SendGeneralDataPacket::write, SendGeneralDataPacket::new, SendGeneralDataPacket::handle);
-		MAIN.registerMessage(10, SendWaypointsPacket.class, SendWaypointsPacket::write, SendWaypointsPacket::new, SendWaypointsPacket::handle);
-		MAIN.registerMessage(11, DeleteWaypointPacket.class, DeleteWaypointPacket::write, DeleteWaypointPacket::new, DeleteWaypointPacket::handle);
-		MAIN.registerMessage(12, ChangeWaypointColorPacket.class, ChangeWaypointColorPacket::write, ChangeWaypointColorPacket::new, ChangeWaypointColorPacket::handle);
-		MAIN.registerMessage(13, ChangeWaypointNamePacket.class, ChangeWaypointNamePacket::write, ChangeWaypointNamePacket::new, ChangeWaypointNamePacket::handle);
+		//10
+		//11
+		//12
+		//13
 		MAIN.registerMessage(14, TeleportFromMapPacket.class, TeleportFromMapPacket::write, TeleportFromMapPacket::new, TeleportFromMapPacket::handle);
-		MAIN.registerMessage(15, ChangeWaypointPrivacyPacket.class, ChangeWaypointPrivacyPacket::write, ChangeWaypointPrivacyPacket::new, ChangeWaypointPrivacyPacket::handle);
+		MAIN.registerMessage(15, PlayerDeathPacket.class, PlayerDeathPacket::write, PlayerDeathPacket::new, PlayerDeathPacket::handle);
 		MAIN.registerMessage(16, SendVisiblePlayerListPacket.class, SendVisiblePlayerListPacket::write, SendVisiblePlayerListPacket::new, SendVisiblePlayerListPacket::handle);
 		MAIN.registerMessage(17, SyncTXPacket.class, SyncTXPacket::write, SyncTXPacket::new, SyncTXPacket::handle);
 		MAIN.registerMessage(18, SyncRXPacket.class, SyncRXPacket::write, SyncRXPacket::new, SyncRXPacket::handle);

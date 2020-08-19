@@ -1,4 +1,4 @@
-package com.feed_the_beast.mods.ftbchunks.api;
+package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import net.minecraft.util.ResourceLocation;
 

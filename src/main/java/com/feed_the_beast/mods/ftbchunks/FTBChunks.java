@@ -3,9 +3,6 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
-import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
-import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
@@ -15,12 +12,14 @@ import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.PlayerDeathPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendAllChunksPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -82,6 +81,7 @@ public class FTBChunks
 {
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
 	public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
+	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
 
 	public static FTBChunks instance;
 	public FTBChunksCommon proxy;
@@ -159,7 +159,6 @@ public class FTBChunks
 
 		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new LoginDataPacket(FTBChunksAPIImpl.manager.serverId));
 		SendGeneralDataPacket.send(player);
-		SendWaypointsPacket.send(player);
 		SendVisiblePlayerListPacket.sendAll();
 
 		Date now = new Date();
@@ -446,20 +445,11 @@ public class FTBChunks
 		if (event.getEntity() instanceof ServerPlayerEntity)
 		{
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
-			ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
-
-			Waypoint w = new Waypoint(data, UUID.randomUUID());
-			w.name = "Death #" + (player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS)) + 1);
-			w.dimension = ChunkDimPos.getID(player.world);
-			w.privacy = PrivacyMode.ALLIES;
-			w.type = WaypointType.DEATH;
-			w.x = MathHelper.floor(player.getPosX());
-			w.y = MathHelper.floor(player.getPosY());
-			w.z = MathHelper.floor(player.getPosZ());
-			data.waypoints.put(w.id, w);
-			data.save();
-
-			SendWaypointsPacket.send(player);
+			String dim = ChunkDimPos.getID(player.world);
+			int x = MathHelper.floor(player.getPosX());
+			int z = MathHelper.floor(player.getPosZ());
+			int num = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS)) + 1;
+			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getEntity()), new PlayerDeathPacket(dim, x, z, num));
 		}
 	}
 }

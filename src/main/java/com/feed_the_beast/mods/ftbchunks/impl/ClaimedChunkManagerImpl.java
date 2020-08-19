@@ -4,7 +4,6 @@ import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -44,7 +43,6 @@ import java.util.UUID;
  */
 public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 {
-	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
 	public static final FolderName DATA_DIR = new FolderName("data/ftbchunks");
 
 	public final MinecraftServer server;
@@ -150,7 +148,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 			{
 				try (Writer writer = Files.newBufferedWriter(data.file))
 				{
-					ClaimedChunkManagerImpl.GSON.toJson(data.toJson(), writer);
+					FTBChunks.GSON.toJson(data.toJson(), writer);
 				}
 				catch (Exception ex)
 				{
@@ -178,7 +176,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json")))
 			{
-				ClaimedChunkManagerImpl.GSON.toJson(array, writer);
+				FTBChunks.GSON.toJson(array, writer);
 			}
 			catch (Exception ex)
 			{
@@ -196,7 +194,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				{
 					try (Reader reader = Files.newBufferedReader(path))
 					{
-						JsonObject json = GSON.fromJson(reader, JsonObject.class);
+						JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
 
 						if (json == null || !json.has("name") || !json.has("uuid"))
 						{
@@ -236,7 +234,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		{
 			try (Reader reader = Files.newBufferedReader(knownFakePlayersFile))
 			{
-				for (JsonElement e : GSON.fromJson(reader, JsonArray.class))
+				for (JsonElement e : FTBChunks.GSON.fromJson(reader, JsonArray.class))
 				{
 					JsonObject json = e.getAsJsonObject();
 					UUID uuid = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
@@ -381,7 +379,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		try (Writer writer = Files.newBufferedWriter(localDirectory.resolve("all.json")))
 		{
-			ClaimedChunkManagerImpl.GSON.toJson(json, writer);
+			FTBChunks.GSON.toJson(json, writer);
 		}
 		catch (Exception ex)
 		{

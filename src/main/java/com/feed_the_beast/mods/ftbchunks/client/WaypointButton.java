@@ -1,11 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
-import com.feed_the_beast.mods.ftbchunks.net.ChangeWaypointColorPacket;
-import com.feed_the_beast.mods.ftbchunks.net.ChangeWaypointNamePacket;
-import com.feed_the_beast.mods.ftbchunks.net.DeleteWaypointPacket;
-import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
+import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
+import com.feed_the_beast.mods.ftbchunks.client.map.WaypointType;
 import com.feed_the_beast.mods.ftbguilibrary.config.ConfigString;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
@@ -23,6 +19,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,12 +42,6 @@ public class WaypointButton extends Widget
 	public void addMouseOverText(TooltipList list)
 	{
 		list.string(waypoint.name);
-
-		if (!waypoint.owner.isEmpty())
-		{
-			list.styledString(waypoint.owner, TextFormatting.GRAY);
-		}
-
 		long dist = (long) MathUtils.dist(Minecraft.getInstance().player.getPosX(), Minecraft.getInstance().player.getPosZ(), waypoint.x, waypoint.z);
 		list.styledString(dist + " m", TextFormatting.GRAY);
 	}
@@ -77,7 +68,7 @@ public class WaypointButton extends Widget
 					if (b)
 					{
 						waypoint.name = config.value;
-						FTBChunksNet.MAIN.sendToServer(new ChangeWaypointNamePacket(waypoint.id, waypoint.name));
+						waypoint.dimension.saveData = true;
 					}
 
 					openGui();
@@ -87,23 +78,22 @@ public class WaypointButton extends Widget
 			if (waypoint.type == WaypointType.DEFAULT)
 			{
 				contextMenu.add(new ContextMenuItem(new StringTextComponent("Change Color"), GuiIcons.COLOR_RGB, () -> {
-					Color4I col = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F);
+					int r = (waypoint.color >> 16) & 0xFF;
+					int g = (waypoint.color >> 8) & 0xFF;
+					int b = (waypoint.color >> 0) & 0xFF;
+					float[] hsb = Color.RGBtoHSB(r, g, b, new float[3]);
+					Color4I col = Color4I.hsb(hsb[0] + 1F / 12F, hsb[1], hsb[2]);
+					waypoint.color = col.rgba();
+					waypoint.dimension.saveData = true;
 					icon = Icon.getIcon(waypoint.type.texture).withTint(col);
-					FTBChunksNet.MAIN.sendToServer(new ChangeWaypointColorPacket(waypoint.id, col.rgba()));
 					contextMenu.get(0).icon = icon;
 				}).setCloseMenu(false));
 			}
 
-			/*
-			contextMenu.add(new ContextMenuItem("Change Privacy", GuiIcons.COLOR_RGB, () -> {
-				FTBChunksNet.MAIN.sendToServer(new ChangeWaypointPrivacyPacket(waypoint.id, col.rgba()));
-			}).setCloseMenu(false));
-			 */
-
 			contextMenu.add(new ContextMenuItem(new TranslationTextComponent("gui.remove"), GuiIcons.REMOVE, () -> {
-				((LargeMapScreen) getGui()).dimension.waypoints.remove(waypoint);
+				waypoint.dimension.getWaypoints().remove(waypoint);
+				waypoint.dimension.saveData = true;
 				parent.widgets.remove(this);
-				FTBChunksNet.MAIN.sendToServer(new DeleteWaypointPacket(waypoint.id));
 			}));
 
 			getGui().openContextMenu(contextMenu);

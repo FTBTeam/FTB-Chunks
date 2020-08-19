@@ -2,12 +2,12 @@ package com.feed_the_beast.mods.ftbchunks;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.RegionSyncKey;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
+import com.feed_the_beast.mods.ftbchunks.net.PlayerDeathPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendAllChunksPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import net.minecraft.world.server.ServerWorld;
 
 /**
@@ -35,10 +35,6 @@ public class FTBChunksCommon
 	{
 	}
 
-	public void updateWaypoints(SendWaypointsPacket packet)
-	{
-	}
-
 	public void openPlayerList(SendPlayerListPacket packet)
 	{
 	}
@@ -52,6 +48,10 @@ public class FTBChunksCommon
 	}
 
 	public void syncRegion(RegionSyncKey key, int offset, int total, byte[] data)
+	{
+	}
+
+	public void playerDeath(PlayerDeathPacket packet)
 	{
 	}
 }

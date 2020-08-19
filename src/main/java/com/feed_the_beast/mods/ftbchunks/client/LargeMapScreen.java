@@ -1,13 +1,13 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.TeleportFromMapPacket;
 import com.feed_the_beast.mods.ftbguilibrary.config.ConfigString;
 import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfigFromString;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
@@ -110,7 +110,14 @@ public class LargeMapScreen extends GuiBase
 			new GuiEditConfigFromString<>(name, set -> {
 				if (set)
 				{
-					ClientUtils.execClientCommand("/ftbchunks waypoints add " + name.value, false);
+					PlayerEntity player = Minecraft.getInstance().player;
+					Waypoint w = new Waypoint(dimension);
+					w.name = name.value;
+					w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
+					w.x = MathHelper.floor(player.getPosX());
+					w.z = MathHelper.floor(player.getPosZ());
+					dimension.getWaypoints().add(w);
+					dimension.saveData = true;
 				}
 
 				openGui();

@@ -1,9 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
-import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
@@ -93,9 +93,12 @@ public class RegionMapPanel extends Panel
 			add(new RegionMapButton(this, region));
 		}
 
-		for (Waypoint waypoint : largeMap.dimension.waypoints)
+		for (Waypoint waypoint : largeMap.dimension.getWaypoints())
 		{
-			add(new WaypointButton(this, waypoint));
+			if (!waypoint.hidden)
+			{
+				add(new WaypointButton(this, waypoint));
+			}
 		}
 
 		String dimId = ChunkDimPos.getID(Minecraft.getInstance().world);

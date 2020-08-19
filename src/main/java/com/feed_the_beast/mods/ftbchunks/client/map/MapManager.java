@@ -26,6 +26,7 @@ public class MapManager implements MapTask
 	{
 		serverId = id;
 		directory = dir;
+		dimensions = null;
 		saveData = false;
 	}
 
@@ -42,18 +43,6 @@ public class MapManager implements MapTask
 
 			try
 			{
-				if (Files.notExists(directory))
-				{
-					try
-					{
-						Files.createDirectories(directory);
-					}
-					catch (Exception ex)
-					{
-						throw new RuntimeException(ex);
-					}
-				}
-
 				Path file = directory.resolve("dimensions.txt");
 
 				if (Files.exists(file))
@@ -84,7 +73,7 @@ public class MapManager implements MapTask
 
 	public MapDimension getDimension(String dim)
 	{
-		return dimensions.computeIfAbsent(dim, d -> new MapDimension(this, d).created());
+		return getDimensions().computeIfAbsent(dim, d -> new MapDimension(this, d).created());
 	}
 
 	public void release()

@@ -4,7 +4,6 @@ import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
-import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.ImportRegionTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
@@ -14,16 +13,18 @@ import com.feed_the_beast.mods.ftbchunks.client.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.client.map.RegionSyncKey;
 import com.feed_the_beast.mods.ftbchunks.client.map.ReloadChunkTask;
+import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
+import com.feed_the_beast.mods.ftbchunks.client.map.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.PartialPackets;
+import com.feed_the_beast.mods.ftbchunks.net.PlayerDeathPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendAllChunksPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.SendVisiblePlayerListPacket;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
 import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
 import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -61,7 +62,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.FolderName;
@@ -73,7 +73,6 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -81,6 +80,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
@@ -169,7 +170,21 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void login(LoginDataPacket loginData)
 	{
-		MapManager.inst = new MapManager(loginData.serverId, FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/data/" + loginData.serverId));
+		Path dir = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks/data/" + loginData.serverId);
+
+		if (Files.notExists(dir))
+		{
+			try
+			{
+				Files.createDirectories(dir);
+			}
+			catch (Exception ex)
+			{
+				throw new RuntimeException(ex);
+			}
+		}
+
+		MapManager.inst = new MapManager(loginData.serverId, dir);
 		updateMinimap = true;
 	}
 
@@ -221,27 +236,6 @@ public class FTBChunksClient extends FTBChunksCommon
 	}
 
 	@Override
-	public void updateWaypoints(SendWaypointsPacket packet)
-	{
-		for (MapDimension dimension : MapManager.inst.getDimensions().values())
-		{
-			dimension.waypoints.clear();
-		}
-
-		for (Waypoint waypoint : packet.waypoints)
-		{
-			MapManager.inst.getDimension(waypoint.dimension).waypoints.add(waypoint);
-		}
-
-		LargeMapScreen screen = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
-
-		if (screen != null)
-		{
-			screen.refreshWidgets();
-		}
-	}
-
-	@Override
 	public void openPlayerList(SendPlayerListPacket packet)
 	{
 		new PlayerListScreen(packet.players, packet.allyMode).openGui();
@@ -288,6 +282,19 @@ public class FTBChunksClient extends FTBChunksCommon
 	public void syncRegion(RegionSyncKey key, int offset, int total, byte[] data)
 	{
 		PartialPackets.REGION.read(key, offset, total, data);
+	}
+
+	@Override
+	public void playerDeath(PlayerDeathPacket packet)
+	{
+		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
+		Waypoint w = new Waypoint(dimension);
+		w.name = "Death #" + packet.number;
+		w.x = packet.x;
+		w.z = packet.z;
+		w.type = WaypointType.DEATH;
+		dimension.getWaypoints().add(w);
+		dimension.saveData = true;
 	}
 
 	@SubscribeEvent
@@ -519,10 +526,15 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 
-		if (FTBChunksClientConfig.minimapWaypoints && !dim.waypoints.isEmpty())
+		if (FTBChunksClientConfig.minimapWaypoints && !dim.getWaypoints().isEmpty())
 		{
-			for (Waypoint waypoint : dim.waypoints)
+			for (Waypoint waypoint : dim.getWaypoints())
 			{
+				if (waypoint.hidden)
+				{
+					continue;
+				}
+
 				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x, waypoint.z) / 3.2D * scale;
 
 				if (d > s / 2D)
@@ -782,15 +794,6 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 
 			taskQueueTicks++;
-		}
-	}
-
-	@SubscribeEvent
-	public void chunkLoaded(ChunkEvent.Load event)
-	{
-		if (event.getWorld() instanceof World && event.getChunk() instanceof Chunk && event.getWorld().isRemote())
-		{
-			// queue(new ReloadChunkTask((World) event.getWorld(), event.getChunk().getPos()));
 		}
 	}
 }

@@ -5,17 +5,11 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
-import com.feed_the_beast.mods.ftbchunks.api.PrivacyMode;
-import com.feed_the_beast.mods.ftbchunks.api.Waypoint;
-import com.feed_the_beast.mods.ftbchunks.api.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import com.feed_the_beast.mods.ftbchunks.net.SendWaypointsPacket;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
@@ -23,7 +17,6 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.DimensionArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
@@ -38,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author LatvianModder
@@ -97,17 +89,6 @@ public class FTBChunksCommands
 												.executes(context -> info(context.getSource(), new ChunkDimPos(ChunkDimPos.getID(DimensionArgument.getDimensionArgument(context, "dimension")), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
 										)
 								)
-						)
-				)
-				.then(Commands.literal("waypoints")
-						.then(Commands.literal("add")
-								.executes(context -> addWaypoint(context.getSource().asPlayer(), "Waypoint"))
-								.then(Commands.argument("name", StringArgumentType.greedyString())
-										.executes(context -> addWaypoint(context.getSource().asPlayer(), StringArgumentType.getString(context, "name")))
-								)
-						)
-						.then(Commands.literal("delete_death_points")
-								.executes(context -> deleteDeathPoints(context.getSource().asPlayer()))
 						)
 				)
 		);
@@ -278,62 +259,6 @@ public class FTBChunksCommands
 		if (source.hasPermissionLevel(2))
 		{
 			source.sendFeedback(new StringTextComponent("Force Loaded: " + chunk.isForceLoaded()), true);
-		}
-
-		return 1;
-	}
-
-	private static int exportJson(CommandSource source)
-	{
-		FTBChunksAPIImpl.manager.exportJson();
-		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/all.json!"), true);
-		return 1;
-	}
-
-	private static int exportSvg(CommandSource source)
-	{
-		FTBChunksAPIImpl.manager.exportSvg();
-		source.sendFeedback(new StringTextComponent("Exported FTB Chunks data to <world directory>/data/ftbchunks/export/<dimension>.svg!"), true);
-		return 1;
-	}
-
-	private static int addWaypoint(ServerPlayerEntity player, String name)
-	{
-		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
-
-		Waypoint w = new Waypoint(data, UUID.randomUUID());
-		w.name = name;
-		w.dimension = ChunkDimPos.getID(player.world);
-		w.privacy = PrivacyMode.PRIVATE;
-		w.x = MathHelper.floor(player.getPosX());
-		w.y = MathHelper.floor(player.getPosY() + 2);
-		w.z = MathHelper.floor(player.getPosZ());
-
-		if (w.name.toLowerCase().startsWith("home") || w.name.toLowerCase().startsWith("house") || w.name.toLowerCase().startsWith("base"))
-		{
-			w.type = WaypointType.HOME;
-		}
-		else
-		{
-			w.color = Color4I.hsb(player.world.rand.nextFloat(), 1F, 1F).rgb();
-			w.type = WaypointType.DEFAULT;
-		}
-
-		data.waypoints.put(w.id, w);
-		data.save();
-
-		SendWaypointsPacket.send(player);
-		return 1;
-	}
-
-	private static int deleteDeathPoints(ServerPlayerEntity player)
-	{
-		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
-
-		if (data.waypoints.values().removeIf(waypoint -> waypoint.type == WaypointType.DEATH))
-		{
-			data.save();
-			SendWaypointsPacket.send(player);
 		}
 
 		return 1;

@@ -23,6 +23,7 @@ public class FTBChunksClientConfig
 	public static float saturation;
 	public static boolean claimedChunksOnMap;
 	public static boolean ownClaimedChunksOnMap;
+	public static boolean inWorldWaypoints;
 
 	public static MinimapPosition minimap;
 	public static double minimapScale;
@@ -71,6 +72,7 @@ public class FTBChunksClientConfig
 			saturation = c.saturation.get().floatValue();
 			claimedChunksOnMap = c.claimedChunksOnMap.get();
 			ownClaimedChunksOnMap = c.ownClaimedChunksOnMap.get();
+			inWorldWaypoints = c.inWorldWaypoints.get();
 
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
@@ -105,6 +107,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.DoubleValue saturation;
 		public final ForgeConfigSpec.BooleanValue claimedChunksOnMap;
 		public final ForgeConfigSpec.BooleanValue ownClaimedChunksOnMap;
+		public final ForgeConfigSpec.BooleanValue inWorldWaypoints;
 
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
@@ -159,6 +162,11 @@ public class FTBChunksClientConfig
 					.comment("Show your own claimed chunks on the map")
 					.translation("ftbchunks.own_claimed_chunks_on_map")
 					.define("own_claimed_chunks_on_map", true);
+
+			inWorldWaypoints = builder
+					.comment("Show waypoints in world")
+					.translation("ftbchunks.in_world_waypoints")
+					.define("in_world_waypoints", true);
 
 			minimap = builder
 					.comment("Enables minimap to show up in corner")
@@ -274,6 +282,11 @@ public class FTBChunksClientConfig
 		group.addBool("own_claimed_chunks_on_map", ownClaimedChunksOnMap, v -> {
 			client.getLeft().ownClaimedChunksOnMap.set(v);
 			ownClaimedChunksOnMap = v;
+		}, true);
+
+		group.addBool("in_world_waypoints", inWorldWaypoints, v -> {
+			client.getLeft().inWorldWaypoints.set(v);
+			inWorldWaypoints = v;
 		}, true);
 
 		group.addEnum("minimap", minimap, v -> {

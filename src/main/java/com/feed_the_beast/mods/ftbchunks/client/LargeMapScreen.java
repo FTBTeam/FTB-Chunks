@@ -12,6 +12,7 @@ import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
+import com.feed_the_beast.mods.ftbguilibrary.widget.ContextMenuItem;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
@@ -118,6 +119,7 @@ public class LargeMapScreen extends GuiBase
 					w.z = MathHelper.floor(player.getPosZ());
 					dimension.getWaypoints().add(w);
 					dimension.saveData = true;
+					refreshWidgets();
 				}
 
 				openGui();
@@ -178,6 +180,32 @@ public class LargeMapScreen extends GuiBase
 		{
 			prevMouseX = getMouseX();
 			prevMouseY = getMouseY();
+			return true;
+		}
+		else if (button.isRight())
+		{
+			int clickBlockX = regionPanel.blockX;
+			int clickBlockZ = regionPanel.blockZ;
+			List<ContextMenuItem> list = new ArrayList<>();
+			list.add(new ContextMenuItem(new TranslationTextComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, () -> {
+				ConfigString name = new ConfigString();
+				new GuiEditConfigFromString<>(name, set -> {
+					if (set)
+					{
+						Waypoint w = new Waypoint(dimension);
+						w.name = name.value;
+						w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
+						w.x = clickBlockX;
+						w.z = clickBlockZ;
+						dimension.getWaypoints().add(w);
+						dimension.saveData = true;
+						refreshWidgets();
+					}
+
+					openGui();
+				}).openGui();
+			}));
+			openContextMenu(list);
 			return true;
 		}
 

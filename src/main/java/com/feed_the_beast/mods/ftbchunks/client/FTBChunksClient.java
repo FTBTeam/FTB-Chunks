@@ -31,10 +31,12 @@ import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.widget.CustomClickEvent;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.Texture;
@@ -54,10 +56,10 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
@@ -69,6 +71,7 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
@@ -84,6 +87,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -526,6 +530,8 @@ public class FTBChunksClient extends FTBChunksCommon
 			}
 		}
 
+		double magicNumber = 3.2D;
+
 		if (FTBChunksClientConfig.minimapWaypoints && !dim.getWaypoints().isEmpty())
 		{
 			for (Waypoint waypoint : dim.getWaypoints())
@@ -535,14 +541,21 @@ public class FTBChunksClient extends FTBChunksCommon
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x, waypoint.z) / 3.2D * scale;
+				double distance = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x + 0.5D, waypoint.z + 0.5D);
+
+				if (distance > waypoint.minimapDistance)
+				{
+					continue;
+				}
+
+				double d = distance / magicNumber * scale;
 
 				if (d > s / 2D)
 				{
 					d = s / 2D;
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z, mc.player.getPosX() - waypoint.x) + minimapRotation * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z - 0.5D, mc.player.getPosX() - waypoint.x - 0.5D) + minimapRotation * Math.PI / 180D;
 
 				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
 				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
@@ -573,7 +586,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), entity.getPosX(), entity.getPosZ()) / 3.2D * scale;
+				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), entity.getPosX(), entity.getPosZ()) / magicNumber * scale;
 
 				if (d > s / 2D)
 				{
@@ -628,7 +641,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), player.getPosX(), player.getPosZ()) / 3.2D * scale;
+				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), player.getPosX(), player.getPosZ()) / magicNumber * scale;
 
 				if (d > s / 2D)
 				{
@@ -694,10 +707,6 @@ public class FTBChunksClient extends FTBChunksCommon
 			{
 				MINIMAP_TEXT_LIST.add(currentChunkOwner);
 			}
-			else
-			{
-				MINIMAP_TEXT_LIST.add(new TranslationTextComponent("wilderness").mergeStyle(TextFormatting.DARK_GREEN));
-			}
 		}
 
 		if (FTBChunksClientConfig.minimapXYZ)
@@ -737,6 +746,101 @@ public class FTBChunksClient extends FTBChunksCommon
 		}
 
 		RenderSystem.enableDepthTest();
+	}
+
+	@SubscribeEvent
+	public void renderWorldLast(RenderWorldLastEvent event)
+	{
+		Minecraft mc = Minecraft.getInstance();
+
+		if (mc.gameSettings.hideGUI || !FTBChunksClientConfig.inWorldWaypoints)
+		{
+			return;
+		}
+
+		MapDimension dim = MapDimension.getCurrent();
+
+		if (dim.getWaypoints().isEmpty())
+		{
+			return;
+		}
+
+		List<Waypoint> visibleWaypoints = new ArrayList<>();
+
+		for (Waypoint waypoint : dim.getWaypoints())
+		{
+			if (waypoint.hidden)
+			{
+				continue;
+			}
+
+			waypoint.distance = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x + 0.5D, waypoint.z + 0.5D);
+
+			if (waypoint.distance <= 8D || waypoint.distance > waypoint.inWorldDistance)
+			{
+				continue;
+			}
+
+			waypoint.alpha = 150;
+
+			if (waypoint.distance < 12D)
+			{
+				waypoint.alpha = (int) (waypoint.alpha * ((waypoint.distance - 8D) / 4D));
+			}
+
+			if (waypoint.alpha <= 0)
+			{
+				continue;
+			}
+
+			visibleWaypoints.add(waypoint);
+		}
+
+		if (visibleWaypoints.isEmpty())
+		{
+			return;
+		}
+
+		if (visibleWaypoints.size() >= 2)
+		{
+			visibleWaypoints.sort(Comparator.comparingDouble(value -> -value.distance));
+		}
+
+		ActiveRenderInfo activeRenderInfo = mc.getRenderManager().info;
+		Vector3d projectedView = activeRenderInfo.getProjectedView();
+		MatrixStack ms = event.getMatrixStack();
+		ms.push();
+		ms.translate(-projectedView.x, -projectedView.y, -projectedView.z);
+
+		IVertexBuilder depthBuffer = mc.getRenderTypeBuffers().getBufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
+
+		for (Waypoint waypoint : visibleWaypoints)
+		{
+			double angle = Math.atan2(projectedView.z - waypoint.z - 0.5D, projectedView.x - waypoint.x - 0.5D) * 180D / Math.PI;
+
+			int r = (waypoint.color >> 16) & 0xFF;
+			int g = (waypoint.color >> 8) & 0xFF;
+			int b = (waypoint.color >> 0) & 0xFF;
+
+			ms.push();
+			ms.translate(waypoint.x + 0.5D, 0, waypoint.z + 0.5D);
+			ms.rotate(Vector3f.YP.rotationDegrees((float) (-angle - 135D)));
+
+			float s = 0.6F;
+
+			Matrix4f m = ms.getLast().getMatrix();
+
+			depthBuffer.pos(m, -s, 0, s).color(r, g, b, waypoint.alpha).tex(0F, 1F).endVertex();
+			depthBuffer.pos(m, -s, 256, s).color(r, g, b, waypoint.alpha).tex(0F, 0F).endVertex();
+			depthBuffer.pos(m, s, 256, -s).color(r, g, b, waypoint.alpha).tex(1F, 0F).endVertex();
+			depthBuffer.pos(m, s, 0, -s).color(r, g, b, waypoint.alpha).tex(1F, 1F).endVertex();
+
+			ms.pop();
+		}
+
+		ms.pop();
+
+		mc.getRenderTypeBuffers().getBufferSource().finish(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 	}
 
 	@SubscribeEvent

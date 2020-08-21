@@ -200,7 +200,11 @@ public class MapRegion implements MapTask
 									int col0 = dataImgMap[ax + 1][az + 1];
 									Color4I col = Color4I.rgb(NativeImage.getRed(col0), NativeImage.getGreen(col0), NativeImage.getBlue(col0));
 
-									if (FTBChunksClientConfig.reducedColorPalette)
+									if (FTBChunksClientConfig.topographyMode)
+									{
+										col = ColorUtils.getTopographyPalette()[NativeImage.getAlpha(dataImgMap[ax + 1][az + 1])];
+									}
+									else if (FTBChunksClientConfig.reducedColorPalette)
 									{
 										col = ColorUtils.reduce(col);
 									}

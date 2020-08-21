@@ -9,6 +9,7 @@
 	"ftbchunks.claimed_chunks_on_map": "Show claimed chunks on map",
 	"ftbchunks.own_claimed_chunks_on_map": "Show your own claimed chunks on map",
 	"ftbchunks.in_world_waypoints": "Show waypoints in world",
+	"ftbchunks.topography_mode": "Topography mode",
 	"ftbchunks.minimap": "Minimap",
 	"ftbchunks.minimap_scale": "Minimap scale",
 	"ftbchunks.minimap_locked_north": "Minimap locked north",

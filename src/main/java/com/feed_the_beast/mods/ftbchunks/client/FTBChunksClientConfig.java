@@ -24,6 +24,7 @@ public class FTBChunksClientConfig
 	public static boolean claimedChunksOnMap;
 	public static boolean ownClaimedChunksOnMap;
 	public static boolean inWorldWaypoints;
+	public static boolean topographyMode;
 
 	public static MinimapPosition minimap;
 	public static double minimapScale;
@@ -73,6 +74,7 @@ public class FTBChunksClientConfig
 			claimedChunksOnMap = c.claimedChunksOnMap.get();
 			ownClaimedChunksOnMap = c.ownClaimedChunksOnMap.get();
 			inWorldWaypoints = c.inWorldWaypoints.get();
+			topographyMode = c.topographyMode.get();
 
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
@@ -108,6 +110,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue claimedChunksOnMap;
 		public final ForgeConfigSpec.BooleanValue ownClaimedChunksOnMap;
 		public final ForgeConfigSpec.BooleanValue inWorldWaypoints;
+		public final ForgeConfigSpec.BooleanValue topographyMode;
 
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
@@ -167,6 +170,11 @@ public class FTBChunksClientConfig
 					.comment("Show waypoints in world")
 					.translation("ftbchunks.in_world_waypoints")
 					.define("in_world_waypoints", true);
+
+			topographyMode = builder
+					.comment("Show waypoints in world")
+					.translation("ftbchunks.topography_mode")
+					.define("topography_mode", false);
 
 			minimap = builder
 					.comment("Enables minimap to show up in corner")
@@ -288,6 +296,11 @@ public class FTBChunksClientConfig
 			client.getLeft().inWorldWaypoints.set(v);
 			inWorldWaypoints = v;
 		}, true);
+
+		group.addBool("topography_mode", topographyMode, v -> {
+			client.getLeft().topographyMode.set(v);
+			topographyMode = v;
+		}, false);
 
 		group.addEnum("minimap", minimap, v -> {
 			client.getLeft().minimap.set(v);

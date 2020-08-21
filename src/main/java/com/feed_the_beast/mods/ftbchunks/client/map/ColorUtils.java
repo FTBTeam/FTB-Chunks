@@ -37,6 +37,7 @@ public class ColorUtils
 {
 	public static final Map<Block, Color4I> COLOR_MAP = new HashMap<>();
 	public static Color4I[] reducedColorPalette = null;
+	public static Color4I[] topographyPalette = null;
 	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
 
 	@ObjectHolder("biomesoplenty:bush")
@@ -116,6 +117,39 @@ public class ColorUtils
 
 			return colr;
 		});
+	}
+
+	public static Color4I[] getTopographyPalette()
+	{
+		if (topographyPalette == null)
+		{
+			topographyPalette = new Color4I[0];
+
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/topography_palette.png")).getInputStream())
+			{
+				NativeImage image = NativeImage.read(stream);
+				int w = image.getWidth();
+				int h = image.getHeight();
+
+				topographyPalette = new Color4I[w * h];
+
+				for (int x = 0; x < w; x++)
+				{
+					for (int y = 0; y < h; y++)
+					{
+						int col = image.getPixelRGBA(x, y);
+						topographyPalette[x + y * w] = Color4I.rgb((NativeImage.getRed(col) << 16) | (NativeImage.getGreen(col) << 8) | NativeImage.getBlue(col));
+					}
+				}
+
+				image.close();
+			}
+			catch (Exception ex)
+			{
+			}
+		}
+
+		return topographyPalette;
 	}
 
 	private static Color4I getColorRaw(BlockState state, IBlockDisplayReader world, BlockPos pos)

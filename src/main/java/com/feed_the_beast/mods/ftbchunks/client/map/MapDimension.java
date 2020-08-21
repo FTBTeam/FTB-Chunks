@@ -179,7 +179,7 @@ public class MapDimension implements MapTask
 		}
 
 		regions = null;
-		waypoints.clear();
+		waypoints = null;
 	}
 
 	public MapChunk getChunk(XZ pos)

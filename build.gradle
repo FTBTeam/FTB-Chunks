@@ -144,6 +144,25 @@ if (ENV.LOCAL_MAVEN) {
 	}
 }
 
+if (ENV.CURSEFORGE_KEY) {
+	curseforge {
+		apiKey = ENV.CURSEFORGE_KEY
+		project {
+			id = project.curseforge_id
+			releaseType = "release"
+			addGameVersion "1.16.2"
+			relations {
+				requiredDependency 'ftb-gui-library'
+				optionalDependency 'ftb-ranks'
+				optionalDependency 'ftb-teams'
+				optionalDependency 'kubejs'
+			}
+			changelog = getGitChangelog
+			changelogType = 'markdown'
+		}
+	}
+}
+
 mixin {
 	add sourceSets.main, "ftbchunks.refmap.json"
 }

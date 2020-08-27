@@ -338,12 +338,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.player == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
-		{
-			return;
-		}
-
-		if (MapManager.inst == null)
+		if (mc.player == null || mc.world == null || MapManager.inst == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
 		{
 			return;
 		}
@@ -753,7 +748,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.gameSettings.hideGUI || !FTBChunksClientConfig.inWorldWaypoints)
+		if (mc.gameSettings.hideGUI || !FTBChunksClientConfig.inWorldWaypoints || MapManager.inst == null || mc.world == null || mc.player == null)
 		{
 			return;
 		}
@@ -814,6 +809,9 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		IVertexBuilder depthBuffer = mc.getRenderTypeBuffers().getBufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 
+		float h = (float) (projectedView.y + 30D);
+		float h2 = h + 70F;
+
 		for (Waypoint waypoint : visibleWaypoints)
 		{
 			double angle = Math.atan2(projectedView.z - waypoint.z - 0.5D, projectedView.x - waypoint.x - 0.5D) * 180D / Math.PI;
@@ -831,9 +829,14 @@ public class FTBChunksClient extends FTBChunksCommon
 			Matrix4f m = ms.getLast().getMatrix();
 
 			depthBuffer.pos(m, -s, 0, s).color(r, g, b, waypoint.alpha).tex(0F, 1F).endVertex();
-			depthBuffer.pos(m, -s, 256, s).color(r, g, b, waypoint.alpha).tex(0F, 0F).endVertex();
-			depthBuffer.pos(m, s, 256, -s).color(r, g, b, waypoint.alpha).tex(1F, 0F).endVertex();
+			depthBuffer.pos(m, -s, h, s).color(r, g, b, waypoint.alpha).tex(0F, 0F).endVertex();
+			depthBuffer.pos(m, s, h, -s).color(r, g, b, waypoint.alpha).tex(1F, 0F).endVertex();
 			depthBuffer.pos(m, s, 0, -s).color(r, g, b, waypoint.alpha).tex(1F, 1F).endVertex();
+
+			depthBuffer.pos(m, -s, h, s).color(r, g, b, waypoint.alpha).tex(0F, 1F).endVertex();
+			depthBuffer.pos(m, -s, h2, s).color(r, g, b, 0).tex(0F, 0F).endVertex();
+			depthBuffer.pos(m, s, h2, -s).color(r, g, b, 0).tex(1F, 0F).endVertex();
+			depthBuffer.pos(m, s, h, -s).color(r, g, b, waypoint.alpha).tex(1F, 1F).endVertex();
 
 			ms.pop();
 		}

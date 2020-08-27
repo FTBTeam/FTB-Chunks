@@ -23,6 +23,7 @@ public class FTBChunksRenderTypes extends RenderState
 			.alpha(DEFAULT_ALPHA)
 			.writeMask(COLOR_WRITE)
 			.cull(CULL_ENABLED)
+			.shadeModel(RenderState.SHADE_ENABLED)
 			.build(false));
 
 	private FTBChunksRenderTypes(String s, Runnable r0, Runnable r1)

@@ -127,7 +127,7 @@ public class FTBChunks
 	@SubscribeEvent
 	public void serverStarting(FMLServerStartingEvent event)
 	{
-		FTBChunksAPIImpl.manager.init(event.getServer().getWorld(World.field_234918_g_));
+		FTBChunksAPIImpl.manager.init();
 	}
 
 	@SubscribeEvent
@@ -158,7 +158,7 @@ public class FTBChunks
 		}
 
 		FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), new LoginDataPacket(FTBChunksAPIImpl.manager.serverId));
-		SendGeneralDataPacket.send(player);
+		SendGeneralDataPacket.send(data, player);
 		SendVisiblePlayerListPacket.sendAll();
 
 		Date now = new Date();

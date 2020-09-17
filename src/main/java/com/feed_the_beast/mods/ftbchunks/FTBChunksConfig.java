@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks;
 
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.Util;
@@ -98,23 +99,23 @@ public class FTBChunksConfig
 		}
 	}
 
-	public static int getMaxClaimedChunks(ServerPlayerEntity player)
+	public static int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
 	{
 		if (FTBChunks.ranksMod)
 		{
-			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks);
+			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks) + playerData.getExtraClaimChunks();
 		}
 
-		return maxClaimedChunks;
+		return maxClaimedChunks + playerData.getExtraClaimChunks();
 	}
 
-	public static int getMaxForceLoadedChunks(ServerPlayerEntity player)
+	public static int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
 	{
 		if (FTBChunks.ranksMod)
 		{
-			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks);
+			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks) + playerData.getExtraForceLoadChunks();
 		}
 
-		return maxForceLoadedChunks;
+		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
 	}
 }

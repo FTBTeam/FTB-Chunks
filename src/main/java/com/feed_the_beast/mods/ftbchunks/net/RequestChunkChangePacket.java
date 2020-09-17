@@ -104,7 +104,7 @@ public class RequestChunkChangePacket
 				//FIXME: FTBChunksAPIImpl.manager.map.queueSend(player.world, pos, p -> p == player);
 			}
 
-			SendGeneralDataPacket.send(player);
+			SendGeneralDataPacket.send(data, player);
 		});
 
 		context.get().setPacketHandled(true);

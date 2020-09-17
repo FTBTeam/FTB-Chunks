@@ -59,10 +59,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public PrivacyMode blockInteractMode;
 	public PrivacyMode minimapMode;
 	public PrivacyMode locationMode;
+	public int extraClaimChunks;
+	public int extraForceLoadChunks;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
-	public HashSet<PlayerLocation> cachedVisiblePlayers;
 
 	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, Path f, UUID id)
 	{
@@ -77,6 +78,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		blockInteractMode = PrivacyMode.ALLIES;
 		minimapMode = PrivacyMode.ALLIES;
 		locationMode = PrivacyMode.ALLIES;
+		extraClaimChunks = 0;
+		extraForceLoadChunks = 0;
 	}
 
 	@Override
@@ -201,7 +204,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.DIMENSION_FORBIDDEN;
 		}
-		else if (source.getEntity() instanceof ServerPlayerEntity && getClaimedChunks().size() >= FTBChunksConfig.getMaxClaimedChunks((ServerPlayerEntity) source.getEntity()))
+		else if (source.getEntity() instanceof ServerPlayerEntity && getClaimedChunks().size() >= FTBChunksConfig.getMaxClaimedChunks(this, (ServerPlayerEntity) source.getEntity()))
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -278,7 +281,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.ALREADY_LOADED;
 		}
-		else if (source.getEntity() instanceof ServerPlayerEntity && getForceLoadedChunks().size() >= FTBChunksConfig.getMaxForceLoadedChunks((ServerPlayerEntity) source.getEntity()))
+		else if (source.getEntity() instanceof ServerPlayerEntity && getForceLoadedChunks().size() >= FTBChunksConfig.getMaxForceLoadedChunks(this, (ServerPlayerEntity) source.getEntity()))
 		{
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
@@ -421,6 +424,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		json.addProperty("block_interact_mode", blockInteractMode.name);
 		json.addProperty("minimap_mode", minimapMode.name);
 		json.addProperty("location_mode", locationMode.name);
+		json.addProperty("extra_claim_chunks", extraClaimChunks);
+		json.addProperty("extra_force_load_chunks", extraForceLoadChunks);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -507,6 +512,16 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			locationMode = PrivacyMode.get(json.get("location_mode").getAsString());
 		}
 
+		if (json.has("extra_claim_chunks"))
+		{
+			extraClaimChunks = json.get("extra_claim_chunks").getAsInt();
+		}
+
+		if (json.has("extra_force_load_chunks"))
+		{
+			extraForceLoadChunks = json.get("extra_force_load_chunks").getAsInt();
+		}
+
 		if (json.has("chunks"))
 		{
 			for (Map.Entry<String, JsonElement> entry : json.get("chunks").getAsJsonObject().entrySet())
@@ -560,6 +575,18 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			}
 		}
 
-		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.func_240743_a_(getColor())));
+		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.fromInt(getColor() & 0xFFFFFF)));
+	}
+
+	@Override
+	public int getExtraClaimChunks()
+	{
+		return extraClaimChunks;
+	}
+
+	@Override
+	public int getExtraForceLoadChunks()
+	{
+		return extraForceLoadChunks;
 	}
 }

@@ -20,18 +20,18 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 {
 	public static String getID(@Nullable RegistryKey<World> type)
 	{
-		return type == null ? "" : type.func_240901_a_().toString();
+		return type == null ? "" : type.getLocation().toString();
 	}
 
 	public static String getID(@Nullable World world)
 	{
-		return world == null ? "" : getID(world.func_234923_W_());
+		return world == null ? "" : getID(world.getDimensionKey());
 	}
 
 	@Nullable
 	public static ServerWorld getWorld(MinecraftServer server, String id)
 	{
-		return server.getWorld(RegistryKey.func_240902_a_(Registry.WORLD_KEY).apply(new ResourceLocation(id)));
+		return server.getWorld(RegistryKey.getKeyCreator(Registry.WORLD_KEY).apply(new ResourceLocation(id)));
 	}
 
 	public final String dimension;

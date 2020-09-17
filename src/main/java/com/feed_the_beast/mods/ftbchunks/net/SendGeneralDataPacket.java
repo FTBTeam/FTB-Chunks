@@ -3,7 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.net;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
-import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -16,14 +16,14 @@ import java.util.function.Supplier;
  */
 public class SendGeneralDataPacket
 {
-	public static void send(ServerPlayerEntity player)
+	public static void send(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
 	{
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
-		data.maxClaimed = FTBChunksConfig.getMaxClaimedChunks(player);
-		data.maxLoaded = FTBChunksConfig.getMaxForceLoadedChunks(player);
+		data.maxClaimed = FTBChunksConfig.getMaxClaimedChunks(playerData, player);
+		data.maxLoaded = FTBChunksConfig.getMaxForceLoadedChunks(playerData, player);
 
-		for (ClaimedChunk chunk : FTBChunksAPI.INSTANCE.getManager().getData(player).getClaimedChunks())
+		for (ClaimedChunk chunk : playerData.getClaimedChunks())
 		{
 			data.claimed++;
 

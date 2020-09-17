@@ -12,7 +12,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.w3c.dom.Document;
@@ -66,7 +65,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		inited = false;
 	}
 
-	public void init(ServerWorld world)
+	public void init()
 	{
 		if (inited)
 		{
@@ -76,7 +75,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		inited = true;
 
 		long nanos = System.nanoTime();
-		dataDirectory = world.getServer().func_240776_a_(DATA_DIR);
+		dataDirectory = server.func_240776_a_(DATA_DIR);
 		localDirectory = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks");
 
 		try

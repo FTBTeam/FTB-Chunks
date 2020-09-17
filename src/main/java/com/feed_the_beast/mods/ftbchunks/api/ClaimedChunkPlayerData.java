@@ -62,6 +62,10 @@ public interface ClaimedChunkPlayerData
 
 	default IFormattableTextComponent getDisplayName()
 	{
-		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.func_240743_a_(getColor() & 0xFFFFFF)));
+		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.fromInt(getColor() & 0xFFFFFF)));
 	}
+
+	int getExtraClaimChunks();
+
+	int getExtraForceLoadChunks();
 }

@@ -7,6 +7,7 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import com.feed_the_beast.mods.ftbchunks.net.SendGeneralDataPacket;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -16,11 +17,12 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.DimensionArgument;
+import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -87,6 +89,57 @@ public class FTBChunksCommands
 										.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getWorld(), new BlockPos(IntegerArgumentType.getInteger(context, "x"), 0, IntegerArgumentType.getInteger(context, "z")))))
 										.then(Commands.argument("dimension", DimensionArgument.getDimension())
 												.executes(context -> info(context.getSource(), new ChunkDimPos(ChunkDimPos.getID(DimensionArgument.getDimensionArgument(context, "dimension")), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
+										)
+								)
+						)
+				)
+				.then(Commands.literal("admin")
+						.requires(source -> source.hasPermissionLevel(2))
+						.then(Commands.literal("extra_claim_chunks")
+								.requires(source -> source.hasPermissionLevel(2))
+								.then(Commands.argument("player", EntityArgument.player())
+										.requires(source -> source.hasPermissionLevel(2))
+										.then(Commands.literal("get")
+												.requires(source -> source.hasPermissionLevel(2))
+												.executes(context -> getExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player")))
+										)
+										.then(Commands.literal("set")
+												.requires(source -> source.hasPermissionLevel(2))
+												.then(Commands.argument("number", IntegerArgumentType.integer(0))
+														.requires(source -> source.hasPermissionLevel(2))
+														.executes(context -> setExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number")))
+												)
+										)
+										.then(Commands.literal("add")
+												.requires(source -> source.hasPermissionLevel(2))
+												.then(Commands.argument("number", IntegerArgumentType.integer())
+														.requires(source -> source.hasPermissionLevel(2))
+														.executes(context -> addExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number")))
+												)
+										)
+								)
+						)
+						.then(Commands.literal("extra_force_load_chunks")
+								.requires(source -> source.hasPermissionLevel(2))
+								.then(Commands.argument("player", EntityArgument.player())
+										.requires(source -> source.hasPermissionLevel(2))
+										.then(Commands.literal("get")
+												.requires(source -> source.hasPermissionLevel(2))
+												.executes(context -> getExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "player")))
+										)
+										.then(Commands.literal("set")
+												.requires(source -> source.hasPermissionLevel(2))
+												.then(Commands.argument("number", IntegerArgumentType.integer(0))
+														.requires(source -> source.hasPermissionLevel(2))
+														.executes(context -> setExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "players"), IntegerArgumentType.getInteger(context, "number")))
+												)
+										)
+										.then(Commands.literal("add")
+												.requires(source -> source.hasPermissionLevel(2))
+												.then(Commands.argument("number", IntegerArgumentType.integer())
+														.requires(source -> source.hasPermissionLevel(2))
+														.executes(context -> addExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "players"), IntegerArgumentType.getInteger(context, "number")))
+												)
 										)
 								)
 						)
@@ -264,9 +317,57 @@ public class FTBChunksCommands
 		return 1;
 	}
 
-	private static int importWorldMap(ServerWorld world)
+	private static int getExtraClaimChunks(CommandSource source, ServerPlayerEntity player)
 	{
-		FTBChunks.instance.proxy.importWorldMap(world);
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		source.sendFeedback(new StringTextComponent("").append(player.getDisplayName()).appendString(" == " + data.extraClaimChunks), false);
+		return 1;
+	}
+
+	private static int setExtraClaimChunks(CommandSource source, ServerPlayerEntity player, int i)
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		data.extraClaimChunks = Math.max(0, i);
+		data.save();
+		SendGeneralDataPacket.send(data, player);
+		source.sendFeedback(new StringTextComponent("").append(player.getDisplayName()).appendString(" == " + data.extraClaimChunks), false);
+		return 1;
+	}
+
+	private static int addExtraClaimChunks(CommandSource source, ServerPlayerEntity player, int i)
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		data.extraClaimChunks = Math.max(0, data.extraClaimChunks + i);
+		data.save();
+		SendGeneralDataPacket.send(data, player);
+		source.sendFeedback(new StringTextComponent("").append(player.getDisplayName()).appendString(" == " + data.extraClaimChunks), false);
+		return 1;
+	}
+
+	private static int getExtraForceLoadChunks(CommandSource source, ServerPlayerEntity player)
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		source.sendFeedback(new StringTextComponent("").append(player.getDisplayName()).appendString(" == " + data.extraForceLoadChunks), false);
+		return 1;
+	}
+
+	private static int setExtraForceLoadChunks(CommandSource source, ServerPlayerEntity player, int i)
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		data.extraForceLoadChunks = Math.max(0, i);
+		data.save();
+		SendGeneralDataPacket.send(data, player);
+		source.sendFeedback(new StringTextComponent("").append(player.getDisplayName()).appendString(" == " + data.extraForceLoadChunks), false);
+		return 1;
+	}
+
+	private static int addExtraForceLoadChunks(CommandSource source, ServerPlayerEntity player, int i)
+	{
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		data.extraForceLoadChunks = Math.max(0, data.extraForceLoadChunks + i);
+		data.save();
+		SendGeneralDataPacket.send(data, player);
+		source.sendFeedback(new StringTextComponent("").append(player.getDisplayName()).appendString(" == " + data.extraForceLoadChunks), false);
 		return 1;
 	}
 }

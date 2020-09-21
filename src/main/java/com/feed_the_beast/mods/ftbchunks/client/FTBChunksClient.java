@@ -140,6 +140,11 @@ public class FTBChunksClient extends FTBChunksCommon
 
 	public static void saveAllRegions()
 	{
+		if (MapManager.inst == null)
+		{
+			return;
+		}
+
 		for (MapDimension dimension : MapManager.inst.getDimensions().values())
 		{
 			for (MapRegion region : dimension.getLoadedRegions())

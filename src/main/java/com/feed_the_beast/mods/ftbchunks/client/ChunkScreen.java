@@ -81,7 +81,7 @@ public class ChunkScreen extends GuiBase
 		{
 			if (isMouseOver() || selectedChunks.contains(chunkPos))
 			{
-				Color4I.WHITE.withAlpha(100).draw(x, y, w, h);
+				Color4I.WHITE.withAlpha(100).draw(matrixStack, x, y, w, h);
 
 				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))
 				{
@@ -228,7 +228,7 @@ public class ChunkScreen extends GuiBase
 		RenderSystem.bindTexture(FTBChunksClient.minimapTextureId);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-		GuiHelper.drawTexturedRect(sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
+		GuiHelper.drawTexturedRect(matrixStack, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputMappings.isKeyDown(Minecraft.getInstance().getMainWindow().getHandle(), GLFW.GLFW_KEY_TAB))
 		{

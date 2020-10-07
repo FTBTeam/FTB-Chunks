@@ -29,7 +29,7 @@ public class RegionMapButton extends Widget
 		if (region.mapImageLoaded)
 		{
 			RenderSystem.bindTexture(id);
-			GuiHelper.drawTexturedRect(x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
+			GuiHelper.drawTexturedRect(matrixStack, x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
 		}
 	}
 }

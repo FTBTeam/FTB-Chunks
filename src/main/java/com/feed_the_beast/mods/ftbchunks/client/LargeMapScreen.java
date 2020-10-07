@@ -250,7 +250,7 @@ public class LargeMapScreen extends GuiBase
 			movedToPlayer = true;
 		}
 
-		backgroundColor.draw(0, 0, width, height);
+		backgroundColor.draw(matrixStack, 0, 0, width, height);
 		return false;
 	}
 
@@ -322,7 +322,7 @@ public class LargeMapScreen extends GuiBase
 		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == 0 ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
 		int coordsw = theme.getStringWidth(coords) / 2;
 
-		backgroundColor.withAlpha(150).draw(x + (w - coordsw) / 2, y + h - 6, coordsw + 4, h);
+		backgroundColor.withAlpha(150).draw(matrixStack, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, h);
 		matrixStack.push();
 		matrixStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
 		matrixStack.scale(0.5F, 0.5F, 1F);

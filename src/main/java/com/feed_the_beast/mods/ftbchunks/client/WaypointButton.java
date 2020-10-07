@@ -49,7 +49,7 @@ public class WaypointButton extends Widget
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		icon.draw(x, y, w, h);
+		icon.draw(matrixStack, x, y, w, h);
 	}
 
 	public boolean mousePressed(MouseButton button)

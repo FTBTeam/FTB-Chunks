@@ -20,9 +20,11 @@ import net.minecraft.command.arguments.DimensionArgument;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -46,25 +48,25 @@ public class FTBChunksCommands
 		LiteralCommandNode<CommandSource> command = event.getDispatcher().register(Commands.literal("ftbchunks")
 				.then(Commands.literal("claim")
 						.executes(context -> claim(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
+						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
 								.executes(context -> claim(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
 				.then(Commands.literal("unclaim")
 						.executes(context -> unclaim(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
+						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
 								.executes(context -> unclaim(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
 				.then(Commands.literal("load")
 						.executes(context -> load(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
+						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
 								.executes(context -> load(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
 				.then(Commands.literal("unload")
 						.executes(context -> unload(context.getSource(), 0))
-						.then(Commands.argument("radius", IntegerArgumentType.integer(0, 30))
+						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
 								.executes(context -> unload(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
 						)
 				)
@@ -88,7 +90,7 @@ public class FTBChunksCommands
 								.then(Commands.argument("z", IntegerArgumentType.integer())
 										.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getWorld(), new BlockPos(IntegerArgumentType.getInteger(context, "x"), 0, IntegerArgumentType.getInteger(context, "z")))))
 										.then(Commands.argument("dimension", DimensionArgument.getDimension())
-												.executes(context -> info(context.getSource(), new ChunkDimPos(ChunkDimPos.getID(DimensionArgument.getDimensionArgument(context, "dimension")), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
+												.executes(context -> info(context.getSource(), new ChunkDimPos(DimensionArgument.getDimensionArgument(context, "dimension").getDimensionKey(), IntegerArgumentType.getInteger(context, "x") >> 4, IntegerArgumentType.getInteger(context, "z") >> 4)))
 										)
 								)
 						)
@@ -145,13 +147,6 @@ public class FTBChunksCommands
 						)
 				)
 		);
-		
-		/*
-		.then(Commands.literal("import_world_map")
-						.requires(source -> source.getServer().isSinglePlayer())
-						.executes(context -> importWorldMap(context.getSource().getWorld()))
-				)
-		 */
 
 		event.getDispatcher().register(Commands.literal("chunks").redirect(command));
 	}
@@ -164,10 +159,12 @@ public class FTBChunksCommands
 	private static void forEachChunk(CommandSource source, int r, ChunkCallback callback) throws CommandSyntaxException
 	{
 		ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(source.asPlayer());
-		String dimId = ChunkDimPos.getID(source.getWorld());
+		RegistryKey<World> dimId = source.getWorld().getDimensionKey();
 		int ox = MathHelper.floor(source.getPos().x) >> 4;
 		int oz = MathHelper.floor(source.getPos().z) >> 4;
 		List<ChunkDimPos> list = new ArrayList<>();
+
+		r = Math.max(1, r >> 4);
 
 		for (int z = -r; z <= r; z++)
 		{

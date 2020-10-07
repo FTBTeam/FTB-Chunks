@@ -1,9 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.block.BlockState;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -35,12 +35,7 @@ public class ReloadChunkTask implements MapTask
 			return;
 		}
 
-		String dimId = ChunkDimPos.getID(world);
-
-		if (dimId.isEmpty())
-		{
-			return;
-		}
+		RegistryKey<World> dimId = world.getDimensionKey();
 
 		IChunk ichunk = world.getChunk(pos.x, pos.z, ChunkStatus.FULL, false);
 

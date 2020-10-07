@@ -3,7 +3,10 @@ package com.feed_the_beast.mods.ftbchunks.net;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkImpl;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nullable;
@@ -85,7 +88,7 @@ public class SendChunkPacket
 		}
 	}
 
-	public String dimension;
+	public RegistryKey<World> dimension;
 	public UUID owner;
 	public SingleChunk chunk;
 
@@ -95,7 +98,7 @@ public class SendChunkPacket
 
 	SendChunkPacket(PacketBuffer buf)
 	{
-		dimension = buf.readString(Short.MAX_VALUE);
+		dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
 		owner = new UUID(buf.readLong(), buf.readLong());
 		chunk = new SingleChunk(buf);
 		chunk.ownerId = owner;
@@ -103,7 +106,7 @@ public class SendChunkPacket
 
 	void write(PacketBuffer buf)
 	{
-		buf.writeString(dimension, 100);
+		buf.writeResourceLocation(dimension.getLocation());
 		buf.writeLong(owner.getMostSignificantBits());
 		buf.writeLong(owner.getLeastSignificantBits());
 		chunk.write(buf);

@@ -3,7 +3,6 @@ package com.feed_the_beast.mods.ftbchunks.client;
 import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapManager;
@@ -315,7 +314,7 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		MapDimension dim = MapDimension.getCurrent();
 
-		if (!dim.dimension.equals(ChunkDimPos.getID(mc.world)))
+		if (dim.dimension != mc.world.getDimensionKey())
 		{
 			MapDimension.updateCurrent();
 			dim = MapDimension.getCurrent();

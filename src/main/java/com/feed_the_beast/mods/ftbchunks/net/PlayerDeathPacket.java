@@ -2,6 +2,9 @@ package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -11,10 +14,10 @@ import java.util.function.Supplier;
  */
 public class PlayerDeathPacket
 {
-	public final String dimension;
+	public final RegistryKey<World> dimension;
 	public final int x, z, number;
 
-	public PlayerDeathPacket(String dim, int _x, int _z, int num)
+	public PlayerDeathPacket(RegistryKey<World> dim, int _x, int _z, int num)
 	{
 		dimension = dim;
 		x = _x;
@@ -24,7 +27,7 @@ public class PlayerDeathPacket
 
 	PlayerDeathPacket(PacketBuffer buf)
 	{
-		dimension = buf.readString(Short.MAX_VALUE);
+		dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		number = buf.readVarInt();
@@ -32,7 +35,7 @@ public class PlayerDeathPacket
 
 	void write(PacketBuffer buf)
 	{
-		buf.writeString(dimension, Short.MAX_VALUE);
+		buf.writeResourceLocation(dimension.getLocation());
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
 		buf.writeVarInt(number);

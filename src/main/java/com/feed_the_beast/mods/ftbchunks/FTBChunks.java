@@ -28,6 +28,7 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BucketItem;
 import net.minecraft.stats.Stats;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
@@ -162,14 +163,14 @@ public class FTBChunks
 		SendVisiblePlayerListPacket.sendAll();
 
 		Date now = new Date();
-		Map<Pair<String, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+		Map<Pair<RegistryKey<World>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 
 		for (ClaimedChunkImpl chunk : FTBChunksAPIImpl.manager.claimedChunks.values())
 		{
 			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.playerData.getUuid()), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
 		}
 
-		for (Map.Entry<Pair<String, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet())
+		for (Map.Entry<Pair<RegistryKey<World>, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet())
 		{
 			SendAllChunksPacket packet = new SendAllChunksPacket();
 			packet.dimension = entry.getKey().getLeft();
@@ -445,7 +446,7 @@ public class FTBChunks
 		if (event.getEntity() instanceof ServerPlayerEntity)
 		{
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
-			String dim = ChunkDimPos.getID(player.world);
+			RegistryKey<World> dim = player.world.getDimensionKey();
 			int x = MathHelper.floor(player.getPosX());
 			int z = MathHelper.floor(player.getPosZ());
 			int num = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS)) + 1;

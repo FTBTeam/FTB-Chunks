@@ -1,11 +1,13 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -20,9 +22,9 @@ import java.util.function.Supplier;
 public class SendVisiblePlayerListPacket
 {
 	public final List<PlayerLocation> players;
-	public final String dim;
+	public final RegistryKey<World> dim;
 
-	public SendVisiblePlayerListPacket(List<PlayerLocation> p, String d)
+	public SendVisiblePlayerListPacket(List<PlayerLocation> p, RegistryKey<World> d)
 	{
 		players = p;
 		dim = d;
@@ -45,7 +47,7 @@ public class SendVisiblePlayerListPacket
 			players.add(p);
 		}
 
-		dim = buf.readString(Short.MAX_VALUE);
+		dim = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
 	}
 
 	public static void sendAll()
@@ -63,7 +65,7 @@ public class SendVisiblePlayerListPacket
 
 		for (VisiblePlayerListItem self : playerList)
 		{
-			String dim = ChunkDimPos.getID(self.player.world);
+			RegistryKey<World> dim = self.player.world.getDimensionKey();
 			List<PlayerLocation> players = new ArrayList<>();
 
 			for (VisiblePlayerListItem other : playerList)
@@ -91,7 +93,7 @@ public class SendVisiblePlayerListPacket
 			buf.writeVarInt(p.z);
 		}
 
-		buf.writeString(dim, Short.MAX_VALUE);
+		buf.writeResourceLocation(dim.getLocation());
 	}
 
 	void handle(Supplier<NetworkEvent.Context> context)

@@ -1,6 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
@@ -13,8 +12,10 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
 
 /**
  * @author LatvianModder
@@ -101,11 +102,11 @@ public class RegionMapPanel extends Panel
 			}
 		}
 
-		String dimId = ChunkDimPos.getID(Minecraft.getInstance().world);
+		RegistryKey<World> dimId = Minecraft.getInstance().world.getDimensionKey();
 
 		for (AbstractClientPlayerEntity player : Minecraft.getInstance().world.getPlayers())
 		{
-			if (largeMap.dimension.dimension.equals(dimId))
+			if (largeMap.dimension.dimension == dimId)
 			{
 				add(new PlayerButton(this, player));
 			}

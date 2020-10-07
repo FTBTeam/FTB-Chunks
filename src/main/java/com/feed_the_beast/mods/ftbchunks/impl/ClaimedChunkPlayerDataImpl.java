@@ -23,7 +23,10 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -431,7 +434,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		for (ClaimedChunk chunk : getClaimedChunks())
 		{
-			String dim = chunk.getPos().dimension;
+			String dim = chunk.getPos().dimension.getLocation().toString();
 			JsonElement e = chunksJson.get(dim);
 
 			if (e == null || e.isJsonNull())
@@ -532,7 +535,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					int x = o.get("x").getAsInt();
 					int z = o.get("z").getAsInt();
 
-					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(entry.getKey(), x, z));
+					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(entry.getKey())), x, z));
 
 					if (o.has("time"))
 					{

@@ -130,7 +130,7 @@ public class LargeMapScreen extends GuiBase
 			dimension.sync();
 		}));
 
-		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.substring(dimension.dimension.indexOf(':') + 1).replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
+		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.getLocation().getPath().replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
 			try
 			{
 				List<MapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
@@ -217,12 +217,8 @@ public class LargeMapScreen extends GuiBase
 	{
 		if (key.is(GLFW.GLFW_KEY_T))
 		{
-			if (dimension == MapDimension.getCurrent())
-			{
-				FTBChunksNet.MAIN.sendToServer(new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ));
-				closeGui(false);
-			}
-
+			FTBChunksNet.MAIN.sendToServer(new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ, dimension.dimension));
+			closeGui(false);
 			return true;
 		}
 		else if (key.is(FTBChunksClient.openMapKey.getKey().getKeyCode()))

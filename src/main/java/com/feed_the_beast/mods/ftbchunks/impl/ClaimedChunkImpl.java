@@ -104,7 +104,7 @@ public class ClaimedChunkImpl implements ClaimedChunk
 
 	public void postSetForceLoaded(boolean load)
 	{
-		ServerWorld world = ChunkDimPos.getWorld(getPlayerData().getManager().getMinecraftServer(), getPos().dimension);
+		ServerWorld world = getPlayerData().getManager().getMinecraftServer().getWorld(getPos().dimension);
 
 		if (world != null)
 		{

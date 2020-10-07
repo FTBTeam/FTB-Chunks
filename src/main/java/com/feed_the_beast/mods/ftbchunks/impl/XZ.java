@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
@@ -83,14 +84,14 @@ public class XZ
 		return "[" + x + ", " + z + "]";
 	}
 
-	public ChunkDimPos dim(String type)
+	public ChunkDimPos dim(RegistryKey<World> type)
 	{
 		return new ChunkDimPos(type, x, z);
 	}
 
 	public ChunkDimPos dim(World world)
 	{
-		return dim(ChunkDimPos.getID(world));
+		return dim(world.getDimensionKey());
 	}
 
 	public XZ offset(int ox, int oz)

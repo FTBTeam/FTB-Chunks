@@ -1,14 +1,19 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -19,7 +24,7 @@ public class MapManager implements MapTask
 
 	public final UUID serverId;
 	public final Path directory;
-	private Map<String, MapDimension> dimensions;
+	private Map<RegistryKey<World>, MapDimension> dimensions;
 	public boolean saveData;
 
 	public MapManager(UUID id, Path dir)
@@ -35,11 +40,11 @@ public class MapManager implements MapTask
 		return dimensions == null ? Collections.emptyList() : dimensions.values();
 	}
 
-	public Map<String, MapDimension> getDimensions()
+	public Map<RegistryKey<World>, MapDimension> getDimensions()
 	{
 		if (dimensions == null)
 		{
-			dimensions = new HashMap<>();
+			dimensions = new LinkedHashMap<>();
 
 			try
 			{
@@ -53,7 +58,8 @@ public class MapManager implements MapTask
 
 						if (s.length() >= 3)
 						{
-							dimensions.put(s, new MapDimension(this, s));
+							RegistryKey<World> key = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(s));
+							dimensions.put(key, new MapDimension(this, key));
 						}
 					}
 				}
@@ -71,7 +77,7 @@ public class MapManager implements MapTask
 		return dimensions;
 	}
 
-	public MapDimension getDimension(String dim)
+	public MapDimension getDimension(RegistryKey<World> dim)
 	{
 		return getDimensions().computeIfAbsent(dim, d -> new MapDimension(this, d).created());
 	}
@@ -104,7 +110,12 @@ public class MapManager implements MapTask
 	{
 		try
 		{
-			Files.write(directory.resolve("dimensions.txt"), dimensions.keySet());
+			Files.write(directory.resolve("dimensions.txt"), dimensions
+					.keySet()
+					.stream()
+					.map(key -> key.getLocation().toString())
+					.collect(Collectors.toList())
+			);
 		}
 		catch (Exception ex)
 		{

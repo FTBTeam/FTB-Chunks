@@ -31,7 +31,7 @@ sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = co
 
 minecraft {
 	mappings channel: 'snapshot', version: project.mapping_version
-	accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+	// accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 	runs {
 		client {
 			workingDirectory project.file('run')
@@ -110,7 +110,7 @@ dependencies {
 	//	transitive = false
 	//	changing = true
 	//}))
-	runtimeOnly fg.deobf(curse.resolve('biomes-o-plenty', project.bop_file))
+	//runtimeOnly fg.deobf(curse.resolve('biomes-o-plenty', project.bop_file))
 }
 
 jar {
@@ -151,6 +151,7 @@ if (ENV.CURSEFORGE_KEY) {
 			id = project.curseforge_id
 			releaseType = "release"
 			addGameVersion "1.16.2"
+			addGameVersion "1.16.3"
 			relations {
 				requiredDependency 'ftb-gui-library'
 				optionalDependency 'ftb-ranks'

@@ -1,7 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -12,7 +14,7 @@ import java.util.UUID;
  */
 public final class PlayerLocation
 {
-	public static String currentDimension = "";
+	public static RegistryKey<World> currentDimension = null;
 	public static final ArrayList<PlayerLocation> CLIENT_LIST = new ArrayList<>();
 
 	public String name;

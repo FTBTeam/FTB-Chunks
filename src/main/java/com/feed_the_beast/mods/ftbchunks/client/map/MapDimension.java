@@ -1,13 +1,14 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
-import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.World;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -32,7 +33,7 @@ public class MapDimension implements MapTask
 	{
 		if (current == null)
 		{
-			current = MapManager.inst.getDimension(ChunkDimPos.getID(Minecraft.getInstance().world));
+			current = MapManager.inst.getDimension(Minecraft.getInstance().world.getDimensionKey());
 		}
 
 		return current;
@@ -44,17 +45,17 @@ public class MapDimension implements MapTask
 	}
 
 	public final MapManager manager;
-	public final String dimension;
+	public final RegistryKey<World> dimension;
 	public final Path directory;
 	private Map<XZ, MapRegion> regions;
 	private List<Waypoint> waypoints;
 	public boolean saveData;
 
-	public MapDimension(MapManager m, String id)
+	public MapDimension(MapManager m, RegistryKey<World> id)
 	{
 		manager = m;
 		dimension = id;
-		directory = manager.directory.resolve(dimension.replace(':', '_'));
+		directory = manager.directory.resolve(dimension.getLocation().toString().replace(':', '_'));
 		saveData = false;
 	}
 

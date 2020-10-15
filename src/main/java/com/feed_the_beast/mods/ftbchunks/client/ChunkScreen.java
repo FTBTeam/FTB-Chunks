@@ -133,7 +133,11 @@ public class ChunkScreen extends GuiBase
 	public ChunkScreen()
 	{
 		FTBChunksClient.alwaysRenderChunksOnMap = true;
-		MapManager.inst.updateAllRegions(false);
+
+		if (MapManager.inst != null)
+		{
+			MapManager.inst.updateAllRegions(false);
+		}
 	}
 
 	@Override
@@ -146,7 +150,12 @@ public class ChunkScreen extends GuiBase
 	public void onClosed()
 	{
 		FTBChunksClient.alwaysRenderChunksOnMap = false;
-		MapManager.inst.updateAllRegions(false);
+
+		if (MapManager.inst != null)
+		{
+			MapManager.inst.updateAllRegions(false);
+		}
+
 		super.onClosed();
 	}
 

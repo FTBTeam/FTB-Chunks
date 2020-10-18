@@ -3,7 +3,11 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -26,7 +30,7 @@ public class FTBChunksConfig
 	public static int maxForceLoadedChunks;
 	public static boolean disableProtection;
 	public static AllyMode allyMode;
-	public static Set<String> claimDimensionBlacklist;
+	public static Set<RegistryKey<World>> claimDimensionBlacklist;
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
@@ -53,7 +57,12 @@ public class FTBChunksConfig
 			maxForceLoadedChunks = c.maxForceLoadedChunks.get();
 			disableProtection = c.disableProtection.get();
 			allyMode = c.allyMode.get();
-			claimDimensionBlacklist = new HashSet<>(c.claimDimensionBlacklist.get());
+			claimDimensionBlacklist = new HashSet<>();
+
+			for (String s : c.claimDimensionBlacklist.get())
+			{
+				claimDimensionBlacklist.add(RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(s)));
+			}
 		}
 	}
 

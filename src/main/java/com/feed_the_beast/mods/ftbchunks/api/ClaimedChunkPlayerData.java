@@ -2,7 +2,6 @@ package com.feed_the_beast.mods.ftbchunks.api;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.command.CommandSource;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -56,9 +55,11 @@ public interface ClaimedChunkPlayerData
 
 	void save();
 
-	boolean isExplicitAlly(ServerPlayerEntity player);
+	boolean isExplicitAlly(ClaimedChunkPlayerData player);
 
-	boolean isAlly(ServerPlayerEntity player);
+	boolean isInAllyList(UUID id);
+
+	boolean isAlly(ClaimedChunkPlayerData player);
 
 	default IFormattableTextComponent getDisplayName()
 	{

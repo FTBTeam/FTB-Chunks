@@ -96,10 +96,7 @@ public class RegionMapPanel extends Panel
 
 		for (Waypoint waypoint : largeMap.dimension.getWaypoints())
 		{
-			if (!waypoint.hidden)
-			{
-				add(new WaypointButton(this, waypoint));
-			}
+			add(new WaypointButton(this, waypoint));
 		}
 
 		RegistryKey<World> dimId = Minecraft.getInstance().world.getDimensionKey();

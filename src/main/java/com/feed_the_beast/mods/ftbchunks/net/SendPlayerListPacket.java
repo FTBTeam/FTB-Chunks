@@ -26,10 +26,11 @@ public class SendPlayerListPacket
 		public static final int FAKE = 1;
 		public static final int ALLY = 2;
 		public static final int BANNED = 4;
+		public static final int ALLY_BACK = 8;
 
 		public final UUID uuid;
 		public final String name;
-		public final int flags;
+		public int flags;
 
 		public NetPlayer(UUID u, String n, int f)
 		{
@@ -46,6 +47,11 @@ public class SendPlayerListPacket
 		public boolean isAlly()
 		{
 			return (flags & ALLY) != 0;
+		}
+
+		public boolean isAllyBack()
+		{
+			return isFake() || (flags & ALLY_BACK) != 0;
 		}
 
 		public boolean isBanned()
@@ -102,7 +108,19 @@ public class SendPlayerListPacket
 				continue;
 			}
 
-			players.add(new NetPlayer(p.getUuid(), p.getName(), self.allies.contains(p.getUuid()) ? NetPlayer.ALLY : 0));
+			int flags = 0;
+
+			if (self.allies.contains(p.getUuid()))
+			{
+				flags |= NetPlayer.ALLY;
+			}
+
+			if (p.allies.contains(self.getUuid()))
+			{
+				flags |= NetPlayer.ALLY_BACK;
+			}
+
+			players.add(new NetPlayer(p.getUuid(), p.getName(), flags));
 		}
 
 		for (KnownFakePlayer p : FTBChunksAPIImpl.manager.knownFakePlayers.values())

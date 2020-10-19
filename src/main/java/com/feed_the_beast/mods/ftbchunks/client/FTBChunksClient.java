@@ -240,7 +240,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void openPlayerList(SendPlayerListPacket packet)
 	{
-		new PlayerListScreen(packet.players, packet.allyMode).openGui();
+		new AllyScreen(packet.players, packet.allyMode).openGui();
 	}
 
 	@Override

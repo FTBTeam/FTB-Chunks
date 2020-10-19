@@ -54,9 +54,7 @@ public class SyncTXPacket
 			{
 				if (p1 != p)
 				{
-					ClaimedChunkPlayerDataImpl pd1 = FTBChunksAPIImpl.manager.getData(p);
-
-					if (pd.isAlly(p1) && pd1.isAlly(p))
+					if (pd.isAlly(FTBChunksAPIImpl.manager.getData(p)))
 					{
 						FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> p1), new SyncRXPacket(key, offset, total, data));
 					}

@@ -21,7 +21,6 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.command.CommandSource;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
@@ -312,7 +311,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_CLAIMED;
 		}
-		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer() && !isTeamMember(source.getEntity()))
+		else if (chunk.playerData != this
+				&& !source.hasPermissionLevel(2)
+				&& !source.getServer().isSinglePlayer()
+				&& !(source.getEntity() instanceof ServerPlayerEntity && isTeamMember(FTBChunksAPIImpl.manager.getData((ServerPlayerEntity) source.getEntity())))
+		)
 		{
 			return ClaimResults.NOT_OWNER;
 		}
@@ -341,19 +344,19 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		shouldSave = true;
 	}
 
-	public boolean isTeamMember(@Nullable Entity entity)
+	public boolean isTeamMember(ClaimedChunkPlayerData p)
 	{
-		return entity instanceof ServerPlayerEntity && FTBChunks.teamsMod && FTBTeamsIntegration.isTeamMember(getProfile(), ((ServerPlayerEntity) entity).getGameProfile());
+		return p == this || FTBChunks.teamsMod && FTBTeamsIntegration.isTeamMember(getProfile(), p.getProfile());
 	}
 
 	@Override
-	public boolean isExplicitAlly(ServerPlayerEntity p)
+	public boolean isExplicitAlly(ClaimedChunkPlayerData p)
 	{
-		if (getUuid().equals(p.getUniqueID()))
+		if (getUuid().equals(p.getUuid()))
 		{
 			return true;
 		}
-		else if (allies.contains(p.getUniqueID()))
+		else if (isInAllyList(p.getUuid()) && p.isInAllyList(getUuid()))
 		{
 			return true;
 		}
@@ -362,13 +365,19 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return true;
 		}
 
-		return getName().equals(p.getGameProfile().getName());
+		return getName().equals(p.getName());
 	}
 
 	@Override
-	public boolean isAlly(ServerPlayerEntity p)
+	public boolean isInAllyList(UUID id)
 	{
-		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p.getUniqueID()))
+		return allies.contains(id);
+	}
+
+	@Override
+	public boolean isAlly(ClaimedChunkPlayerData p)
+	{
+		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p.getUuid()))
 		{
 			return true;
 		}
@@ -392,7 +401,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 		else if (mode == PrivacyMode.ALLIES)
 		{
-			return explicit ? isExplicitAlly(p) : isAlly(p);
+			ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(p);
+			return explicit ? isExplicitAlly(data) : isAlly(data);
 		}
 
 		return false;

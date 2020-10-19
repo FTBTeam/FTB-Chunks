@@ -34,7 +34,7 @@ public class WaypointButton extends Widget
 	public WaypointButton(Panel panel, Waypoint w)
 	{
 		super(panel);
-		icon = Icon.getIcon(w.type.texture).withTint(Color4I.rgb(w.color));
+		icon = Icon.getIcon(w.type.texture).withTint(Color4I.rgb(w.color).withAlpha(w.hidden ? 100 : 255));
 		waypoint = w;
 	}
 
@@ -85,9 +85,16 @@ public class WaypointButton extends Widget
 					Color4I col = Color4I.hsb(hsb[0] + 1F / 12F, hsb[1], hsb[2]);
 					waypoint.color = col.rgba();
 					waypoint.dimension.saveData = true;
-					icon = Icon.getIcon(waypoint.type.texture).withTint(col);
+					icon = Icon.getIcon(waypoint.type.texture).withTint(col.withAlpha(waypoint.hidden ? 100 : 255));
 					contextMenu.get(0).icon = icon;
 				}).setCloseMenu(false));
+
+				contextMenu.add(new ContextMenuItem(new StringTextComponent(waypoint.hidden ? "Show" : "Hide"), GuiIcons.BEACON, () -> {
+					waypoint.hidden = !waypoint.hidden;
+					waypoint.dimension.saveData = true;
+					contextMenu.get(0).title = new StringTextComponent(waypoint.hidden ? "Show" : "Hide");
+					getGui().refreshWidgets();
+				}));
 			}
 
 			contextMenu.add(new ContextMenuItem(new TranslationTextComponent("gui.remove"), GuiIcons.REMOVE, () -> {

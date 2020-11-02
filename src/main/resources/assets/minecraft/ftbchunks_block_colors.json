@@ -30,9 +30,6 @@
 	"jungle_planks": "#C67653",
 	"acacia_planks": "#E07F3E",
 	"dark_oak_planks": "#512D14",
-	"rail": "#888888",
-	"detector_rail": "#888888",
-	"activator_rail": "#888888",
 	"powered_rail": "#D87F33",
 	"snow": "#EFEFEF",
 	"snow_block": "#EFEFEF",
@@ -49,7 +46,6 @@
 	"ice": "#91B6F7",
 	"packed_ice": "#91B6F7",
 	"blue_ice": "#91B6F7",
-	"#flower_pots": "#683A2D",
 	"bricks": "#AE604B",
 	"brick_slab": "#AE604B",
 	"brick_stairs": "#AE604B",
@@ -62,5 +58,9 @@
 	"yellow_wool": "#F6C325",
 	"hay_block": "#AA8B08",
 	"mossy_cobblestone": "#687157",
-	"sweet_berry_bush": "#671E20"
+	"sweet_berry_bush": "#671E20",
+	"redstone_wire": "redstone_0_15",
+	"iron_bars": "ignored",
+	"lily_pad": "#208030",
+	"dead_bush": "#A89061"
 }

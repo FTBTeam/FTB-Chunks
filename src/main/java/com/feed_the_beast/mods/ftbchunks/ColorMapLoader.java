@@ -1,20 +1,31 @@
 package com.feed_the_beast.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.ColorUtils;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColorProvider;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColors;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.CustomBlockColor;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.block.AbstractButtonBlock;
+import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.BushBlock;
+import net.minecraft.block.FireBlock;
+import net.minecraft.block.FlowerPotBlock;
+import net.minecraft.block.GrassBlock;
+import net.minecraft.block.LeavesBlock;
+import net.minecraft.block.RedstoneTorchBlock;
+import net.minecraft.block.TorchBlock;
+import net.minecraft.block.VineBlock;
 import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.extensions.IAbstractRailBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.io.InputStreamReader;
@@ -70,41 +81,56 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 	@Override
 	protected void apply(JsonObject object, IResourceManager resourceManager, IProfiler profiler)
 	{
-		ColorUtils.COLOR_MAP.clear();
+		for (Block block : ForgeRegistries.BLOCKS)
+		{
+			if (block instanceof BlockColorProvider)
+			{
+				BlockColorProvider p = (BlockColorProvider) block;
+				p.setFTBCBlockColor(BlockColors.DEFAULT);
+
+				if (block instanceof AirBlock
+						|| block instanceof BushBlock
+						|| block instanceof FireBlock
+						|| block instanceof AbstractButtonBlock
+						|| block instanceof TorchBlock && !(block instanceof RedstoneTorchBlock)
+				)
+				{
+					p.setFTBCBlockColor(BlockColors.IGNORED);
+				}
+				else if (block instanceof GrassBlock)
+				{
+					p.setFTBCBlockColor(BlockColors.GRASS);
+				}
+				else if (block instanceof LeavesBlock || block instanceof VineBlock)
+				{
+					p.setFTBCBlockColor(BlockColors.FOLIAGE);
+				}
+				else if (block instanceof FlowerPotBlock)
+				{
+					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(0x683A2D)));
+				}
+				else if (block instanceof IAbstractRailBlock)
+				{
+					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(0x888888)));
+				}
+			}
+		}
+
+		// Fire event Pre
 
 		for (Map.Entry<String, JsonElement> entry : object.entrySet())
 		{
 			if (entry.getValue().isJsonPrimitive())
 			{
-				Color4I color = Color4I.fromJson(entry.getValue());
+				Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
 
-				if (color.isEmpty())
+				if (block != Blocks.AIR && block instanceof BlockColorProvider)
 				{
-					continue;
-				}
-
-				if (entry.getKey().startsWith("#"))
-				{
-					ITag<Block> tag = BlockTags.getCollection().get(new ResourceLocation(entry.getKey().substring(1)));
-
-					if (tag != null)
-					{
-						for (Block block : tag.getAllElements())
-						{
-							ColorUtils.COLOR_MAP.put(block, color);
-						}
-					}
-				}
-				else
-				{
-					Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
-
-					if (block != Blocks.AIR)
-					{
-						ColorUtils.COLOR_MAP.put(block, color);
-					}
+					((BlockColorProvider) block).setFTBCBlockColor(BlockColors.getFromType(entry.getValue().getAsString()));
 				}
 			}
 		}
+
+		// Fire event Post
 	}
 }

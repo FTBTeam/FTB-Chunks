@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClientConfig;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;

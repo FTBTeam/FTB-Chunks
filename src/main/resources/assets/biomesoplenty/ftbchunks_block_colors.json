@@ -14,5 +14,7 @@
 	"pink_cherry_leaves": "#D58BBC",
 	"goldenrod": "#F1D157",
 	"dead_grass": "#544C40",
-	"cattail": "#70492E"
+	"cattail": "#70492E",
+	"rainbow_birch_leaves": "bop_rainbow",
+	"bush": "foliage"
 }

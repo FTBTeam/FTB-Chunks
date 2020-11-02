@@ -1,5 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
+import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClientConfig;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.block.BlockState;
@@ -8,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeColors;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 
@@ -52,6 +55,7 @@ public class ReloadChunkTask implements MapTask
 		int blockZ = pos.getZStart();
 
 		boolean changed = false;
+		boolean[] flags = new boolean[1];
 
 		try
 		{
@@ -60,12 +64,30 @@ public class ReloadChunkTask implements MapTask
 				int wx = wi % 16;
 				int wz = wi / 16;
 				blockPos.setPos(blockX + wx, topY, blockZ + wz);
-				int by = MathHelper.clamp(MapChunk.setHeight(ichunk, blockPos).getY(), 1, 255);
+				int by = MathHelper.clamp(MapChunk.setHeight(ichunk, blockPos, flags).getY(), 1, 255);
 				blockPos.setY(by);
 				BlockState state = ichunk.getBlockState(blockPos);
-				//Biome biome = chunk.getBiomes().getNoiseBiome(blockPos.getX() >> 2, 0, blockPos.getZ() >> 2);
-				Color4I color = ColorUtils.getColor(state, world, ichunk, blockPos);
-				changed = mapChunk.setHRGB(wx, wz, (by << 24) | color.rgb()) | changed;
+				Color4I color = ColorUtils.getColor(state, world, blockPos);
+
+				if (flags[0])
+				{
+					flags[0] = false;
+
+					if (FTBChunksClientConfig.waterHeightFactor == 0)
+					{
+						by = 62;
+					}
+					else
+					{
+						by = (by / FTBChunksClientConfig.waterHeightFactor) * FTBChunksClientConfig.waterHeightFactor + FTBChunksClientConfig.waterHeightFactor - 1;
+					}
+
+					changed = mapChunk.setHRGB(wx, wz, (by << 24) | color.withTint(Color4I.rgb(BiomeColors.getWaterColor(world, blockPos)).withAlpha(220)).rgb()) | changed;
+				}
+				else
+				{
+					changed = mapChunk.setHRGB(wx, wz, (by << 24) | color.rgb()) | changed;
+				}
 			}
 		}
 		catch (Exception ex)

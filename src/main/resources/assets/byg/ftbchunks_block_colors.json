@@ -27,6 +27,17 @@
 	"brown_oak_leaves": "#725738",
 	"brown_zelkova_leaves": "#4D3A2B",
 	"orange_birch_leaves": "#CF7F2A",
-	"orange_oak_leaves": "#8A611F",
-	"orange_spruce_leaves": "#B47018"
+	"orange_oak_leaves": "#A87925",
+	"orange_spruce_leaves": "#B47018",
+	"rainbow_eucalyptus_leaves": "#366616",
+	"cypress_leaves": "#7AA03E",
+	"ebony_leaves": "#356321",
+	"meadow_grass_block": "grass",
+	"short_grass": "ignored",
+	"tall_allium": "#BD94DE",
+	"allium_flower_bush": "#BD94DE",
+	"pink_allium": "#E595C9",
+	"tall_pink_allium": "#E595C9",
+	"pink_allium_flower_bush": "#E595C9",
+	"green_mushroom_block": "#60914E"
 }

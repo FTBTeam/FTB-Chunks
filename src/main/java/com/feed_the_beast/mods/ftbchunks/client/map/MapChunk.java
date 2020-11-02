@@ -1,20 +1,17 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
+import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColorProvider;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
-import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.FireBlock;
-import net.minecraft.block.RedstoneTorchBlock;
-import net.minecraft.block.TallGrassBlock;
-import net.minecraft.block.TorchBlock;
 import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.chunk.IChunk;
 
 import javax.annotation.Nullable;
@@ -140,31 +137,19 @@ public class MapChunk
 		return false;
 	}
 
-	public static boolean skipBlock(BlockState state, IWorld world, BlockPos pos)
+	public static boolean isWater(BlockState state)
 	{
-		Block b = state.getBlock();
-
-		if (b == Blocks.AIR || b == Blocks.TALL_GRASS || b == Blocks.LARGE_FERN || b instanceof TallGrassBlock || b == Blocks.IRON_BARS)
-		{
-			return true;
-		}
-		else if (b instanceof FireBlock)
-		{
-			return true;
-		}
-		else if (b instanceof AbstractButtonBlock)
-		{
-			return true;
-		}
-		else if (b instanceof TorchBlock)
-		{
-			return !(b instanceof RedstoneTorchBlock);
-		}
-
-		return b.isAir(state, world, pos);
+		return state.getBlock() == Blocks.WATER || state.getFluidState().getFluid().isEquivalentTo(Fluids.WATER);
 	}
 
-	public static BlockPos.Mutable setHeight(@Nullable IChunk chunk, BlockPos.Mutable pos)
+	public static boolean skipBlock(BlockState state)
+	{
+		Block b = state.getBlock();
+		BlockColor color = b instanceof BlockColorProvider ? ((BlockColorProvider) b).getFTBCBlockColor() : null;
+		return color == null || color.isIgnored();
+	}
+
+	public static BlockPos.Mutable setHeight(@Nullable IChunk chunk, BlockPos.Mutable pos, boolean[] flags)
 	{
 		int topY = pos.getY();
 
@@ -193,7 +178,10 @@ public class MapChunk
 				}
 			}
 
-			if (!skipBlock(state, chunk.getWorldForge(), pos))
+			boolean water = isWater(state);
+			flags[0] |= water;
+
+			if (!water && !skipBlock(state))
 			{
 				pos.setY(by);
 				return pos;

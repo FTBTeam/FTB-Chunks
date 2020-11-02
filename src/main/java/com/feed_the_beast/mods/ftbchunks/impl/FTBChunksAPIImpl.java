@@ -13,7 +13,6 @@ public class FTBChunksAPIImpl extends FTBChunksAPI
 	public static ClaimedChunkManagerImpl manager;
 	public static final ITag.INamedTag<Block> EDIT_TAG = BlockTags.makeWrapperTag("ftbchunks:edit_whitelist");
 	public static final ITag.INamedTag<Block> INTERACT_TAG = BlockTags.makeWrapperTag("ftbchunks:interact_whitelist");
-	public static final ITag.INamedTag<Block> MAP_IGNORE_IN_WATER_TAG = BlockTags.makeWrapperTag("ftbchunks:map_ignore_in_water");
 
 	@Override
 	public ClaimedChunkManagerImpl getManager()

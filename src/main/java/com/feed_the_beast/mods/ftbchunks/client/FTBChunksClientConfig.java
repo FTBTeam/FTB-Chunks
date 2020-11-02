@@ -25,6 +25,7 @@ public class FTBChunksClientConfig
 	public static boolean ownClaimedChunksOnMap;
 	public static boolean inWorldWaypoints;
 	public static boolean topographyMode;
+	public static int waterHeightFactor;
 
 	public static MinimapPosition minimap;
 	public static double minimapScale;
@@ -75,6 +76,7 @@ public class FTBChunksClientConfig
 			ownClaimedChunksOnMap = c.ownClaimedChunksOnMap.get();
 			inWorldWaypoints = c.inWorldWaypoints.get();
 			topographyMode = c.topographyMode.get();
+			waterHeightFactor = c.waterHeightFactor.get();
 
 			minimap = c.minimap.get();
 			minimapScale = c.minimapScale.get();
@@ -111,6 +113,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue ownClaimedChunksOnMap;
 		public final ForgeConfigSpec.BooleanValue inWorldWaypoints;
 		public final ForgeConfigSpec.BooleanValue topographyMode;
+		public final ForgeConfigSpec.IntValue waterHeightFactor;
 
 		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
 		public final ForgeConfigSpec.DoubleValue minimapScale;
@@ -175,6 +178,11 @@ public class FTBChunksClientConfig
 					.comment("Show waypoints in world")
 					.translation("ftbchunks.topography_mode")
 					.define("topography_mode", false);
+
+			waterHeightFactor = builder
+					.comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain")
+					.translation("ftbchunks.water_height_factor")
+					.defineInRange("water_height_factor", 0, 0, 128);
 
 			minimap = builder
 					.comment("Enables minimap to show up in corner")
@@ -301,6 +309,11 @@ public class FTBChunksClientConfig
 			client.getLeft().topographyMode.set(v);
 			topographyMode = v;
 		}, false);
+
+		group.addInt("water_height_factor", waterHeightFactor, v -> {
+			client.getLeft().waterHeightFactor.set(v);
+			waterHeightFactor = v;
+		}, 0, 0, 128);
 
 		group.addEnum("minimap", minimap, v -> {
 			client.getLeft().minimap.set(v);

@@ -409,6 +409,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		RenderSystem.enableCull();
 		RenderSystem.enableTexture();
 		RenderSystem.enableDepthTest();
+		RenderSystem.enableAlphaTest();
 
 		MatrixStack matrixStack = event.getMatrixStack();
 		matrixStack.push();

@@ -9,7 +9,7 @@ buildscript {
 	dependencies {
 		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
 		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.+'
-		classpath 'com.wynprice.cursemaven:CurseMaven:1.2.+'
+		classpath 'com.wynprice.cursemaven:CurseMaven:2.+'
 		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
 	}
 }
@@ -106,11 +106,8 @@ dependencies {
 	//	transitive = false
 	//	changing = true
 	//}))
-	//runtimeOnly(fg.deobf(project.dependencies.create("com.sunekaer.mods:YAMDA:${yamda_version}") {
-	//	transitive = false
-	//	changing = true
-	//}))
-	//runtimeOnly fg.deobf(curse.resolve('biomes-o-plenty', project.bop_file))
+	//runtimeOnly fg.deobf("curse.maven:biomes-o-plenty:${bop_file}")
+	//runtimeOnly fg.deobf("curse.maven:oh-the-biomes-youll-go:${byg_file}")
 }
 
 jar {

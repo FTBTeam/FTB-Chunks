@@ -34,6 +34,7 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
@@ -104,7 +105,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	private static final List<ITextComponent> MINIMAP_TEXT_LIST = new ArrayList<>(3);
 
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
-	private static long taskQueueTicks = 0L;
+	public static long taskQueueTicks = 0L;
 	public static final HashSet<ChunkPos> rerenderCache = new HashSet<>();
 
 	public static void queue(MapTask task)
@@ -284,7 +285,21 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		if (openMapKey.isPressed())
 		{
-			openGui();
+			if (FTBChunksClientConfig.debugInfo && Screen.hasControlDown())
+			{
+				FTBChunks.LOGGER.info("=== Task Queue: " + taskQueue.size());
+
+				for (MapTask task : taskQueue)
+				{
+					FTBChunks.LOGGER.info(task.toString());
+				}
+
+				FTBChunks.LOGGER.info("===");
+			}
+			else
+			{
+				openGui();
+			}
 		}
 	}
 
@@ -371,7 +386,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
 					MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
-					region.getMapImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, FTBChunksClientConfig.minimapBlur, false, false, false);
+					region.getRenderedMapImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, FTBChunksClientConfig.minimapBlur, false, false, false);
 				}
 			}
 
@@ -691,7 +706,9 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		if (FTBChunksClientConfig.debugInfo)
 		{
+			XZ r = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
 			MINIMAP_TEXT_LIST.add(new StringTextComponent("Queued tasks: " + taskQueue.size()));
+			MINIMAP_TEXT_LIST.add(new StringTextComponent(r.toRegionString()));
 		}
 
 		if (!MINIMAP_TEXT_LIST.isEmpty())
@@ -831,7 +848,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		if (event.phase == TickEvent.Phase.START && MapManager.inst != null && Minecraft.getInstance().world != null)
 		{
-			if (taskQueueTicks % FTBChunksClientConfig.taskQueueTicks == 1L)
+			if (taskQueueTicks % FTBChunksClientConfig.rerenderQueueTicks == 0L)
 			{
 				if (!rerenderCache.isEmpty())
 				{
@@ -844,30 +861,36 @@ public class FTBChunksClient extends FTBChunksCommon
 
 					rerenderCache.clear();
 				}
+			}
 
-				int s = Math.min(taskQueue.size(), MathHelper.clamp(taskQueue.size() / 10, FTBChunksClientConfig.taskQueueMin, FTBChunksClientConfig.taskQueueMax));
+			if (taskQueueTicks % FTBChunksClientConfig.taskQueueTicks == 0L)
+			{
+				int s = Math.min(taskQueue.size(), FTBChunksClientConfig.taskQueueMax);
 
-				MapTask[] tasks = new MapTask[s];
-
-				for (int i = 0; i < s; i++)
+				if (s > 0)
 				{
-					tasks[i] = taskQueue.pollFirst();
+					MapTask[] tasks = new MapTask[s];
 
-					if (tasks[i] == null || tasks[i].cancelOtherTasks())
+					for (int i = 0; i < s; i++)
 					{
-						break;
-					}
-				}
+						tasks[i] = taskQueue.pollFirst();
 
-				FTBChunks.EXECUTOR_SERVICE.execute(() -> {
-					for (MapTask task : tasks)
-					{
-						if (task != null)
+						if (tasks[i] == null || tasks[i].cancelOtherTasks())
 						{
-							task.runMapTask();
+							break;
 						}
 					}
-				});
+
+					FTBChunks.EXECUTOR_SERVICE.execute(() -> {
+						for (MapTask task : tasks)
+						{
+							if (task != null)
+							{
+								task.runMapTask();
+							}
+						}
+					});
+				}
 			}
 
 			taskQueueTicks++;

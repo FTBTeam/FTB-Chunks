@@ -103,4 +103,9 @@ public class XZ
 	{
 		return (long) x & 4294967295L | ((long) z & 4294967295L) << 32L;
 	}
+
+	public String toRegionString()
+	{
+		return String.format("%05X-%05X", x + 60000, z + 60000);
+	}
 }

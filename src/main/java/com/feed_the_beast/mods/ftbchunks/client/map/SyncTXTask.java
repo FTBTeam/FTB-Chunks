@@ -29,9 +29,13 @@ public class SyncTXTask implements MapTask
 
 		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out))))
 		{
-			byte[] imgData = region.getDataImage().getBytes();
-			stream.writeInt(imgData.length);
-			stream.write(imgData);
+			byte[] dataImgBytes = region.getDataImage().getBytes();
+			stream.writeInt(dataImgBytes.length);
+			stream.write(dataImgBytes);
+
+			byte[] blockImgBytes = region.getBlockImage().getBytes();
+			stream.writeInt(blockImgBytes.length);
+			stream.write(blockImgBytes);
 
 			stream.writeShort(region.getChunks().size());
 

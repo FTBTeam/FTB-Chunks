@@ -1,8 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColorProvider;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColors;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.CustomBlockColor;
+import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -83,10 +84,9 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 	{
 		for (Block block : ForgeRegistries.BLOCKS)
 		{
-			if (block instanceof BlockColorProvider)
+			if (block instanceof BlockFTBC)
 			{
-				BlockColorProvider p = (BlockColorProvider) block;
-				p.setFTBCBlockColor(BlockColors.DEFAULT);
+				BlockFTBC p = (BlockFTBC) block;
 
 				if (block instanceof AirBlock
 						|| block instanceof BushBlock
@@ -113,6 +113,14 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 				{
 					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(0x888888)));
 				}
+				else if (block.getMaterialColor() != null)
+				{
+					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(block.getMaterialColor().colorValue)));
+				}
+				else
+				{
+					p.setFTBCBlockColor(new CustomBlockColor(Color4I.RED));
+				}
 			}
 		}
 
@@ -124,9 +132,14 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 			{
 				Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
 
-				if (block != Blocks.AIR && block instanceof BlockColorProvider)
+				if (block != Blocks.AIR && block instanceof BlockFTBC)
 				{
-					((BlockColorProvider) block).setFTBCBlockColor(BlockColors.getFromType(entry.getValue().getAsString()));
+					BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
+
+					if (col != null)
+					{
+						((BlockFTBC) block).setFTBCBlockColor(col);
+					}
 				}
 			}
 		}

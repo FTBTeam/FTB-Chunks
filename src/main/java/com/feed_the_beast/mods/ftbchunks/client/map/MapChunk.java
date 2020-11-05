@@ -1,13 +1,13 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
-import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColorProvider;
+import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
+import com.feed_the_beast.mods.ftbchunks.core.BlockStateFTBC;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -47,14 +47,14 @@ public class MapChunk
 		owner = StringTextComponent.EMPTY;
 	}
 
-	public int getHRGB(int x, int z)
+	public int getBlock(int x, int z)
 	{
-		int c = region.getDataImage().getPixelRGBA(pos.x * 16 + (x & 15) + 1, pos.z * 16 + (z & 15) + 1);
-		int a = NativeImage.getAlpha(c);
-		int r = NativeImage.getRed(c);
-		int g = NativeImage.getGreen(c);
-		int b = NativeImage.getBlue(c);
-		return (a << 24) | (r << 16) | (g << 8) | b;
+		return region.getBlockImage().getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
+	}
+
+	public int getData(int x, int z)
+	{
+		return region.getDataImage().getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
 	}
 
 	public boolean connects(MapChunk chunk)
@@ -69,83 +69,18 @@ public class MapChunk
 
 	public int getHeight(int x, int z)
 	{
-		return (getHRGB(x, z) >> 24) & 0xFF;
-	}
-
-	public boolean setHRGB(int x, int z, int c)
-	{
-		int c0 = getHRGB(x, z);
-
-		if (c0 != c)
-		{
-			int a = (c >> 24) & 0xFF;
-			int r = (c >> 16) & 0xFF;
-			int g = (c >> 8) & 0xFF;
-			int b = (c >> 0) & 0xFF;
-			int cc = NativeImage.getCombined(a, b, g, r);
-			int ax = pos.x * 16 + (x & 15);
-			int az = pos.z * 16 + (z & 15);
-			region.getDataImage().setPixelRGBA(ax + 1, az + 1, cc);
-
-			// edges //
-
-			if (ax == 0)
-			{
-				region.offset(-1, 0).setPixelAndUpdate(513, az + 1, cc);
-			}
-
-			if (ax == 511)
-			{
-				region.offset(1, 0).setPixelAndUpdate(0, az + 1, cc);
-			}
-
-			if (az == 0)
-			{
-				region.offset(0, -1).setPixelAndUpdate(ax + 1, 513, cc);
-			}
-
-			if (az == 511)
-			{
-				region.offset(0, 1).setPixelAndUpdate(ax + 1, 0, cc);
-			}
-
-			// corners //
-
-			if (ax == 0 && az == 0)
-			{
-				region.offset(-1, -1).setPixelAndUpdate(513, 513, cc);
-			}
-
-			if (ax == 511 && az == 511)
-			{
-				region.offset(1, 1).setPixelAndUpdate(0, 0, cc);
-			}
-
-			if (ax == 511 && az == 0)
-			{
-				region.offset(1, -1).setPixelAndUpdate(0, 513, cc);
-			}
-
-			if (ax == 0 && az == 511)
-			{
-				region.offset(-1, 1).setPixelAndUpdate(513, 0, cc);
-			}
-
-			return true;
-		}
-
-		return false;
+		return (getData(x, z) >> 16) & 0xFF;
 	}
 
 	public static boolean isWater(BlockState state)
 	{
-		return state.getBlock() == Blocks.WATER || state.getFluidState().getFluid().isEquivalentTo(Fluids.WATER);
+		return state instanceof BlockStateFTBC ? ((BlockStateFTBC) state).getFTBCIsWater() : state.getFluidState().getFluid().isEquivalentTo(Fluids.WATER);
 	}
 
 	public static boolean skipBlock(BlockState state)
 	{
 		Block b = state.getBlock();
-		BlockColor color = b instanceof BlockColorProvider ? ((BlockColorProvider) b).getFTBCBlockColor() : null;
+		BlockColor color = b instanceof BlockFTBC ? ((BlockFTBC) b).getFTBCBlockColor() : null;
 		return color == null || color.isIgnored();
 	}
 

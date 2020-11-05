@@ -1,7 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.client.map.color;
 
+import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import net.minecraft.block.BlockState;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
@@ -19,7 +20,18 @@ public class ColorUtils
 {
 	public static Color4I[] reducedColorPalette = null;
 	public static Color4I[] topographyPalette = null;
+	public static Color4I[][] lightMapPalette = null;
 	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
+
+	public static int convertToNative(int c)
+	{
+		return NativeImage.getCombined((c >> 24) & 0xFF, (c >> 0) & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF);
+	}
+
+	public static int convertFromNative(int c)
+	{
+		return (NativeImage.getAlpha(c) << 24) | (NativeImage.getRed(c) << 16) | (NativeImage.getGreen(c) << 8) | NativeImage.getBlue(c);
+	}
 
 	public static Color4I addBrightness(Color4I c, float f)
 	{
@@ -113,7 +125,7 @@ public class ColorUtils
 					for (int y = 0; y < h; y++)
 					{
 						int col = image.getPixelRGBA(x, y);
-						topographyPalette[x + y * w] = Color4I.rgb((NativeImage.getRed(col) << 16) | (NativeImage.getGreen(col) << 8) | NativeImage.getBlue(col));
+						topographyPalette[x + y * w] = Color4I.rgb(convertFromNative(col)).withAlpha(255);
 					}
 				}
 
@@ -127,9 +139,42 @@ public class ColorUtils
 		return topographyPalette;
 	}
 
-	public static Color4I getColor(BlockState state, IBlockDisplayReader world, BlockPos pos)
+	public static Color4I[][] getLightMapPalette()
 	{
-		BlockColor blockColor = state.getBlock() instanceof BlockColorProvider ? ((BlockColorProvider) state.getBlock()).getFTBCBlockColor() : null;
-		return (blockColor == null ? BlockColors.DEFAULT : blockColor).getBlockColor(state, world, pos);
+		if (lightMapPalette == null)
+		{
+			lightMapPalette = new Color4I[0][0];
+
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/lightmap_palette.png")).getInputStream())
+			{
+				NativeImage image = NativeImage.read(stream);
+				int w = image.getWidth();
+				int h = image.getHeight();
+
+				lightMapPalette = new Color4I[w][h];
+
+				for (int x = 0; x < w; x++)
+				{
+					for (int y = 0; y < h; y++)
+					{
+						int col = image.getPixelRGBA(x, y);
+						lightMapPalette[x][y] = Color4I.rgb(convertFromNative(col)).withAlpha(255);
+					}
+				}
+
+				image.close();
+			}
+			catch (Exception ex)
+			{
+			}
+		}
+
+		return lightMapPalette;
+	}
+
+	public static Color4I getColor(Block block, IBlockDisplayReader world, BlockPos pos)
+	{
+		BlockColor blockColor = block instanceof BlockFTBC ? ((BlockFTBC) block).getFTBCBlockColor() : null;
+		return (blockColor == null ? BlockColors.IGNORED : blockColor).getBlockColor(world, pos);
 	}
 }

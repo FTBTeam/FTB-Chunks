@@ -33,10 +33,17 @@ public class SyncRXTask implements MapTask
 		{
 			MapDimension dimension = MapManager.inst.getDimension(key.dim);
 			MapRegion region = dimension.getRegion(XZ.of(key.x, key.z));
+			NativeImage dataImg0 = region.getDataImage();
+			NativeImage blockImg0 = region.getBlockImage();
 
-			byte[] imgData = new byte[stream.readInt()];
-			stream.read(imgData);
-			NativeImage image = NativeImage.read(new BufferedInputStream(new ByteArrayInputStream(imgData)));
+			byte[] dataImgBytes = new byte[stream.readInt()];
+			stream.read(dataImgBytes);
+			NativeImage dataImg = NativeImage.read(new BufferedInputStream(new ByteArrayInputStream(dataImgBytes)));
+
+			byte[] blockImgBytes = new byte[stream.readInt()];
+			stream.read(blockImgBytes);
+			NativeImage blockImg = NativeImage.read(new BufferedInputStream(new ByteArrayInputStream(blockImgBytes)));
+
 			boolean changed = false;
 
 			int s = stream.readShort();
@@ -56,12 +63,23 @@ public class SyncRXTask implements MapTask
 					{
 						for (int x = 0; x < 16; x++)
 						{
-							int c = image.getPixelRGBA(chunk.pos.x * 16 + x + 1, chunk.pos.z * 16 + z + 1);
-							int a = NativeImage.getAlpha(c);
-							int r = NativeImage.getRed(c);
-							int g = NativeImage.getGreen(c);
-							int b = NativeImage.getBlue(c);
-							changed = chunk.setHRGB(x, z, (a << 24) | (r << 16) | (g << 8) | b) | changed;
+							int ax = chunk.pos.x * 16 + x;
+							int az = chunk.pos.z * 16 + z;
+
+							int dc = dataImg.getPixelRGBA(ax, az);
+							int bc = blockImg.getPixelRGBA(ax, az);
+
+							if (dc != dataImg0.getPixelRGBA(ax, az))
+							{
+								dataImg0.setPixelRGBA(ax, az, dc);
+								changed = true;
+							}
+
+							if (bc != blockImg0.getPixelRGBA(ax, az))
+							{
+								blockImg0.setPixelRGBA(ax, az, bc);
+								changed = true;
+							}
 						}
 					}
 				}

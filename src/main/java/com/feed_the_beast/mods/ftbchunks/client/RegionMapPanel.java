@@ -13,6 +13,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.util.RegistryKey;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -245,7 +246,17 @@ public class RegionMapPanel extends Panel
 		{
 			largeMap.prevMouseX = getMouseX();
 			largeMap.prevMouseY = getMouseY();
-			largeMap.grabbed = 1;
+
+			if (FTBChunksClientConfig.debugInfo && isCtrlKeyDown())
+			{
+				FTBChunksClient.rerenderCache.add(new ChunkPos(blockX >> 4, blockZ >> 4));
+				FTBChunksClient.taskQueueTicks = 0L;
+			}
+			else
+			{
+				largeMap.grabbed = 1;
+			}
+
 			return true;
 		}
 

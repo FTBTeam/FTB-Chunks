@@ -6,8 +6,10 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -31,6 +33,7 @@ public class FTBChunksConfig
 	public static boolean disableProtection;
 	public static AllyMode allyMode;
 	public static Set<RegistryKey<World>> claimDimensionBlacklist;
+	public static boolean patchChunkLoading;
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
@@ -63,6 +66,8 @@ public class FTBChunksConfig
 			{
 				claimDimensionBlacklist.add(RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(s)));
 			}
+
+			patchChunkLoading = c.patchChunkLoading.get();
 		}
 	}
 
@@ -74,37 +79,37 @@ public class FTBChunksConfig
 		private final ForgeConfigSpec.BooleanValue disableProtection;
 		private final ForgeConfigSpec.EnumValue<AllyMode> allyMode;
 		private final ForgeConfigSpec.ConfigValue<List<? extends String>> claimDimensionBlacklist;
+		private final ForgeConfigSpec.BooleanValue patchChunkLoading;
 
 		private ServerConfig(ForgeConfigSpec.Builder builder)
 		{
 			disableAllFakePlayers = builder
 					.comment("Disables fake players like miners and auto-clickers.")
-					.translation("ftbchunks.general.disable_fake_players")
 					.define("disable_fake_players", false);
 
 			maxClaimedChunks = builder
 					.comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission")
-					.translation("ftbchunks.general.max_claimed_chunks")
 					.defineInRange("max_claimed_chunks", 500, 0, Integer.MAX_VALUE);
 
 			maxForceLoadedChunks = builder
 					.comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission")
-					.translation("ftbchunks.general.max_force_loaded_chunks")
 					.defineInRange("max_force_loaded_chunks", 25, 0, Integer.MAX_VALUE);
 
 			disableProtection = builder
 					.comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for forceloading.")
-					.translation("ftbchunks.general.disable_protection")
 					.define("disable_protection", false);
 
 			allyMode = builder
 					.comment("Forced modes won't let players change their ally settings.")
-					.translation("ftbchunks.general.ally_mode")
 					.defineEnum("ally_mode", AllyMode.DEFAULT);
 
 			claimDimensionBlacklist = builder
 					.comment("Blacklist for dimensions where chunks can't be claimed.")
 					.defineList("claim_dimension_blacklist", Util.make(new ArrayList<>(), l -> l.add("minecraft:the_end")), o -> true);
+
+			patchChunkLoading = builder
+					.comment("Patches vanilla chunkloading to allow random block ticks and other environment updates in chunks where no players are nearby. With this off farms and other things won't work. Disable in case this causes issues.")
+					.define("patch_chunkloading", true);
 		}
 	}
 
@@ -126,5 +131,15 @@ public class FTBChunksConfig
 		}
 
 		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
+	}
+
+	public static boolean patchChunkLoading(ServerWorld world, ChunkPos pos)
+	{
+		if (patchChunkLoading)
+		{
+			return false;
+		}
+
+		return false;
 	}
 }

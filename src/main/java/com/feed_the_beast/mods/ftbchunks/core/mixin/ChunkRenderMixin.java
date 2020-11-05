@@ -1,4 +1,4 @@
-package com.feed_the_beast.mods.ftbchunks.mixin;
+package com.feed_the_beast.mods.ftbchunks.core.mixin;
 
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;

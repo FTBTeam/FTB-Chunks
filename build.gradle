@@ -9,7 +9,6 @@ buildscript {
 	dependencies {
 		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
 		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.+'
-		classpath 'com.wynprice.cursemaven:CurseMaven:2.+'
 		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
 	}
 }
@@ -17,7 +16,6 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'com.matthewprenger.cursegradle'
 apply plugin: 'maven'
-apply plugin: 'com.wynprice.cursemaven'
 apply plugin: 'org.spongepowered.mixin'
 
 apply from: 'https://files.latmod.com/public/markdown-git-changelog.gradle'
@@ -84,7 +82,7 @@ configurations.all {
 
 repositories {
 	mavenLocal()
-	maven { url "https://maven.tterrag.com/" } //Yarn2MCP
+	maven { url = "https://www.cursemaven.com" }
 	maven { url "https://maven.latmod.com/" } //FTB GUI Library, FTB Teams, FTB Ranks, KubeJS
 }
 
@@ -149,6 +147,7 @@ if (ENV.CURSEFORGE_KEY) {
 			releaseType = "release"
 			addGameVersion "1.16.2"
 			addGameVersion "1.16.3"
+			addGameVersion "1.16.4"
 			relations {
 				requiredDependency 'ftb-gui-library'
 				optionalDependency 'ftb-ranks'

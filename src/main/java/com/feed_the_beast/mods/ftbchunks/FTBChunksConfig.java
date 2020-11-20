@@ -137,7 +137,7 @@ public class FTBChunksConfig
 	{
 		if (patchChunkLoading)
 		{
-			return false;
+			return true;
 		}
 
 		return false;

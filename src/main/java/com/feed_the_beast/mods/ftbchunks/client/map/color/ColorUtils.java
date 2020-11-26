@@ -1,14 +1,10 @@
 package com.feed_the_beast.mods.ftbchunks.client.map.color;
 
-import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockDisplayReader;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -170,11 +166,5 @@ public class ColorUtils
 		}
 
 		return lightMapPalette;
-	}
-
-	public static Color4I getColor(Block block, IBlockDisplayReader world, BlockPos pos)
-	{
-		BlockColor blockColor = block instanceof BlockFTBC ? ((BlockFTBC) block).getFTBCBlockColor() : null;
-		return (blockColor == null ? BlockColors.IGNORED : blockColor).getBlockColor(world, pos);
 	}
 }

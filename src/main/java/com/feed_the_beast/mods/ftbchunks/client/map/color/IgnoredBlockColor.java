@@ -13,7 +13,7 @@ public class IgnoredBlockColor implements BlockColor
 	@Override
 	public Color4I getBlockColor(IBlockDisplayReader world, BlockPos pos)
 	{
-		return Icon.EMPTY;
+		return pos.getY() == 0 ? Color4I.BLACK : Icon.EMPTY;
 	}
 
 	@Override

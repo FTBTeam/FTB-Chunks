@@ -126,8 +126,8 @@ public class LargeMapScreen extends GuiBase
 			}).openGui();
 		}));
 
-		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), GuiIcons.REFRESH, (b, m) -> {
-			dimension.sync();
+		add(syncButton = new SimpleButton(this, /*new TranslationTextComponent("ftbchunks.gui.sync")*/new StringTextComponent("Currently disabled due to a bug!"), GuiIcons.REFRESH, (b, m) -> {
+			// dimension.sync();
 		}));
 
 		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.getLocation().getPath().replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {

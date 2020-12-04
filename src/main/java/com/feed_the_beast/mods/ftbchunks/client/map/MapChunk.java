@@ -1,11 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
-import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
+import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.core.BlockStateFTBC;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluids;
@@ -79,9 +77,7 @@ public class MapChunk
 
 	public static boolean skipBlock(BlockState state)
 	{
-		Block b = state.getBlock();
-		BlockColor color = b instanceof BlockFTBC ? ((BlockFTBC) b).getFTBCBlockColor() : null;
-		return color == null || color.isIgnored();
+		return ColorMapLoader.getBlockColor(state.getBlock()).isIgnored();
 	}
 
 	public static BlockPos.Mutable setHeight(@Nullable IChunk chunk, BlockPos.Mutable pos, boolean[] flags)

@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.BushBlock;
 import net.minecraft.block.FireBlock;
 import net.minecraft.block.FlowerPotBlock;
@@ -28,6 +29,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.extensions.IAbstractRailBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nullable;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +41,7 @@ import java.util.Map;
  */
 public class ColorMapLoader extends ReloadListener<JsonObject>
 {
-	public static final Map<ResourceLocation, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
+	private static final Map<ResourceLocation, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
 
 	@Override
 	protected JsonObject prepare(IResourceManager resourceManager, IProfiler profiler)
@@ -149,5 +151,37 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 		}
 
 		// Fire event Post
+	}
+
+	public static BlockColor getBlockColor(ResourceLocation id)
+	{
+		return BLOCK_ID_TO_COLOR_MAP.getOrDefault(id, BlockColors.IGNORED);
+	}
+
+	public static BlockColor getBlockColor(@Nullable Block block)
+	{
+		if (block != Blocks.AIR && block instanceof BlockFTBC)
+		{
+			BlockColor color = ((BlockFTBC) block).getFTBCBlockColor();
+
+			if (color == null)
+			{
+				if (block.getRegistryName() != null)
+				{
+					color = getBlockColor(block.getRegistryName());
+				}
+
+				if (color == null)
+				{
+					color = BlockColors.IGNORED;
+				}
+
+				((BlockFTBC) block).setFTBCBlockColor(color);
+			}
+
+			return color;
+		}
+
+		return BlockColors.IGNORED;
 	}
 }

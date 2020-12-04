@@ -3,7 +3,6 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
-import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColors;
 import com.feed_the_beast.mods.ftbchunks.core.BiomeFTBC;
 import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -327,33 +326,7 @@ public class MapManager implements MapTask
 
 	public BlockColor getBlockColor(int id)
 	{
-		return blockIdToColMap.computeIfAbsent(id & 0xFFFFFF, i -> {
-			Block block = ForgeRegistries.BLOCKS.getValue(blockColorIndexMap.get(i));
-
-			if (block != Blocks.AIR && block instanceof BlockFTBC)
-			{
-				BlockColor color = ((BlockFTBC) block).getFTBCBlockColor();
-
-				if (color == null)
-				{
-					if (block.getRegistryName() != null)
-					{
-						color = ColorMapLoader.BLOCK_ID_TO_COLOR_MAP.get(block.getRegistryName());
-					}
-
-					if (color == null)
-					{
-						color = BlockColors.IGNORED;
-					}
-
-					((BlockFTBC) block).setFTBCBlockColor(color);
-				}
-
-				return color;
-			}
-
-			return BlockColors.IGNORED;
-		});
+		return blockIdToColMap.computeIfAbsent(id & 0xFFFFFF, i -> ColorMapLoader.getBlockColor(ForgeRegistries.BLOCKS.getValue(blockColorIndexMap.get(i))));
 	}
 
 	public RegistryKey<Biome> getBiomeKey(int id)

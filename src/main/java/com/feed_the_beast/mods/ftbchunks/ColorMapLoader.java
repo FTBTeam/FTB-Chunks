@@ -12,7 +12,6 @@ import com.google.gson.JsonObject;
 import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.BushBlock;
 import net.minecraft.block.FireBlock;
 import net.minecraft.block.FlowerPotBlock;
@@ -32,6 +31,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,6 +39,8 @@ import java.util.Map;
  */
 public class ColorMapLoader extends ReloadListener<JsonObject>
 {
+	public static final Map<ResourceLocation, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
+
 	@Override
 	protected JsonObject prepare(IResourceManager resourceManager, IProfiler profiler)
 	{
@@ -82,12 +84,19 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 	@Override
 	protected void apply(JsonObject object, IResourceManager resourceManager, IProfiler profiler)
 	{
+		BLOCK_ID_TO_COLOR_MAP.clear();
+
 		for (Block block : ForgeRegistries.BLOCKS)
 		{
 			if (block instanceof BlockFTBC)
 			{
-				BlockFTBC p = (BlockFTBC) block;
+				((BlockFTBC) block).setFTBCBlockColor(null);
+			}
 
+			ResourceLocation id = block.getRegistryName();
+
+			if (id != null)
+			{
 				if (block instanceof AirBlock
 						|| block instanceof BushBlock
 						|| block instanceof FireBlock
@@ -95,31 +104,31 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 						|| block instanceof TorchBlock && !(block instanceof RedstoneTorchBlock)
 				)
 				{
-					p.setFTBCBlockColor(BlockColors.IGNORED);
+					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.IGNORED);
 				}
 				else if (block instanceof GrassBlock)
 				{
-					p.setFTBCBlockColor(BlockColors.GRASS);
+					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.GRASS);
 				}
 				else if (block instanceof LeavesBlock || block instanceof VineBlock)
 				{
-					p.setFTBCBlockColor(BlockColors.FOLIAGE);
+					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.FOLIAGE);
 				}
 				else if (block instanceof FlowerPotBlock)
 				{
-					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(0x683A2D)));
+					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x683A2D)));
 				}
 				else if (block instanceof IAbstractRailBlock)
 				{
-					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(0x888888)));
+					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
 				}
 				else if (block.getMaterialColor() != null)
 				{
-					p.setFTBCBlockColor(new CustomBlockColor(Color4I.rgb(block.getMaterialColor().colorValue)));
+					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.getMaterialColor().colorValue)));
 				}
 				else
 				{
-					p.setFTBCBlockColor(new CustomBlockColor(Color4I.RED));
+					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.RED));
 				}
 			}
 		}
@@ -130,16 +139,11 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 		{
 			if (entry.getValue().isJsonPrimitive())
 			{
-				Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getKey()));
+				BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
 
-				if (block != Blocks.AIR && block instanceof BlockFTBC)
+				if (col != null)
 				{
-					BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
-
-					if (col != null)
-					{
-						((BlockFTBC) block).setFTBCBlockColor(col);
-					}
+					BLOCK_ID_TO_COLOR_MAP.put(new ResourceLocation(entry.getKey()), col);
 				}
 			}
 		}

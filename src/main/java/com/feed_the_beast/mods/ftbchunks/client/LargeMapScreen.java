@@ -1,7 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
 import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
+import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.RequestPlayerListPacket;
 import com.feed_the_beast.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -19,15 +21,19 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHelper;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -320,6 +326,15 @@ public class LargeMapScreen extends GuiBase
 	public void drawForeground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
 		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == 0 ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
+
+		if (regionPanel.blockY != 0)
+		{
+			MapRegion region = dimension.getRegion(XZ.regionFromBlock(regionPanel.blockX, regionPanel.blockZ));
+			RegistryKey<Biome> biome = dimension.manager.getBiomeKey(region.getDataImage().getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511));
+			Block block = dimension.manager.getBlock(region.getBlockImage().getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511));
+			coords = coords + " | " + I18n.format("biome." + biome.getLocation().getNamespace() + "." + biome.getLocation().getPath()) + " | " + I18n.format(block.getTranslationKey());
+		}
+
 		int coordsw = theme.getStringWidth(coords) / 2;
 
 		backgroundColor.withAlpha(150).draw(matrixStack, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, h);

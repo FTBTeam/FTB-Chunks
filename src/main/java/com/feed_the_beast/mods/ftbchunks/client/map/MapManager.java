@@ -1,5 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
+import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColors;
@@ -166,6 +167,14 @@ public class MapManager implements MapTask
 		blocksToRelease.clear();
 		biomesToRelease.clear();
 		blockIdToColMap.clear();
+
+		for (Block block : ForgeRegistries.BLOCKS)
+		{
+			if (block instanceof BlockFTBC)
+			{
+				((BlockFTBC) block).setFTBCBlockColor(null);
+			}
+		}
 	}
 
 	public void updateAllRegions(boolean save)
@@ -309,6 +318,13 @@ public class MapManager implements MapTask
 		return i;
 	}
 
+	public Block getBlock(int id)
+	{
+		ResourceLocation rl = blockColorIndexMap.get(id & 0xFFFFFF);
+		Block block = rl == null ? null : ForgeRegistries.BLOCKS.getValue(rl);
+		return block == null ? Blocks.AIR : block;
+	}
+
 	public BlockColor getBlockColor(int id)
 	{
 		return blockIdToColMap.computeIfAbsent(id & 0xFFFFFF, i -> {
@@ -316,15 +332,37 @@ public class MapManager implements MapTask
 
 			if (block != Blocks.AIR && block instanceof BlockFTBC)
 			{
-				return ((BlockFTBC) block).getFTBCBlockColor();
+				BlockColor color = ((BlockFTBC) block).getFTBCBlockColor();
+
+				if (color == null)
+				{
+					if (block.getRegistryName() != null)
+					{
+						color = ColorMapLoader.BLOCK_ID_TO_COLOR_MAP.get(block.getRegistryName());
+					}
+
+					if (color == null)
+					{
+						color = BlockColors.IGNORED;
+					}
+
+					((BlockFTBC) block).setFTBCBlockColor(color);
+				}
+
+				return color;
 			}
 
 			return BlockColors.IGNORED;
 		});
 	}
 
+	public RegistryKey<Biome> getBiomeKey(int id)
+	{
+		return biomeColorIndexMap.get(id & 0b111_11111111);
+	}
+
 	public Biome getBiome(World world, int id)
 	{
-		return world.func_241828_r().getRegistry(Registry.BIOME_KEY).getValueForKey(biomeColorIndexMap.get(id));
+		return world.func_241828_r().getRegistry(Registry.BIOME_KEY).getValueForKey(getBiomeKey(id));
 	}
 }

@@ -11,6 +11,7 @@ public interface BlockFTBC
 {
 	void setFTBCBlockColor(@Nullable BlockColor c);
 
+	@Nullable
 	BlockColor getFTBCBlockColor();
 
 	void setFTBCBlockColorIndex(int c);

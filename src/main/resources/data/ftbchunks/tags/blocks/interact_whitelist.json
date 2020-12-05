@@ -3,6 +3,9 @@
 	"values": [
 	],
 	"optinal": [
-		"#tombstone:graves"
+		"#tombstone:graves",
+		"waystones:waystone",
+		"waystones:mossy_waystone",
+		"waystones:sandy_waystone"
 	]
 }

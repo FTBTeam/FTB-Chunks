@@ -1,8 +1,9 @@
 {
 	"replace": false,
 	"values": [
-	],
-	"optinal": [
-		"gravestone:gravestone"
+		{
+			"id": "gravestone:gravestone",
+			"required": false
+		}
 	]
 }

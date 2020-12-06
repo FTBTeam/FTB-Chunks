@@ -1,11 +1,22 @@
 {
 	"replace": false,
 	"values": [
-	],
-	"optinal": [
-		"#tombstone:graves",
-		"waystones:waystone",
-		"waystones:mossy_waystone",
-		"waystones:sandy_waystone"
+		"minecraft:crafting_table",
+		{
+			"id": "#tombstone:graves",
+			"required": false
+		},
+		{
+			"id": "waystones:waystone",
+			"required": false
+		},
+		{
+			"id": "waystones:mossy_waystone",
+			"required": false
+		},
+		{
+			"id": "waystones:sandy_waystone",
+			"required": false
+		}
 	]
 }

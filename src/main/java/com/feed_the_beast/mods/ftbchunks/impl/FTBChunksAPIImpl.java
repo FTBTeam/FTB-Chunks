@@ -3,7 +3,8 @@ package com.feed_the_beast.mods.ftbchunks.impl;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import net.minecraft.block.Block;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ITag;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.Tags;
 
 /**
  * @author LatvianModder
@@ -11,8 +12,8 @@ import net.minecraft.tags.ITag;
 public class FTBChunksAPIImpl extends FTBChunksAPI
 {
 	public static ClaimedChunkManagerImpl manager;
-	public static final ITag.INamedTag<Block> EDIT_TAG = BlockTags.makeWrapperTag("ftbchunks:edit_whitelist");
-	public static final ITag.INamedTag<Block> INTERACT_TAG = BlockTags.makeWrapperTag("ftbchunks:interact_whitelist");
+	public static final Tags.IOptionalNamedTag<Block> EDIT_TAG = BlockTags.createOptional(new ResourceLocation("ftbchunks", "edit_whitelist"));
+	public static final Tags.IOptionalNamedTag<Block> INTERACT_TAG = BlockTags.createOptional(new ResourceLocation("ftbchunks", "interact_whitelist"));
 
 	@Override
 	public ClaimedChunkManagerImpl getManager()

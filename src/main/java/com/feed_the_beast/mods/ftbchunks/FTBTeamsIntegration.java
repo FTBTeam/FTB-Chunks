@@ -3,6 +3,7 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbteams.api.FTBTeamsAPI;
 import com.feed_the_beast.mods.ftbteams.api.Team;
+import com.feed_the_beast.mods.ftbteams.impl.TeamImpl;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.util.text.IFormattableTextComponent;
 
@@ -30,6 +31,11 @@ public class FTBTeamsIntegration
 	@Nullable
 	public static IFormattableTextComponent getTeamName(ClaimedChunkPlayerData data)
 	{
-		return FTBTeamsAPI.INSTANCE.getManager().getTeam(new GameProfile(data.getUuid(), data.getName())).map(team -> team.getName().deepCopy()).orElse(null);
+		return FTBTeamsAPI.INSTANCE.getManager().getTeam(data.getProfile()).map(team -> team.getName().deepCopy()).orElse(null);
+	}
+
+	public static int getTeamColor(ClaimedChunkPlayerData data)
+	{
+		return FTBTeamsAPI.INSTANCE.getManager().getTeam(data.getProfile()).map(team -> team.getProperty(TeamImpl.COLOR)).orElse(0);
 	}
 }

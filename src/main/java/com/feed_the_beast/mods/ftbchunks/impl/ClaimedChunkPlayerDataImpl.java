@@ -105,6 +105,16 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	@Override
 	public int getColor()
 	{
+		if (FTBChunks.teamsMod)
+		{
+			int c = FTBTeamsIntegration.getTeamColor(this);
+
+			if (c != 0)
+			{
+				return 0xFF000000 | c;
+			}
+		}
+
 		if (color == 0)
 		{
 			color = MathHelper.hsvToRGB(MathUtils.RAND.nextFloat(), 0.65F, 1F);
@@ -576,6 +586,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		}
 	}
 
+	@Override
 	public IFormattableTextComponent getDisplayName()
 	{
 		if (FTBChunks.teamsMod)

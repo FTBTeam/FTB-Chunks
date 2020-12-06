@@ -12,28 +12,15 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
 import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import javax.annotation.Nullable;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -361,142 +348,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 			if (addAnother)
 			{
 				prettyTimeString(builder, seconds % 86400L, false);
-			}
-		}
-	}
-
-	public void exportJson()
-	{
-		JsonObject json = new JsonObject();
-
-		JsonObject playersJson = new JsonObject();
-
-		for (ClaimedChunkPlayerDataImpl data : playerData.values())
-		{
-			playersJson.add(data.getName(), data.toJson());
-		}
-
-		json.add("players", playersJson);
-
-		try (Writer writer = Files.newBufferedWriter(localDirectory.resolve("all.json")))
-		{
-			FTBChunks.GSON.toJson(json, writer);
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-		}
-	}
-
-	public void exportSvg()
-	{
-		HashMap<RegistryKey<World>, ArrayList<ClaimedChunk>> chunkMap = new HashMap<>();
-
-		for (ClaimedChunk chunk : FTBChunksAPIImpl.manager.getAllClaimedChunks())
-		{
-			chunkMap.computeIfAbsent(chunk.getPos().dimension, type -> new ArrayList<>()).add(chunk);
-		}
-
-		long sec = Instant.now().getEpochSecond();
-
-		for (Map.Entry<RegistryKey<World>, ArrayList<ClaimedChunk>> entry : chunkMap.entrySet())
-		{
-			try (Writer writer = Files.newBufferedWriter(localDirectory.resolve(entry.getKey().getLocation().toString().replace(':', '_') + ".svg"), StandardOpenOption.CREATE))
-			{
-				DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
-				Document document = documentBuilder.newDocument();
-
-				Element svg = document.createElement("svg");
-				document.appendChild(svg);
-				svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-				svg.setAttribute("version", "1.1");
-
-				Element style = document.createElement("style");
-				StringBuilder sb = new StringBuilder();
-				sb.append("text{font-size:4px;dominant-baseline:hanging;}");
-				sb.append("rect{width:32px;height:32px;stroke-width:0.75px;stroke:#000000;}");
-				sb.append(".fl{stroke:#FF0000;}");
-
-				style.appendChild(document.createTextNode(sb.toString()));
-				svg.appendChild(style);
-
-				int minX = Integer.MAX_VALUE;
-				int minZ = Integer.MAX_VALUE;
-				int maxX = Integer.MIN_VALUE;
-				int maxZ = Integer.MIN_VALUE;
-
-				for (ClaimedChunk chunk : entry.getValue())
-				{
-					minX = Math.min(minX, chunk.getPos().x);
-					minZ = Math.min(minZ, chunk.getPos().z);
-					maxX = Math.max(maxX, chunk.getPos().x);
-					maxZ = Math.max(maxZ, chunk.getPos().z);
-				}
-
-				svg.setAttribute("width", Integer.toString((maxX - minX + 3) * 33) + 2);
-				svg.setAttribute("height", Integer.toString((maxZ - minZ + 3) * 33) + 2);
-
-				for (ClaimedChunk chunk : entry.getValue())
-				{
-					int x = (chunk.getPos().x - minX + 1) * 33 + 1;
-					int z = (chunk.getPos().z - minZ + 1) * 33 + 1;
-
-					Element c = document.createElement("rect");
-					c.setAttribute("x", Integer.toString(x));
-					c.setAttribute("y", Integer.toString(z));
-					c.setAttribute("fill", String.format("#%06X", 0xFFFFFF & chunk.getColor()));
-
-					StringBuilder title = new StringBuilder();
-					title.append("Claimed: ").append(prettyTimeString(sec - chunk.getTimeClaimed().getEpochSecond())).append(" ago");
-
-					String group = chunk.getGroupID();
-
-					if (!group.isEmpty())
-					{
-						title.append("\r\nGroup: ").append(group);
-					}
-
-					if (chunk.isForceLoaded())
-					{
-						c.setAttribute("class", "fl");
-						title.append("\r\nForce Loaded");
-					}
-
-					svg.appendChild(c);
-
-					Element t = document.createElement("title");
-					t.appendChild(document.createTextNode(title.toString()));
-					c.appendChild(t);
-
-					Element n = document.createElement("text");
-					n.setAttribute("x", Integer.toString(x + 1));
-					n.setAttribute("y", Integer.toString(z + 1));
-					n.appendChild(document.createTextNode(chunk.getPlayerData().getName()));
-					svg.appendChild(n);
-
-					Element cx = document.createElement("text");
-					cx.setAttribute("x", Integer.toString(x + 1));
-					cx.setAttribute("y", Integer.toString(z + 6));
-					cx.appendChild(document.createTextNode("X: " + ((chunk.getPos().x << 4) + 8)));
-					svg.appendChild(cx);
-
-					Element cz = document.createElement("text");
-					cz.setAttribute("x", Integer.toString(x + 1));
-					cz.setAttribute("y", Integer.toString(z + 11));
-					cz.appendChild(document.createTextNode("Z: " + ((chunk.getPos().z << 4) + 8)));
-					svg.appendChild(cz);
-				}
-
-				TransformerFactory transformerFactory = TransformerFactory.newInstance();
-				Transformer transformer = transformerFactory.newTransformer();
-				DOMSource domSource = new DOMSource(document);
-				StreamResult streamResult = new StreamResult(writer);
-				transformer.transform(domSource, streamResult);
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace();
 			}
 		}
 	}

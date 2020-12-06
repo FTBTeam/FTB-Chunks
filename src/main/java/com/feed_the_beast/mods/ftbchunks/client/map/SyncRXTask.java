@@ -33,8 +33,7 @@ public class SyncRXTask implements MapTask
 		{
 			MapDimension dimension = MapManager.inst.getDimension(key.dim);
 			MapRegion region = dimension.getRegion(XZ.of(key.x, key.z));
-			NativeImage dataImg0 = region.getDataImage();
-			NativeImage blockImg0 = region.getBlockImage();
+			MapRegion.Images images = region.getImages();
 
 			byte[] dataImgBytes = new byte[stream.readInt()];
 			stream.read(dataImgBytes);
@@ -69,15 +68,15 @@ public class SyncRXTask implements MapTask
 							int dc = dataImg.getPixelRGBA(ax, az);
 							int bc = blockImg.getPixelRGBA(ax, az);
 
-							if (dc != dataImg0.getPixelRGBA(ax, az))
+							if (dc != images.data.getPixelRGBA(ax, az))
 							{
-								dataImg0.setPixelRGBA(ax, az, dc);
+								images.data.setPixelRGBA(ax, az, dc);
 								changed = true;
 							}
 
-							if (bc != blockImg0.getPixelRGBA(ax, az))
+							if (bc != images.blocks.getPixelRGBA(ax, az))
 							{
-								blockImg0.setPixelRGBA(ax, az, bc);
+								images.blocks.setPixelRGBA(ax, az, bc);
 								changed = true;
 							}
 						}

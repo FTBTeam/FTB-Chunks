@@ -52,8 +52,7 @@ public class RenderMapImageTask implements MapTask
 	@Override
 	public void runMapTask()
 	{
-		NativeImage blockImg = region.getBlockImage();
-		NativeImage dataImg = region.getDataImage();
+		MapRegion.Images images = region.getImages();
 
 		int[][] blockImgMap = new int[512][512];
 		int[][] dataImgMap = new int[1024][1024];
@@ -62,7 +61,7 @@ public class RenderMapImageTask implements MapTask
 		{
 			for (int x = 0; x < 512; x++)
 			{
-				blockImgMap[x][z] = blockImg.getPixelRGBA(x, z);
+				blockImgMap[x][z] = images.blocks.getPixelRGBA(x, z);
 			}
 		}
 
@@ -70,7 +69,7 @@ public class RenderMapImageTask implements MapTask
 		{
 			for (int x = 0; x < 1024; x++)
 			{
-				dataImgMap[x][z] = dataImg.getPixelRGBA(x, z);
+				dataImgMap[x][z] = images.data.getPixelRGBA(x, z);
 			}
 		}
 
@@ -81,7 +80,7 @@ public class RenderMapImageTask implements MapTask
 
 		if (rEast != null)
 		{
-			NativeImage img = rEast.getDataImage();
+			NativeImage img = rEast.getImages().data;
 
 			for (int i = 0; i < 512; i++)
 			{
@@ -100,7 +99,7 @@ public class RenderMapImageTask implements MapTask
 
 		if (rTop != null)
 		{
-			NativeImage img = rTop.getDataImage();
+			NativeImage img = rTop.getImages().data;
 
 			for (int i = 0; i < 512; i++)
 			{

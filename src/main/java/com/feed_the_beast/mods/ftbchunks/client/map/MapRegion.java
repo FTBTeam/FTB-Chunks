@@ -24,6 +24,18 @@ public class MapRegion implements MapTask
 {
 	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
 
+	public static final class Images
+	{
+		public final NativeImage data;
+		public final NativeImage blocks;
+
+		private Images(NativeImage d, NativeImage b)
+		{
+			data = d;
+			blocks = b;
+		}
+	}
+
 	public final MapDimension dimension;
 	public final XZ pos;
 	public Map<XZ, MapChunk> chunks;
@@ -93,10 +105,8 @@ public class MapRegion implements MapTask
 		return chunks;
 	}
 
-	public NativeImage getDataImage()
+	private NativeImage getDataImage()
 	{
-		getChunks();
-
 		if (dataImage == null)
 		{
 			Path file = dimension.directory.resolve(pos.toRegionString() + "-data.png");
@@ -123,10 +133,8 @@ public class MapRegion implements MapTask
 		return dataImage;
 	}
 
-	public NativeImage getBlockImage()
+	private NativeImage getBlockImage()
 	{
-		getChunks();
-
 		if (blockImage == null)
 		{
 			Path file = dimension.directory.resolve(pos.toRegionString() + "-blocks.png");
@@ -151,6 +159,12 @@ public class MapRegion implements MapTask
 		}
 
 		return blockImage;
+	}
+
+	public final Images getImages()
+	{
+		getChunks();
+		return new Images(getDataImage(), getBlockImage());
 	}
 
 	public NativeImage getRenderedMapImage()
@@ -282,8 +296,9 @@ public class MapRegion implements MapTask
 				}
 			});
 
-			getDataImage().write(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
-			getBlockImage().write(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
+			Images images = getImages();
+			images.data.write(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
+			images.blocks.write(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
 		}
 		catch (Exception ex)
 		{

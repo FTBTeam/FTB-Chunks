@@ -3,7 +3,6 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -49,8 +48,7 @@ public class ReloadChunkTask implements MapTask
 		}
 
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getChunk(XZ.of(pos));
-		NativeImage dataImage = mapChunk.region.getDataImage();
-		NativeImage blockImage = mapChunk.region.getBlockImage();
+		MapRegion.Images images = mapChunk.region.getImages();
 
 		int topY = world.func_234938_ad_() + 1;
 		BlockPos.Mutable blockPos = new BlockPos.Mutable();
@@ -81,8 +79,8 @@ public class ReloadChunkTask implements MapTask
 
 				int ax = mapChunk.pos.x * 16 + wx;
 				int az = mapChunk.pos.z * 16 + wz;
-				int dataABGR0 = dataImage.getPixelRGBA(ax, az) & 0xFFFFFF;
-				int blockABGR0 = blockImage.getPixelRGBA(ax, az) & 0xFFFFFF;
+				int dataABGR0 = images.data.getPixelRGBA(ax, az) & 0xFFFFFF;
+				int blockABGR0 = images.blocks.getPixelRGBA(ax, az) & 0xFFFFFF;
 				int by0 = (dataABGR0 >> 16) & 255; // Get old height
 
 				int dataABGR = (dataABGR0 & 0b00000000_00000111_11111111); // Clear height, water and light bits
@@ -97,9 +95,9 @@ public class ReloadChunkTask implements MapTask
 					Biome biome = world.getBiome(blockPos);
 					dataABGR &= 0b11111111_11111000_00000000; // Clear biome bits
 					dataABGR |= (manager.getBiomeColorIndex(world, biome, biome) & 0b111_11111111); // Biome
-					dataImage.setPixelRGBA(ax + 512, az, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getFoliageColor(world, blockPos)));
-					dataImage.setPixelRGBA(ax, az + 512, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getGrassColor(world, blockPos)));
-					dataImage.setPixelRGBA(ax + 512, az + 512, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getWaterColor(world, blockPos)));
+					images.data.setPixelRGBA(ax + 512, az, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getFoliageColor(world, blockPos)));
+					images.data.setPixelRGBA(ax, az + 512, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getGrassColor(world, blockPos)));
+					images.data.setPixelRGBA(ax + 512, az + 512, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getWaterColor(world, blockPos)));
 					changed = true;
 				}
 
@@ -107,13 +105,13 @@ public class ReloadChunkTask implements MapTask
 
 				if (dataABGR0 != dataABGR)
 				{
-					dataImage.setPixelRGBA(ax, az, 0xFF000000 | dataABGR);
+					images.data.setPixelRGBA(ax, az, 0xFF000000 | dataABGR);
 					changed = true;
 				}
 
 				if (blockABGR0 != blockABGR)
 				{
-					blockImage.setPixelRGBA(ax, az, 0xFF000000 | blockABGR);
+					images.blocks.setPixelRGBA(ax, az, 0xFF000000 | blockABGR);
 					changed = true;
 				}
 

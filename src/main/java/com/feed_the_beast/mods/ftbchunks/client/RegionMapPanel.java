@@ -143,7 +143,7 @@ public class RegionMapPanel extends Panel
 			{
 				double qx = ((WaypointButton) w).waypoint.x / 512D;
 				double qy = ((WaypointButton) w).waypoint.z / 512D;
-				int s = Math.max(4, z / 128);
+				int s = Math.max(8, z / 128);
 
 				double x = (qx - regionMinX) * z - s / 2D;
 				double y = (qy - regionMinZ) * z - s / 2D;
@@ -153,7 +153,7 @@ public class RegionMapPanel extends Panel
 			{
 				double qx = ((PlayerButton) w).playerX / 512D;
 				double qy = ((PlayerButton) w).playerZ / 512D;
-				int s = Math.max(4, z / 128);
+				int s = Math.max(8, z / 128);
 
 				double x = (qx - regionMinX) * z - s / 2D;
 				double y = (qy - regionMinZ) * z - s / 2D;

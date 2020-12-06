@@ -47,12 +47,12 @@ public class MapChunk
 
 	public int getBlock(int x, int z)
 	{
-		return region.getBlockImage().getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
+		return region.getImages().blocks.getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
 	}
 
 	public int getData(int x, int z)
 	{
-		return region.getDataImage().getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
+		return region.getImages().data.getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
 	}
 
 	public boolean connects(MapChunk chunk)

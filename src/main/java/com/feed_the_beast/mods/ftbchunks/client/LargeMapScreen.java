@@ -330,9 +330,16 @@ public class LargeMapScreen extends GuiBase
 		if (regionPanel.blockY != 0)
 		{
 			MapRegion region = dimension.getRegion(XZ.regionFromBlock(regionPanel.blockX, regionPanel.blockZ));
-			RegistryKey<Biome> biome = dimension.manager.getBiomeKey(region.getDataImage().getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511));
-			Block block = dimension.manager.getBlock(region.getBlockImage().getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511));
+			MapRegion.Images images = region.getImages();
+			int data = images.data.getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511);
+			RegistryKey<Biome> biome = dimension.manager.getBiomeKey(data);
+			Block block = dimension.manager.getBlock(images.blocks.getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511));
 			coords = coords + " | " + I18n.format("biome." + biome.getLocation().getNamespace() + "." + biome.getLocation().getPath()) + " | " + I18n.format(block.getTranslationKey());
+
+			if ((data & (1 << 15)) != 0)
+			{
+				coords += " (in water)";
+			}
 		}
 
 		int coordsw = theme.getStringWidth(coords) / 2;

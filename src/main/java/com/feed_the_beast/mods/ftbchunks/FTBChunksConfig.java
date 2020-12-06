@@ -1,6 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks;
 
+import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
+import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.RegistryKey;
@@ -137,7 +140,8 @@ public class FTBChunksConfig
 	{
 		if (patchChunkLoading)
 		{
-			return false;
+			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(world.getDimensionKey(), pos));
+			return chunk != null && chunk.isForceLoaded();
 		}
 
 		return false;

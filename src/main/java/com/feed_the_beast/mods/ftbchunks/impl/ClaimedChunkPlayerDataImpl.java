@@ -374,6 +374,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return true;
 		}
+		else if (isInAllyList(p.getUuid()) && FTBChunksAPIImpl.manager.knownFakePlayers.containsKey(p.getUuid()))
+		{
+			return true;
+		}
 
 		return getName().equals(p.getName());
 	}

@@ -343,7 +343,7 @@ public class FTBChunks
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((ServerWorld) event.getWorld(), event.getPos()));
 
-			if (chunk != null)
+			if (chunk != null && !chunk.canEdit((ServerPlayerEntity) event.getEntity(), event.getState()))
 			{
 				event.setCanceled(true);
 			}

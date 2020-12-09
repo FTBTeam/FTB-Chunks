@@ -108,6 +108,11 @@ public class SendPlayerListPacket
 				continue;
 			}
 
+			if (FTBChunksAPIImpl.manager.knownFakePlayers.containsKey(p.getUuid()))
+			{
+				continue;
+			}
+
 			int flags = 0;
 
 			if (self.allies.contains(p.getUuid()))

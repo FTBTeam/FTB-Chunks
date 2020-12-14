@@ -3,7 +3,6 @@ package com.feed_the_beast.mods.ftbchunks;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColors;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.CustomBlockColor;
-import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -12,7 +11,6 @@ import com.google.gson.JsonObject;
 import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.BushBlock;
 import net.minecraft.block.FireBlock;
 import net.minecraft.block.FlowerPotBlock;
@@ -29,7 +27,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.extensions.IAbstractRailBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -90,11 +87,6 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 
 		for (Block block : ForgeRegistries.BLOCKS)
 		{
-			if (block instanceof BlockFTBC)
-			{
-				((BlockFTBC) block).setFTBCBlockColor(null);
-			}
-
 			ResourceLocation id = block.getRegistryName();
 
 			if (id != null)
@@ -156,32 +148,5 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 	public static BlockColor getBlockColor(ResourceLocation id)
 	{
 		return BLOCK_ID_TO_COLOR_MAP.getOrDefault(id, BlockColors.IGNORED);
-	}
-
-	public static BlockColor getBlockColor(@Nullable Block block)
-	{
-		if (block != Blocks.AIR && block instanceof BlockFTBC)
-		{
-			BlockColor color = ((BlockFTBC) block).getFTBCBlockColor();
-
-			if (color == null)
-			{
-				if (block.getRegistryName() != null)
-				{
-					color = getBlockColor(block.getRegistryName());
-				}
-
-				if (color == null)
-				{
-					color = BlockColors.IGNORED;
-				}
-
-				((BlockFTBC) block).setFTBCBlockColor(color);
-			}
-
-			return color;
-		}
-
-		return BlockColors.IGNORED;
 	}
 }

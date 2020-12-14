@@ -7,10 +7,12 @@ import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -77,7 +79,8 @@ public class MapChunk
 
 	public static boolean skipBlock(BlockState state)
 	{
-		return ColorMapLoader.getBlockColor(state.getBlock()).isIgnored();
+		ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
+		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}
 
 	public static BlockPos.Mutable setHeight(@Nullable IChunk chunk, BlockPos.Mutable pos, boolean[] flags)

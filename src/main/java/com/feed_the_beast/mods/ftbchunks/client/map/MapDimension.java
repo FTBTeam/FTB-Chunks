@@ -196,7 +196,7 @@ public class MapDimension implements MapTask
 			JsonObject json = new JsonObject();
 			JsonArray waypointArray = new JsonArray();
 
-			for (Waypoint w : waypoints)
+			for (Waypoint w : getWaypoints())
 			{
 				JsonObject o = new JsonObject();
 				o.addProperty("hidden", w.hidden);

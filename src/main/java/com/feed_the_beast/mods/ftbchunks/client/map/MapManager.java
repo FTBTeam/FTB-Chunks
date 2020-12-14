@@ -4,8 +4,8 @@ import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
 import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
 import com.feed_the_beast.mods.ftbchunks.core.BiomeFTBC;
-import com.feed_the_beast.mods.ftbchunks.core.BlockFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.RegistryKey;
@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -37,31 +36,31 @@ public class MapManager implements MapTask
 
 	public final UUID serverId;
 	public final Path directory;
-	public final Random random;
 	private final Map<RegistryKey<World>, MapDimension> dimensions;
 	public boolean saveData;
 
 	private final Int2ObjectOpenHashMap<ResourceLocation> blockColorIndexMap;
+	private final Object2IntOpenHashMap<ResourceLocation> blockColorIndexMapReverse;
 	private final Int2ObjectOpenHashMap<RegistryKey<Biome>> biomeColorIndexMap;
-	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColMap;
-	private final List<BlockFTBC> blocksToRelease;
+	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColCache;
 	private final List<BiomeFTBC> biomesToRelease;
 
 	public MapManager(UUID id, Path dir)
 	{
 		serverId = id;
 		directory = dir;
-		random = new Random();
 		dimensions = new LinkedHashMap<>();
 		saveData = false;
 
 		blockColorIndexMap = new Int2ObjectOpenHashMap<>();
 		blockColorIndexMap.defaultReturnValue(new ResourceLocation("minecraft:air"));
+		blockColorIndexMapReverse = new Object2IntOpenHashMap<>();
+		blockColorIndexMapReverse.defaultReturnValue(0);
 		biomeColorIndexMap = new Int2ObjectOpenHashMap<>();
 		biomeColorIndexMap.defaultReturnValue(Biomes.PLAINS);
-		blockIdToColMap = new Int2ObjectOpenHashMap<>();
 
-		blocksToRelease = new ArrayList<>();
+		blockIdToColCache = new Int2ObjectOpenHashMap<>();
+
 		biomesToRelease = new ArrayList<>();
 
 		try
@@ -100,6 +99,7 @@ public class MapManager implements MapTask
 						int i = Integer.decode(s1[0]);
 						ResourceLocation loc = new ResourceLocation(s1[1]);
 						blockColorIndexMap.put(i, loc);
+						blockColorIndexMapReverse.put(loc, i);
 					}
 				}
 			}
@@ -121,7 +121,8 @@ public class MapManager implements MapTask
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
 						ResourceLocation loc = new ResourceLocation(s1[1]);
-						biomeColorIndexMap.put(i, RegistryKey.getOrCreateKey(Registry.BIOME_KEY, loc));
+						RegistryKey<Biome> key = RegistryKey.getOrCreateKey(Registry.BIOME_KEY, loc);
+						biomeColorIndexMap.put(i, key);
 					}
 				}
 			}
@@ -153,27 +154,13 @@ public class MapManager implements MapTask
 			dimension.release();
 		}
 
-		for (BlockFTBC b : blocksToRelease)
-		{
-			b.setFTBCBlockColorIndex(-1);
-		}
-
 		for (BiomeFTBC b : biomesToRelease)
 		{
 			b.setFTBCBiomeColorIndex(-1);
 		}
 
-		blocksToRelease.clear();
 		biomesToRelease.clear();
-		blockIdToColMap.clear();
-
-		for (Block block : ForgeRegistries.BLOCKS)
-		{
-			if (block instanceof BlockFTBC)
-			{
-				((BlockFTBC) block).setFTBCBlockColor(null);
-			}
-		}
+		blockIdToColCache.clear();
 	}
 
 	public void updateAllRegions(boolean save)
@@ -223,38 +210,14 @@ public class MapManager implements MapTask
 		}
 	}
 
-	public int getBlockColorIndex(Block block)
+	public int getBlockColorIndex(ResourceLocation id)
 	{
-		BlockFTBC b = block instanceof BlockFTBC ? (BlockFTBC) block : null;
+		int i = blockColorIndexMapReverse.getInt(id);
 
-		if (b == null)
+		if (i == 0)
 		{
-			return 0;
-		}
-
-		int i = b.getFTBCBlockColorIndex();
-
-		if (i == -1)
-		{
-			ResourceLocation id = block.getRegistryName();
-
-			if (id == null)
-			{
-				b.setFTBCBlockColorIndex(i);
-				return 0;
-			}
-
-			for (Int2ObjectOpenHashMap.Entry<ResourceLocation> entry : blockColorIndexMap.int2ObjectEntrySet())
-			{
-				if (entry.getValue().equals(id))
-				{
-					i = entry.getIntKey();
-					b.setFTBCBlockColorIndex(i);
-					return i;
-				}
-			}
-
-			i = Objects.hashCode(block.getRegistryName()) & 0xFFFFFF;
+			Random random = new Random((long) id.getNamespace().hashCode() & 4294967295L | ((long) id.getPath().hashCode() & 4294967295L) << 32);
+			i = id.hashCode() & 0xFFFFFF;
 
 			while (i == 0 || blockColorIndexMap.containsKey(i))
 			{
@@ -262,9 +225,8 @@ public class MapManager implements MapTask
 			}
 
 			blockColorIndexMap.put(i, id);
-			b.setFTBCBlockColorIndex(i);
+			blockColorIndexMapReverse.put(id, i);
 			saveData = true;
-			blocksToRelease.add(b);
 		}
 
 		return i;
@@ -301,6 +263,7 @@ public class MapManager implements MapTask
 				}
 			}
 
+			Random random = new Random((long) key.getLocation().getNamespace().hashCode() & 4294967295L | ((long) key.getLocation().getPath().hashCode() & 4294967295L) << 32);
 			i = key.getLocation().hashCode() & 0b111_11111111;
 
 			while (i == 0 || biomeColorIndexMap.containsKey(i))
@@ -326,7 +289,7 @@ public class MapManager implements MapTask
 
 	public BlockColor getBlockColor(int id)
 	{
-		return blockIdToColMap.computeIfAbsent(id & 0xFFFFFF, i -> ColorMapLoader.getBlockColor(ForgeRegistries.BLOCKS.getValue(blockColorIndexMap.get(i))));
+		return blockIdToColCache.computeIfAbsent(id & 0xFFFFFF, i -> ColorMapLoader.getBlockColor(blockColorIndexMap.get(i)));
 	}
 
 	public RegistryKey<Biome> getBiomeKey(int id)

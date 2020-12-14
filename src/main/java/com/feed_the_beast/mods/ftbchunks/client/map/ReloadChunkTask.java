@@ -4,6 +4,7 @@ import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -13,6 +14,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeColors;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * @author LatvianModder
@@ -88,7 +90,8 @@ public class ReloadChunkTask implements MapTask
 				dataABGR |= flags[0] ? (1 << 15) : 0; // Water
 				dataABGR |= (world.getLightFor(LightType.BLOCK, blockPos.up()) & 15) << 11; // Light
 
-				int blockABGR = manager.getBlockColorIndex(state.getBlock());
+				ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
+				int blockABGR = manager.getBlockColorIndex(id == null ? ForgeRegistries.BLOCKS.getDefaultKey() : id);
 
 				if (by != by0 || dataABGR0 == 0) // Only update biome, foliage, grass and water colors if its first visit or height changed
 				{

@@ -1,8 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbchunks.impl.XZ;
-import net.minecraft.client.renderer.texture.NativeImage;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -31,9 +28,9 @@ public class SyncRXTask implements MapTask
 
 		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(in))))
 		{
+			/*
 			MapDimension dimension = MapManager.inst.getDimension(key.dim);
 			MapRegion region = dimension.getRegion(XZ.of(key.x, key.z));
-			MapRegion.Images images = region.getImages();
 
 			byte[] dataImgBytes = new byte[stream.readInt()];
 			stream.read(dataImgBytes);
@@ -88,6 +85,7 @@ public class SyncRXTask implements MapTask
 			{
 				region.update(true);
 			}
+			 */
 		}
 		catch (Exception ex)
 		{

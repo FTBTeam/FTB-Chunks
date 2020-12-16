@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegionData;
 import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
@@ -185,11 +186,11 @@ public class RegionMapPanel extends Panel
 
 		if (r != null)
 		{
-			MapChunk c = r.getChunks().get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+			MapRegionData data = r.getData();
 
-			if (c != null)
+			if (data != null)
 			{
-				blockY = c.getHeight(blockX, blockZ);
+				blockY = data.height[blockX & 511 + (blockZ & 511) * 512] & 0xFFFF;
 			}
 		}
 
@@ -225,11 +226,16 @@ public class RegionMapPanel extends Panel
 
 		if (r != null)
 		{
-			MapChunk c = r.getChunks().get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+			MapRegionData data = r.getData();
 
-			if (c != null && c.owner != StringTextComponent.EMPTY)
+			if (data != null)
 			{
-				list.add(c.owner);
+				MapChunk c = data.chunks.get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+
+				if (c != null && c.owner != StringTextComponent.EMPTY)
+				{
+					list.add(c.owner);
+				}
 			}
 		}
 	}

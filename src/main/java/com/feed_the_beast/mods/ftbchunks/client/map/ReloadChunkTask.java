@@ -1,6 +1,5 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.RegistryKey;
@@ -21,6 +20,8 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 public class ReloadChunkTask implements MapTask
 {
+	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
+
 	public final World world;
 	public final ChunkPos pos;
 	private final MapManager manager;
@@ -49,8 +50,8 @@ public class ReloadChunkTask implements MapTask
 			return;
 		}
 
-		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getChunk(XZ.of(pos));
-		MapRegion.Images images = mapChunk.region.getImages();
+		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
+		MapRegionData data = mapChunk.region.getDataBlocking();
 
 		int topY = world.func_234938_ad_() + 1;
 		BlockPos.Mutable blockPos = new BlockPos.Mutable();
@@ -67,54 +68,51 @@ public class ReloadChunkTask implements MapTask
 				int wx = wi % 16;
 				int wz = wi / 16;
 				blockPos.setPos(blockX + wx, topY, blockZ + wz);
-				int by = MathHelper.clamp(MapChunk.setHeight(ichunk, blockPos, flags).getY(), 0, 255);
-				blockPos.setY(by);
+				int height = MathHelper.clamp(MapChunk.getHeight(ichunk, blockPos, flags).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
+				blockPos.setY(height);
 				BlockState state = ichunk.getBlockState(blockPos);
-
-				// A        B        G        R
-				// FFFFFFFF HHHHHHHH WLLLLBBB BBBBBBBB
-				// F - Filler
-				// H - Height
-				// W - Water
-				// L - Light
-				// B - Biome
 
 				int ax = mapChunk.pos.x * 16 + wx;
 				int az = mapChunk.pos.z * 16 + wz;
-				int dataABGR0 = images.data.getPixelRGBA(ax, az) & 0xFFFFFF;
-				int blockABGR0 = images.blocks.getPixelRGBA(ax, az) & 0xFFFFFF;
-				int by0 = (dataABGR0 >> 16) & 255; // Get old height
+				int index = ax + az * 512;
 
-				int dataABGR = (dataABGR0 & 0b00000000_00000111_11111111); // Clear height, water and light bits
-				dataABGR |= by << 16; // Height
-				dataABGR |= flags[0] ? (1 << 15) : 0; // Water
-				dataABGR |= (world.getLightFor(LightType.BLOCK, blockPos.up()) & 15) << 11; // Light
+				int waterLightAndBiome0 = data.waterLightAndBiome[index] & 0xFFFF;
+				int blockIndex0 = data.getBlockIndex(index);
+				int height0 = data.height[index] & 0xFFFF; // Get old height
+
+				int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
+				waterLightAndBiome |= flags[0] ? (1 << 15) : 0; // Water
+				waterLightAndBiome |= (world.getLightFor(LightType.BLOCK, blockPos.up()) & 15) << 11; // Light
 
 				ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
-				int blockABGR = manager.getBlockColorIndex(id == null ? ForgeRegistries.BLOCKS.getDefaultKey() : id);
+				int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
 
-				if (by != by0 || dataABGR0 == 0) // Only update biome, foliage, grass and water colors if its first visit or height changed
+				if (height0 != height || waterLightAndBiome0 == 0) // Only update biome, foliage, grass and water colors if its first visit or height changed
 				{
 					Biome biome = world.getBiome(blockPos);
-					dataABGR &= 0b11111111_11111000_00000000; // Clear biome bits
-					dataABGR |= (manager.getBiomeColorIndex(world, biome, biome) & 0b111_11111111); // Biome
-					images.data.setPixelRGBA(ax + 512, az, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getFoliageColor(world, blockPos)));
-					images.data.setPixelRGBA(ax, az + 512, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getGrassColor(world, blockPos)));
-					images.data.setPixelRGBA(ax + 512, az + 512, ColorUtils.convertToNative(0xFF000000 | BiomeColors.getWaterColor(world, blockPos)));
+					waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
+					waterLightAndBiome |= (manager.getBiomeColorIndex(world, biome, biome) & 0b111_11111111); // Biome
+					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getFoliageColor(world, blockPos) & 0xFFFFFF);
+					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getGrassColor(world, blockPos) & 0xFFFFFF);
+					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getWaterColor(world, blockPos) & 0xFFFFFF);
 					changed = true;
 				}
 
-				//100 00110010 01010011 10010010
-
-				if (dataABGR0 != dataABGR)
+				if (height0 != height)
 				{
-					images.data.setPixelRGBA(ax, az, 0xFF000000 | dataABGR);
+					data.height[index] = (short) height;
 					changed = true;
 				}
 
-				if (blockABGR0 != blockABGR)
+				if (waterLightAndBiome0 != waterLightAndBiome)
 				{
-					images.blocks.setPixelRGBA(ax, az, 0xFF000000 | blockABGR);
+					data.waterLightAndBiome[index] = (short) waterLightAndBiome;
+					changed = true;
+				}
+
+				if (blockIndex0 != blockIndex)
+				{
+					data.setBlockIndex(index, blockIndex);
 					changed = true;
 				}
 

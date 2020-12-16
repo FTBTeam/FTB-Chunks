@@ -3,14 +3,15 @@ package com.feed_the_beast.mods.ftbchunks.client;
 import com.feed_the_beast.mods.ftbchunks.ColorMapLoader;
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.FTBChunksCommon;
-import com.feed_the_beast.mods.ftbchunks.client.map.MapChunk;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapManager;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegionData;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.PlayerHeadTexture;
 import com.feed_the_beast.mods.ftbchunks.client.map.RegionSyncKey;
 import com.feed_the_beast.mods.ftbchunks.client.map.ReloadChunkTask;
+import com.feed_the_beast.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.WaypointType;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
@@ -220,9 +221,9 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void updateChunk(SendChunkPacket packet)
 	{
-		MapChunk chunk = MapManager.inst.getDimension(packet.dimension).getRegion(XZ.regionFromChunk(packet.chunk.x, packet.chunk.z)).getChunk(XZ.of(packet.chunk.x, packet.chunk.z));
+		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 		Date now = new Date();
-		chunk.updateFrom(now, packet.chunk);
+		queue(new UpdateChunkFromServerTask(dimension, packet.chunk, now));
 	}
 
 	@Override
@@ -233,8 +234,7 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		for (SendChunkPacket.SingleChunk c : packet.chunks)
 		{
-			MapChunk chunk = dimension.getRegion(XZ.regionFromChunk(c.x, c.z)).getChunk(XZ.of(c.x, c.z));
-			chunk.updateFrom(now, c);
+			queue(new UpdateChunkFromServerTask(dimension, c, now));
 		}
 	}
 
@@ -681,11 +681,16 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		if (FTBChunksClientConfig.minimapZone)
 		{
-			ITextComponent currentChunkOwner = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).owner;
+			MapRegionData data = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getData();
 
-			if (currentChunkOwner != StringTextComponent.EMPTY)
+			if (data != null)
 			{
-				MINIMAP_TEXT_LIST.add(currentChunkOwner);
+				ITextComponent currentChunkOwner = data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).owner;
+
+				if (currentChunkOwner != StringTextComponent.EMPTY)
+				{
+					MINIMAP_TEXT_LIST.add(currentChunkOwner);
+				}
 			}
 		}
 

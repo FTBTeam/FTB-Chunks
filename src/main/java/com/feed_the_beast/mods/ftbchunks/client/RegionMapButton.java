@@ -24,7 +24,7 @@ public class RegionMapButton extends Widget
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
 	{
-		int id = region.getMapImageTextureId();
+		int id = region.getRenderedMapImageTextureId();
 
 		if (region.mapImageLoaded)
 		{

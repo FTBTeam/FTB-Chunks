@@ -1,6 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
+import com.feed_the_beast.mods.ftbchunks.FTBChunks;
 import com.feed_the_beast.mods.ftbchunks.client.FTBChunksClient;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
@@ -9,13 +11,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.TextureUtil;
 
+import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.zip.InflaterInputStream;
 
 /**
  * @author LatvianModder
@@ -24,27 +29,15 @@ public class MapRegion implements MapTask
 {
 	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
 
-	public static final class Images
-	{
-		public final NativeImage data;
-		public final NativeImage blocks;
-
-		private Images(NativeImage d, NativeImage b)
-		{
-			data = d;
-			blocks = b;
-		}
-	}
-
 	public final MapDimension dimension;
 	public final XZ pos;
-	public Map<XZ, MapChunk> chunks;
-	private NativeImage dataImage, blockImage;
+	public MapRegionData data;
+	private boolean isLoadingData;
 	public boolean saveData;
 	public NativeImage renderedMapImage;
-	private boolean updateMapImage;
-	public boolean updateMapTexture;
-	private int mapImageTextureId;
+	private boolean updateRenderedMapImage;
+	public boolean updateRenderedMapTexture;
+	private int renderedMapImageTextureId;
 	public boolean mapImageLoaded;
 	public boolean renderingMapImage;
 
@@ -52,13 +45,13 @@ public class MapRegion implements MapTask
 	{
 		dimension = d;
 		pos = p;
-		dataImage = null;
-		blockImage = null;
+		data = null;
+		isLoadingData = false;
 		saveData = false;
 		renderedMapImage = null;
-		updateMapImage = true;
-		updateMapTexture = true;
-		mapImageTextureId = -1;
+		updateRenderedMapImage = true;
+		updateRenderedMapTexture = true;
+		renderedMapImageTextureId = -1;
 		mapImageLoaded = false;
 	}
 
@@ -68,21 +61,22 @@ public class MapRegion implements MapTask
 		return this;
 	}
 
-	public Map<XZ, MapChunk> getChunks()
+	public MapRegionData getDataBlocking()
 	{
-		if (chunks == null)
+		if (data == null)
 		{
-			chunks = new HashMap<>();
-			dataImage = null;
-			blockImage = null;
+			data = new MapRegionData(this);
 
 			Path chunksFile = dimension.directory.resolve(pos.toRegionString() + "-chunks.dat");
 
 			if (Files.exists(chunksFile) && Files.isReadable(chunksFile))
 			{
-				if (!MapIOUtils.read(chunksFile, stream -> {
+				FTBChunks.LOGGER.info("Found old map files, converting... [" + dimension.safeDimensionId + "/" + pos.toRegionString() + "]");
+
+				try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(Files.newInputStream(chunksFile)))))
+				{
 					stream.readByte();
-					int version = stream.readByte();
+					stream.readByte();
 					int s = stream.readShort();
 
 					for (int i = 0; i < s; i++)
@@ -93,84 +87,106 @@ public class MapRegion implements MapTask
 
 						MapChunk c = new MapChunk(this, XZ.of(x, z));
 						c.modified = m;
-						chunks.put(c.pos, c);
+						data.chunks.put(c.pos, c);
 					}
-				}))
+				}
+				catch (IOException ex)
+				{
+					ex.printStackTrace();
+				}
+
+				try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-data.png")))
+				{
+					BufferedImage img = ImageIO.read(stream);
+
+					for (int y = 0; y < 512; y++)
+					{
+						for (int x = 0; x < 512; x++)
+						{
+							int index = x + y * 512;
+							int d = ColorUtils.convertToNative(img.getRGB(x, y) & 0xFFFFFF);
+							data.height[index] = (short) (d >> 16);
+							data.waterLightAndBiome[index] = (short) d;
+							data.foliage[index] = img.getRGB(x + 512, y) & 0xFFFFFF;
+							data.grass[index] = img.getRGB(x, y + 512) & 0xFFFFFF;
+							data.water[index] = img.getRGB(x + 512, y + 512) & 0xFFFFFF;
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
+				}
+
+				try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-blocks.png")))
+				{
+					BufferedImage img = ImageIO.read(stream);
+
+					for (int y = 0; y < 512; y++)
+					{
+						for (int x = 0; x < 512; x++)
+						{
+							data.setBlockIndex(x + y * 512, ColorUtils.convertToNative(img.getRGB(x, y)));
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
+				}
+
+				try
+				{
+					Files.deleteIfExists(chunksFile);
+					Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
+					Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
+				}
+				catch (IOException ex)
+				{
+					ex.printStackTrace();
+				}
+
+				try
+				{
+					data.write();
+					update(false);
+				}
+				catch (IOException ex)
 				{
 					update(true);
+					ex.printStackTrace();
 				}
 			}
-		}
-
-		return chunks;
-	}
-
-	private NativeImage getDataImage()
-	{
-		if (dataImage == null)
-		{
-			Path file = dimension.directory.resolve(pos.toRegionString() + "-data.png");
-
-			if (Files.exists(file) && Files.isReadable(file))
+			else
 			{
-				try (InputStream in = Files.newInputStream(file))
+				try
 				{
-					dataImage = NativeImage.read(in);
+					data.read();
 				}
-				catch (Exception ex)
+				catch (IOException ex)
 				{
 					ex.printStackTrace();
 				}
 			}
-
-			if (dataImage == null)
-			{
-				dataImage = new NativeImage(NativeImage.PixelFormat.RGBA, 1024, 1024, true);
-				dataImage.fillAreaRGBA(0, 0, 1024, 1024, NativeImage.getCombined(255, 0, 0, 0));
-			}
 		}
 
-		return dataImage;
+		return data;
 	}
 
-	private NativeImage getBlockImage()
+	@Nullable
+	public MapRegionData getData()
 	{
-		if (blockImage == null)
+		if (data == null && !isLoadingData)
 		{
-			Path file = dimension.directory.resolve(pos.toRegionString() + "-blocks.png");
-
-			if (Files.exists(file) && Files.isReadable(file))
-			{
-				try (InputStream in = Files.newInputStream(file))
-				{
-					blockImage = NativeImage.read(in);
-				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-				}
-			}
-
-			if (blockImage == null)
-			{
-				blockImage = new NativeImage(NativeImage.PixelFormat.RGBA, 512, 512, true);
-				blockImage.fillAreaRGBA(0, 0, 512, 512, NativeImage.getCombined(255, 0, 0, 0));
-			}
+			isLoadingData = true;
+			FTBChunks.EXECUTOR_SERVICE.submit(this::getDataBlocking);
 		}
 
-		return blockImage;
-	}
-
-	public final Images getImages()
-	{
-		getChunks();
-		return new Images(getDataImage(), getBlockImage());
+		return data;
 	}
 
 	public NativeImage getRenderedMapImage()
 	{
-		getChunks();
-
 		if (renderedMapImage == null)
 		{
 			renderedMapImage = new NativeImage(NativeImage.PixelFormat.RGBA, 512, 512, true);
@@ -178,9 +194,9 @@ public class MapRegion implements MapTask
 			update(false);
 		}
 
-		if (updateMapImage && !renderingMapImage)
+		if (updateRenderedMapImage && !renderingMapImage)
 		{
-			updateMapImage = false;
+			updateRenderedMapImage = false;
 			mapImageLoaded = false;
 			renderingMapImage = true;
 			FTBChunksClient.queue(new RenderMapImageTask(this));
@@ -189,58 +205,49 @@ public class MapRegion implements MapTask
 		return renderedMapImage;
 	}
 
-	public int getMapImageTextureId()
+	public int getRenderedMapImageTextureId()
 	{
-		if (mapImageTextureId == -1)
+		if (renderedMapImageTextureId == -1)
 		{
-			mapImageTextureId = TextureUtil.generateTextureId();
-			TextureUtil.prepareImage(mapImageTextureId, 512, 512);
+			renderedMapImageTextureId = TextureUtil.generateTextureId();
+			TextureUtil.prepareImage(renderedMapImageTextureId, 512, 512);
 		}
 
 		getRenderedMapImage();
 
-		if (updateMapTexture)
+		if (updateRenderedMapTexture)
 		{
 			mapImageLoaded = false;
 
 			Minecraft.getInstance().runAsync(() -> {
-				RenderSystem.bindTexture(mapImageTextureId);
+				RenderSystem.bindTexture(renderedMapImageTextureId);
 				renderedMapImage.uploadTextureSub(0, 0, 0, false);
 				mapImageLoaded = true;
 				FTBChunksClient.updateMinimap = true;
 			});
 
-			updateMapTexture = false;
+			updateRenderedMapTexture = false;
 		}
 
-		return mapImageTextureId;
-	}
-
-	public MapChunk getChunk(XZ pos)
-	{
-		if (pos.x != (pos.x & 31) || pos.z != (pos.z & 31))
-		{
-			pos = XZ.of(pos.x & 31, pos.z & 31);
-		}
-
-		return getChunks().computeIfAbsent(pos, p -> new MapChunk(this, p).created());
+		return renderedMapImageTextureId;
 	}
 
 	public void release()
 	{
-		if (dataImage != null)
+		if (saveData && data != null)
 		{
-			dataImage.close();
-			dataImage = null;
+			try
+			{
+				data.write();
+			}
+			catch (IOException ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 
-		if (blockImage != null)
-		{
-			blockImage.close();
-			blockImage = null;
-		}
-
-		chunks = null;
+		data = null;
+		isLoadingData = false;
 		releaseMapImage();
 	}
 
@@ -252,10 +259,10 @@ public class MapRegion implements MapTask
 			renderedMapImage = null;
 		}
 
-		if (mapImageTextureId != -1)
+		if (renderedMapImageTextureId != -1)
 		{
-			TextureUtil.releaseTextureId(mapImageTextureId);
-			mapImageTextureId = -1;
+			TextureUtil.releaseTextureId(renderedMapImageTextureId);
+			renderedMapImageTextureId = -1;
 		}
 
 		mapImageLoaded = false;
@@ -264,45 +271,16 @@ public class MapRegion implements MapTask
 	@Override
 	public void runMapTask()
 	{
-		if (getChunks().isEmpty())
+		if (data != null)
 		{
-			return;
-		}
-
-		try
-		{
-			if (Files.notExists(dimension.directory))
+			try
 			{
-				Files.createDirectories(dimension.directory);
+				data.write();
 			}
-
-			List<MapChunk> chunkList = getChunks().values().stream().filter(c -> c.modified > 0L).collect(Collectors.toList());
-
-			if (chunkList.isEmpty())
+			catch (IOException ex)
 			{
-				return;
+				ex.printStackTrace();
 			}
-
-			MapIOUtils.write(dimension.directory.resolve(pos.toRegionString() + "-chunks.dat"), stream -> {
-				stream.writeByte(0);
-				stream.writeByte(1);
-				stream.writeShort(chunkList.size());
-
-				for (MapChunk chunk : chunkList)
-				{
-					stream.writeByte(chunk.pos.x);
-					stream.writeByte(chunk.pos.z);
-					stream.writeLong(chunk.modified);
-				}
-			});
-
-			Images images = getImages();
-			images.data.write(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
-			images.blocks.write(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
 		}
 	}
 
@@ -314,8 +292,8 @@ public class MapRegion implements MapTask
 			dimension.saveData = true;
 		}
 
-		updateMapImage = true;
-		updateMapTexture = true;
+		updateRenderedMapImage = true;
+		updateRenderedMapTexture = true;
 		FTBChunksClient.updateMinimap = true;
 	}
 

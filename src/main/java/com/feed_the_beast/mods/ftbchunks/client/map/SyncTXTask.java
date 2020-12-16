@@ -29,6 +29,7 @@ public class SyncTXTask implements MapTask
 
 		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out))))
 		{
+			/*
 			MapRegion.Images images = region.getImages();
 
 			byte[] dataImgBytes = images.data.getBytes();
@@ -47,6 +48,7 @@ public class SyncTXTask implements MapTask
 				stream.writeByte(chunk.pos.z);
 				stream.writeLong(now - chunk.modified);
 			}
+			 */
 		}
 		catch (Exception ex)
 		{

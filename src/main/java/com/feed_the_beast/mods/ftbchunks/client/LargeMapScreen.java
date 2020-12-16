@@ -2,6 +2,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 
 import com.feed_the_beast.mods.ftbchunks.client.map.MapDimension;
 import com.feed_the_beast.mods.ftbchunks.client.map.MapRegion;
+import com.feed_the_beast.mods.ftbchunks.client.map.MapRegionData;
 import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
@@ -13,6 +14,7 @@ import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
+import com.feed_the_beast.mods.ftbguilibrary.utils.StringUtils;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
 import com.feed_the_beast.mods.ftbguilibrary.widget.ContextMenuItem;
 import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
@@ -330,25 +332,57 @@ public class LargeMapScreen extends GuiBase
 		if (regionPanel.blockY != 0)
 		{
 			MapRegion region = dimension.getRegion(XZ.regionFromBlock(regionPanel.blockX, regionPanel.blockZ));
-			MapRegion.Images images = region.getImages();
-			int data = images.data.getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511);
-			RegistryKey<Biome> biome = dimension.manager.getBiomeKey(data);
-			Block block = dimension.manager.getBlock(images.blocks.getPixelRGBA(regionPanel.blockX & 511, regionPanel.blockZ & 511));
-			coords = coords + " | " + I18n.format("biome." + biome.getLocation().getNamespace() + "." + biome.getLocation().getPath()) + " | " + I18n.format(block.getTranslationKey());
+			MapRegionData data = region.getData();
 
-			if ((data & (1 << 15)) != 0)
+			if (data != null)
 			{
-				coords += " (in water)";
+				int waterLightAndBiome = data.waterLightAndBiome[regionPanel.blockX & 511 + (regionPanel.blockZ & 511) * 512];
+				RegistryKey<Biome> biome = dimension.manager.getBiomeKey(waterLightAndBiome);
+				Block block = dimension.manager.getBlock(data.getBlockIndex(regionPanel.blockX & 511 + (regionPanel.blockZ & 511) * 512));
+				coords = coords + " | " + I18n.format("biome." + biome.getLocation().getNamespace() + "." + biome.getLocation().getPath()) + " | " + I18n.format(block.getTranslationKey());
+
+				if ((waterLightAndBiome & (1 << 15)) != 0)
+				{
+					coords += " (in water)";
+				}
 			}
 		}
 
 		int coordsw = theme.getStringWidth(coords) / 2;
 
-		backgroundColor.withAlpha(150).draw(matrixStack, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, h);
+		backgroundColor.withAlpha(150).draw(matrixStack, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
 		matrixStack.push();
 		matrixStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
 		matrixStack.scale(0.5F, 0.5F, 1F);
 		theme.drawString(matrixStack, coords, 0, 0, Theme.SHADOW);
 		matrixStack.pop();
+
+		if (FTBChunksClientConfig.debugInfo)
+		{
+			long memory = 0L;
+
+			for (MapDimension dim : dimension.manager.getDimensions().values())
+			{
+				for (MapRegion region : dim.getLoadedRegions())
+				{
+					if (region.data != null)
+					{
+						memory += 2L * 2L * 512L * 512L; // height, waterLightAndBiome
+						memory += 3L * 4L * 512L * 512L; // foliage, grass, water
+					}
+				}
+			}
+
+			String memoryUsage = "Estimated Memory Usage: " + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB";
+			int memoryUsagew = theme.getStringWidth(memoryUsage) / 2;
+
+			backgroundColor.withAlpha(150).draw(matrixStack, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
+
+			matrixStack.push();
+			matrixStack.translate(x + (w - memoryUsagew) - 1F, y + 1, 0F);
+			matrixStack.scale(0.5F, 0.5F, 1F);
+			theme.drawString(matrixStack, memoryUsage, 0, 0, Theme.SHADOW);
+			matrixStack.pop();
+		}
 	}
 }

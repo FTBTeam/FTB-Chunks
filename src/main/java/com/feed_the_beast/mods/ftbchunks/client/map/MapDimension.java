@@ -46,6 +46,7 @@ public class MapDimension implements MapTask
 
 	public final MapManager manager;
 	public final RegistryKey<World> dimension;
+	public final String safeDimensionId;
 	public final Path directory;
 	private Map<XZ, MapRegion> regions;
 	private List<Waypoint> waypoints;
@@ -55,8 +56,15 @@ public class MapDimension implements MapTask
 	{
 		manager = m;
 		dimension = id;
-		directory = manager.directory.resolve(dimension.getLocation().toString().replace(':', '_'));
+		safeDimensionId = dimension.getLocation().toString().replace(':', '_');
+		directory = manager.directory.resolve(safeDimensionId);
 		saveData = false;
+	}
+
+	@Override
+	public String toString()
+	{
+		return safeDimensionId;
 	}
 
 	public Collection<MapRegion> getLoadedRegions()
@@ -181,11 +189,6 @@ public class MapDimension implements MapTask
 
 		regions = null;
 		waypoints = null;
-	}
-
-	public MapChunk getChunk(XZ pos)
-	{
-		return getRegion(XZ.regionFromChunk(pos.x, pos.z)).getChunk(pos);
 	}
 
 	@Override

@@ -47,16 +47,6 @@ public class MapChunk
 		owner = StringTextComponent.EMPTY;
 	}
 
-	public int getBlock(int x, int z)
-	{
-		return region.getImages().blocks.getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
-	}
-
-	public int getData(int x, int z)
-	{
-		return region.getImages().data.getPixelRGBA(pos.x * 16 + (x & 15), pos.z * 16 + (z & 15));
-	}
-
 	public boolean connects(MapChunk chunk)
 	{
 		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && Objects.equals(ownerId, chunk.ownerId);
@@ -65,11 +55,6 @@ public class MapChunk
 	public XZ getActualPos()
 	{
 		return XZ.of((region.pos.x << 5) + pos.x, (region.pos.z << 5) + pos.z);
-	}
-
-	public int getHeight(int x, int z)
-	{
-		return (getData(x, z) >> 16) & 0xFF;
 	}
 
 	public static boolean isWater(BlockState state)
@@ -83,7 +68,7 @@ public class MapChunk
 		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}
 
-	public static BlockPos.Mutable setHeight(@Nullable IChunk chunk, BlockPos.Mutable pos, boolean[] flags)
+	public static BlockPos.Mutable getHeight(@Nullable IChunk chunk, BlockPos.Mutable pos, boolean[] flags)
 	{
 		int topY = pos.getY();
 
@@ -132,9 +117,10 @@ public class MapChunk
 		return this;
 	}
 
-	public MapChunk offset(int x, int z)
+	public MapChunk offsetBlocking(int x, int z)
 	{
-		return region.dimension.getChunk(getActualPos().offset(x, z));
+		XZ pos = getActualPos().offset(x, z);
+		return region.dimension.getRegion(XZ.regionFromChunk(pos.x, pos.z)).getDataBlocking().getChunk(pos);
 	}
 
 	public void updateFrom(Date now, SendChunkPacket.SingleChunk packet)

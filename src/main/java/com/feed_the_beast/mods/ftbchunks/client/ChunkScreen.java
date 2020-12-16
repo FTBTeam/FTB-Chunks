@@ -176,7 +176,7 @@ public class ChunkScreen extends GuiBase
 			for (int x = 0; x < FTBChunks.TILES; x++)
 			{
 				ChunkButton button = new ChunkButton(this, XZ.of(startX + x, startZ + z));
-				button.chunk = dimension.getRegion(XZ.regionFromChunk(startX + x, startZ + z)).getChunk(button.chunkPos);
+				button.chunk = dimension.getRegion(XZ.regionFromChunk(startX + x, startZ + z)).getDataBlocking().getChunk(button.chunkPos);
 				chunkButtons.add(button);
 				button.setPos(sx + x * FTBChunks.TILE_SIZE, sy + z * FTBChunks.TILE_SIZE);
 			}

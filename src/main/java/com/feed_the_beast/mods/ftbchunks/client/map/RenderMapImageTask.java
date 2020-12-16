@@ -11,7 +11,6 @@ import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -32,11 +31,11 @@ public class RenderMapImageTask implements MapTask
 		region = r;
 	}
 
-	private static int getHeight(int data)
+	private static int getHeight(short data, short height)
 	{
-		int h = (data >> 16) & 255;
+		int h = height & 0xFFFF;
 
-		if (((data >> 15) & 1) != 0 && FTBChunksClientConfig.mapMode != MapMode.TOPOGRAPHY)
+		if ((((data & 0xFFFF) >> 15) & 1) != 0 && FTBChunksClientConfig.mapMode != MapMode.TOPOGRAPHY)
 		{
 			if (FTBChunksClientConfig.waterHeightFactor == 0)
 			{
@@ -52,46 +51,30 @@ public class RenderMapImageTask implements MapTask
 	@Override
 	public void runMapTask()
 	{
-		MapRegion.Images images = region.getImages();
-
-		int[][] blockImgMap = new int[512][512];
-		int[][] dataImgMap = new int[1024][1024];
-
-		for (int z = 0; z < 512; z++)
-		{
-			for (int x = 0; x < 512; x++)
-			{
-				blockImgMap[x][z] = images.blocks.getPixelRGBA(x, z);
-			}
-		}
-
-		for (int z = 0; z < 1024; z++)
-		{
-			for (int x = 0; x < 1024; x++)
-			{
-				dataImgMap[x][z] = images.data.getPixelRGBA(x, z);
-			}
-		}
-
-		int[] dataImgMapW = new int[512];
-		int[] dataImgMapN = new int[512];
+		MapRegionData data = region.getDataBlocking();
+		short[] heightW = new short[512];
+		short[] heightN = new short[512];
+		short[] waterLightAndBiomeW = new short[512];
+		short[] waterLightAndBiomeN = new short[512];
 
 		MapRegion rEast = region.dimension.getRegions().get(region.pos.offset(-1, 0));
 
 		if (rEast != null)
 		{
-			NativeImage img = rEast.getImages().data;
+			MapRegionData d = rEast.getDataBlocking();
 
 			for (int i = 0; i < 512; i++)
 			{
-				dataImgMapW[i] = img.getPixelRGBA(511, i);
+				heightW[i] = d.height[511 + i * 512];
+				waterLightAndBiomeW[i] = d.waterLightAndBiome[511 + i * 512];
 			}
 		}
 		else
 		{
 			for (int i = 0; i < 512; i++)
 			{
-				dataImgMapW[i] = dataImgMap[0][i];
+				heightW[i] = data.height[i * 512];
+				waterLightAndBiomeW[i] = data.waterLightAndBiome[i * 512];
 			}
 		}
 
@@ -99,19 +82,14 @@ public class RenderMapImageTask implements MapTask
 
 		if (rTop != null)
 		{
-			NativeImage img = rTop.getImages().data;
-
-			for (int i = 0; i < 512; i++)
-			{
-				dataImgMapN[i] = img.getPixelRGBA(i, 511);
-			}
+			MapRegionData d = rTop.getDataBlocking();
+			System.arraycopy(d.height, 511 * 512, heightN, 0, 512);
+			System.arraycopy(d.waterLightAndBiome, 511 * 512, waterLightAndBiomeN, 0, 512);
 		}
 		else
 		{
-			for (int i = 0; i < 512; i++)
-			{
-				dataImgMapN[i] = dataImgMap[i][0];
-			}
+			System.arraycopy(data.height, 0, heightN, 0, 512);
+			System.arraycopy(data.waterLightAndBiome, 0, waterLightAndBiomeN, 0, 512);
 		}
 
 		float[] hsb = new float[3];
@@ -124,7 +102,7 @@ public class RenderMapImageTask implements MapTask
 		{
 			for (int cx = 0; cx < 32; cx++)
 			{
-				MapChunk c = region.chunks.get(XZ.of(cx, cz));
+				MapChunk c = data.chunks.get(XZ.of(cx, cz));
 				Random random = new Random(region.pos.asLong() ^ (c == null ? 0L : c.pos.asLong()));
 				Color4I claimColor, fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
@@ -133,10 +111,10 @@ public class RenderMapImageTask implements MapTask
 				{
 					claimColor = Color4I.rgb(c.color).withAlpha(100);
 					fullClaimColor = claimColor.withAlpha(255);
-					claimBarUp = !c.connects(c.offset(0, -1));
-					claimBarDown = !c.connects(c.offset(0, 1));
-					claimBarLeft = !c.connects(c.offset(-1, 0));
-					claimBarRight = !c.connects(c.offset(1, 0));
+					claimBarUp = !c.connects(c.offsetBlocking(0, -1));
+					claimBarDown = !c.connects(c.offsetBlocking(0, 1));
+					claimBarLeft = !c.connects(c.offsetBlocking(-1, 0));
+					claimBarRight = !c.connects(c.offsetBlocking(1, 0));
 				}
 				else
 				{
@@ -154,6 +132,7 @@ public class RenderMapImageTask implements MapTask
 					{
 						int ax = cx * 16 + x;
 						int az = cz * 16 + z;
+						int index = ax + az * 512;
 
 						if (c == null)
 						{
@@ -161,11 +140,10 @@ public class RenderMapImageTask implements MapTask
 						}
 						else
 						{
-							BlockColor blockColor = region.dimension.manager.getBlockColor(blockImgMap[ax][az]);
+							BlockColor blockColor = region.dimension.manager.getBlockColor(data.getBlockIndex(index));
 							Color4I col;
-							int data = dataImgMap[ax][az];
-							int by = getHeight(data);
-							boolean water = ((data >> 15) & 1) != 0;
+							int by = getHeight(data.waterLightAndBiome[index], data.height[index]);
+							boolean water = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
 							blockPos.setPos(region.pos.x * 512 + ax, by, region.pos.z * 512 + az);
 
 							if (FTBChunksClientConfig.mapMode == MapMode.TOPOGRAPHY)
@@ -174,11 +152,11 @@ public class RenderMapImageTask implements MapTask
 							}
 							else if (FTBChunksClientConfig.mapMode == MapMode.BLOCKS)
 							{
-								col = Color4I.rgb(ColorUtils.convertFromNative(blockImgMap[ax][az]));
+								col = Color4I.rgb(data.getBlockIndex(index));
 							}
 							else if (FTBChunksClientConfig.mapMode == MapMode.BIOME_TEMPERATURE)
 							{
-								Biome biome = biomeMap.computeIfAbsent(data & 0b111_11111111, i -> region.dimension.manager.getBiome(world, i));
+								Biome biome = biomeMap.computeIfAbsent(data.waterLightAndBiome[index] & 0b111_11111111, i -> region.dimension.manager.getBiome(world, i));
 								float temp0 = biome.getTemperature(blockPos);
 
 								float temp = (temp0 + 0.5F) / 2F;
@@ -186,7 +164,7 @@ public class RenderMapImageTask implements MapTask
 							}
 							else if (FTBChunksClientConfig.mapMode == MapMode.LIGHT_SOURCES)
 							{
-								col = ColorUtils.getLightMapPalette()[15][(data >> 11) & 15];
+								col = ColorUtils.getLightMapPalette()[15][(data.waterLightAndBiome[index] >> 11) & 15];
 							}
 							else
 							{
@@ -196,11 +174,11 @@ public class RenderMapImageTask implements MapTask
 								}
 								else if (blockColor == BlockColors.FOLIAGE)
 								{
-									col = Color4I.rgb(ColorUtils.convertFromNative(dataImgMap[ax + 512][az])).withAlpha(255).withTint(Color4I.BLACK.withAlpha(50));
+									col = Color4I.rgb(data.foliage[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(50));
 								}
 								else if (blockColor == BlockColors.GRASS)
 								{
-									col = Color4I.rgb(ColorUtils.convertFromNative(dataImgMap[ax][az + 512])).withAlpha(255).withTint(Color4I.BLACK.withAlpha(50));
+									col = Color4I.rgb(data.grass[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(50));
 								}
 								else
 								{
@@ -209,12 +187,12 @@ public class RenderMapImageTask implements MapTask
 
 								if (FTBChunksClientConfig.mapMode == MapMode.NIGHT)
 								{
-									col = col.withTint(ColorUtils.getLightMapPalette()[(data >> 11) & 15][15].withAlpha(230));
+									col = col.withTint(ColorUtils.getLightMapPalette()[(data.waterLightAndBiome[index] >> 11) & 15][15].withAlpha(230));
 								}
 
 								if (water)
 								{
-									col = col.withTint(Color4I.rgb(ColorUtils.convertFromNative(dataImgMap[ax + 512][az + 512])).withAlpha(220));
+									col = col.withTint(Color4I.rgb(data.water[index]).withAlpha(220));
 								}
 
 								if (FTBChunksClientConfig.reducedColorPalette)
@@ -234,8 +212,8 @@ public class RenderMapImageTask implements MapTask
 
 							if (FTBChunksClientConfig.shadows > 0F)
 							{
-								int bn = getHeight(az == 0 ? dataImgMapN[ax] : dataImgMap[ax][az - 1]);
-								int bw = getHeight(ax == 0 ? dataImgMapW[az] : dataImgMap[ax - 1][az]);
+								int bn = getHeight(az == 0 ? waterLightAndBiomeN[ax] : data.waterLightAndBiome[ax + (az - 1) * 512], az == 0 ? heightN[ax] : data.height[ax + (az - 1) * 512]);
+								int bw = getHeight(ax == 0 ? waterLightAndBiomeW[az] : data.waterLightAndBiome[ax - 1 + az * 512], ax == 0 ? heightW[az] : data.height[ax - 1 + az * 512]);
 
 								if (by > bn || by > bw)
 								{
@@ -280,7 +258,7 @@ public class RenderMapImageTask implements MapTask
 			}
 		}
 
-		region.updateMapTexture = true;
+		region.updateRenderedMapTexture = true;
 		FTBChunksClient.updateMinimap = true;
 		region.renderingMapImage = false;
 	}

@@ -82,8 +82,6 @@ public class MapRegionData
 
 				while ((ze = zis.getNextEntry()) != null)
 				{
-					System.out.println(ze.getName() + " " + ze.getCompressedSize() + "/" + ze.getSize());
-
 					switch (ze.getName())
 					{
 						case "chunks.dat":

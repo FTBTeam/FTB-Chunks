@@ -261,6 +261,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void playerDeath(PlayerDeathPacket packet)
 	{
+		/*
 		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 		Waypoint w = new Waypoint(dimension);
 		w.name = "Death #" + packet.number;
@@ -269,6 +270,7 @@ public class FTBChunksClient extends FTBChunksCommon
 		w.type = WaypointType.DEATH;
 		dimension.getWaypoints().add(w);
 		dimension.saveData = true;
+		*/
 	}
 
 	@SubscribeEvent

@@ -1,6 +1,7 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
+import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
@@ -117,7 +118,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 
 		for (ClaimedChunkImpl chunk : claimedChunks.values())
 		{
-			if (chunk.isForceLoaded())
+			if (chunk.isForceLoaded() && chunk.getPlayerData().chunkLoadOffline())
 			{
 				forceLoaded++;
 				chunk.postSetForceLoaded(true);

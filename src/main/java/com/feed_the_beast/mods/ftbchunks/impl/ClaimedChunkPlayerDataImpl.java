@@ -63,6 +63,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public PrivacyMode locationMode;
 	public int extraClaimChunks;
 	public int extraForceLoadChunks;
+	public boolean chunkLoadOffline;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -82,6 +83,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		locationMode = PrivacyMode.ALLIES;
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
+		chunkLoadOffline = true;
 	}
 
 	@Override
@@ -453,6 +455,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		json.addProperty("location_mode", locationMode.name);
 		json.addProperty("extra_claim_chunks", extraClaimChunks);
 		json.addProperty("extra_force_load_chunks", extraForceLoadChunks);
+		json.addProperty("chunk_load_offline", chunkLoadOffline);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -549,6 +552,11 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			extraForceLoadChunks = json.get("extra_force_load_chunks").getAsInt();
 		}
 
+		if (json.has("chunk_load_offline"))
+		{
+			chunkLoadOffline = json.get("chunk_load_offline").getAsBoolean();
+		}
+
 		if (json.has("chunks"))
 		{
 			for (Map.Entry<String, JsonElement> entry : json.get("chunks").getAsJsonObject().entrySet())
@@ -616,5 +624,17 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 	public int getExtraForceLoadChunks()
 	{
 		return extraForceLoadChunks;
+	}
+
+	@Override
+	public boolean chunkLoadOffline()
+	{
+		return chunkLoadOffline;
+	}
+
+	public void setChunkLoadOffline(boolean val)
+	{
+		chunkLoadOffline = val;
+		save();
 	}
 }

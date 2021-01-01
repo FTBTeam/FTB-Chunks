@@ -33,6 +33,7 @@ public class FTBChunksConfig
 	public static boolean disableAllFakePlayers;
 	public static int maxClaimedChunks;
 	public static int maxForceLoadedChunks;
+	public static boolean chunkLoadOffline;
 	public static boolean disableProtection;
 	public static AllyMode allyMode;
 	public static Set<RegistryKey<World>> claimDimensionBlacklist;
@@ -61,6 +62,7 @@ public class FTBChunksConfig
 			disableAllFakePlayers = c.disableAllFakePlayers.get();
 			maxClaimedChunks = c.maxClaimedChunks.get();
 			maxForceLoadedChunks = c.maxForceLoadedChunks.get();
+			chunkLoadOffline = c.chunkLoadOffline.get();
 			disableProtection = c.disableProtection.get();
 			allyMode = c.allyMode.get();
 			claimDimensionBlacklist = new HashSet<>();
@@ -79,6 +81,7 @@ public class FTBChunksConfig
 		private final ForgeConfigSpec.BooleanValue disableAllFakePlayers;
 		private final ForgeConfigSpec.IntValue maxClaimedChunks;
 		private final ForgeConfigSpec.IntValue maxForceLoadedChunks;
+		private final ForgeConfigSpec.BooleanValue chunkLoadOffline;
 		private final ForgeConfigSpec.BooleanValue disableProtection;
 		private final ForgeConfigSpec.EnumValue<AllyMode> allyMode;
 		private final ForgeConfigSpec.ConfigValue<List<? extends String>> claimDimensionBlacklist;
@@ -97,6 +100,10 @@ public class FTBChunksConfig
 			maxForceLoadedChunks = builder
 					.comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission")
 					.defineInRange("max_force_loaded_chunks", 25, 0, Integer.MAX_VALUE);
+
+			chunkLoadOffline = builder
+					.comment("Allow players to load chunks while they are offline.")
+					.define("chunk_load_offline", true);
 
 			disableProtection = builder
 					.comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for forceloading.")
@@ -134,6 +141,16 @@ public class FTBChunksConfig
 		}
 
 		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
+	}
+
+	public static boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
+	{
+		if (FTBChunks.ranksMod)
+		{
+			return FTBRanksIntegration.getChunkLoadOffline(player, chunkLoadOffline);
+		}
+
+		return chunkLoadOffline;
 	}
 
 	public static boolean patchChunkLoading(ServerWorld world, ChunkPos pos)

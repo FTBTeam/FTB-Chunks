@@ -69,4 +69,6 @@ public interface ClaimedChunkPlayerData
 	int getExtraClaimChunks();
 
 	int getExtraForceLoadChunks();
+
+	boolean chunkLoadOffline();
 }

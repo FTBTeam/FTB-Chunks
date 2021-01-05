@@ -183,7 +183,12 @@ public class FTBChunks
 		{
 			if (c.isForceLoaded())
 			{
-				data.load(player.getCommandSource(), c.getPos(), false);
+				ClaimedChunkImpl chunk = FTBChunksAPIImpl.manager.claimedChunks.get(c.getPos());
+
+				if (chunk != null)
+				{
+					chunk.postSetForceLoaded(true);
+				}
 			}
 		}
 
@@ -203,7 +208,13 @@ public class FTBChunks
 		{
 			for (ClaimedChunk chunk : data.getClaimedChunks())
 			{
-				data.unload(player.getCommandSource(), chunk.getPos(), false);
+				ClaimedChunkImpl c = FTBChunksAPIImpl.manager.claimedChunks.get(chunk.getPos());
+
+				if (c == null)
+				{
+					return;
+				}
+				c.postSetForceLoaded(false);
 			}
 		}
 	}

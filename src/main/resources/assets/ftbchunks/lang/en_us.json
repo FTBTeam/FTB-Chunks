@@ -9,6 +9,7 @@
 	"ftbchunks.claimed_chunks_on_map": "Show claimed chunks on map",
 	"ftbchunks.own_claimed_chunks_on_map": "Show your own claimed chunks on map",
 	"ftbchunks.in_world_waypoints": "Show waypoints in world",
+	"ftbchunks.death_waypoints": "Create death waypoints on death",
 	"ftbchunks.map_mode": "Map mode",
 	"ftbchunks.water_height_factor": "Water weight factor",
 	"ftbchunks.minimap": "Minimap",

@@ -25,6 +25,7 @@ public class FTBChunksClientConfig
 	public static boolean claimedChunksOnMap;
 	public static boolean ownClaimedChunksOnMap;
 	public static boolean inWorldWaypoints;
+	public static boolean deathWaypoints;
 	public static MapMode mapMode;
 	public static int waterHeightFactor;
 
@@ -76,6 +77,7 @@ public class FTBChunksClientConfig
 			claimedChunksOnMap = c.claimedChunksOnMap.get();
 			ownClaimedChunksOnMap = c.ownClaimedChunksOnMap.get();
 			inWorldWaypoints = c.inWorldWaypoints.get();
+			deathWaypoints = c.deathWaypoints.get();
 			mapMode = c.mapMode.get();
 			waterHeightFactor = c.waterHeightFactor.get();
 
@@ -113,6 +115,7 @@ public class FTBChunksClientConfig
 		public final ForgeConfigSpec.BooleanValue claimedChunksOnMap;
 		public final ForgeConfigSpec.BooleanValue ownClaimedChunksOnMap;
 		public final ForgeConfigSpec.BooleanValue inWorldWaypoints;
+		public final ForgeConfigSpec.BooleanValue deathWaypoints;
 		public final ForgeConfigSpec.EnumValue<MapMode> mapMode;
 		public final ForgeConfigSpec.IntValue waterHeightFactor;
 
@@ -174,6 +177,11 @@ public class FTBChunksClientConfig
 					.comment("Show waypoints in world")
 					.translation("ftbchunks.in_world_waypoints")
 					.define("in_world_waypoints", true);
+
+			deathWaypoints = builder
+					.comment("Enables creation of death waypoints")
+					.translation("ftbchunks.death_waypoints")
+					.define("death_waypoints", true);
 
 			mapMode = builder
 					.comment("Different ways to render map")
@@ -304,6 +312,11 @@ public class FTBChunksClientConfig
 		group.addBool("in_world_waypoints", inWorldWaypoints, v -> {
 			client.getLeft().inWorldWaypoints.set(v);
 			inWorldWaypoints = v;
+		}, true);
+
+		group.addBool("death_waypoints", deathWaypoints, v -> {
+			client.getLeft().deathWaypoints.set(v);
+			deathWaypoints = v;
 		}, true);
 
 		group.addEnum("map_mode", mapMode, v -> {

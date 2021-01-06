@@ -17,4 +17,9 @@ public class FTBRanksIntegration
 	{
 		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_force_loaded").asNumber().orElse(def).intValue(), 0);
 	}
+
+	public static boolean getChunkLoadOffline(ServerPlayerEntity player, boolean def)
+	{
+		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBoolean().orElse(def);
+	}
 }

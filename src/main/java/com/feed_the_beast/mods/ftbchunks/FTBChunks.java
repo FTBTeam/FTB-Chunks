@@ -178,6 +178,45 @@ public class FTBChunks
 			packet.chunks = entry.getValue();
 			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), packet);
 		}
+
+		for (ClaimedChunk c : data.getClaimedChunks())
+		{
+			if (c.isForceLoaded())
+			{
+				ClaimedChunkImpl chunk = FTBChunksAPIImpl.manager.claimedChunks.get(c.getPos());
+
+				if (chunk != null)
+				{
+					chunk.postSetForceLoaded(true);
+				}
+			}
+		}
+
+		boolean canChunkLoadOffline = FTBChunksConfig.getChunkLoadOffline(data, player);
+		data.setChunkLoadOffline(canChunkLoadOffline);
+	}
+
+	@SubscribeEvent
+	public void loggedOut(PlayerEvent.PlayerLoggedOutEvent event)
+	{
+		final ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		boolean canChunkLoadOffline = FTBChunksConfig.getChunkLoadOffline(data, player);
+		data.setChunkLoadOffline(canChunkLoadOffline);
+
+		if (!canChunkLoadOffline)
+		{
+			for (ClaimedChunk chunk : data.getClaimedChunks())
+			{
+				ClaimedChunkImpl c = FTBChunksAPIImpl.manager.claimedChunks.get(chunk.getPos());
+
+				if (c == null)
+				{
+					return;
+				}
+				c.postSetForceLoaded(false);
+			}
+		}
 	}
 
 	private boolean isValidPlayer(@Nullable Entity entity)

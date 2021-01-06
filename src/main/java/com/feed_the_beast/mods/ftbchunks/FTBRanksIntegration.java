@@ -20,6 +20,13 @@ public class FTBRanksIntegration
 
 	public static boolean getChunkLoadOffline(ServerPlayerEntity player, boolean def)
 	{
-		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBoolean().orElse(def);
+		if (def)
+		{
+			return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBooleanOrTrue();
+		}
+		else
+		{
+			return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBooleanOrFalse();
+		}
 	}
 }

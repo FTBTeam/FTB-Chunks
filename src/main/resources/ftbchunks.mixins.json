@@ -7,7 +7,8 @@
 		"BiomeMixin",
 		"BlockMixin",
 		"BlockStateMixin",
-		"ChunkManagerMixin"
+		"ChunkManagerMixin",
+		"UtilMixin"
 	],
 	"client": [
 		"ChunkRenderMixin"

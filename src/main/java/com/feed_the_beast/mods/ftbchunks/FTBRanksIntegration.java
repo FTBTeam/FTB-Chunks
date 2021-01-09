@@ -10,23 +10,16 @@ public class FTBRanksIntegration
 {
 	public static int getMaxClaimedChunks(ServerPlayerEntity player, int def)
 	{
-		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_claimed").asNumber().orElse(def).intValue(), 0);
+		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_claimed").asInteger().orElse(def), 0);
 	}
 
 	public static int getMaxForceLoadedChunks(ServerPlayerEntity player, int def)
 	{
-		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_force_loaded").asNumber().orElse(def).intValue(), 0);
+		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_force_loaded").asInteger().orElse(def), 0);
 	}
 
 	public static boolean getChunkLoadOffline(ServerPlayerEntity player, boolean def)
 	{
-		if (def)
-		{
-			return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBooleanOrTrue();
-		}
-		else
-		{
-			return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBooleanOrFalse();
-		}
+		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBoolean().orElse(def);
 	}
 }

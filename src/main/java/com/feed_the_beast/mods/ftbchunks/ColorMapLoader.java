@@ -46,11 +46,11 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 		Gson gson = new GsonBuilder().setLenient().create();
 		JsonObject object = new JsonObject();
 
-		for (String namespace : resourceManager.getResourceNamespaces())
+		for (String namespace : resourceManager.getNamespaces())
 		{
 			try
 			{
-				for (IResource resource : resourceManager.getAllResources(new ResourceLocation(namespace, "ftbchunks_block_colors.json")))
+				for (IResource resource : resourceManager.getResources(new ResourceLocation(namespace, "ftbchunks_block_colors.json")))
 				{
 					try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))
 					{
@@ -116,9 +116,9 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 				{
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
 				}
-				else if (block.getMaterialColor() != null)
+				else if (block.defaultMaterialColor() != null)
 				{
-					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.getMaterialColor().colorValue)));
+					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMaterialColor().col)));
 				}
 				else
 				{

@@ -101,9 +101,9 @@ public class RegionMapPanel extends Panel
 			add(new WaypointButton(this, waypoint));
 		}
 
-		RegistryKey<World> dimId = Minecraft.getInstance().world.getDimensionKey();
+		RegistryKey<World> dimId = Minecraft.getInstance().level.dimension();
 
-		for (AbstractClientPlayerEntity player : Minecraft.getInstance().world.getPlayers())
+		for (AbstractClientPlayerEntity player : Minecraft.getInstance().level.players())
 		{
 			if (largeMap.dimension.dimension == dimId)
 			{

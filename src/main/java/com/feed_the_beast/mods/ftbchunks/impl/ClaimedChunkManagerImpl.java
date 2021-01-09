@@ -1,7 +1,6 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.FTBChunks;
-import com.feed_the_beast.mods.ftbchunks.FTBChunksConfig;
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkManager;
@@ -65,7 +64,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		inited = true;
 
 		long nanos = System.nanoTime();
-		dataDirectory = server.func_240776_a_(DATA_DIR);
+		dataDirectory = server.getWorldPath(DATA_DIR);
 		localDirectory = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks");
 
 		try
@@ -270,7 +269,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	@Override
 	public ClaimedChunkPlayerDataImpl getData(ServerPlayerEntity player)
 	{
-		return getData(player.getUniqueID(), player.getGameProfile().getName());
+		return getData(player.getUUID(), player.getGameProfile().getName());
 	}
 
 	@Override

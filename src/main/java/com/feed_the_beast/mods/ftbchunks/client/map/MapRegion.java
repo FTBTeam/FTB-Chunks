@@ -10,6 +10,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.TextureUtil;
+import net.minecraft.util.Util;
 
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
@@ -179,7 +180,7 @@ public class MapRegion implements MapTask
 		if (data == null && !isLoadingData)
 		{
 			isLoadingData = true;
-			FTBChunks.EXECUTOR_SERVICE.submit(this::getDataBlocking);
+			Util.ioPool().execute(this::getDataBlocking);
 		}
 
 		return data;
@@ -190,7 +191,7 @@ public class MapRegion implements MapTask
 		if (renderedMapImage == null)
 		{
 			renderedMapImage = new NativeImage(NativeImage.PixelFormat.RGBA, 512, 512, true);
-			renderedMapImage.fillAreaRGBA(0, 0, 512, 512, 0);
+			renderedMapImage.fillRect(0, 0, 512, 512, 0);
 			update(false);
 		}
 
@@ -219,9 +220,9 @@ public class MapRegion implements MapTask
 		{
 			mapImageLoaded = false;
 
-			Minecraft.getInstance().runAsync(() -> {
+			Minecraft.getInstance().submit(() -> {
 				RenderSystem.bindTexture(renderedMapImageTextureId);
-				renderedMapImage.uploadTextureSub(0, 0, 0, false);
+				renderedMapImage.upload(0, 0, 0, false);
 				mapImageLoaded = true;
 				FTBChunksClient.updateMinimap = true;
 			});
@@ -314,6 +315,6 @@ public class MapRegion implements MapTask
 
 	public double distToPlayer()
 	{
-		return MathUtils.distSq(pos.x * 512D + 256D, pos.z * 512D + 256D, Minecraft.getInstance().player.getPosX(), Minecraft.getInstance().player.getPosZ());
+		return MathUtils.distSq(pos.x * 512D + 256D, pos.z * 512D + 256D, Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ());
 	}
 }

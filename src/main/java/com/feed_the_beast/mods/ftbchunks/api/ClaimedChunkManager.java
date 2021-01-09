@@ -22,7 +22,7 @@ public interface ClaimedChunkManager
 
 	default ClaimedChunkPlayerData getData(ServerPlayerEntity player)
 	{
-		return getData(player.getUniqueID(), player.getGameProfile().getName());
+		return getData(player.getUUID(), player.getGameProfile().getName());
 	}
 
 	default ClaimedChunkPlayerData getServerData()

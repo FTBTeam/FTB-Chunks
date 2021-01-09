@@ -69,7 +69,7 @@ public class FTBChunksConfig
 
 			for (String s : c.claimDimensionBlacklist.get())
 			{
-				claimDimensionBlacklist.add(RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(s)));
+				claimDimensionBlacklist.add(RegistryKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
 			}
 
 			patchChunkLoading = c.patchChunkLoading.get();
@@ -157,7 +157,7 @@ public class FTBChunksConfig
 	{
 		if (patchChunkLoading)
 		{
-			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(world.getDimensionKey(), pos));
+			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(world.dimension(), pos));
 			return chunk != null && chunk.isForceLoaded();
 		}
 

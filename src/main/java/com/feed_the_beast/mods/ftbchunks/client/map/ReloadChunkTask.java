@@ -41,7 +41,7 @@ public class ReloadChunkTask implements MapTask
 			return;
 		}
 
-		RegistryKey<World> dimId = world.getDimensionKey();
+		RegistryKey<World> dimId = world.dimension();
 
 		IChunk ichunk = world.getChunk(pos.x, pos.z, ChunkStatus.FULL, false);
 
@@ -53,10 +53,10 @@ public class ReloadChunkTask implements MapTask
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
 		MapRegionData data = mapChunk.region.getDataBlocking();
 
-		int topY = world.func_234938_ad_() + 1;
+		int topY = world.getHeight() + 1;
 		BlockPos.Mutable blockPos = new BlockPos.Mutable();
-		int blockX = pos.getXStart();
-		int blockZ = pos.getZStart();
+		int blockX = pos.getMinBlockX();
+		int blockZ = pos.getMinBlockZ();
 
 		boolean changed = false;
 		boolean[] flags = new boolean[1];
@@ -67,7 +67,7 @@ public class ReloadChunkTask implements MapTask
 			{
 				int wx = wi % 16;
 				int wz = wi / 16;
-				blockPos.setPos(blockX + wx, topY, blockZ + wz);
+				blockPos.set(blockX + wx, topY, blockZ + wz);
 				int height = MathHelper.clamp(MapChunk.getHeight(ichunk, blockPos, flags).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
 				blockPos.setY(height);
 				BlockState state = ichunk.getBlockState(blockPos);
@@ -82,7 +82,7 @@ public class ReloadChunkTask implements MapTask
 
 				int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
 				waterLightAndBiome |= flags[0] ? (1 << 15) : 0; // Water
-				waterLightAndBiome |= (world.getLightFor(LightType.BLOCK, blockPos.up()) & 15) << 11; // Light
+				waterLightAndBiome |= (world.getBrightness(LightType.BLOCK, blockPos.above()) & 15) << 11; // Light
 
 				ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
 				int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
@@ -92,9 +92,9 @@ public class ReloadChunkTask implements MapTask
 					Biome biome = world.getBiome(blockPos);
 					waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
 					waterLightAndBiome |= (manager.getBiomeColorIndex(world, biome, biome) & 0b111_11111111); // Biome
-					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getFoliageColor(world, blockPos) & 0xFFFFFF);
-					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getGrassColor(world, blockPos) & 0xFFFFFF);
-					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getWaterColor(world, blockPos) & 0xFFFFFF);
+					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getAverageFoliageColor(world, blockPos) & 0xFFFFFF);
+					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getAverageGrassColor(world, blockPos) & 0xFFFFFF);
+					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getAverageWaterColor(world, blockPos) & 0xFFFFFF);
 					changed = true;
 				}
 

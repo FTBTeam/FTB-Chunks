@@ -28,7 +28,7 @@ public class EntityIcons extends ReloadListener<Map<EntityType<?>, ResourceLocat
 
 		for (EntityType<?> t : ForgeRegistries.ENTITIES)
 		{
-			if (t.getClassification() == EntityClassification.MISC)
+			if (t.getCategory() == EntityClassification.MISC)
 			{
 				continue;
 			}

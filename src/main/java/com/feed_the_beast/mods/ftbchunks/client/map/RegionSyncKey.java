@@ -22,7 +22,7 @@ public class RegionSyncKey
 
 	public RegionSyncKey(PacketBuffer buf)
 	{
-		dim = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
+		dim = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		random = buf.readInt();
@@ -30,7 +30,7 @@ public class RegionSyncKey
 
 	public void write(PacketBuffer buf)
 	{
-		buf.writeResourceLocation(dim.getLocation());
+		buf.writeResourceLocation(dim.location());
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
 		buf.writeInt(random);

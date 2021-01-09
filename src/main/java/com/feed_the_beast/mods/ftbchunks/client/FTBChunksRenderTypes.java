@@ -15,16 +15,16 @@ public class FTBChunksRenderTypes extends RenderState
 {
 	public static final ResourceLocation WAYPOINT_BEAM = new ResourceLocation("ftbchunks:textures/waypoint_beam.png");
 
-	public static final RenderType WAYPOINTS_DEPTH = RenderType.makeType("ftbchunks_waypoints_depth", DefaultVertexFormats.POSITION_COLOR_TEX, GL11.GL_QUADS, 256, RenderType.State.getBuilder()
-			.line(new LineState(OptionalDouble.empty()))
-			.layer(NO_LAYERING)
-			.texture(new TextureState(WAYPOINT_BEAM, true, false))
-			.transparency(TRANSLUCENT_TRANSPARENCY)
-			.alpha(DEFAULT_ALPHA)
-			.writeMask(COLOR_WRITE)
-			.cull(CULL_ENABLED)
-			.shadeModel(RenderState.SHADE_ENABLED)
-			.build(false));
+	public static final RenderType WAYPOINTS_DEPTH = RenderType.create("ftbchunks_waypoints_depth", DefaultVertexFormats.POSITION_COLOR_TEX, GL11.GL_QUADS, 256, RenderType.State.builder()
+			.setLineState(new LineState(OptionalDouble.empty()))
+			.setLayeringState(NO_LAYERING)
+			.setTextureState(new TextureState(WAYPOINT_BEAM, true, false))
+			.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+			.setAlphaState(DEFAULT_ALPHA)
+			.setWriteMaskState(COLOR_WRITE)
+			.setCullState(CULL)
+			.setShadeModelState(RenderState.SMOOTH_SHADE)
+			.createCompositeState(false));
 
 	private FTBChunksRenderTypes(String s, Runnable r0, Runnable r1)
 	{

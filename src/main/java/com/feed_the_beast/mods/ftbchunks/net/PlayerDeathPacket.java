@@ -27,7 +27,7 @@ public class PlayerDeathPacket
 
 	PlayerDeathPacket(PacketBuffer buf)
 	{
-		dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
+		dimension = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		number = buf.readVarInt();
@@ -35,7 +35,7 @@ public class PlayerDeathPacket
 
 	void write(PacketBuffer buf)
 	{
-		buf.writeResourceLocation(dimension.getLocation());
+		buf.writeResourceLocation(dimension.location());
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
 		buf.writeVarInt(number);

@@ -36,11 +36,11 @@ public class PlayerButton extends Widget
 	{
 		super(panel);
 		name = e.getDisplayName();
-		uuid = UUIDTypeAdapter.fromUUID(e.getUniqueID());
+		uuid = UUIDTypeAdapter.fromUUID(e.getUUID());
 		texture = new ResourceLocation("head", uuid);
-		playerX = e.getPosX();
-		playerZ = e.getPosZ();
-		rotation = e.getRotationYawHead();
+		playerX = e.getX();
+		playerZ = e.getZ();
+		rotation = e.getYHeadRot();
 	}
 
 	@Override
@@ -57,19 +57,19 @@ public class PlayerButton extends Widget
 		if (t == null)
 		{
 			t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/8", ImageIcon.MISSING_IMAGE);
-			texturemanager.loadTexture(texture, t);
+			texturemanager.register(texture, t);
 		}
 
-		Matrix4f m = matrixStack.getLast().getMatrix();
+		Matrix4f m = matrixStack.last().pose();
 
-		RenderSystem.bindTexture(t.getGlTextureId());
+		RenderSystem.bindTexture(t.getId());
 		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
+		BufferBuilder buffer = tessellator.getBuilder();
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(m, x, y + h, 0).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-		buffer.pos(m, x + w, y + h, 0).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-		buffer.pos(m, x + w, y, 0).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
-		buffer.pos(m, x, y, 0).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-		tessellator.draw();
+		buffer.vertex(m, x, y + h, 0).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
+		buffer.vertex(m, x + w, y + h, 0).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
+		buffer.vertex(m, x + w, y, 0).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
+		buffer.vertex(m, x, y, 0).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
+		tessellator.end();
 	}
 }

@@ -18,7 +18,7 @@ public abstract class BlockStateMixin implements BlockStateFTBC
 	{
 		if (cachedFTBCIsWater == null)
 		{
-			cachedFTBCIsWater = ((BlockState) (Object) this).getFluidState().getFluid().isEquivalentTo(Fluids.WATER);
+			cachedFTBCIsWater = ((BlockState) (Object) this).getFluidState().getType().isSame(Fluids.WATER);
 		}
 
 		return cachedFTBCIsWater;

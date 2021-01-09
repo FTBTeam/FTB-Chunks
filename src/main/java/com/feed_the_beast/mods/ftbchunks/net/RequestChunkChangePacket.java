@@ -60,7 +60,7 @@ public class RequestChunkChangePacket
 	{
 		context.get().enqueueWork(() -> {
 			ServerPlayerEntity player = context.get().getSender();
-			CommandSource source = player.getCommandSource();
+			CommandSource source = player.createCommandSourceStack();
 			ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(player);
 			Consumer<XZ> consumer;
 			Instant time = Instant.now();
@@ -69,7 +69,7 @@ public class RequestChunkChangePacket
 			{
 				case 0:
 					consumer = pos -> {
-						ClaimResult result = data.claim(source, pos.dim(player.world), false);
+						ClaimResult result = data.claim(source, pos.dim(player.level), false);
 
 						if (result.isSuccess())
 						{
@@ -78,11 +78,11 @@ public class RequestChunkChangePacket
 					};
 					break;
 				case 1:
-					consumer = pos -> data.unclaim(source, pos.dim(player.world), false);
+					consumer = pos -> data.unclaim(source, pos.dim(player.level), false);
 					break;
 				case 2:
 					consumer = pos -> {
-						ClaimResult result = data.load(source, pos.dim(player.world), false);
+						ClaimResult result = data.load(source, pos.dim(player.level), false);
 
 						if (result.isSuccess())
 						{
@@ -91,7 +91,7 @@ public class RequestChunkChangePacket
 					};
 					break;
 				case 3:
-					consumer = pos -> data.unload(source, pos.dim(player.world), false);
+					consumer = pos -> data.unload(source, pos.dim(player.level), false);
 					break;
 				default:
 					FTBChunks.LOGGER.warn("Unknown chunk action ID: " + action);

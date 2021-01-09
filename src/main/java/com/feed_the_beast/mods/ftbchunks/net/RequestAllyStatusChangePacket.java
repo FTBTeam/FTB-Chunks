@@ -56,7 +56,7 @@ public class RequestAllyStatusChangePacket
 			{
 				ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.playerData.get(uuid);
 
-				if (data != null && data.allies.remove(context.get().getSender().getUniqueID()))
+				if (data != null && data.allies.remove(context.get().getSender().getUUID()))
 				{
 					data.save();
 				}

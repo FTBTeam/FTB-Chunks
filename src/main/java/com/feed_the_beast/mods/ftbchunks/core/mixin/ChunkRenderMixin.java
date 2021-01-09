@@ -14,9 +14,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ChunkRenderDispatcher.ChunkRender.class)
 public class ChunkRenderMixin
 {
-	@Inject(method = "clearNeedsUpdate", at = @At("RETURN"))
+	@Inject(method = "setNotDirty", at = @At("RETURN"))
 	private void clearNeedsUpdateFTBC(CallbackInfo ci)
 	{
-		FTBChunksClient.rerenderCache.add(new ChunkPos(((ChunkRenderDispatcher.ChunkRender) (Object) this).getPosition()));
+		FTBChunksClient.rerenderCache.add(new ChunkPos(((ChunkRenderDispatcher.ChunkRender) (Object) this).getOrigin()));
 	}
 }

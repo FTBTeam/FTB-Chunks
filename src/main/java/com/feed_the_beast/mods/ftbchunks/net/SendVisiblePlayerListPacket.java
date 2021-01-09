@@ -41,13 +41,13 @@ public class SendVisiblePlayerListPacket
 			long most = buf.readLong();
 			long least = buf.readLong();
 			p.uuid = new UUID(most, least);
-			p.name = buf.readString(Short.MAX_VALUE);
+			p.name = buf.readUtf(Short.MAX_VALUE);
 			p.x = buf.readVarInt();
 			p.z = buf.readVarInt();
 			players.add(p);
 		}
 
-		dim = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
+		dim = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 	}
 
 	public static void sendAll()
@@ -65,12 +65,12 @@ public class SendVisiblePlayerListPacket
 
 		for (VisiblePlayerListItem self : playerList)
 		{
-			RegistryKey<World> dim = self.player.world.getDimensionKey();
+			RegistryKey<World> dim = self.player.level.dimension();
 			List<PlayerLocation> players = new ArrayList<>();
 
 			for (VisiblePlayerListItem other : playerList)
 			{
-				if (other.player.world == self.player.world && self.data.canUse(other.player, self.data.locationMode, false))
+				if (other.player.level == self.player.level && self.data.canUse(other.player, self.data.locationMode, false))
 				{
 					players.add(other.location);
 				}
@@ -88,12 +88,12 @@ public class SendVisiblePlayerListPacket
 		{
 			buf.writeLong(p.uuid.getMostSignificantBits());
 			buf.writeLong(p.uuid.getLeastSignificantBits());
-			buf.writeString(p.name, Short.MAX_VALUE);
+			buf.writeUtf(p.name, Short.MAX_VALUE);
 			buf.writeVarInt(p.x);
 			buf.writeVarInt(p.z);
 		}
 
-		buf.writeResourceLocation(dim.getLocation());
+		buf.writeResourceLocation(dim.location());
 	}
 
 	void handle(Supplier<NetworkEvent.Context> context)

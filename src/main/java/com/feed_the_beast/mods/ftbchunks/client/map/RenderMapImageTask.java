@@ -93,8 +93,8 @@ public class RenderMapImageTask implements MapTask
 		}
 
 		float[] hsb = new float[3];
-		UUID ownId = Minecraft.getInstance().player.getUniqueID();
-		World world = Minecraft.getInstance().world;
+		UUID ownId = Minecraft.getInstance().player.getUUID();
+		World world = Minecraft.getInstance().level;
 		BlockPos.Mutable blockPos = new BlockPos.Mutable();
 		Int2ObjectOpenHashMap<Biome> biomeMap = new Int2ObjectOpenHashMap<>();
 
@@ -144,7 +144,7 @@ public class RenderMapImageTask implements MapTask
 							Color4I col;
 							int by = getHeight(data.waterLightAndBiome[index], data.height[index]);
 							boolean water = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
-							blockPos.setPos(region.pos.x * 512 + ax, by, region.pos.z * 512 + az);
+							blockPos.set(region.pos.x * 512 + ax, by, region.pos.z * 512 + az);
 
 							if (FTBChunksClientConfig.mapMode == MapMode.TOPOGRAPHY)
 							{

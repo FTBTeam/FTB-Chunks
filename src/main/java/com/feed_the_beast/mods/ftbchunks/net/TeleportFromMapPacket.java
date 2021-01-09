@@ -35,14 +35,14 @@ public class TeleportFromMapPacket
 	{
 		x = buf.readVarInt();
 		z = buf.readVarInt();
-		dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
+		dimension = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 	}
 
 	void write(PacketBuffer buf)
 	{
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
-		buf.writeResourceLocation(dimension.getLocation());
+		buf.writeResourceLocation(dimension.location());
 	}
 
 	private int getHeight(@Nullable IChunk chunk, int blockX, int blockZ, int topY)
@@ -56,14 +56,14 @@ public class TeleportFromMapPacket
 
 		for (int by = topY; by > 0; by--)
 		{
-			currentBlockPos.setPos(blockX, by, blockZ);
+			currentBlockPos.set(blockX, by, blockZ);
 			BlockState state = chunk.getBlockState(currentBlockPos);
 
 			if (by == topY || state.getBlock() == Blocks.BEDROCK)
 			{
 				for (; by > 0; by--)
 				{
-					currentBlockPos.setPos(blockX, by, blockZ);
+					currentBlockPos.set(blockX, by, blockZ);
 					state = chunk.getBlockState(currentBlockPos);
 
 					if (state.getBlock().isAir(state, chunk.getWorldForge(), currentBlockPos))
@@ -73,7 +73,7 @@ public class TeleportFromMapPacket
 				}
 			}
 
-			if (!state.isAir(chunk.getWorldForge(), currentBlockPos))
+			if (!state.isAir())
 			{
 				return by;
 			}
@@ -86,14 +86,14 @@ public class TeleportFromMapPacket
 	{
 		context.get().enqueueWork(() -> {
 			ServerPlayerEntity p = context.get().getSender();
-			int topY = p.world.func_234938_ad_() + 1; //getActualHeight
-			int y = getHeight(p.world.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true), x, z, topY) + 2;
+			int topY = p.level.getHeight() + 1; //getActualHeight
+			int y = getHeight(p.level.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true), x, z, topY) + 2;
 
-			ServerWorld world = p.getServer().getWorld(dimension);
+			ServerWorld world = p.getServer().getLevel(dimension);
 
-			if (world != null && p.hasPermissionLevel(2))
+			if (world != null && p.hasPermissions(2))
 			{
-				p.teleport(world, x + 0.5D, y + 0.1D, z + 0.5D, p.rotationYaw, p.rotationPitch);
+				p.teleportTo(world, x + 0.5D, y + 0.1D, z + 0.5D, p.yRot, p.xRot);
 			}
 		});
 		context.get().setPacketHandled(true);

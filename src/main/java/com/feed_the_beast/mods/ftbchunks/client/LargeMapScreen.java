@@ -22,7 +22,7 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHelper;
@@ -96,8 +96,8 @@ public class LargeMapScreen extends GuiBase
 			regionPanel.resetScroll();
 			regionPanel.scrollTo(sx, sy);
 
-			ObfuscationReflectionHelper.setPrivateValue(MouseHelper.class, Minecraft.getInstance().mouseHelper, true, "field_198051_p");
-			Minecraft.getInstance().mouseHelper.ungrabMouse();
+			ObfuscationReflectionHelper.setPrivateValue(MouseHelper.class, Minecraft.getInstance().mouseHandler, true, "field_198051_p");
+			Minecraft.getInstance().mouseHandler.releaseMouse();
 		}
 	}
 
@@ -123,8 +123,8 @@ public class LargeMapScreen extends GuiBase
 					Waypoint w = new Waypoint(dimension);
 					w.name = name.value;
 					w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
-					w.x = MathHelper.floor(player.getPosX());
-					w.z = MathHelper.floor(player.getPosZ());
+					w.x = MathHelper.floor(player.getX());
+					w.z = MathHelper.floor(player.getZ());
 					dimension.getWaypoints().add(w);
 					dimension.saveData = true;
 					refreshWidgets();
@@ -138,7 +138,7 @@ public class LargeMapScreen extends GuiBase
 			// dimension.sync();
 		}));
 
-		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.getLocation().getPath().replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
+		add(dimensionButton = new SimpleButton(this, new StringTextComponent(dimension.dimension.location().getPath().replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
 			try
 			{
 				List<MapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
@@ -229,7 +229,7 @@ public class LargeMapScreen extends GuiBase
 			closeGui(false);
 			return true;
 		}
-		else if (key.is(FTBChunksClient.openMapKey.getKey().getKeyCode()))
+		else if (key.is(FTBChunksClient.openMapKey.getKey().getValue()))
 		{
 			closeGui(true);
 			return true;
@@ -254,7 +254,7 @@ public class LargeMapScreen extends GuiBase
 		{
 			PlayerEntity p = Minecraft.getInstance().player;
 			regionPanel.resetScroll();
-			regionPanel.scrollTo(p.getPosX() / 512D, p.getPosZ() / 512D);
+			regionPanel.scrollTo(p.getX() / 512D, p.getZ() / 512D);
 			movedToPlayer = true;
 		}
 
@@ -294,9 +294,9 @@ public class LargeMapScreen extends GuiBase
 			regionPanel.setScrollY((scrollHeight - regionPanel.height) / 2D);
 		}
 
-		GlStateManager.disableTexture();
+		RenderSystem.disableTexture();
 		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
+		BufferBuilder buffer = tessellator.getBuilder();
 		int r = 70;
 		int g = 70;
 		int b = 70;
@@ -310,18 +310,18 @@ public class LargeMapScreen extends GuiBase
 
 		for (int gx = 0; gx <= (w / s) + 1; gx++)
 		{
-			buffer.pos(x + ox + gx * s, y, 0).color(r, g, b, a).endVertex();
-			buffer.pos(x + ox + gx * s, y + h, 0).color(r, g, b, a).endVertex();
+			buffer.vertex(x + ox + gx * s, y, 0).color(r, g, b, a).endVertex();
+			buffer.vertex(x + ox + gx * s, y + h, 0).color(r, g, b, a).endVertex();
 		}
 
 		for (int gy = 0; gy <= (h / s) + 1; gy++)
 		{
-			buffer.pos(x, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
-			buffer.pos(x + w, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
+			buffer.vertex(x, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
+			buffer.vertex(x + w, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
 		}
 
-		tessellator.draw();
-		GlStateManager.enableTexture();
+		tessellator.end();
+		RenderSystem.enableTexture();
 	}
 
 	@Override
@@ -339,7 +339,7 @@ public class LargeMapScreen extends GuiBase
 				int waterLightAndBiome = data.waterLightAndBiome[regionPanel.blockX & 511 + (regionPanel.blockZ & 511) * 512];
 				RegistryKey<Biome> biome = dimension.manager.getBiomeKey(waterLightAndBiome);
 				Block block = dimension.manager.getBlock(data.getBlockIndex(regionPanel.blockX & 511 + (regionPanel.blockZ & 511) * 512));
-				coords = coords + " | " + I18n.format("biome." + biome.getLocation().getNamespace() + "." + biome.getLocation().getPath()) + " | " + I18n.format(block.getTranslationKey());
+				coords = coords + " | " + I18n.get("biome." + biome.location().getNamespace() + "." + biome.location().getPath()) + " | " + I18n.get(block.getDescriptionId());
 
 				if ((waterLightAndBiome & (1 << 15)) != 0)
 				{
@@ -351,11 +351,11 @@ public class LargeMapScreen extends GuiBase
 		int coordsw = theme.getStringWidth(coords) / 2;
 
 		backgroundColor.withAlpha(150).draw(matrixStack, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
 		matrixStack.scale(0.5F, 0.5F, 1F);
 		theme.drawString(matrixStack, coords, 0, 0, Theme.SHADOW);
-		matrixStack.pop();
+		matrixStack.popPose();
 
 		if (FTBChunksClientConfig.debugInfo)
 		{
@@ -378,11 +378,11 @@ public class LargeMapScreen extends GuiBase
 
 			backgroundColor.withAlpha(150).draw(matrixStack, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
 
-			matrixStack.push();
+			matrixStack.pushPose();
 			matrixStack.translate(x + (w - memoryUsagew) - 1F, y + 1, 0F);
 			matrixStack.scale(0.5F, 0.5F, 1F);
 			theme.drawString(matrixStack, memoryUsage, 0, 0, Theme.SHADOW);
-			matrixStack.pop();
+			matrixStack.popPose();
 		}
 	}
 }

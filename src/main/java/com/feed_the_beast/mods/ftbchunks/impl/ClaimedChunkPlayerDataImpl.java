@@ -119,7 +119,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		if (color == 0)
 		{
-			color = MathHelper.hsvToRGB(MathUtils.RAND.nextFloat(), 0.65F, 1F);
+			color = MathHelper.hsvToRgb(MathUtils.RAND.nextFloat(), 0.65F, 1F);
 			save();
 		}
 
@@ -247,7 +247,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_CLAIMED;
 		}
-		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer())
+		else if (chunk.playerData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer())
 		{
 			return ClaimResults.NOT_OWNER;
 		}
@@ -287,7 +287,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return ClaimResults.NOT_CLAIMED;
 		}
-		else if (chunk.playerData != this && !source.hasPermissionLevel(2) && !source.getServer().isSinglePlayer())
+		else if (chunk.playerData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer())
 		{
 			return ClaimResults.NOT_OWNER;
 		}
@@ -324,8 +324,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			return ClaimResults.NOT_CLAIMED;
 		}
 		else if (chunk.playerData != this
-				&& !source.hasPermissionLevel(2)
-				&& !source.getServer().isSinglePlayer()
+				&& !source.hasPermission(2)
+				&& !source.getServer().isSingleplayer()
 				&& !(source.getEntity() instanceof ServerPlayerEntity && isTeamMember(FTBChunksAPIImpl.manager.getData((ServerPlayerEntity) source.getEntity())))
 		)
 		{
@@ -411,7 +411,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 		{
 			return true;
 		}
-		else if (p.getServer().isSinglePlayer())
+		else if (p.getServer().isSingleplayer())
 		{
 			return true;
 		}
@@ -461,7 +461,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 
 		for (ClaimedChunk chunk : getClaimedChunks())
 		{
-			String dim = chunk.getPos().dimension.getLocation().toString();
+			String dim = chunk.getPos().dimension.location().toString();
 			JsonElement e = chunksJson.get(dim);
 
 			if (e == null || e.isJsonNull())
@@ -567,7 +567,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 					int x = o.get("x").getAsInt();
 					int z = o.get("z").getAsInt();
 
-					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(entry.getKey())), x, z));
+					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(RegistryKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(entry.getKey())), x, z));
 
 					if (o.has("time"))
 					{
@@ -611,7 +611,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData
 			}
 		}
 
-		return new StringTextComponent(getName()).mergeStyle(Style.EMPTY.setColor(Color.fromInt(getColor() & 0xFFFFFF)));
+		return new StringTextComponent(getName()).withStyle(Style.EMPTY.withColor(Color.fromRgb(getColor() & 0xFFFFFF)));
 	}
 
 	@Override

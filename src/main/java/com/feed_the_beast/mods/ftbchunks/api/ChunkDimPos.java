@@ -33,12 +33,12 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 
 	public ChunkDimPos(World world, BlockPos pos)
 	{
-		this(world.getDimensionKey(), pos.getX() >> 4, pos.getZ() >> 4);
+		this(world.dimension(), pos.getX() >> 4, pos.getZ() >> 4);
 	}
 
 	public ChunkDimPos(Entity entity)
 	{
-		this(entity.world, entity.getPosition());
+		this(entity.level, entity.blockPosition());
 	}
 
 	public ChunkPos getChunkPos()
@@ -54,7 +54,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 	@Override
 	public String toString()
 	{
-		return "[" + dimension.getLocation() + ":" + x + ":" + z + "]";
+		return "[" + dimension.location() + ":" + x + ":" + z + "]";
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 	{
 		if (hash == 0)
 		{
-			hash = Objects.hash(dimension.getLocation(), x, z);
+			hash = Objects.hash(dimension.location(), x, z);
 
 			if (hash == 0)
 			{
@@ -92,8 +92,8 @@ public class ChunkDimPos implements Comparable<ChunkDimPos>
 	@Override
 	public int compareTo(ChunkDimPos o)
 	{
-		int i = dimension.getLocation().compareTo(o.dimension.getLocation());
-		return i == 0 ? Long.compare(getChunkPos().asLong(), o.getChunkPos().asLong()) : i;
+		int i = dimension.location().compareTo(o.dimension.location());
+		return i == 0 ? Long.compare(getChunkPos().toLong(), o.getChunkPos().toLong()) : i;
 	}
 
 	public ChunkDimPos offset(int ox, int oz)

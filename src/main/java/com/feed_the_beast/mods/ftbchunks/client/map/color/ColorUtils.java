@@ -21,12 +21,12 @@ public class ColorUtils
 
 	public static int convertToNative(int c)
 	{
-		return NativeImage.getCombined((c >> 24) & 0xFF, (c >> 0) & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF);
+		return NativeImage.combine((c >> 24) & 0xFF, (c >> 0) & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF);
 	}
 
 	public static int convertFromNative(int c)
 	{
-		return (NativeImage.getAlpha(c) << 24) | (NativeImage.getRed(c) << 16) | (NativeImage.getGreen(c) << 8) | NativeImage.getBlue(c);
+		return (NativeImage.getA(c) << 24) | (NativeImage.getR(c) << 16) | (NativeImage.getG(c) << 8) | NativeImage.getB(c);
 	}
 
 	public static Color4I addBrightness(Color4I c, float f)
@@ -61,7 +61,7 @@ public class ColorUtils
 					for (int y = 0; y < h; y++)
 					{
 						int col = image.getPixelRGBA(x, y);
-						reducedColorPalette[x + y * w] = Color4I.rgb((NativeImage.getRed(col) << 16) | (NativeImage.getGreen(col) << 8) | NativeImage.getBlue(col));
+						reducedColorPalette[x + y * w] = Color4I.rgb((NativeImage.getR(col) << 16) | (NativeImage.getG(col) << 8) | NativeImage.getB(col));
 					}
 				}
 

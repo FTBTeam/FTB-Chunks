@@ -27,7 +27,7 @@ public class SendAllChunksPacket
 
 	SendAllChunksPacket(PacketBuffer buf)
 	{
-		dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
+		dimension = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		owner = new UUID(buf.readLong(), buf.readLong());
 
 		int s = buf.readVarInt();
@@ -43,7 +43,7 @@ public class SendAllChunksPacket
 
 	void write(PacketBuffer buf)
 	{
-		buf.writeResourceLocation(dimension.getLocation());
+		buf.writeResourceLocation(dimension.location());
 		buf.writeLong(owner.getMostSignificantBits());
 		buf.writeLong(owner.getLeastSignificantBits());
 		buf.writeVarInt(chunks.size());

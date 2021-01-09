@@ -29,9 +29,9 @@ public final class PlayerLocation
 	public PlayerLocation(PlayerEntity player)
 	{
 		name = player.getGameProfile().getName();
-		uuid = player.getUniqueID();
-		x = MathHelper.floor(player.getPosX());
-		z = MathHelper.floor(player.getPosZ());
+		uuid = player.getUUID();
+		x = MathHelper.floor(player.getX());
+		z = MathHelper.floor(player.getZ());
 	}
 
 	@Override

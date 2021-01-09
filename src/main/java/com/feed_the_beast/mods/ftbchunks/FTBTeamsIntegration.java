@@ -31,7 +31,7 @@ public class FTBTeamsIntegration
 	@Nullable
 	public static IFormattableTextComponent getTeamName(ClaimedChunkPlayerData data)
 	{
-		return FTBTeamsAPI.INSTANCE.getManager().getTeam(data.getProfile()).map(team -> team.getName().deepCopy()).orElse(null);
+		return FTBTeamsAPI.INSTANCE.getManager().getTeam(data.getProfile()).map(team -> team.getName().copy()).orElse(null);
 	}
 
 	public static int getTeamColor(ClaimedChunkPlayerData data)

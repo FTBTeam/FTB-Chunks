@@ -52,6 +52,7 @@ import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
@@ -130,8 +131,8 @@ public class FTBChunksClient extends FTBChunksCommon
 		FTBChunksClientConfig.init();
 		openMapKey = new KeyBinding("key.ftbchunks.map", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
 		ClientRegistry.registerKeyBinding(openMapKey);
-		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(new EntityIcons());
-		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(new ColorMapLoader());
+		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(new EntityIcons());
+		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(new ColorMapLoader());
 	}
 
 	public static void openGui()
@@ -261,7 +262,8 @@ public class FTBChunksClient extends FTBChunksCommon
 	@Override
 	public void playerDeath(PlayerDeathPacket packet)
 	{
-		if (FTBChunksClientConfig.deathWaypoints) {
+		if (FTBChunksClientConfig.deathWaypoints)
+		{
 			MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 			Waypoint w = new Waypoint(dimension);
 			w.name = "Death #" + packet.number;
@@ -285,7 +287,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	@SubscribeEvent
 	public void keyEvent(InputEvent.KeyInputEvent event)
 	{
-		if (openMapKey.isPressed())
+		if (openMapKey.isDown())
 		{
 			if (FTBChunksClientConfig.debugInfo && Screen.hasControlDown())
 			{
@@ -308,7 +310,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	@SubscribeEvent
 	public void guiKeyEvent(GuiScreenEvent.KeyboardKeyEvent.KeyboardKeyPressedEvent.Pre event)
 	{
-		if (openMapKey.isPressed())
+		if (openMapKey.isDown())
 		{
 			LargeMapScreen gui = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
 
@@ -324,14 +326,14 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.player == null || mc.world == null || MapManager.inst == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
+		if (mc.player == null || mc.level == null || MapManager.inst == null || event.getType() != RenderGameOverlayEvent.ElementType.ALL)
 		{
 			return;
 		}
 
 		MapDimension dim = MapDimension.getCurrent();
 
-		if (dim.dimension != mc.world.getDimensionKey())
+		if (dim.dimension != mc.level.dimension())
 		{
 			MapDimension.updateCurrent();
 			dim = MapDimension.getCurrent();
@@ -366,8 +368,8 @@ public class FTBChunksClient extends FTBChunksCommon
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		}
 
-		int cx = mc.player.chunkCoordX;
-		int cz = mc.player.chunkCoordZ;
+		int cx = mc.player.xChunk;
+		int cz = mc.player.zChunk;
 
 		if (cx != currentPlayerChunkX || cz != currentPlayerChunkZ)
 		{
@@ -388,7 +390,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
 					MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
-					region.getRenderedMapImage().uploadTextureSub(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, FTBChunksClientConfig.minimapBlur, false, false, false);
+					region.getRenderedMapImage().upload(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, FTBChunksClientConfig.minimapBlur, false, false, false);
 				}
 			}
 
@@ -396,30 +398,30 @@ public class FTBChunksClient extends FTBChunksCommon
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.gameSettings.showDebugInfo || FTBChunksClientConfig.minimap == MinimapPosition.DISABLED || FTBChunksClientConfig.minimapVisibility == 0)
+		if (mc.options.renderDebug || FTBChunksClientConfig.minimap == MinimapPosition.DISABLED || FTBChunksClientConfig.minimapVisibility == 0)
 		{
 			return;
 		}
 
-		float scale = (float) (FTBChunksClientConfig.minimapScale * 4D / mc.getMainWindow().getGuiScaleFactor());
-		float minimapRotation = (FTBChunksClientConfig.minimapLockedNorth ? 180F : -mc.player.rotationYaw) % 360F;
+		float scale = (float) (FTBChunksClientConfig.minimapScale * 4D / mc.getWindow().getGuiScale());
+		float minimapRotation = (FTBChunksClientConfig.minimapLockedNorth ? 180F : -mc.player.yRot) % 360F;
 
 		int s = (int) (64D * scale);
-		int x = FTBChunksClientConfig.minimap.getX(mc.getMainWindow().getScaledWidth(), s);
-		int y = FTBChunksClientConfig.minimap.getY(mc.getMainWindow().getScaledHeight(), s);
+		int x = FTBChunksClientConfig.minimap.getX(mc.getWindow().getGuiScaledWidth(), s);
+		int y = FTBChunksClientConfig.minimap.getY(mc.getWindow().getGuiScaledHeight(), s);
 		int z = 0;
 
 		float border = 0F;
 		int alpha = FTBChunksClientConfig.minimapVisibility;
 
 		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
+		BufferBuilder buffer = tessellator.getBuilder();
 
 		float f0 = 1F / (float) FTBChunks.TILES;
 		float f1 = 1F - f0;
 
-		float offX = (float) ((mc.player.getPosX() / 16D - currentPlayerChunkX - 0.5D) / (double) FTBChunks.TILES);
-		float offY = (float) ((mc.player.getPosZ() / 16D - currentPlayerChunkZ - 0.5D) / (double) FTBChunks.TILES);
+		float offX = (float) ((mc.player.getX() / 16D - currentPlayerChunkX - 0.5D) / (double) FTBChunks.TILES);
+		float offY = (float) ((mc.player.getZ() / 16D - currentPlayerChunkZ - 0.5D) / (double) FTBChunks.TILES);
 
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
@@ -429,62 +431,62 @@ public class FTBChunksClient extends FTBChunksCommon
 		RenderSystem.enableAlphaTest();
 
 		MatrixStack matrixStack = event.getMatrixStack();
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(x + s / 2D, y + s / 2D, -10);
 
 		matrixStack.translate(0, 0, 950);
 
-		Matrix4f m = matrixStack.getLast().getMatrix();
+		Matrix4f m = matrixStack.last().pose();
 
 		// See AdvancementTabGui
 		RenderSystem.colorMask(false, false, false, false);
-		mc.getTextureManager().bindTexture(CIRCLE_MASK);
+		mc.getTextureManager().bind(CIRCLE_MASK);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-		buffer.pos(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-		buffer.pos(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-		buffer.pos(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
-		tessellator.draw();
+		buffer.vertex(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
+		buffer.vertex(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
+		buffer.vertex(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
+		buffer.vertex(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
+		tessellator.end();
 		RenderSystem.colorMask(true, true, true, true);
 
 		matrixStack.translate(0, 0, -950);
-		matrixStack.rotate(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
+		matrixStack.mulPose(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
 		RenderSystem.bindTexture(minimapTextureId);
 
-		m = matrixStack.getLast().getMatrix();
+		m = matrixStack.last().pose();
 
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, alpha).tex(f0 + offX, f0 + offY).endVertex();
-		buffer.pos(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, alpha).tex(f0 + offX, f1 + offY).endVertex();
-		buffer.pos(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, alpha).tex(f1 + offX, f1 + offY).endVertex();
-		buffer.pos(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, alpha).tex(f1 + offX, f0 + offY).endVertex();
-		tessellator.draw();
+		buffer.vertex(m, -s / 2F + border, -s / 2F + border, z).color(255, 255, 255, alpha).uv(f0 + offX, f0 + offY).endVertex();
+		buffer.vertex(m, -s / 2F + border, s / 2F - border, z).color(255, 255, 255, alpha).uv(f0 + offX, f1 + offY).endVertex();
+		buffer.vertex(m, s / 2F - border, s / 2F - border, z).color(255, 255, 255, alpha).uv(f1 + offX, f1 + offY).endVertex();
+		buffer.vertex(m, s / 2F - border, -s / 2F + border, z).color(255, 255, 255, alpha).uv(f1 + offX, f0 + offY).endVertex();
+		tessellator.end();
 
-		matrixStack.pop();
+		matrixStack.popPose();
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 		RenderSystem.defaultBlendFunc();
 
-		m = matrixStack.getLast().getMatrix();
+		m = matrixStack.last().pose();
 
-		mc.getTextureManager().bindTexture(CIRCLE_BORDER);
+		mc.getTextureManager().bind(CIRCLE_BORDER);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(m, x, y, z).color(255, 255, 255, alpha).tex(0F, 0F).endVertex();
-		buffer.pos(m, x, y + s, z).color(255, 255, 255, alpha).tex(0F, 1F).endVertex();
-		buffer.pos(m, x + s, y + s, z).color(255, 255, 255, alpha).tex(1F, 1F).endVertex();
-		buffer.pos(m, x + s, y, z).color(255, 255, 255, alpha).tex(1F, 0F).endVertex();
-		tessellator.draw();
+		buffer.vertex(m, x, y, z).color(255, 255, 255, alpha).uv(0F, 0F).endVertex();
+		buffer.vertex(m, x, y + s, z).color(255, 255, 255, alpha).uv(0F, 1F).endVertex();
+		buffer.vertex(m, x + s, y + s, z).color(255, 255, 255, alpha).uv(1F, 1F).endVertex();
+		buffer.vertex(m, x + s, y, z).color(255, 255, 255, alpha).uv(1F, 0F).endVertex();
+		tessellator.end();
 
 		RenderSystem.disableTexture();
 		buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-		buffer.pos(m, x + s / 2F, y + 0, z).color(0, 0, 0, 30).endVertex();
-		buffer.pos(m, x + s / 2F, y + s, z).color(0, 0, 0, 30).endVertex();
-		buffer.pos(m, x + 0, y + s / 2F, z).color(0, 0, 0, 30).endVertex();
-		buffer.pos(m, x + s, y + s / 2F, z).color(0, 0, 0, 30).endVertex();
-		tessellator.draw();
+		buffer.vertex(m, x + s / 2F, y + 0, z).color(0, 0, 0, 30).endVertex();
+		buffer.vertex(m, x + s / 2F, y + s, z).color(0, 0, 0, 30).endVertex();
+		buffer.vertex(m, x + 0, y + s / 2F, z).color(0, 0, 0, 30).endVertex();
+		buffer.vertex(m, x + s, y + s / 2F, z).color(0, 0, 0, 30).endVertex();
+		tessellator.end();
 
 		RenderSystem.enableTexture();
 
@@ -500,15 +502,15 @@ public class FTBChunksClient extends FTBChunksCommon
 				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
 				float ws = s / 32F;
 
-				m = matrixStack.getLast().getMatrix();
+				m = matrixStack.last().pose();
 
-				mc.textureManager.bindTexture(COMPASS[face]);
+				mc.textureManager.bind(COMPASS[face]);
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-				buffer.pos(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
-				tessellator.draw();
+				buffer.vertex(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
+				buffer.vertex(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
+				tessellator.end();
 			}
 		}
 
@@ -523,7 +525,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					continue;
 				}
 
-				double distance = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x + 0.5D, waypoint.z + 0.5D);
+				double distance = MathUtils.dist(mc.player.getX(), mc.player.getZ(), waypoint.x + 0.5D, waypoint.z + 0.5D);
 
 				if (distance > waypoint.minimapDistance)
 				{
@@ -537,7 +539,7 @@ public class FTBChunksClient extends FTBChunksCommon
 					d = s / 2D;
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - waypoint.z - 0.5D, mc.player.getPosX() - waypoint.x - 0.5D) + minimapRotation * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getZ() - waypoint.z - 0.5D, mc.player.getX() - waypoint.x - 0.5D) + minimapRotation * Math.PI / 180D;
 
 				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
 				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
@@ -547,28 +549,28 @@ public class FTBChunksClient extends FTBChunksCommon
 				int g = (waypoint.color >> 8) & 0xFF;
 				int b = (waypoint.color >> 0) & 0xFF;
 
-				m = matrixStack.getLast().getMatrix();
+				m = matrixStack.last().pose();
 
-				mc.getTextureManager().bindTexture(waypoint.type.texture);
+				mc.getTextureManager().bind(waypoint.type.texture);
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(m, wx - ws, wy - ws, z).color(r, g, b, 255).tex(0F, 0F).endVertex();
-				buffer.pos(m, wx - ws, wy + ws, z).color(r, g, b, 255).tex(0F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy + ws, z).color(r, g, b, 255).tex(1F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy - ws, z).color(r, g, b, 255).tex(1F, 0F).endVertex();
-				tessellator.draw();
+				buffer.vertex(m, wx - ws, wy - ws, z).color(r, g, b, 255).uv(0F, 0F).endVertex();
+				buffer.vertex(m, wx - ws, wy + ws, z).color(r, g, b, 255).uv(0F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy + ws, z).color(r, g, b, 255).uv(1F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy - ws, z).color(r, g, b, 255).uv(1F, 0F).endVertex();
+				tessellator.end();
 			}
 		}
 
 		if (FTBChunksClientConfig.minimapEntities)
 		{
-			for (Entity entity : mc.world.getAllEntities())
+			for (Entity entity : mc.level.entitiesForRendering())
 			{
-				if (entity instanceof AbstractClientPlayerEntity || entity.getType().getClassification() == EntityClassification.MISC || entity.getPosY() < entity.world.getHeight(Heightmap.Type.WORLD_SURFACE, MathHelper.floor(entity.getPosX()), MathHelper.floor(entity.getPosZ())) - 10)
+				if (entity instanceof AbstractClientPlayerEntity || entity.getType().getCategory() == EntityClassification.MISC || entity.getY() < entity.level.getHeight(Heightmap.Type.WORLD_SURFACE, MathHelper.floor(entity.getX()), MathHelper.floor(entity.getZ())) - 10)
 				{
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), entity.getPosX(), entity.getPosZ()) / magicNumber * scale;
+				double d = MathUtils.dist(mc.player.getX(), mc.player.getZ(), entity.getX(), entity.getZ()) / magicNumber * scale;
 
 				if (d > s / 2D)
 				{
@@ -593,50 +595,50 @@ public class FTBChunksClient extends FTBChunksCommon
 					}
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - entity.getPosZ(), mc.player.getPosX() - entity.getPosX()) + minimapRotation * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getZ() - entity.getZ(), mc.player.getX() - entity.getX()) + minimapRotation * Math.PI / 180D;
 
 				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
 				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
 				float ws = s / (FTBChunksClientConfig.minimapLargeEntities ? 32F : 48F);
 
-				m = matrixStack.getLast().getMatrix();
+				m = matrixStack.last().pose();
 
-				mc.getTextureManager().bindTexture(texture);
+				mc.getTextureManager().bind(texture);
 				RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 				RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-				buffer.pos(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
-				tessellator.draw();
+				buffer.vertex(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
+				buffer.vertex(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
+				tessellator.end();
 			}
 		}
 
-		if (FTBChunksClientConfig.minimapPlayerHeads && mc.world.getPlayers().size() > 1)
+		if (FTBChunksClientConfig.minimapPlayerHeads && mc.level.players().size() > 1)
 		{
-			for (AbstractClientPlayerEntity player : mc.world.getPlayers())
+			for (AbstractClientPlayerEntity player : mc.level.players())
 			{
 				if (player == mc.player)
 				{
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), player.getPosX(), player.getPosZ()) / magicNumber * scale;
+				double d = MathUtils.dist(mc.player.getX(), mc.player.getZ(), player.getX(), player.getZ()) / magicNumber * scale;
 
 				if (d > s / 2D)
 				{
 					d = s / 2D;
 				}
 
-				double angle = Math.atan2(mc.player.getPosZ() - player.getPosZ(), mc.player.getPosX() - player.getPosX()) + minimapRotation * Math.PI / 180D;
+				double angle = Math.atan2(mc.player.getZ() - player.getZ(), mc.player.getX() - player.getX()) + minimapRotation * Math.PI / 180D;
 
 				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
 				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
 				float ws = s / 32F;
 
-				String uuid = UUIDTypeAdapter.fromUUID(player.getUniqueID());
+				String uuid = UUIDTypeAdapter.fromUUID(player.getUUID());
 				ResourceLocation texture = new ResourceLocation("head", uuid);
 
 				TextureManager texturemanager = mc.getTextureManager();
@@ -645,38 +647,38 @@ public class FTBChunksClient extends FTBChunksCommon
 				if (t == null)
 				{
 					t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/16", ImageIcon.MISSING_IMAGE);
-					texturemanager.loadTexture(texture, t);
+					texturemanager.register(texture, t);
 				}
 
-				m = matrixStack.getLast().getMatrix();
+				m = matrixStack.last().pose();
 
-				RenderSystem.bindTexture(t.getGlTextureId());
+				RenderSystem.bindTexture(t.getId());
 				buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-				buffer.pos(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).tex(0F, 0F).endVertex();
-				buffer.pos(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).tex(0F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).tex(1F, 1F).endVertex();
-				buffer.pos(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).tex(1F, 0F).endVertex();
-				tessellator.draw();
+				buffer.vertex(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
+				buffer.vertex(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
+				buffer.vertex(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
+				tessellator.end();
 			}
 		}
 
 		if (FTBChunksClientConfig.minimapLockedNorth)
 		{
-			mc.getTextureManager().bindTexture(PLAYER);
-			matrixStack.push();
+			mc.getTextureManager().bind(PLAYER);
+			matrixStack.pushPose();
 			matrixStack.translate(x + s / 2D, y + s / 2D, z);
-			matrixStack.rotate(Vector3f.ZP.rotationDegrees(mc.player.rotationYaw + 180F));
+			matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.yRot + 180F));
 			matrixStack.scale(s / 16F, s / 16F, 1F);
-			m = matrixStack.getLast().getMatrix();
+			m = matrixStack.last().pose();
 
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-			buffer.pos(m, -1, -1, 0).color(255, 255, 255, 200).tex(0F, 0F).endVertex();
-			buffer.pos(m, -1, 1, 0).color(255, 255, 255, 200).tex(0F, 1F).endVertex();
-			buffer.pos(m, 1, 1, 0).color(255, 255, 255, 200).tex(1F, 1F).endVertex();
-			buffer.pos(m, 1, -1, 0).color(255, 255, 255, 200).tex(1F, 0F).endVertex();
-			tessellator.draw();
+			buffer.vertex(m, -1, -1, 0).color(255, 255, 255, 200).uv(0F, 0F).endVertex();
+			buffer.vertex(m, -1, 1, 0).color(255, 255, 255, 200).uv(0F, 1F).endVertex();
+			buffer.vertex(m, 1, 1, 0).color(255, 255, 255, 200).uv(1F, 1F).endVertex();
+			buffer.vertex(m, 1, -1, 0).color(255, 255, 255, 200).uv(1F, 0F).endVertex();
+			tessellator.end();
 
-			matrixStack.pop();
+			matrixStack.popPose();
 		}
 
 		MINIMAP_TEXT_LIST.clear();
@@ -698,16 +700,16 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		if (FTBChunksClientConfig.minimapXYZ)
 		{
-			MINIMAP_TEXT_LIST.add(new StringTextComponent(MathHelper.floor(mc.player.getPosX()) + " " + MathHelper.floor(mc.player.getPosY()) + " " + MathHelper.floor(mc.player.getPosZ())));
+			MINIMAP_TEXT_LIST.add(new StringTextComponent(MathHelper.floor(mc.player.getX()) + " " + MathHelper.floor(mc.player.getY()) + " " + MathHelper.floor(mc.player.getZ())));
 		}
 
 		if (FTBChunksClientConfig.minimapBiome)
 		{
-			RegistryKey<Biome> biome = mc.world.func_242406_i(mc.player.getPosition()).orElse(null);
+			RegistryKey<Biome> biome = mc.level.getBiomeName(mc.player.blockPosition()).orElse(null);
 
 			if (biome != null)
 			{
-				MINIMAP_TEXT_LIST.add(new TranslationTextComponent("biome." + biome.getLocation().getNamespace() + "." + biome.getLocation().getPath()));
+				MINIMAP_TEXT_LIST.add(new TranslationTextComponent("biome." + biome.location().getNamespace() + "." + biome.location().getPath()));
 			}
 		}
 
@@ -720,18 +722,18 @@ public class FTBChunksClient extends FTBChunksCommon
 
 		if (!MINIMAP_TEXT_LIST.isEmpty())
 		{
-			matrixStack.push();
+			matrixStack.pushPose();
 			matrixStack.translate(x + s / 2D, y + s + 3D, 0D);
 			matrixStack.scale((float) (0.5D * scale), (float) (0.5D * scale), 1F);
 
 			for (int i = 0; i < MINIMAP_TEXT_LIST.size(); i++)
 			{
-				IReorderingProcessor bs = MINIMAP_TEXT_LIST.get(i).func_241878_f();
-				int bsw = mc.fontRenderer.func_243245_a(bs);
-				mc.fontRenderer.func_238407_a_(matrixStack, bs, -bsw / 2F, i * 11, 0xFFFFFFFF);
+				IReorderingProcessor bs = MINIMAP_TEXT_LIST.get(i).getVisualOrderText();
+				int bsw = mc.font.width(bs);
+				mc.font.drawShadow(matrixStack, bs, -bsw / 2F, i * 11, 0xFFFFFFFF);
 			}
 
-			matrixStack.pop();
+			matrixStack.popPose();
 		}
 
 		RenderSystem.enableDepthTest();
@@ -742,7 +744,7 @@ public class FTBChunksClient extends FTBChunksCommon
 	{
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.gameSettings.hideGUI || !FTBChunksClientConfig.inWorldWaypoints || MapManager.inst == null || mc.world == null || mc.player == null)
+		if (mc.options.hideGui || !FTBChunksClientConfig.inWorldWaypoints || MapManager.inst == null || mc.level == null || mc.player == null)
 		{
 			return;
 		}
@@ -763,7 +765,7 @@ public class FTBChunksClient extends FTBChunksCommon
 				continue;
 			}
 
-			waypoint.distance = MathUtils.dist(mc.player.getPosX(), mc.player.getPosZ(), waypoint.x + 0.5D, waypoint.z + 0.5D);
+			waypoint.distance = MathUtils.dist(mc.player.getX(), mc.player.getZ(), waypoint.x + 0.5D, waypoint.z + 0.5D);
 
 			if (waypoint.distance <= 8D || waypoint.distance > waypoint.inWorldDistance)
 			{
@@ -795,13 +797,13 @@ public class FTBChunksClient extends FTBChunksCommon
 			visibleWaypoints.sort(Comparator.comparingDouble(value -> -value.distance));
 		}
 
-		ActiveRenderInfo activeRenderInfo = mc.getRenderManager().info;
-		Vector3d projectedView = activeRenderInfo.getProjectedView();
+		ActiveRenderInfo activeRenderInfo = mc.getEntityRenderDispatcher().camera;
+		Vector3d projectedView = activeRenderInfo.getPosition();
 		MatrixStack ms = event.getMatrixStack();
-		ms.push();
+		ms.pushPose();
 		ms.translate(-projectedView.x, -projectedView.y, -projectedView.z);
 
-		IVertexBuilder depthBuffer = mc.getRenderTypeBuffers().getBufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
+		IVertexBuilder depthBuffer = mc.renderBuffers().bufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 
 		float h = (float) (projectedView.y + 30D);
 		float h2 = h + 70F;
@@ -814,30 +816,30 @@ public class FTBChunksClient extends FTBChunksCommon
 			int g = (waypoint.color >> 8) & 0xFF;
 			int b = (waypoint.color >> 0) & 0xFF;
 
-			ms.push();
+			ms.pushPose();
 			ms.translate(waypoint.x + 0.5D, 0, waypoint.z + 0.5D);
-			ms.rotate(Vector3f.YP.rotationDegrees((float) (-angle - 135D)));
+			ms.mulPose(Vector3f.YP.rotationDegrees((float) (-angle - 135D)));
 
 			float s = 0.6F;
 
-			Matrix4f m = ms.getLast().getMatrix();
+			Matrix4f m = ms.last().pose();
 
-			depthBuffer.pos(m, -s, 0, s).color(r, g, b, waypoint.alpha).tex(0F, 1F).endVertex();
-			depthBuffer.pos(m, -s, h, s).color(r, g, b, waypoint.alpha).tex(0F, 0F).endVertex();
-			depthBuffer.pos(m, s, h, -s).color(r, g, b, waypoint.alpha).tex(1F, 0F).endVertex();
-			depthBuffer.pos(m, s, 0, -s).color(r, g, b, waypoint.alpha).tex(1F, 1F).endVertex();
+			depthBuffer.vertex(m, -s, 0, s).color(r, g, b, waypoint.alpha).uv(0F, 1F).endVertex();
+			depthBuffer.vertex(m, -s, h, s).color(r, g, b, waypoint.alpha).uv(0F, 0F).endVertex();
+			depthBuffer.vertex(m, s, h, -s).color(r, g, b, waypoint.alpha).uv(1F, 0F).endVertex();
+			depthBuffer.vertex(m, s, 0, -s).color(r, g, b, waypoint.alpha).uv(1F, 1F).endVertex();
 
-			depthBuffer.pos(m, -s, h, s).color(r, g, b, waypoint.alpha).tex(0F, 1F).endVertex();
-			depthBuffer.pos(m, -s, h2, s).color(r, g, b, 0).tex(0F, 0F).endVertex();
-			depthBuffer.pos(m, s, h2, -s).color(r, g, b, 0).tex(1F, 0F).endVertex();
-			depthBuffer.pos(m, s, h, -s).color(r, g, b, waypoint.alpha).tex(1F, 1F).endVertex();
+			depthBuffer.vertex(m, -s, h, s).color(r, g, b, waypoint.alpha).uv(0F, 1F).endVertex();
+			depthBuffer.vertex(m, -s, h2, s).color(r, g, b, 0).uv(0F, 0F).endVertex();
+			depthBuffer.vertex(m, s, h2, -s).color(r, g, b, 0).uv(1F, 0F).endVertex();
+			depthBuffer.vertex(m, s, h, -s).color(r, g, b, waypoint.alpha).uv(1F, 1F).endVertex();
 
-			ms.pop();
+			ms.popPose();
 		}
 
-		ms.pop();
+		ms.popPose();
 
-		mc.getRenderTypeBuffers().getBufferSource().finish(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
+		mc.renderBuffers().bufferSource().endBatch(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 	}
 
 	@SubscribeEvent
@@ -853,13 +855,13 @@ public class FTBChunksClient extends FTBChunksCommon
 	@SubscribeEvent
 	public void clientTick(TickEvent.ClientTickEvent event)
 	{
-		if (event.phase == TickEvent.Phase.START && MapManager.inst != null && Minecraft.getInstance().world != null)
+		if (event.phase == TickEvent.Phase.START && MapManager.inst != null && Minecraft.getInstance().level != null)
 		{
 			if (taskQueueTicks % FTBChunksClientConfig.rerenderQueueTicks == 0L)
 			{
 				if (!rerenderCache.isEmpty())
 				{
-					World world = Minecraft.getInstance().world;
+					World world = Minecraft.getInstance().level;
 
 					for (ChunkPos pos : rerenderCache)
 					{
@@ -888,7 +890,7 @@ public class FTBChunksClient extends FTBChunksCommon
 						}
 					}
 
-					FTBChunks.EXECUTOR_SERVICE.execute(() -> {
+					Util.backgroundExecutor().execute(() -> {
 						for (MapTask task : tasks)
 						{
 							if (task != null)

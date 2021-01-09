@@ -81,13 +81,13 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	@Override
 	public boolean canEdit(ServerPlayerEntity player, BlockState state)
 	{
-		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || player.hasPermissionLevel(2);
+		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || player.hasPermissions(2);
 	}
 
 	@Override
 	public boolean canInteract(ServerPlayerEntity player, BlockState state)
 	{
-		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || player.hasPermissionLevel(2);
+		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || player.hasPermissions(2);
 	}
 
 	@Override
@@ -104,11 +104,11 @@ public class ClaimedChunkImpl implements ClaimedChunk
 
 	public void postSetForceLoaded(boolean load)
 	{
-		ServerWorld world = getPlayerData().getManager().getMinecraftServer().getWorld(getPos().dimension);
+		ServerWorld world = getPlayerData().getManager().getMinecraftServer().getLevel(getPos().dimension);
 
 		if (world != null)
 		{
-			world.forceChunk(getPos().x, getPos().z, load);
+			world.setChunkForced(getPos().x, getPos().z, load);
 			sendUpdateToAll();
 		}
 	}

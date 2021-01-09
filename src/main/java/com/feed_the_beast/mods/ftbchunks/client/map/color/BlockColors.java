@@ -20,8 +20,8 @@ public class BlockColors
 		return color;
 	}
 
-	public static final BlockColor FOLIAGE = register("foliage", (world, pos) -> Color4I.rgb(BiomeColors.getFoliageColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
-	public static final BlockColor GRASS = register("grass", (world, pos) -> Color4I.rgb(BiomeColors.getGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
+	public static final BlockColor FOLIAGE = register("foliage", (world, pos) -> Color4I.rgb(BiomeColors.getAverageFoliageColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
+	public static final BlockColor GRASS = register("grass", (world, pos) -> Color4I.rgb(BiomeColors.getAverageGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
 	public static final BlockColor IGNORED = register("ignored", new IgnoredBlockColor());
 
 	public static final BlockColor BOP_RAINBOW = register("bop_rainbow", (world, pos) -> Color4I.hsb((((float) pos.getX() + MathHelper.sin(((float) pos.getZ() + (float) pos.getX()) / 35) * 35) % 150) / 150, 0.6F, 0.5F));

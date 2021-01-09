@@ -91,7 +91,7 @@ public class XZ
 
 	public ChunkDimPos dim(World world)
 	{
-		return dim(world.getDimensionKey());
+		return dim(world.dimension());
 	}
 
 	public XZ offset(int ox, int oz)

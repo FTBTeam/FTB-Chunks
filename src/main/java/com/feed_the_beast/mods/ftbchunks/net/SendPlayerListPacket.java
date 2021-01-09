@@ -85,7 +85,7 @@ public class SendPlayerListPacket
 		{
 			long most = buf.readLong();
 			long least = buf.readLong();
-			String name = buf.readString(50);
+			String name = buf.readUtf(50);
 			int flags = buf.readVarInt();
 			players.add(new NetPlayer(new UUID(most, least), name, flags));
 		}
@@ -146,7 +146,7 @@ public class SendPlayerListPacket
 		{
 			buf.writeLong(p.uuid.getMostSignificantBits());
 			buf.writeLong(p.uuid.getLeastSignificantBits());
-			buf.writeString(p.name, 50);
+			buf.writeUtf(p.name, 50);
 			buf.writeVarInt(p.flags);
 		}
 

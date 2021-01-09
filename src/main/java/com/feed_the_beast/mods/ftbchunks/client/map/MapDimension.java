@@ -33,7 +33,7 @@ public class MapDimension implements MapTask
 	{
 		if (current == null)
 		{
-			current = MapManager.inst.getDimension(Minecraft.getInstance().world.getDimensionKey());
+			current = MapManager.inst.getDimension(Minecraft.getInstance().level.dimension());
 		}
 
 		return current;
@@ -56,7 +56,7 @@ public class MapDimension implements MapTask
 	{
 		manager = m;
 		dimension = id;
-		safeDimensionId = dimension.getLocation().toString().replace(':', '_');
+		safeDimensionId = dimension.location().toString().replace(':', '_');
 		directory = manager.directory.resolve(safeDimensionId);
 		saveData = false;
 	}

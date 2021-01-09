@@ -19,12 +19,12 @@ public class ChunkManagerMixin
 {
 	@Shadow
 	@Final
-	private ServerWorld world;
+	private ServerWorld level;
 
-	@Inject(method = "isOutsideSpawningRadius", at = @At("RETURN"), cancellable = true)
+	@Inject(method = "noPlayersCloseForSpawning", at = @At("RETURN"), cancellable = true)
 	public void isOutsideSpawningRadiusPatch(ChunkPos pos, CallbackInfoReturnable<Boolean> ci)
 	{
-		if (ci.getReturnValue() && FTBChunksConfig.patchChunkLoading(world, pos))
+		if (ci.getReturnValue() && FTBChunksConfig.patchChunkLoading(level, pos))
 		{
 			ci.setReturnValue(false);
 		}

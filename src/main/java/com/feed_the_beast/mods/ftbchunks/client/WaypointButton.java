@@ -42,7 +42,7 @@ public class WaypointButton extends Widget
 	public void addMouseOverText(TooltipList list)
 	{
 		list.string(waypoint.name);
-		long dist = (long) MathUtils.dist(Minecraft.getInstance().player.getPosX(), Minecraft.getInstance().player.getPosZ(), waypoint.x, waypoint.z);
+		long dist = (long) MathUtils.dist(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ(), waypoint.x, waypoint.z);
 		list.styledString(dist + " m", TextFormatting.GRAY);
 	}
 

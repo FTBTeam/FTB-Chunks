@@ -58,7 +58,7 @@ public class AllyScreen extends GuiButtonListBase
 				icon = GuiIcons.ADD_GRAY;
 			}
 
-			panel.add(new SimpleTextButton(panel, new StringTextComponent(p.name).mergeStyle(p.isFake() ? TextFormatting.YELLOW : TextFormatting.WHITE), icon)
+			panel.add(new SimpleTextButton(panel, new StringTextComponent(p.name).withStyle(p.isFake() ? TextFormatting.YELLOW : TextFormatting.WHITE), icon)
 			{
 				@Override
 				public void addMouseOverText(TooltipList list)

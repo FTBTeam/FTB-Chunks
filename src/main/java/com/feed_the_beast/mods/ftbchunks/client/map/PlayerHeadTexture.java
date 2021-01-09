@@ -34,18 +34,19 @@ public class PlayerHeadTexture extends SimpleTexture
 
 	private void upload(NativeImage imageIn)
 	{
-		TextureUtil.prepareImage(this.getGlTextureId(), imageIn.getWidth(), imageIn.getHeight());
-		imageIn.uploadTextureSub(0, 0, 0, true);
+		TextureUtil.prepareImage(getId(), imageIn.getWidth(), imageIn.getHeight());
+		imageIn.upload(0, 0, 0, true);
 	}
 
-	public void loadTexture(IResourceManager manager)
+	@Override
+	public void load(IResourceManager manager)
 	{
 		Minecraft.getInstance().execute(() -> {
 			if (!this.textureUploaded)
 			{
 				try
 				{
-					super.loadTexture(manager);
+					super.load(manager);
 				}
 				catch (IOException ioexception)
 				{
@@ -98,7 +99,7 @@ public class PlayerHeadTexture extends SimpleTexture
 				catch (Exception exception)
 				{
 				}
-			}, Util.getServerExecutor());
+			}, Util.backgroundExecutor());
 		}
 	}
 }

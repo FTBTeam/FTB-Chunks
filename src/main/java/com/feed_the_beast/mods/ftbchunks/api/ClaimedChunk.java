@@ -67,6 +67,6 @@ public interface ClaimedChunk extends ClaimResult
 			return group.getCustomName();
 		}
 
-		return getPlayerData().getDisplayName().mergeStyle(Style.EMPTY.setColor(Color.fromInt(getColor() & 0xFFFFFF)));
+		return getPlayerData().getDisplayName().withStyle(Style.EMPTY.withColor(Color.fromRgb(getColor() & 0xFFFFFF)));
 	}
 }

@@ -37,7 +37,7 @@ public class SendChunkPacket
 			if (claimedChunk != null)
 			{
 				long now = nowd.getTime();
-				owner = claimedChunk.getDisplayName().deepCopy();
+				owner = claimedChunk.getDisplayName().copy();
 				color = 0xFF000000 | claimedChunk.getColor();
 				relativeTimeClaimed = now - Date.from(claimedChunk.getTimeClaimed()).getTime();
 				forceLoaded = claimedChunk.isForceLoaded();
@@ -57,7 +57,7 @@ public class SendChunkPacket
 
 			if (color != 0)
 			{
-				owner = buf.readTextComponent();
+				owner = buf.readComponent();
 				relativeTimeClaimed = buf.readVarLong();
 				forceLoaded = buf.readBoolean();
 
@@ -76,7 +76,7 @@ public class SendChunkPacket
 
 			if (color != 0)
 			{
-				buf.writeTextComponent(owner);
+				buf.writeComponent(owner);
 				buf.writeVarLong(relativeTimeClaimed);
 				buf.writeBoolean(forceLoaded);
 
@@ -98,7 +98,7 @@ public class SendChunkPacket
 
 	SendChunkPacket(PacketBuffer buf)
 	{
-		dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, buf.readResourceLocation());
+		dimension = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		owner = new UUID(buf.readLong(), buf.readLong());
 		chunk = new SingleChunk(buf);
 		chunk.ownerId = owner;
@@ -106,7 +106,7 @@ public class SendChunkPacket
 
 	void write(PacketBuffer buf)
 	{
-		buf.writeResourceLocation(dimension.getLocation());
+		buf.writeResourceLocation(dimension.location());
 		buf.writeLong(owner.getMostSignificantBits());
 		buf.writeLong(owner.getLeastSignificantBits());
 		chunk.write(buf);

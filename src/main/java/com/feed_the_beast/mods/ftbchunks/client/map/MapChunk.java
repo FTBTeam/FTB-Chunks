@@ -59,7 +59,7 @@ public class MapChunk
 
 	public static boolean isWater(BlockState state)
 	{
-		return state instanceof BlockStateFTBC ? ((BlockStateFTBC) state).getFTBCIsWater() : state.getFluidState().getFluid().isEquivalentTo(Fluids.WATER);
+		return state instanceof BlockStateFTBC ? ((BlockStateFTBC) state).getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
 	public static boolean skipBlock(BlockState state)

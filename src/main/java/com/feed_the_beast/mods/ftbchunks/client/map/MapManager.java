@@ -75,7 +75,7 @@ public class MapManager implements MapTask
 
 					if (s.length() >= 3)
 					{
-						RegistryKey<World> key = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(s));
+						RegistryKey<World> key = RegistryKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s));
 						dimensions.put(key, new MapDimension(this, key));
 					}
 				}
@@ -121,7 +121,7 @@ public class MapManager implements MapTask
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
 						ResourceLocation loc = new ResourceLocation(s1[1]);
-						RegistryKey<Biome> key = RegistryKey.getOrCreateKey(Registry.BIOME_KEY, loc);
+						RegistryKey<Biome> key = RegistryKey.create(Registry.BIOME_REGISTRY, loc);
 						biomeColorIndexMap.put(i, key);
 					}
 				}
@@ -184,7 +184,7 @@ public class MapManager implements MapTask
 			Files.write(directory.resolve("dimensions.txt"), dimensions
 					.keySet()
 					.stream()
-					.map(key -> key.getLocation().toString())
+					.map(key -> key.location().toString())
 					.collect(Collectors.toList())
 			);
 
@@ -199,8 +199,8 @@ public class MapManager implements MapTask
 			Files.write(directory.resolve("biome_map.txt"), biomeColorIndexMap
 					.int2ObjectEntrySet()
 					.stream()
-					.sorted(Comparator.comparing(o -> o.getValue().getLocation()))
-					.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().getLocation()))
+					.sorted(Comparator.comparing(o -> o.getValue().location()))
+					.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
 					.collect(Collectors.toList())
 			);
 		}
@@ -245,7 +245,7 @@ public class MapManager implements MapTask
 
 		if (i == -1)
 		{
-			RegistryKey<Biome> key = world.func_241828_r().getRegistry(Registry.BIOME_KEY).getOptionalKey(biome).orElse(null);
+			RegistryKey<Biome> key = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getResourceKey(biome).orElse(null);
 
 			if (key == null)
 			{
@@ -263,8 +263,8 @@ public class MapManager implements MapTask
 				}
 			}
 
-			Random random = new Random((long) key.getLocation().getNamespace().hashCode() & 4294967295L | ((long) key.getLocation().getPath().hashCode() & 4294967295L) << 32);
-			i = key.getLocation().hashCode() & 0b111_11111111;
+			Random random = new Random((long) key.location().getNamespace().hashCode() & 4294967295L | ((long) key.location().getPath().hashCode() & 4294967295L) << 32);
+			i = key.location().hashCode() & 0b111_11111111;
 
 			while (i == 0 || biomeColorIndexMap.containsKey(i))
 			{
@@ -299,6 +299,6 @@ public class MapManager implements MapTask
 
 	public Biome getBiome(World world, int id)
 	{
-		return world.func_241828_r().getRegistry(Registry.BIOME_KEY).getValueForKey(getBiomeKey(id));
+		return world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).get(getBiomeKey(id));
 	}
 }

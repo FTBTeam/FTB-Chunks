@@ -5,10 +5,8 @@
 	"refmap": "ftbchunks.refmap.json",
 	"mixins": [
 		"BiomeMixin",
-		"BlockMixin",
 		"BlockStateMixin",
-		"ChunkManagerMixin",
-		"UtilMixin"
+		"ChunkManagerMixin"
 	],
 	"client": [
 		"ChunkRenderMixin"

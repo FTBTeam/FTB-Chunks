@@ -5,7 +5,6 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,24 +36,12 @@ public class MapIOUtils
 
 	public static void write(Path path, IOCallback<DataOutputStream> callback)
 	{
-		try
+		try (OutputStream fos = Files.newOutputStream(path))
 		{
-			write(Files.newOutputStream(path), callback);
+			write(fos, callback);
 		}
 		catch (Exception ex)
 		{
-		}
-	}
-
-	public static void read(InputStream stream, IOCallback<DataInputStream> callback)
-	{
-		try
-		{
-			callback.callback(new DataInputStream(new BufferedInputStream(new InflaterInputStream(stream))));
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
 		}
 	}
 

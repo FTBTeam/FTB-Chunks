@@ -132,6 +132,10 @@ public class FTBChunksCommands
 								)
 						)
 				)
+				.then(Commands.literal("block_color")
+						.requires(source -> source.getServer().isSingleplayer())
+						.executes(context -> FTBChunks.instance.proxy.blockColor())
+				)
 		);
 
 		event.getDispatcher().register(Commands.literal("chunks").redirect(command));

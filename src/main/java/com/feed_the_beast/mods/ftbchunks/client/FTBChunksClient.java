@@ -39,6 +39,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.Texture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
@@ -52,15 +53,22 @@ import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.ScreenShotHelper;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.Heightmap;
@@ -273,6 +281,26 @@ public class FTBChunksClient extends FTBChunksCommon
 			dimension.getWaypoints().add(w);
 			dimension.saveData = true;
 		}
+	}
+
+	@Override
+	public int blockColor()
+	{
+		Minecraft mc = Minecraft.getInstance();
+		mc.submit(() -> {
+			if (mc.hitResult instanceof BlockRayTraceResult && mc.options.hideGui)
+			{
+				NativeImage image = ScreenShotHelper.takeScreenshot(mc.getWindow().getWidth(), mc.getWindow().getHeight(), mc.getMainRenderTarget());
+				String s = String.format("\"%s\": \"#%06X\"", Registry.BLOCK.getKey(mc.level.getBlockState(((BlockRayTraceResult) mc.hitResult).getBlockPos()).getBlock()), image.getPixelRGBA(image.getWidth() / 2, image.getHeight() / 2));
+				mc.player.sendMessage(new StringTextComponent(s).withStyle(Style.EMPTY.applyFormat(TextFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Click to copy")))), Util.NIL_UUID);
+			}
+			else
+			{
+				mc.player.sendMessage(new StringTextComponent("You must be looking at a block in F1 mode!"), Util.NIL_UUID);
+			}
+		});
+
+		return 1;
 	}
 
 	@SubscribeEvent

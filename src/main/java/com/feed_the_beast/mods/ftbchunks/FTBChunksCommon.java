@@ -54,4 +54,9 @@ public class FTBChunksCommon
 	public void playerDeath(PlayerDeathPacket packet)
 	{
 	}
+
+	public int blockColor()
+	{
+		return 0;
+	}
 }

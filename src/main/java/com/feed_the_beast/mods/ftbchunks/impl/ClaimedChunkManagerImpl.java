@@ -178,23 +178,20 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		try
 		{
 			Files.list(dataDirectory).filter(path -> path.getFileName().toString().endsWith(".json") && !path.getFileName().toString().equals("info.json") && !path.getFileName().toString().equals("known_fake_players.json")).forEach(path -> {
-				try
+				try (Reader reader = Files.newBufferedReader(path))
 				{
-					try (Reader reader = Files.newBufferedReader(path))
+					JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
+
+					if (json == null || !json.has("name") || !json.has("uuid"))
 					{
-						JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
-
-						if (json == null || !json.has("name") || !json.has("uuid"))
-						{
-							return;
-						}
-
-						UUID id = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
-
-						ClaimedChunkPlayerDataImpl data = new ClaimedChunkPlayerDataImpl(this, path, id);
-						data.fromJson(json);
-						playerData.put(id, data);
+						return;
 					}
+
+					UUID id = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
+
+					ClaimedChunkPlayerDataImpl data = new ClaimedChunkPlayerDataImpl(this, path, id);
+					data.fromJson(json);
+					playerData.put(id, data);
 				}
 				catch (Exception ex)
 				{

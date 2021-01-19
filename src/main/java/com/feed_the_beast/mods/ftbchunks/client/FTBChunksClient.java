@@ -290,8 +290,9 @@ public class FTBChunksClient extends FTBChunksCommon
 		mc.submit(() -> {
 			if (mc.hitResult instanceof BlockRayTraceResult && mc.options.hideGui)
 			{
+				ResourceLocation id = Registry.BLOCK.getKey(mc.level.getBlockState(((BlockRayTraceResult) mc.hitResult).getBlockPos()).getBlock());
 				NativeImage image = ScreenShotHelper.takeScreenshot(mc.getWindow().getWidth(), mc.getWindow().getHeight(), mc.getMainRenderTarget());
-				String s = String.format("\"%s\": \"#%06X\"", Registry.BLOCK.getKey(mc.level.getBlockState(((BlockRayTraceResult) mc.hitResult).getBlockPos()).getBlock()), image.getPixelRGBA(image.getWidth() / 2, image.getHeight() / 2));
+				String s = String.format("%s - \"%s\": \"#%06X\"", id.getNamespace(), id.getPath(), image.getPixelRGBA(image.getWidth() / 2, image.getHeight() / 2));
 				mc.player.sendMessage(new StringTextComponent(s).withStyle(Style.EMPTY.applyFormat(TextFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Click to copy")))), Util.NIL_UUID);
 			}
 			else

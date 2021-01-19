@@ -14,6 +14,7 @@ import com.feed_the_beast.mods.ftbchunks.client.map.ReloadChunkTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
 import com.feed_the_beast.mods.ftbchunks.client.map.Waypoint;
 import com.feed_the_beast.mods.ftbchunks.client.map.WaypointType;
+import com.feed_the_beast.mods.ftbchunks.client.map.color.ColorUtils;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
@@ -292,8 +293,9 @@ public class FTBChunksClient extends FTBChunksCommon
 			{
 				ResourceLocation id = Registry.BLOCK.getKey(mc.level.getBlockState(((BlockRayTraceResult) mc.hitResult).getBlockPos()).getBlock());
 				NativeImage image = ScreenShotHelper.takeScreenshot(mc.getWindow().getWidth(), mc.getWindow().getHeight(), mc.getMainRenderTarget());
-				String s = String.format("%s - \"%s\": \"#%06X\"", id.getNamespace(), id.getPath(), image.getPixelRGBA(image.getWidth() / 2, image.getHeight() / 2));
-				mc.player.sendMessage(new StringTextComponent(s).withStyle(Style.EMPTY.applyFormat(TextFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Click to copy")))), Util.NIL_UUID);
+				int col = image.getPixelRGBA(image.getWidth() / 2, image.getHeight() / 2);
+				String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
+				mc.player.sendMessage(new StringTextComponent(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(TextFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Click to copy")))), Util.NIL_UUID);
 			}
 			else
 			{

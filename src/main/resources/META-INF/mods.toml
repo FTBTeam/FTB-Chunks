@@ -1,50 +1,50 @@
-modLoader="javafml"
-loaderVersion="[28,)"
-issueTrackerURL="https://github.com/FTBTeam/FTB-Chunks/issues"
-license="All Rights Reserved"
+modLoader = "javafml"
+loaderVersion = "[28,)"
+issueTrackerURL = "https://github.com/FTBTeam/FTB-Chunks/issues"
+license = "All Rights Reserved"
 
 [[mods]]
-modId="ftbchunks"
-version="${file.jarVersion}"
-displayName="FTB Chunks"
-authors="LatvianModder"
-description='''
+modId = "ftbchunks"
+version = "${file.jarVersion}"
+displayName = "FTB Chunks"
+authors = "LatvianModder"
+description = '''
 Claim chunks to protect your base from griefers!
 '''
 # logoFile="logo.png"
-license="All Rights Reserved"
+license = "All Rights Reserved"
 
 [[dependencies.ftbchunks]]
-    modId="forge"
-    mandatory=true
-    versionRange="[28,)"
-    ordering="NONE"
-    side="BOTH"
+modId = "forge"
+mandatory = true
+versionRange = "[28,)"
+ordering = "NONE"
+side = "BOTH"
 
 [[dependencies.ftbchunks]]
-    modId="minecraft"
-    mandatory=true
-    versionRange="[1.14,)"
-    ordering="NONE"
-    side="BOTH"
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.14,)"
+ordering = "NONE"
+side = "BOTH"
 
 [[dependencies.ftbchunks]]
-    modId="ftbguilibrary"
-    mandatory=true
-    versionRange="[1.0.0,)"
-    ordering="AFTER"
-    side="BOTH"
+modId = "ftbguilibrary"
+mandatory = true
+versionRange = "[1.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
 
 [[dependencies.ftbchunks]]
-    modId="ftbteams"
-    mandatory=false
-    versionRange="[1.0.0,)"
-    ordering="AFTER"
-    side="BOTH"
+modId = "ftbteams"
+mandatory = false
+versionRange = "[1.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
 
 [[dependencies.ftbchunks]]
-    modId="kubjes"
-    mandatory=false
-    versionRange="[1.0.0,)"
-    ordering="BEFORE"
-    side="BOTH"
+modId = "kubjes"
+mandatory = false
+versionRange = "[1.0.0,)"
+ordering = "BEFORE"
+side = "BOTH"

@@ -8,6 +8,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -81,13 +82,13 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	@Override
 	public boolean canEdit(ServerPlayerEntity player, BlockState state)
 	{
-		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || player.hasPermissions(2);
+		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || (!(player instanceof FakePlayer) && player.hasPermissions(2));
 	}
 
 	@Override
 	public boolean canInteract(ServerPlayerEntity player, BlockState state)
 	{
-		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || player.hasPermissions(2);
+		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || (!(player instanceof FakePlayer) && player.hasPermissions(2));
 	}
 
 	@Override

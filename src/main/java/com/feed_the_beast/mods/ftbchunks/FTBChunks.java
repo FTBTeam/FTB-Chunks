@@ -26,7 +26,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BucketItem;
+import net.minecraft.item.*;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
@@ -287,7 +287,10 @@ public class FTBChunks
 	@SubscribeEvent
 	public void itemRightClick(PlayerInteractEvent.RightClickItem event)
 	{
-		if (isValidPlayer(event.getPlayer()) && !event.getItemStack().isEdible())
+		if (isValidPlayer(event.getPlayer())
+				&& !event.getItemStack().isEdible()
+				&& !isPlayerTryingToFly(event)
+		)
 		{
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
@@ -299,6 +302,16 @@ public class FTBChunks
 				}
 			}
 		}
+	}
+
+	private boolean isPlayerTryingToFly(PlayerInteractEvent.RightClickItem event) {
+		boolean isItemFirework = event.getItemStack().getItem() instanceof FireworkRocketItem;
+		boolean isPlayerWearingElytra = false
+		for (ItemStack armorSlot : event.getPlayer().getArmorSlots()) {
+			if (armorSlot.getItem() instanceof ElytraItem)
+				isPlayerWearingElytra = true;
+		}
+		return isItemFirework && isPlayerWearingElytra;
 	}
 
 	@SubscribeEvent

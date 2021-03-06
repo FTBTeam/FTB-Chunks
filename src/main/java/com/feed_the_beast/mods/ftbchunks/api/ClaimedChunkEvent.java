@@ -67,7 +67,7 @@ public class ClaimedChunkEvent extends Event
 			super(s, a, p);
 		}
 
-		public static class Check extends Unclaim
+		public static class Check extends Claim
 		{
 			public Check(CommandSource s, ClaimedChunk a)
 			{
@@ -75,7 +75,7 @@ public class ClaimedChunkEvent extends Event
 			}
 		}
 
-		public static class Done extends Unclaim
+		public static class Done extends Claim
 		{
 			public Done(CommandSource s, ClaimedChunk a)
 			{

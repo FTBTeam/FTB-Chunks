@@ -1,9 +1,9 @@
 package com.feed_the_beast.mods.ftbchunks.impl;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -12,9 +12,8 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public final class PlayerLocation
-{
-	public static RegistryKey<World> currentDimension = null;
+public final class PlayerLocation {
+	public static ResourceKey<Level> currentDimension = null;
 	public static final ArrayList<PlayerLocation> CLIENT_LIST = new ArrayList<>();
 
 	public String name;
@@ -22,27 +21,22 @@ public final class PlayerLocation
 	public int x;
 	public int z;
 
-	public PlayerLocation()
-	{
+	public PlayerLocation() {
 	}
 
-	public PlayerLocation(PlayerEntity player)
-	{
+	public PlayerLocation(Player player) {
 		name = player.getGameProfile().getName();
 		uuid = player.getUUID();
-		x = MathHelper.floor(player.getX());
-		z = MathHelper.floor(player.getZ());
+		x = Mth.floor(player.getX());
+		z = Mth.floor(player.getZ());
 	}
 
 	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o)
-		{
+	public boolean equals(Object o) {
+		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass())
-		{
+		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
 		PlayerLocation that = (PlayerLocation) o;
@@ -53,8 +47,7 @@ public final class PlayerLocation
 	}
 
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return Objects.hash(name, uuid, x, z);
 	}
 }

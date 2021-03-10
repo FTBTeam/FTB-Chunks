@@ -3,8 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.client;
 /**
  * @author LatvianModder
  */
-public enum MinimapPosition
-{
+public enum MinimapPosition {
 	DISABLED(-1, -1),
 	BOTTOM_LEFT(0, 2),
 	LEFT(0, 1),
@@ -16,30 +15,23 @@ public enum MinimapPosition
 	public final int posX;
 	public final int posY;
 
-	MinimapPosition(int x, int y)
-	{
+	MinimapPosition(int x, int y) {
 		posX = x;
 		posY = y;
 	}
 
-	public int getX(int w, int s)
-	{
-		if (posX == 0)
-		{
+	public int getX(int w, int s) {
+		if (posX == 0) {
 			return 5;
 		}
 
 		return w - s - 5;
 	}
 
-	public int getY(int h, int s)
-	{
-		if (posY == 0)
-		{
+	public int getY(int h, int s) {
+		if (posY == 0) {
 			return 5;
-		}
-		else if (posY == 1)
-		{
+		} else if (posY == 1) {
 			return (h - s) / 2;
 		}
 

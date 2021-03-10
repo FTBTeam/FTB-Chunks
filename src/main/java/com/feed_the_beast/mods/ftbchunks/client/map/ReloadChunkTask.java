@@ -1,52 +1,47 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeColors;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * @author LatvianModder
  */
-public class ReloadChunkTask implements MapTask
-{
+public class ReloadChunkTask implements MapTask {
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
 
-	public final World world;
+	public final Level world;
 	public final ChunkPos pos;
 	private final MapManager manager;
 
-	public ReloadChunkTask(World w, ChunkPos p)
-	{
+	public ReloadChunkTask(Level w, ChunkPos p) {
 		world = w;
 		pos = p;
 		manager = MapManager.inst;
 	}
 
 	@Override
-	public void runMapTask()
-	{
-		if (MapManager.inst != manager)
-		{
+	public void runMapTask() {
+		if (MapManager.inst != manager) {
 			return;
 		}
 
-		RegistryKey<World> dimId = world.dimension();
+		ResourceKey<Level> dimId = world.dimension();
 
-		IChunk ichunk = world.getChunk(pos.x, pos.z, ChunkStatus.FULL, false);
+		ChunkAccess ichunk = world.getChunk(pos.x, pos.z, ChunkStatus.FULL, false);
 
-		if (ichunk == null)
-		{
+		if (ichunk == null) {
 			return;
 		}
 
@@ -54,21 +49,19 @@ public class ReloadChunkTask implements MapTask
 		MapRegionData data = mapChunk.region.getDataBlocking();
 
 		int topY = world.getHeight() + 1;
-		BlockPos.Mutable blockPos = new BlockPos.Mutable();
+		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		int blockX = pos.getMinBlockX();
 		int blockZ = pos.getMinBlockZ();
 
 		boolean changed = false;
 		boolean[] flags = new boolean[1];
 
-		try
-		{
-			for (int wi = 0; wi < 256; wi++)
-			{
+		try {
+			for (int wi = 0; wi < 256; wi++) {
 				int wx = wi % 16;
 				int wz = wi / 16;
 				blockPos.set(blockX + wx, topY, blockZ + wz);
-				int height = MathHelper.clamp(MapChunk.getHeight(ichunk, blockPos, flags).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
+				int height = Mth.clamp(MapChunk.getHeight(ichunk, blockPos, flags).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
 				blockPos.setY(height);
 				BlockState state = ichunk.getBlockState(blockPos);
 
@@ -82,7 +75,7 @@ public class ReloadChunkTask implements MapTask
 
 				int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
 				waterLightAndBiome |= flags[0] ? (1 << 15) : 0; // Water
-				waterLightAndBiome |= (world.getBrightness(LightType.BLOCK, blockPos.above()) & 15) << 11; // Light
+				waterLightAndBiome |= (world.getBrightness(LightLayer.BLOCK, blockPos.above()) & 15) << 11; // Light
 
 				ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
 				int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
@@ -98,42 +91,35 @@ public class ReloadChunkTask implements MapTask
 					changed = true;
 				}
 
-				if (height0 != height)
-				{
+				if (height0 != height) {
 					data.height[index] = (short) height;
 					changed = true;
 				}
 
-				if (waterLightAndBiome0 != waterLightAndBiome)
-				{
+				if (waterLightAndBiome0 != waterLightAndBiome) {
 					data.waterLightAndBiome[index] = (short) waterLightAndBiome;
 					changed = true;
 				}
 
-				if (blockIndex0 != blockIndex)
-				{
+				if (blockIndex0 != blockIndex) {
 					data.setBlockIndex(index, blockIndex);
 					changed = true;
 				}
 
 				flags[0] = false;
 			}
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		if (changed)
-		{
+		if (changed) {
 			mapChunk.modified = System.currentTimeMillis();
 			mapChunk.region.update(true);
 		}
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "ReloadChunkTask@" + pos;
 	}
 }

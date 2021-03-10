@@ -5,13 +5,13 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -34,7 +34,7 @@ public class FTBChunksConfig {
 	public static boolean chunkLoadOffline;
 	public static boolean disableProtection;
 	public static AllyMode allyMode;
-	public static Set<RegistryKey<World>> claimDimensionBlacklist;
+	public static Set<ResourceKey<Level>> claimDimensionBlacklist;
 	public static boolean patchChunkLoading;
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
@@ -63,7 +63,7 @@ public class FTBChunksConfig {
 			claimDimensionBlacklist = new HashSet<>();
 
 			for (String s : c.claimDimensionBlacklist.get()) {
-				claimDimensionBlacklist.add(RegistryKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
+				claimDimensionBlacklist.add(ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
 			}
 
 			patchChunkLoading = c.patchChunkLoading.get();
@@ -115,7 +115,7 @@ public class FTBChunksConfig {
 		}
 	}
 
-	public static int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player) {
+	public static int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks) + playerData.getExtraClaimChunks();
 		}
@@ -123,7 +123,7 @@ public class FTBChunksConfig {
 		return maxClaimedChunks + playerData.getExtraClaimChunks();
 	}
 
-	public static int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player) {
+	public static int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks) + playerData.getExtraForceLoadChunks();
 		}
@@ -131,7 +131,7 @@ public class FTBChunksConfig {
 		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
 	}
 
-	public static boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayerEntity player) {
+	public static boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getChunkLoadOffline(player, chunkLoadOffline);
 		}
@@ -139,7 +139,7 @@ public class FTBChunksConfig {
 		return chunkLoadOffline;
 	}
 
-	public static boolean patchChunkLoading(ServerWorld world, ChunkPos pos) {
+	public static boolean patchChunkLoading(ServerLevel world, ChunkPos pos) {
 		if (patchChunkLoading) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(world.dimension(), pos));
 			return chunk != null && chunk.isForceLoaded();

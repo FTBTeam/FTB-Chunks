@@ -22,21 +22,21 @@ import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BucketItem;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.FakePlayer;
@@ -77,8 +77,7 @@ import java.util.UUID;
  * @author LatvianModder
  */
 @Mod("ftbchunks")
-public class FTBChunks
-{
+public class FTBChunks {
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
 
@@ -94,8 +93,7 @@ public class FTBChunks
 	public static boolean teamsMod = false;
 	public static boolean ranksMod = false;
 
-	public FTBChunks()
-	{
+	public FTBChunks() {
 		instance = this;
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
 		MinecraftForge.EVENT_BUS.register(this);
@@ -104,64 +102,53 @@ public class FTBChunks
 		FTBChunksAPI.INSTANCE = new FTBChunksAPIImpl();
 		FTBChunksConfig.init();
 
-		if (ModList.get().isLoaded("kubejs"))
-		{
+		if (ModList.get().isLoaded("kubejs")) {
 			loadKJS();
 		}
 	}
 
-	private void loadKJS()
-	{
+	private void loadKJS() {
 		KubeJSIntegration.init();
 	}
 
-	private void init(FMLCommonSetupEvent event)
-	{
+	private void init(FMLCommonSetupEvent event) {
 		teamsMod = ModList.get().isLoaded("ftbteams");
 		ranksMod = ModList.get().isLoaded("ftbranks");
 		FTBChunksNet.init();
 
-		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++)
-		{
+		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
 			RELATIVE_SPIRAL_POSITIONS[i] = XZ.of(MathUtils.getSpiralPoint(i + 1));
 		}
 	}
 
 	@SubscribeEvent
-	public void serverAboutToStart(FMLServerAboutToStartEvent event)
-	{
+	public void serverAboutToStart(FMLServerAboutToStartEvent event) {
 		FTBChunksAPIImpl.manager = new ClaimedChunkManagerImpl(event.getServer());
 	}
 
 	@SubscribeEvent
-	public void serverStarting(FMLServerStartingEvent event)
-	{
+	public void serverStarting(FMLServerStartingEvent event) {
 		FTBChunksAPIImpl.manager.init();
 	}
 
 	@SubscribeEvent
-	public void serverStopped(FMLServerStoppedEvent event)
-	{
+	public void serverStopped(FMLServerStoppedEvent event) {
 		FTBChunksAPIImpl.manager = null;
 	}
 
 	@SubscribeEvent
-	public void worldSaved(WorldEvent.Save event)
-	{
-		if (FTBChunksAPIImpl.manager != null && !event.getWorld().isClientSide() && event.getWorld() instanceof World)
-		{
+	public void worldSaved(WorldEvent.Save event) {
+		if (FTBChunksAPIImpl.manager != null && !event.getWorld().isClientSide() && event.getWorld() instanceof Level) {
 			FTBChunksAPIImpl.manager.serverSaved();
 		}
 	}
 
 	@SubscribeEvent
-	public void loggedIn(PlayerEvent.PlayerLoggedInEvent event)
-	{
-		final ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+	public void loggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+		final ServerPlayer player = (ServerPlayer) event.getPlayer();
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
-		if (!data.getName().equals(event.getPlayer().getGameProfile().getName()))
-		{
+		if (!data.getName().equals(event.getPlayer().getGameProfile().getName())) {
 			data.profile = new GameProfile(data.getUuid(), event.getPlayer().getGameProfile().getName());
 			data.save();
 		}
@@ -171,15 +158,13 @@ public class FTBChunks
 		SendVisiblePlayerListPacket.sendAll();
 
 		Date now = new Date();
-		Map<Pair<RegistryKey<World>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 
-		for (ClaimedChunkImpl chunk : FTBChunksAPIImpl.manager.claimedChunks.values())
-		{
+		for (ClaimedChunkImpl chunk : FTBChunksAPIImpl.manager.claimedChunks.values()) {
 			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.playerData.getUuid()), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
 		}
 
-		for (Map.Entry<Pair<RegistryKey<World>, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet())
-		{
+		for (Map.Entry<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
 			SendAllChunksPacket packet = new SendAllChunksPacket();
 			packet.dimension = entry.getKey().getLeft();
 			packet.owner = entry.getKey().getRight();
@@ -187,14 +172,11 @@ public class FTBChunks
 			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> player), packet);
 		}
 
-		for (ClaimedChunk c : data.getClaimedChunks())
-		{
-			if (c.isForceLoaded())
-			{
+		for (ClaimedChunk c : data.getClaimedChunks()) {
+			if (c.isForceLoaded()) {
 				ClaimedChunkImpl chunk = FTBChunksAPIImpl.manager.claimedChunks.get(c.getPos());
 
-				if (chunk != null)
-				{
+				if (chunk != null) {
 					chunk.postSetForceLoaded(true);
 				}
 			}
@@ -205,21 +187,17 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void loggedOut(PlayerEvent.PlayerLoggedOutEvent event)
-	{
-		final ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+	public void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+		final ServerPlayer player = (ServerPlayer) event.getPlayer();
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 		boolean canChunkLoadOffline = FTBChunksConfig.getChunkLoadOffline(data, player);
 		data.setChunkLoadOffline(canChunkLoadOffline);
 
-		if (!canChunkLoadOffline)
-		{
-			for (ClaimedChunk chunk : data.getClaimedChunks())
-			{
+		if (!canChunkLoadOffline) {
+			for (ClaimedChunk chunk : data.getClaimedChunks()) {
 				ClaimedChunkImpl c = FTBChunksAPIImpl.manager.claimedChunks.get(chunk.getPos());
 
-				if (c == null)
-				{
+				if (c == null) {
 					return;
 				}
 				c.postSetForceLoaded(false);
@@ -227,26 +205,20 @@ public class FTBChunks
 		}
 	}
 
-	private boolean isValidPlayer(@Nullable Entity entity)
-	{
-		if (FTBChunksConfig.disableProtection)
-		{
+	private boolean isValidPlayer(@Nullable Entity entity) {
+		if (FTBChunksConfig.disableProtection) {
 			return false;
 		}
 
-		if (entity instanceof ServerPlayerEntity)
-		{
-			if (entity instanceof FakePlayer)
-			{
-				if (FTBChunksConfig.disableAllFakePlayers)
-				{
+		if (entity instanceof ServerPlayer) {
+			if (entity instanceof FakePlayer) {
+				if (FTBChunksConfig.disableAllFakePlayers) {
 					return false;
 				}
 
 				KnownFakePlayer player = FTBChunksAPIImpl.manager.knownFakePlayers.get(entity.getUUID());
 
-				if (player == null)
-				{
+				if (player == null) {
 					player = new KnownFakePlayer(entity.getUUID(), ((FakePlayer) entity).getGameProfile().getName(), false);
 					FTBChunksAPIImpl.manager.knownFakePlayers.put(player.uuid, player);
 					FTBChunksAPIImpl.manager.saveFakePlayers = true;
@@ -262,16 +234,12 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void blockLeftClick(PlayerInteractEvent.LeftClickBlock event)
-	{
-		if (isValidPlayer(event.getPlayer()))
-		{
+	public void blockLeftClick(PlayerInteractEvent.LeftClickBlock event) {
+		if (isValidPlayer(event.getPlayer())) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
-			if (chunk != null)
-			{
-				if (!chunk.canEdit((ServerPlayerEntity) event.getPlayer(), event.getWorld().getBlockState(event.getPos())))
-				{
+			if (chunk != null) {
+				if (!chunk.canEdit((ServerPlayer) event.getPlayer(), event.getWorld().getBlockState(event.getPos()))) {
 					event.setCanceled(true);
 				}
 			}
@@ -279,16 +247,12 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void blockRightClick(PlayerInteractEvent.RightClickBlock event)
-	{
-		if (isValidPlayer(event.getPlayer()))
-		{
+	public void blockRightClick(PlayerInteractEvent.RightClickBlock event) {
+		if (isValidPlayer(event.getPlayer())) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
-			if (chunk != null)
-			{
-				if (!chunk.canInteract((ServerPlayerEntity) event.getPlayer(), event.getWorld().getBlockState(event.getPos())))
-				{
+			if (chunk != null) {
+				if (!chunk.canInteract((ServerPlayer) event.getPlayer(), event.getWorld().getBlockState(event.getPos()))) {
 					event.setCanceled(true);
 				}
 			}
@@ -296,16 +260,12 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void itemRightClick(PlayerInteractEvent.RightClickItem event)
-	{
-		if (isValidPlayer(event.getPlayer()) && !event.getItemStack().isEdible())
-		{
+	public void itemRightClick(PlayerInteractEvent.RightClickItem event) {
+		if (isValidPlayer(event.getPlayer()) && !event.getItemStack().isEdible()) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
-			if (chunk != null)
-			{
-				if (!chunk.canInteract((ServerPlayerEntity) event.getPlayer(), event.getWorld().getBlockState(event.getPos())))
-				{
+			if (chunk != null) {
+				if (!chunk.canInteract((ServerPlayer) event.getPlayer(), event.getWorld().getBlockState(event.getPos()))) {
 					event.setCanceled(true);
 				}
 			}
@@ -313,16 +273,12 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void blockBreak(BlockEvent.BreakEvent event)
-	{
-		if (event.getWorld() instanceof World && isValidPlayer(event.getPlayer()))
-		{
-			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((World) event.getWorld(), event.getPos()));
+	public void blockBreak(BlockEvent.BreakEvent event) {
+		if (event.getWorld() instanceof Level && isValidPlayer(event.getPlayer())) {
+			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((Level) event.getWorld(), event.getPos()));
 
-			if (chunk != null)
-			{
-				if (!chunk.canEdit((ServerPlayerEntity) event.getPlayer(), event.getState()))
-				{
+			if (chunk != null) {
+				if (!chunk.canEdit((ServerPlayer) event.getPlayer(), event.getState())) {
 					event.setCanceled(true);
 				}
 			}
@@ -330,32 +286,23 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void blockPlace(BlockEvent.EntityPlaceEvent event)
-	{
-		if (isValidPlayer(event.getEntity()))
-		{
-			if (event instanceof BlockEvent.EntityMultiPlaceEvent)
-			{
-				for (BlockSnapshot snapshot : ((BlockEvent.EntityMultiPlaceEvent) event).getReplacedBlockSnapshots())
-				{
-					if (snapshot.getWorld() instanceof World)
-					{
-						ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((World) snapshot.getWorld(), snapshot.getPos()));
+	public void blockPlace(BlockEvent.EntityPlaceEvent event) {
+		if (isValidPlayer(event.getEntity())) {
+			if (event instanceof BlockEvent.EntityMultiPlaceEvent) {
+				for (BlockSnapshot snapshot : ((BlockEvent.EntityMultiPlaceEvent) event).getReplacedBlockSnapshots()) {
+					if (snapshot.getWorld() instanceof Level) {
+						ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((Level) snapshot.getWorld(), snapshot.getPos()));
 
-						if (chunk != null && !chunk.canEdit((ServerPlayerEntity) event.getEntity(), snapshot.getCurrentBlock()))
-						{
+						if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), snapshot.getCurrentBlock())) {
 							event.setCanceled(true);
 							return;
 						}
 					}
 				}
-			}
-			else if (event.getWorld() instanceof World)
-			{
-				ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((World) event.getWorld(), event.getPos()));
+			} else if (event.getWorld() instanceof Level) {
+				ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((Level) event.getWorld(), event.getPos()));
 
-				if (chunk != null && !chunk.canEdit((ServerPlayerEntity) event.getEntity(), event.getPlacedBlock()))
-				{
+				if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), event.getPlacedBlock())) {
 					event.setCanceled(true);
 				}
 			}
@@ -363,70 +310,56 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void fillBucket(FillBucketEvent event)
-	{
-		if (isValidPlayer(event.getPlayer()) && event.getTarget() != null && event.getTarget() instanceof BlockRayTraceResult)
-		{
-			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), ((BlockRayTraceResult) event.getTarget()).getBlockPos()));
+	public void fillBucket(FillBucketEvent event) {
+		if (isValidPlayer(event.getPlayer()) && event.getTarget() != null && event.getTarget() instanceof BlockHitResult) {
+			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), ((BlockHitResult) event.getTarget()).getBlockPos()));
 
 			Fluid fluid = Fluids.EMPTY;
 
-			if (event.getEmptyBucket().getItem() instanceof BucketItem)
-			{
+			if (event.getEmptyBucket().getItem() instanceof BucketItem) {
 				fluid = ((BucketItem) event.getEmptyBucket().getItem()).getFluid();
 			}
 
-			if (chunk != null && !chunk.canEdit((ServerPlayerEntity) event.getEntity(), fluid.defaultFluidState().createLegacyBlock()))
-			{
+			if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), fluid.defaultFluidState().createLegacyBlock())) {
 				event.setCanceled(true);
 			}
 		}
 	}
 
 	@SubscribeEvent
-	public void farmlandTrample(BlockEvent.FarmlandTrampleEvent event)
-	{
-		if (event.getWorld() instanceof ServerWorld && isValidPlayer(event.getEntity()))
-		{
-			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((ServerWorld) event.getWorld(), event.getPos()));
+	public void farmlandTrample(BlockEvent.FarmlandTrampleEvent event) {
+		if (event.getWorld() instanceof ServerLevel && isValidPlayer(event.getEntity())) {
+			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((ServerLevel) event.getWorld(), event.getPos()));
 
-			if (chunk != null && !chunk.canEdit((ServerPlayerEntity) event.getEntity(), event.getState()))
-			{
+			if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), event.getState())) {
 				event.setCanceled(true);
 			}
 		}
 	}
 
 	@SubscribeEvent
-	public void chunkChange(EntityEvent.EnteringChunk event)
-	{
-		if (event.getEntity() instanceof FakePlayer || !(event.getEntity() instanceof ServerPlayerEntity))
-		{
+	public void chunkChange(EntityEvent.EnteringChunk event) {
+		if (event.getEntity() instanceof FakePlayer || !(event.getEntity() instanceof ServerPlayer)) {
 			return;
 		}
 
-		ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+		ServerPlayer player = (ServerPlayer) event.getEntity();
 		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
 
 		int newX = event.getNewChunkX();
 		int newZ = event.getNewChunkZ();
 
-		if (data.prevChunkX != newX || data.prevChunkZ != newZ)
-		{
+		if (data.prevChunkX != newX || data.prevChunkZ != newZ) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(player));
 			String s = chunk == null ? "-" : (chunk.getGroupID() + ":" + chunk.getPlayerData().getName());
 
-			if (!data.lastChunkID.equals(s))
-			{
+			if (!data.lastChunkID.equals(s)) {
 				data.lastChunkID = s;
 
-				if (chunk != null)
-				{
+				if (chunk != null) {
 					player.displayClientMessage(chunk.getDisplayName(), true);
-				}
-				else
-				{
-					player.displayClientMessage(new TranslationTextComponent("wilderness").withStyle(TextFormatting.DARK_GREEN), true);
+				} else {
+					player.displayClientMessage(new TranslatableComponent("wilderness").withStyle(ChatFormatting.DARK_GREEN), true);
 				}
 			}
 
@@ -436,23 +369,18 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void mobSpawned(LivingSpawnEvent.CheckSpawn event)
-	{
-		if (!event.getWorld().isClientSide() && !(event.getEntity() instanceof PlayerEntity) && event.getWorld() instanceof World)
-		{
-			switch (event.getSpawnReason())
-			{
+	public void mobSpawned(LivingSpawnEvent.CheckSpawn event) {
+		if (!event.getWorld().isClientSide() && !(event.getEntity() instanceof Player) && event.getWorld() instanceof Level) {
+			switch (event.getSpawnReason()) {
 				case NATURAL:
 				case CHUNK_GENERATION:
 				case SPAWNER:
 				case STRUCTURE:
 				case JOCKEY:
-				case PATROL:
-				{
-					ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((World) event.getWorld(), new BlockPos(event.getX(), event.getY(), event.getZ())));
+				case PATROL: {
+					ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((Level) event.getWorld(), new BlockPos(event.getX(), event.getY(), event.getZ())));
 
-					if (chunk != null && !chunk.canEntitySpawn(event.getEntity()))
-					{
+					if (chunk != null && !chunk.canEntitySpawn(event.getEntity())) {
 						event.setResult(Event.Result.DENY);
 					}
 				}
@@ -461,12 +389,10 @@ public class FTBChunks
 	}
 
 	@SubscribeEvent
-	public void explosionDetonate(ExplosionEvent.Detonate event)
-	{
+	public void explosionDetonate(ExplosionEvent.Detonate event) {
 		// check config if explosion blocking is disabled
 
-		if (event.getWorld().isClientSide() || event.getExplosion().getToBlow().isEmpty())
-		{
+		if (event.getWorld().isClientSide() || event.getExplosion().getToBlow().isEmpty()) {
 			return;
 		}
 
@@ -474,30 +400,27 @@ public class FTBChunks
 		event.getExplosion().clearToBlow();
 		Map<ChunkDimPos, Boolean> map = new HashMap<>();
 
-		for (BlockPos pos : list)
-		{
+		for (BlockPos pos : list) {
 			if (map.computeIfAbsent(new ChunkDimPos(event.getWorld(), pos), cpos ->
 			{
 				ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(cpos);
 				return chunk == null || chunk.allowExplosions();
-			}))
-			{
+			})) {
 				event.getExplosion().getToBlow().add(pos);
 			}
 		}
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void playerDeath(LivingDeathEvent event)
-	{
-		if (event.getEntity() instanceof ServerPlayerEntity)
-		{
-			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
-			RegistryKey<World> dim = player.level.dimension();
-			int x = MathHelper.floor(player.getX());
-			int z = MathHelper.floor(player.getZ());
+	public void playerDeath(LivingDeathEvent event) {
+		if (event.getEntity() instanceof ServerPlayer) {
+			ServerPlayer player = (ServerPlayer) event.getEntity();
+			ResourceKey<Level> dim = player.level.dimension();
+			int x = Mth.floor(player.getX());
+			int y = Mth.floor(player.getY());
+			int z = Mth.floor(player.getZ());
 			int num = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS)) + 1;
-			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getEntity()), new PlayerDeathPacket(dim, x, z, num));
+			FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new PlayerDeathPacket(dim, x, y, z, num));
 		}
 	}
 }

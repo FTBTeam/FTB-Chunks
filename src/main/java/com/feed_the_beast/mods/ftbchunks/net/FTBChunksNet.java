@@ -1,18 +1,16 @@
 package com.feed_the_beast.mods.ftbchunks.net;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 import java.util.function.Predicate;
 
-public class FTBChunksNet
-{
+public class FTBChunksNet {
 	public static SimpleChannel MAIN;
 	private static final String MAIN_VERSION = "5";
 
-	public static void init()
-	{
+	public static void init() {
 		Predicate<String> validator = v -> MAIN_VERSION.equals(v) || NetworkRegistry.ABSENT.equals(v) || NetworkRegistry.ACCEPTVANILLA.equals(v);
 
 		MAIN = NetworkRegistry.ChannelBuilder

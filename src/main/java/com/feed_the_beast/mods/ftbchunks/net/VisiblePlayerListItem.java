@@ -2,28 +2,24 @@ package com.feed_the_beast.mods.ftbchunks.net;
 
 import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.PlayerLocation;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Objects;
 
 /**
  * @author LatvianModder
  */
-public class VisiblePlayerListItem
-{
-	public ServerPlayerEntity player;
+public class VisiblePlayerListItem {
+	public ServerPlayer player;
 	public ClaimedChunkPlayerDataImpl data;
 	public PlayerLocation location;
 
 	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o)
-		{
+	public boolean equals(Object o) {
+		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass())
-		{
+		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
 		VisiblePlayerListItem that = (VisiblePlayerListItem) o;
@@ -31,8 +27,7 @@ public class VisiblePlayerListItem
 	}
 
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return Objects.hash(location);
 	}
 }

@@ -1,25 +1,21 @@
 package com.feed_the_beast.mods.ftbchunks;
 
 import com.feed_the_beast.mods.ftbranks.api.FTBRanksAPI;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 /**
  * @author LatvianModder
  */
-public class FTBRanksIntegration
-{
-	public static int getMaxClaimedChunks(ServerPlayerEntity player, int def)
-	{
+public class FTBRanksIntegration {
+	public static int getMaxClaimedChunks(ServerPlayer player, int def) {
 		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_claimed").asInteger().orElse(def), 0);
 	}
 
-	public static int getMaxForceLoadedChunks(ServerPlayerEntity player, int def)
-	{
+	public static int getMaxForceLoadedChunks(ServerPlayer player, int def) {
 		return Math.max(FTBRanksAPI.getPermissionValue(player, "ftbchunks.max_force_loaded").asInteger().orElse(def), 0);
 	}
 
-	public static boolean getChunkLoadOffline(ServerPlayerEntity player, boolean def)
-	{
+	public static boolean getChunkLoadOffline(ServerPlayer player, boolean def) {
 		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBoolean().orElse(def);
 	}
 }

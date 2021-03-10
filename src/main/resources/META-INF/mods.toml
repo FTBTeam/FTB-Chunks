@@ -5,7 +5,7 @@ license = "All Rights Reserved"
 
 [[mods]]
 modId = "ftbchunks"
-version = "${file.jarVersion}"
+version = "${version}"
 displayName = "FTB Chunks"
 authors = "LatvianModder"
 description = '''

@@ -8,22 +8,22 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.block.AbstractButtonBlock;
-import net.minecraft.block.AirBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BushBlock;
-import net.minecraft.block.FireBlock;
-import net.minecraft.block.FlowerPotBlock;
-import net.minecraft.block.GrassBlock;
-import net.minecraft.block.LeavesBlock;
-import net.minecraft.block.RedstoneTorchBlock;
-import net.minecraft.block.TorchBlock;
-import net.minecraft.block.VineBlock;
-import net.minecraft.client.resources.ReloadListener;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResource;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BushBlock;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.FlowerPotBlock;
+import net.minecraft.world.level.block.GrassBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.RedstoneTorchBlock;
+import net.minecraft.world.level.block.TorchBlock;
+import net.minecraft.world.level.block.VineBlock;
 import net.minecraftforge.common.extensions.IAbstractRailBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -36,44 +36,30 @@ import java.util.Map;
 /**
  * @author LatvianModder
  */
-public class ColorMapLoader extends ReloadListener<JsonObject>
-{
+public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 	private static final Map<ResourceLocation, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
 
 	@Override
-	protected JsonObject prepare(IResourceManager resourceManager, IProfiler profiler)
-	{
+	protected JsonObject prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
 		Gson gson = new GsonBuilder().setLenient().create();
 		JsonObject object = new JsonObject();
 
-		for (String namespace : resourceManager.getNamespaces())
-		{
-			try
-			{
-				for (IResource resource : resourceManager.getResources(new ResourceLocation(namespace, "ftbchunks_block_colors.json")))
-				{
-					try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))
-					{
-						for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet())
-						{
-							if (entry.getKey().startsWith("#"))
-							{
+		for (String namespace : resourceManager.getNamespaces()) {
+			try {
+				for (Resource resource : resourceManager.getResources(new ResourceLocation(namespace, "ftbchunks_block_colors.json"))) {
+					try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+						for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet()) {
+							if (entry.getKey().startsWith("#")) {
 								object.add("#" + namespace + ":" + entry.getKey().substring(1), entry.getValue());
-							}
-							else
-							{
+							} else {
 								object.add(namespace + ":" + entry.getKey(), entry.getValue());
 							}
 						}
-					}
-					catch (Exception ex)
-					{
+					} catch (Exception ex) {
 						ex.printStackTrace();
 					}
 				}
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 			}
 		}
 
@@ -81,47 +67,31 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 	}
 
 	@Override
-	protected void apply(JsonObject object, IResourceManager resourceManager, IProfiler profiler)
-	{
+	protected void apply(JsonObject object, ResourceManager resourceManager, ProfilerFiller profiler) {
 		BLOCK_ID_TO_COLOR_MAP.clear();
 
-		for (Block block : ForgeRegistries.BLOCKS)
-		{
+		for (Block block : ForgeRegistries.BLOCKS) {
 			ResourceLocation id = block.getRegistryName();
 
-			if (id != null)
-			{
+			if (id != null) {
 				if (block instanceof AirBlock
 						|| block instanceof BushBlock
 						|| block instanceof FireBlock
-						|| block instanceof AbstractButtonBlock
+						|| block instanceof ButtonBlock
 						|| block instanceof TorchBlock && !(block instanceof RedstoneTorchBlock)
-				)
-				{
+				) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.IGNORED);
-				}
-				else if (block instanceof GrassBlock)
-				{
+				} else if (block instanceof GrassBlock) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.GRASS);
-				}
-				else if (block instanceof LeavesBlock || block instanceof VineBlock)
-				{
+				} else if (block instanceof LeavesBlock || block instanceof VineBlock) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.FOLIAGE);
-				}
-				else if (block instanceof FlowerPotBlock)
-				{
+				} else if (block instanceof FlowerPotBlock) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x683A2D)));
-				}
-				else if (block instanceof IAbstractRailBlock)
-				{
+				} else if (block instanceof IAbstractRailBlock) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
-				}
-				else if (block.defaultMaterialColor() != null)
-				{
+				} else if (block.defaultMaterialColor() != null) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMaterialColor().col)));
-				}
-				else
-				{
+				} else {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.RED));
 				}
 			}
@@ -129,14 +99,11 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 
 		// Fire event Pre
 
-		for (Map.Entry<String, JsonElement> entry : object.entrySet())
-		{
-			if (entry.getValue().isJsonPrimitive())
-			{
+		for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
+			if (entry.getValue().isJsonPrimitive()) {
 				BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
 
-				if (col != null)
-				{
+				if (col != null) {
 					BLOCK_ID_TO_COLOR_MAP.put(new ResourceLocation(entry.getKey()), col);
 				}
 			}
@@ -145,8 +112,7 @@ public class ColorMapLoader extends ReloadListener<JsonObject>
 		// Fire event Post
 	}
 
-	public static BlockColor getBlockColor(ResourceLocation id)
-	{
+	public static BlockColor getBlockColor(ResourceLocation id) {
 		return BLOCK_ID_TO_COLOR_MAP.getOrDefault(id, BlockColors.IGNORED);
 	}
 }

@@ -5,9 +5,9 @@ import com.feed_the_beast.mods.ftbchunks.api.ClaimResult;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.api.FTBChunksAPI;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
-import net.minecraft.command.CommandSource;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.time.Instant;
@@ -19,60 +19,51 @@ import java.util.function.Supplier;
 /**
  * @author LatvianModder
  */
-public class RequestChunkChangePacket
-{
+public class RequestChunkChangePacket {
 	private final int action;
 	private final Set<XZ> chunks;
 
-	public RequestChunkChangePacket(int a, Set<XZ> c)
-	{
+	public RequestChunkChangePacket(int a, Set<XZ> c) {
 		action = a;
 		chunks = c;
 	}
 
-	RequestChunkChangePacket(PacketBuffer buf)
-	{
+	RequestChunkChangePacket(FriendlyByteBuf buf) {
 		action = buf.readVarInt();
 		int s = buf.readVarInt();
 		chunks = new LinkedHashSet<>(s);
 
-		for (int i = 0; i < s; i++)
-		{
+		for (int i = 0; i < s; i++) {
 			int x = buf.readVarInt();
 			int z = buf.readVarInt();
 			chunks.add(XZ.of(x, z));
 		}
 	}
 
-	void write(PacketBuffer buf)
-	{
+	void write(FriendlyByteBuf buf) {
 		buf.writeVarInt(action);
 		buf.writeVarInt(chunks.size());
 
-		for (XZ pos : chunks)
-		{
+		for (XZ pos : chunks) {
 			buf.writeVarInt(pos.x);
 			buf.writeVarInt(pos.z);
 		}
 	}
 
-	void handle(Supplier<NetworkEvent.Context> context)
-	{
+	void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
-			ServerPlayerEntity player = context.get().getSender();
-			CommandSource source = player.createCommandSourceStack();
+			ServerPlayer player = context.get().getSender();
+			CommandSourceStack source = player.createCommandSourceStack();
 			ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(player);
 			Consumer<XZ> consumer;
 			Instant time = Instant.now();
 
-			switch (action)
-			{
+			switch (action) {
 				case 0:
 					consumer = pos -> {
 						ClaimResult result = data.claim(source, pos.dim(player.level), false);
 
-						if (result.isSuccess())
-						{
+						if (result.isSuccess()) {
 							result.setClaimedTime(time);
 						}
 					};
@@ -84,8 +75,7 @@ public class RequestChunkChangePacket
 					consumer = pos -> {
 						ClaimResult result = data.load(source, pos.dim(player.level), false);
 
-						if (result.isSuccess())
-						{
+						if (result.isSuccess()) {
 							result.setForceLoadedTime(time);
 						}
 					};
@@ -98,8 +88,7 @@ public class RequestChunkChangePacket
 					return;
 			}
 
-			for (XZ pos : chunks)
-			{
+			for (XZ pos : chunks) {
 				consumer.accept(pos);
 				//FIXME: FTBChunksAPIImpl.manager.map.queueSend(player.world, pos, p -> p == player);
 			}

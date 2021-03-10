@@ -6,13 +6,11 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.TextBox;
 /**
  * @author LatvianModder
  */
-public class EditWaypointScreen extends GuiBase
-{
+public class EditWaypointScreen extends GuiBase {
 	public TextBox name;
 	public TextBox coordX, coordY, coordZ;
 
 	@Override
-	public void addWidgets()
-	{
+	public void addWidgets() {
 	}
 }

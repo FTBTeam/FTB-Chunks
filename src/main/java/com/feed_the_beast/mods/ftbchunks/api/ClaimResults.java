@@ -3,8 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.api;
 /**
  * @author LatvianModder
  */
-public enum ClaimResults implements ClaimResult
-{
+public enum ClaimResults implements ClaimResult {
 	OTHER,
 	NOT_OWNER,
 	NOT_ENOUGH_POWER,

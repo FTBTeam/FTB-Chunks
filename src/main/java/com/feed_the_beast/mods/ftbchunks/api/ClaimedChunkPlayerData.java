@@ -1,11 +1,11 @@
 package com.feed_the_beast.mods.ftbchunks.api;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TextComponent;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -14,19 +14,16 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public interface ClaimedChunkPlayerData
-{
+public interface ClaimedChunkPlayerData {
 	ClaimedChunkManager getManager();
 
 	GameProfile getProfile();
 
-	default UUID getUuid()
-	{
+	default UUID getUuid() {
 		return getProfile().getId();
 	}
 
-	default String getName()
-	{
+	default String getName() {
 		return getProfile().getName();
 	}
 
@@ -45,13 +42,13 @@ public interface ClaimedChunkPlayerData
 
 	Collection<ClaimedChunkGroup> getGroups();
 
-	ClaimResult claim(CommandSource source, ChunkDimPos pos, boolean checkOnly);
+	ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
-	ClaimResult unclaim(CommandSource source, ChunkDimPos pos, boolean checkOnly);
+	ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
-	ClaimResult load(CommandSource source, ChunkDimPos pos, boolean checkOnly);
+	ClaimResult load(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
-	ClaimResult unload(CommandSource source, ChunkDimPos pos, boolean checkOnly);
+	ClaimResult unload(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
 	void save();
 
@@ -61,9 +58,8 @@ public interface ClaimedChunkPlayerData
 
 	boolean isAlly(ClaimedChunkPlayerData player);
 
-	default IFormattableTextComponent getDisplayName()
-	{
-		return new StringTextComponent(getName()).withStyle(Style.EMPTY.withColor(Color.fromRgb(getColor() & 0xFFFFFF)));
+	default Component getDisplayName() {
+		return new TextComponent(getName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor() & 0xFFFFFF)));
 	}
 
 	int getExtraClaimChunks();

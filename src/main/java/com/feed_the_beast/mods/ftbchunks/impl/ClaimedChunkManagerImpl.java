@@ -10,9 +10,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
@@ -29,9 +29,8 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkManagerImpl implements ClaimedChunkManager
-{
-	public static final FolderName DATA_DIR = new FolderName("data/ftbchunks");
+public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
+	public static final LevelResource DATA_DIR = new LevelResource("data/ftbchunks");
 
 	public final MinecraftServer server;
 	public UUID serverId;
@@ -43,8 +42,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	public Path localDirectory;
 	private boolean inited;
 
-	public ClaimedChunkManagerImpl(MinecraftServer s)
-	{
+	public ClaimedChunkManagerImpl(MinecraftServer s) {
 		server = s;
 		serverId = UUID.randomUUID();
 		playerData = new HashMap<>();
@@ -54,10 +52,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		inited = false;
 	}
 
-	public void init()
-	{
-		if (inited)
-		{
+	public void init() {
+		if (inited) {
 			return;
 		}
 
@@ -67,47 +63,33 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		dataDirectory = server.getWorldPath(DATA_DIR);
 		localDirectory = FMLPaths.GAMEDIR.get().resolve("local/ftbchunks");
 
-		try
-		{
-			if (Files.notExists(dataDirectory))
-			{
+		try {
+			if (Files.notExists(dataDirectory)) {
 				Files.createDirectories(dataDirectory);
 			}
 
-			if (Files.notExists(localDirectory))
-			{
+			if (Files.notExists(localDirectory)) {
 				Files.createDirectories(localDirectory);
 			}
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 		Path infoFile = dataDirectory.resolve("info.json");
 
-		if (Files.exists(infoFile))
-		{
-			try (Reader reader = Files.newBufferedReader(infoFile))
-			{
+		if (Files.exists(infoFile)) {
+			try (Reader reader = Files.newBufferedReader(infoFile)) {
 				JsonObject json = new GsonBuilder().disableHtmlEscaping().create().fromJson(reader, JsonObject.class);
 				serverId = UUID.fromString(json.get("id").getAsString());
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-		}
-		else
-		{
-			try (Writer writer = Files.newBufferedWriter(infoFile))
-			{
+		} else {
+			try (Writer writer = Files.newBufferedWriter(infoFile)) {
 				JsonObject json = new JsonObject();
 				json.addProperty("id", serverId.toString());
 				new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(json, writer);
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
@@ -115,10 +97,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		loadPlayerData();
 		int forceLoaded = 0;
 
-		for (ClaimedChunkImpl chunk : claimedChunks.values())
-		{
-			if (chunk.isForceLoaded() && chunk.getPlayerData().chunkLoadOffline())
-			{
+		for (ClaimedChunkImpl chunk : claimedChunks.values()) {
+			if (chunk.isForceLoaded() && chunk.getPlayerData().chunkLoadOffline()) {
 				forceLoaded++;
 				chunk.postSetForceLoaded(true);
 			}
@@ -128,18 +108,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		getServerData();
 	}
 
-	public void serverSaved()
-	{
-		for (ClaimedChunkPlayerDataImpl data : playerData.values())
-		{
-			if (data.shouldSave)
-			{
-				try (Writer writer = Files.newBufferedWriter(data.file))
-				{
+	public void serverSaved() {
+		for (ClaimedChunkPlayerDataImpl data : playerData.values()) {
+			if (data.shouldSave) {
+				try (Writer writer = Files.newBufferedWriter(data.file)) {
 					FTBChunks.GSON.toJson(data.toJson(), writer);
-				}
-				catch (Exception ex)
-				{
+				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 
@@ -147,14 +121,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 			}
 		}
 
-		if (saveFakePlayers)
-		{
+		if (saveFakePlayers) {
 			saveFakePlayers = false;
 
 			JsonArray array = new JsonArray();
 
-			for (KnownFakePlayer p : knownFakePlayers.values())
-			{
+			for (KnownFakePlayer p : knownFakePlayers.values()) {
 				JsonObject json = new JsonObject();
 				json.addProperty("uuid", UUIDTypeAdapter.fromUUID(p.uuid));
 				json.addProperty("name", p.name);
@@ -162,28 +134,21 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 				array.add(json);
 			}
 
-			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json")))
-			{
+			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json"))) {
 				FTBChunks.GSON.toJson(array, writer);
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
 
-	private void loadPlayerData()
-	{
-		try
-		{
+	private void loadPlayerData() {
+		try {
 			Files.list(dataDirectory).filter(path -> path.getFileName().toString().endsWith(".json") && !path.getFileName().toString().equals("info.json") && !path.getFileName().toString().equals("known_fake_players.json")).forEach(path -> {
-				try (Reader reader = Files.newBufferedReader(path))
-				{
+				try (Reader reader = Files.newBufferedReader(path)) {
 					JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
 
-					if (json == null || !json.has("name") || !json.has("uuid"))
-					{
+					if (json == null || !json.has("name") || !json.has("uuid")) {
 						return;
 					}
 
@@ -192,68 +157,52 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 					ClaimedChunkPlayerDataImpl data = new ClaimedChunkPlayerDataImpl(this, path, id);
 					data.fromJson(json);
 					playerData.put(id, data);
-				}
-				catch (Exception ex)
-				{
+				} catch (Exception ex) {
 					FTBChunks.LOGGER.error("Failed to load " + path + ": " + ex + ". Deleting the file...");
 
-					try
-					{
+					try {
 						Files.delete(path);
-					}
-					catch (IOException e)
-					{
+					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
 			});
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 		Path knownFakePlayersFile = dataDirectory.resolve("known_fake_players.json");
 
-		if (Files.exists(knownFakePlayersFile))
-		{
-			try (Reader reader = Files.newBufferedReader(knownFakePlayersFile))
-			{
-				for (JsonElement e : FTBChunks.GSON.fromJson(reader, JsonArray.class))
-				{
+		if (Files.exists(knownFakePlayersFile)) {
+			try (Reader reader = Files.newBufferedReader(knownFakePlayersFile)) {
+				for (JsonElement e : FTBChunks.GSON.fromJson(reader, JsonArray.class)) {
 					JsonObject json = e.getAsJsonObject();
 					UUID uuid = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
 					String name = json.get("name").getAsString();
 					boolean banned = json.get("banned").getAsBoolean();
 					knownFakePlayers.put(uuid, new KnownFakePlayer(uuid, name, banned));
 				}
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
 
 	@Override
-	public MinecraftServer getMinecraftServer()
-	{
+	public MinecraftServer getMinecraftServer() {
 		return server;
 	}
 
 	@Override
-	public UUID getServerId()
-	{
+	public UUID getServerId() {
 		return serverId;
 	}
 
 	@Override
-	public ClaimedChunkPlayerDataImpl getData(UUID id, String name)
-	{
+	public ClaimedChunkPlayerDataImpl getData(UUID id, String name) {
 		ClaimedChunkPlayerDataImpl data = playerData.get(id);
 
-		if (data == null)
-		{
+		if (data == null) {
 			data = new ClaimedChunkPlayerDataImpl(this, dataDirectory.resolve(UUIDTypeAdapter.fromUUID(id) + "-" + name + ".json"), id);
 			data.profile = new GameProfile(id, name);
 			playerData.put(id, data);
@@ -264,35 +213,29 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 	}
 
 	@Override
-	public ClaimedChunkPlayerDataImpl getData(ServerPlayerEntity player)
-	{
+	public ClaimedChunkPlayerDataImpl getData(ServerPlayer player) {
 		return getData(player.getUUID(), player.getGameProfile().getName());
 	}
 
 	@Override
-	public ClaimedChunkPlayerDataImpl getServerData()
-	{
+	public ClaimedChunkPlayerDataImpl getServerData() {
 		return getData(SERVER_PLAYER_ID, "Server");
 	}
 
 	@Override
 	@Nullable
-	public ClaimedChunkImpl getChunk(ChunkDimPos pos)
-	{
+	public ClaimedChunkImpl getChunk(ChunkDimPos pos) {
 		return claimedChunks.get(pos);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Collection<ClaimedChunk> getAllClaimedChunks()
-	{
+	public Collection<ClaimedChunk> getAllClaimedChunks() {
 		return (Collection<ClaimedChunk>) (Collection) claimedChunks.values();
 	}
 
-	public static String prettyTimeString(long seconds)
-	{
-		if (seconds <= 0L)
-		{
+	public static String prettyTimeString(long seconds) {
+		if (seconds <= 0L) {
 			return "0 seconds";
 		}
 
@@ -301,49 +244,35 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager
 		return builder.toString();
 	}
 
-	private static void prettyTimeString(StringBuilder builder, long seconds, boolean addAnother)
-	{
-		if (seconds <= 0L)
-		{
+	private static void prettyTimeString(StringBuilder builder, long seconds, boolean addAnother) {
+		if (seconds <= 0L) {
 			return;
-		}
-		else if (!addAnother)
-		{
+		} else if (!addAnother) {
 			builder.append(" and ");
 		}
 
-		if (seconds < 60L)
-		{
+		if (seconds < 60L) {
 			builder.append(seconds);
 			builder.append(seconds == 1L ? " second" : " seconds");
-		}
-		else if (seconds < 3600L)
-		{
+		} else if (seconds < 3600L) {
 			builder.append(seconds / 60L);
 			builder.append(seconds / 60L == 1L ? " minute" : " minutes");
 
-			if (addAnother)
-			{
+			if (addAnother) {
 				prettyTimeString(builder, seconds % 60L, false);
 			}
-		}
-		else if (seconds < 86400L)
-		{
+		} else if (seconds < 86400L) {
 			builder.append(seconds / 3600L);
 			builder.append(seconds / 3600L == 1L ? " hour" : " hours");
 
-			if (addAnother)
-			{
+			if (addAnother) {
 				prettyTimeString(builder, seconds % 3600L, false);
 			}
-		}
-		else
-		{
+		} else {
 			builder.append(seconds / 86400L);
 			builder.append(seconds / 86400L == 1L ? " day" : " days");
 
-			if (addAnother)
-			{
+			if (addAnother) {
 				prettyTimeString(builder, seconds % 86400L, false);
 			}
 		}

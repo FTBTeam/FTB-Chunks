@@ -6,18 +6,14 @@ import java.time.Instant;
 /**
  * @author LatvianModder
  */
-public interface ClaimResult
-{
-	default boolean isSuccess()
-	{
+public interface ClaimResult {
+	default boolean isSuccess() {
 		return false;
 	}
 
-	default void setClaimedTime(Instant time)
-	{
+	default void setClaimedTime(Instant time) {
 	}
 
-	default void setForceLoadedTime(@Nullable Instant time)
-	{
+	default void setForceLoadedTime(@Nullable Instant time) {
 	}
 }

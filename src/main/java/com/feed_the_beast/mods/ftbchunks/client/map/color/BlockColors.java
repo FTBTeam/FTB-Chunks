@@ -1,8 +1,8 @@
 package com.feed_the_beast.mods.ftbchunks.client.map.color;
 
 import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.BiomeColors;
+import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.util.Mth;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -10,12 +10,10 @@ import java.util.HashMap;
 /**
  * @author LatvianModder
  */
-public class BlockColors
-{
+public class BlockColors {
 	private static final HashMap<String, BlockColor> TYPE_MAP = new HashMap<>();
 
-	public static BlockColor register(String type, BlockColor color)
-	{
+	public static BlockColor register(String type, BlockColor color) {
 		TYPE_MAP.put(type, color);
 		return color;
 	}
@@ -24,17 +22,13 @@ public class BlockColors
 	public static final BlockColor GRASS = register("grass", (world, pos) -> Color4I.rgb(BiomeColors.getAverageGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
 	public static final BlockColor IGNORED = register("ignored", new IgnoredBlockColor());
 
-	public static final BlockColor BOP_RAINBOW = register("bop_rainbow", (world, pos) -> Color4I.hsb((((float) pos.getX() + MathHelper.sin(((float) pos.getZ() + (float) pos.getX()) / 35) * 35) % 150) / 150, 0.6F, 0.5F));
+	public static final BlockColor BOP_RAINBOW = register("bop_rainbow", (world, pos) -> Color4I.hsb((((float) pos.getX() + Mth.sin(((float) pos.getZ() + (float) pos.getX()) / 35) * 35) % 150) / 150, 0.6F, 0.5F));
 
 	@Nullable
-	public static BlockColor getFromType(String value)
-	{
-		if (value.indexOf('#') == 0)
-		{
+	public static BlockColor getFromType(String value) {
+		if (value.indexOf('#') == 0) {
 			return new CustomBlockColor(Color4I.fromString(value));
-		}
-		else
-		{
+		} else {
 			return TYPE_MAP.get(value);
 		}
 	}

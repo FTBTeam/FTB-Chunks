@@ -8,26 +8,22 @@ import java.util.zip.InflaterInputStream;
 /**
  * @author LatvianModder
  */
-public class SyncRXTask implements MapTask
-{
+public class SyncRXTask implements MapTask {
 	public final RegionSyncKey key;
 	public final byte[] data;
 	public final long now;
 
-	public SyncRXTask(RegionSyncKey k, byte[] d)
-	{
+	public SyncRXTask(RegionSyncKey k, byte[] d) {
 		key = k;
 		data = d;
 		now = System.currentTimeMillis();
 	}
 
 	@Override
-	public void runMapTask()
-	{
+	public void runMapTask() {
 		ByteArrayInputStream in = new ByteArrayInputStream(data);
 
-		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(in))))
-		{
+		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(in)))) {
 			/*
 			MapDimension dimension = MapManager.inst.getDimension(key.dim);
 			MapRegion region = dimension.getRegion(XZ.of(key.x, key.z));
@@ -86,16 +82,13 @@ public class SyncRXTask implements MapTask
 				region.update(true);
 			}
 			 */
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
 	@Override
-	public boolean cancelOtherTasks()
-	{
+	public boolean cancelOtherTasks() {
 		return true;
 	}
 }

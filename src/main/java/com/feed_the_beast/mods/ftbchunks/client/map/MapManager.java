@@ -6,14 +6,14 @@ import com.feed_the_beast.mods.ftbchunks.client.map.color.BlockColor;
 import com.feed_the_beast.mods.ftbchunks.core.BiomeFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biomes;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.nio.file.Files;
@@ -30,23 +30,21 @@ import java.util.stream.Collectors;
 /**
  * @author LatvianModder
  */
-public class MapManager implements MapTask
-{
+public class MapManager implements MapTask {
 	public static MapManager inst;
 
 	public final UUID serverId;
 	public final Path directory;
-	private final Map<RegistryKey<World>, MapDimension> dimensions;
+	private final Map<ResourceKey<Level>, MapDimension> dimensions;
 	public boolean saveData;
 
 	private final Int2ObjectOpenHashMap<ResourceLocation> blockColorIndexMap;
 	private final Object2IntOpenHashMap<ResourceLocation> blockColorIndexMapReverse;
-	private final Int2ObjectOpenHashMap<RegistryKey<Biome>> biomeColorIndexMap;
+	private final Int2ObjectOpenHashMap<ResourceKey<Biome>> biomeColorIndexMap;
 	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColCache;
 	private final List<BiomeFTBC> biomesToRelease;
 
-	public MapManager(UUID id, Path dir)
-	{
+	public MapManager(UUID id, Path dir) {
 		serverId = id;
 		directory = dir;
 		dimensions = new LinkedHashMap<>();
@@ -63,38 +61,29 @@ public class MapManager implements MapTask
 
 		biomesToRelease = new ArrayList<>();
 
-		try
-		{
+		try {
 			Path dimFile = directory.resolve("dimensions.txt");
 
-			if (Files.exists(dimFile))
-			{
-				for (String s : Files.readAllLines(dimFile))
-				{
+			if (Files.exists(dimFile)) {
+				for (String s : Files.readAllLines(dimFile)) {
 					s = s.trim();
 
-					if (s.length() >= 3)
-					{
-						RegistryKey<World> key = RegistryKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s));
+					if (s.length() >= 3) {
+						ResourceKey<Level> key = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s));
 						dimensions.put(key, new MapDimension(this, key));
 					}
 				}
-			}
-			else
-			{
+			} else {
 				saveData = true;
 			}
 
 			Path blockFile = directory.resolve("block_map.txt");
 
-			if (Files.exists(blockFile))
-			{
-				for (String s : Files.readAllLines(blockFile))
-				{
+			if (Files.exists(blockFile)) {
+				for (String s : Files.readAllLines(blockFile)) {
 					s = s.trim();
 
-					if (!s.isEmpty())
-					{
+					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
 						ResourceLocation loc = new ResourceLocation(s1[1]);
@@ -102,60 +91,46 @@ public class MapManager implements MapTask
 						blockColorIndexMapReverse.put(loc, i);
 					}
 				}
-			}
-			else
-			{
+			} else {
 				saveData = true;
 			}
 
 			Path biomeFile = directory.resolve("biome_map.txt");
 
-			if (Files.exists(biomeFile))
-			{
-				for (String s : Files.readAllLines(biomeFile))
-				{
+			if (Files.exists(biomeFile)) {
+				for (String s : Files.readAllLines(biomeFile)) {
 					s = s.trim();
 
-					if (!s.isEmpty())
-					{
+					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
 						ResourceLocation loc = new ResourceLocation(s1[1]);
-						RegistryKey<Biome> key = RegistryKey.create(Registry.BIOME_REGISTRY, loc);
+						ResourceKey<Biome> key = ResourceKey.create(Registry.BIOME_REGISTRY, loc);
 						biomeColorIndexMap.put(i, key);
 					}
 				}
-			}
-			else
-			{
+			} else {
 				saveData = true;
 			}
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	public Map<RegistryKey<World>, MapDimension> getDimensions()
-	{
+	public Map<ResourceKey<Level>, MapDimension> getDimensions() {
 		return dimensions;
 	}
 
-	public MapDimension getDimension(RegistryKey<World> dim)
-	{
+	public MapDimension getDimension(ResourceKey<Level> dim) {
 		return getDimensions().computeIfAbsent(dim, d -> new MapDimension(this, d).created());
 	}
 
-	public void release()
-	{
-		for (MapDimension dimension : getDimensions().values())
-		{
+	public void release() {
+		for (MapDimension dimension : getDimensions().values()) {
 			dimension.release();
 		}
 
-		for (BiomeFTBC b : biomesToRelease)
-		{
+		for (BiomeFTBC b : biomesToRelease) {
 			b.setFTBCBiomeColorIndex(-1);
 		}
 
@@ -163,12 +138,9 @@ public class MapManager implements MapTask
 		blockIdToColCache.clear();
 	}
 
-	public void updateAllRegions(boolean save)
-	{
-		for (MapDimension dimension : getDimensions().values())
-		{
-			for (MapRegion region : dimension.getRegions().values())
-			{
+	public void updateAllRegions(boolean save) {
+		for (MapDimension dimension : getDimensions().values()) {
+			for (MapRegion region : dimension.getRegions().values()) {
 				region.update(save);
 			}
 		}
@@ -177,10 +149,8 @@ public class MapManager implements MapTask
 	}
 
 	@Override
-	public void runMapTask()
-	{
-		try
-		{
+	public void runMapTask() {
+		try {
 			Files.write(directory.resolve("dimensions.txt"), dimensions
 					.keySet()
 					.stream()
@@ -203,24 +173,19 @@ public class MapManager implements MapTask
 					.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
 					.collect(Collectors.toList())
 			);
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	public int getBlockColorIndex(ResourceLocation id)
-	{
+	public int getBlockColorIndex(ResourceLocation id) {
 		int i = blockColorIndexMapReverse.getInt(id);
 
-		if (i == 0)
-		{
+		if (i == 0) {
 			Random random = new Random((long) id.getNamespace().hashCode() & 4294967295L | ((long) id.getPath().hashCode() & 4294967295L) << 32);
 			i = id.hashCode() & 0xFFFFFF;
 
-			while (i == 0 || blockColorIndexMap.containsKey(i))
-			{
+			while (i == 0 || blockColorIndexMap.containsKey(i)) {
 				i = random.nextInt() & 0xFFFFFF;
 			}
 
@@ -232,31 +197,25 @@ public class MapManager implements MapTask
 		return i;
 	}
 
-	public int getBiomeColorIndex(World world, Biome biome, Object b0)
-	{
+	public int getBiomeColorIndex(Level world, Biome biome, Object b0) {
 		BiomeFTBC b = b0 instanceof BiomeFTBC ? (BiomeFTBC) b0 : null;
 
-		if (b == null)
-		{
+		if (b == null) {
 			return 0;
 		}
 
 		int i = b.getFTBCBiomeColorIndex();
 
-		if (i == -1)
-		{
-			RegistryKey<Biome> key = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getResourceKey(biome).orElse(null);
+		if (i == -1) {
+			ResourceKey<Biome> key = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getResourceKey(biome).orElse(null);
 
-			if (key == null)
-			{
+			if (key == null) {
 				b.setFTBCBiomeColorIndex(0);
 				return 0;
 			}
 
-			for (Int2ObjectOpenHashMap.Entry<RegistryKey<Biome>> entry : biomeColorIndexMap.int2ObjectEntrySet())
-			{
-				if (entry.getValue() == key)
-				{
+			for (Int2ObjectOpenHashMap.Entry<ResourceKey<Biome>> entry : biomeColorIndexMap.int2ObjectEntrySet()) {
+				if (entry.getValue() == key) {
 					i = entry.getIntKey();
 					b.setFTBCBiomeColorIndex(i);
 					return i;
@@ -266,8 +225,7 @@ public class MapManager implements MapTask
 			Random random = new Random((long) key.location().getNamespace().hashCode() & 4294967295L | ((long) key.location().getPath().hashCode() & 4294967295L) << 32);
 			i = key.location().hashCode() & 0b111_11111111;
 
-			while (i == 0 || biomeColorIndexMap.containsKey(i))
-			{
+			while (i == 0 || biomeColorIndexMap.containsKey(i)) {
 				i = random.nextInt() & 0b111_11111111;
 			}
 
@@ -280,25 +238,21 @@ public class MapManager implements MapTask
 		return i;
 	}
 
-	public Block getBlock(int id)
-	{
+	public Block getBlock(int id) {
 		ResourceLocation rl = blockColorIndexMap.get(id & 0xFFFFFF);
 		Block block = rl == null ? null : ForgeRegistries.BLOCKS.getValue(rl);
 		return block == null ? Blocks.AIR : block;
 	}
 
-	public BlockColor getBlockColor(int id)
-	{
+	public BlockColor getBlockColor(int id) {
 		return blockIdToColCache.computeIfAbsent(id & 0xFFFFFF, i -> ColorMapLoader.getBlockColor(blockColorIndexMap.get(i)));
 	}
 
-	public RegistryKey<Biome> getBiomeKey(int id)
-	{
+	public ResourceKey<Biome> getBiomeKey(int id) {
 		return biomeColorIndexMap.get(id & 0b111_11111111);
 	}
 
-	public Biome getBiome(World world, int id)
-	{
-		return world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).get(getBiomeKey(id));
+	public Biome getBiome(Level level, int id) {
+		return level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).get(getBiomeKey(id));
 	}
 }

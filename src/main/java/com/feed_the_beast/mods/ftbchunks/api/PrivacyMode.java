@@ -3,22 +3,17 @@ package com.feed_the_beast.mods.ftbchunks.api;
 /**
  * @author LatvianModder
  */
-public enum PrivacyMode
-{
+public enum PrivacyMode {
 	PRIVATE("private"),
 	ALLIES("allies"),
 	PUBLIC("public");
 
 	public static final PrivacyMode[] VALUES = values();
 
-	public static PrivacyMode get(String name)
-	{
-		if (name.equals("private"))
-		{
+	public static PrivacyMode get(String name) {
+		if (name.equals("private")) {
 			return PRIVATE;
-		}
-		else if (name.equals("public"))
-		{
+		} else if (name.equals("public")) {
 			return PUBLIC;
 		}
 
@@ -27,8 +22,7 @@ public enum PrivacyMode
 
 	public final String name;
 
-	PrivacyMode(String n)
-	{
+	PrivacyMode(String n) {
 		name = n;
 	}
 }

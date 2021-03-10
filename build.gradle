@@ -1,117 +1,81 @@
-buildscript {
-	repositories {
-		jcenter()
-		maven { url = 'https://files.minecraftforge.net/maven' }
-		maven { url "https://plugins.gradle.org/m2/" }
-		maven { url "https://dist.creeper.host/Sponge/maven" }
-		mavenCentral()
-	}
-	dependencies {
-		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-		classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.+'
-		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-	}
+plugins {
+	id 'forgified-fabric-loom' version '0.6.70'
+	id 'maven-publish'
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'com.matthewprenger.cursegradle'
-apply plugin: 'maven'
-apply plugin: 'org.spongepowered.mixin'
 
 apply from: 'https://files.latmod.com/public/markdown-git-changelog.gradle'
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 def ENV = System.getenv()
-version = ENV.BUILD_NUMBER ? "${mod_version}.${ENV.BUILD_NUMBER}" : "${mod_version}.custom"
-group = project.mod_package
-archivesBaseName = project.mod_name
+version = "${mod_version}-build.${ENV.BUILD_NUMBER ?: 9999}"
+archivesBaseName = project.archives_base_name
+group = project.maven_group
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+loom {
+	silentMojangMappingsLicense()
 
-minecraft {
-	mappings channel: 'official', version: project.mapping_version
-	// accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-	runs {
-		client {
-			workingDirectory project.file('run')
-			property 'forge.logging.console.level', 'debug'
-			args '--mixin.config', 'ftbchunks.mixins.json'
+	mixinConfigs = [
+			"ftbchunks.mixins.json"
+	]
 
-			if (project.hasProperty('mc_dev_uuid')) args '--uuid', project.mc_dev_uuid
-			if (project.hasProperty('mc_dev_username')) args '--username', project.mc_dev_username
-			if (project.hasProperty('mc_dev_width')) args '--width', project.mc_dev_width
-			if (project.hasProperty('mc_dev_height')) args '--height', project.mc_dev_height
+	useFabricMixin = true
 
-			mods {
-				ftbchunks {
-					source sourceSets.main
-				}
-			}
-		}
+	dataGen {
+		mod project.mod_id
+	}
 
-		server {
-			workingDirectory project.file('run')
-			property 'forge.logging.console.level', 'debug'
-			args '--mixin.config', 'ftbchunks.mixins.json'
-
-			mods {
-				ftbchunks {
-					source sourceSets.main
-				}
-			}
-		}
-
+	launches {
 		data {
-			workingDirectory project.file('run')
-			property 'forge.logging.console.level', 'debug'
-			args '--mixin.config', 'ftbchunks.mixins.json'
-
-			args '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/')
-
-			mods {
-				ftbchunks {
-					source sourceSets.main
-				}
-			}
+			arg "--existing", file("src/main/resources").absolutePath
 		}
 	}
 }
 
-configurations.all {
-	resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
 repositories {
-	mavenLocal()
-	maven { url = "https://www.cursemaven.com" }
-	maven { url "https://maven.latmod.com/" } //FTB GUI Library, FTB Teams, FTB Ranks, KubeJS
+	maven { url "https://www.cursemaven.com" }
 }
 
 dependencies {
-	minecraft "net.minecraftforge:forge:${forge_version}"
-	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-gui-library:${ftb_gui_library_version}") {
-		transitive = false
-		changing = true
-	}))
-	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-teams:${ftb_teams_version}") {
-		transitive = false
-		changing = true
-	}))
-	compile(fg.deobf(project.dependencies.create("com.feed_the_beast.mods:ftb-ranks:${ftb_ranks_version}") {
-		transitive = false
-		changing = true
-	}))
-	//compileOnly(fg.deobf(project.dependencies.create("dev.latvian.mods:kubejs:${kubejs_version}") {
-	//	transitive = false
-	//	changing = true
-	//}))
-	//runtimeOnly fg.deobf("curse.maven:biomes-o-plenty:${bop_file}")
-	//runtimeOnly fg.deobf("curse.maven:oh-the-biomes-youll-go:${byg_file}")
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings minecraft.officialMojangMappings()
+	forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+	modCompile "curse.maven:kubejs-fabric-395864:${kubejs_file}"
+	modCompile "curse.maven:architectury-fabric-419697:${arch_file}"
+	modCompile "curse.maven:rhino-416294:${rhino_file}"
+	modCompile "curse.maven:ftb-gui-library-404465:${ftbguilibrary_file}"
+	modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
+	modCompile "curse.maven:ftb-ranks-314905:${ftbranks_file}"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("META-INF/mods.toml") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = "UTF-8"
+	def targetVersion = 8
+	if (JavaVersion.current().isJava9Compatible()) {
+		it.options.release = targetVersion
+	}
+}
+
+java {
+	withSourcesJar()
 }
 
 jar {
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}" }
+	}
+
 	manifest {
 		attributes([
-				"MixinConfigs"            : "ftbchunks.mixins.json",
 				"Specification-Title"     : project.mod_id,
 				"Specification-Vendor"    : project.mod_author,
 				"Specification-Version"   : "1",
@@ -121,21 +85,30 @@ jar {
 				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
 		])
 	}
+
+	classifier "dev"
 }
 
-def reobfFile = file("$buildDir/reobfJar/output.jar")
-def reobfArtifact = artifacts.add('default', reobfFile) {
-	type 'jar'
-	builtBy 'reobfJar'
-}
-
-if (ENV.LOCAL_MAVEN) {
-	uploadArchives {
-		repositories {
-			mavenDeployer {
-				repository(url: "file://${ENV.LOCAL_MAVEN}")
+// configure the maven publication
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			// add all the jars that should be included when publishing to maven
+			artifact(remapJar) {
+				builtBy remapJar
+			}
+			artifact(sourcesJar) {
+				builtBy remapSourcesJar
 			}
 		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
 	}
 }
 
@@ -159,8 +132,4 @@ if (ENV.CURSEFORGE_KEY) {
 			changelogType = 'markdown'
 		}
 	}
-}
-
-mixin {
-	add sourceSets.main, "ftbchunks.refmap.json"
 }

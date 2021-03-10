@@ -11,84 +11,63 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleTextButton;
 import com.feed_the_beast.mods.ftbguilibrary.widget.WidgetType;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.List;
 
 /**
  * @author LatvianModder
  */
-public class AllyScreen extends GuiButtonListBase
-{
+public class AllyScreen extends GuiButtonListBase {
 	public final List<SendPlayerListPacket.NetPlayer> players;
 	public final int allyMode;
 
-	public AllyScreen(List<SendPlayerListPacket.NetPlayer> p, int a)
-	{
+	public AllyScreen(List<SendPlayerListPacket.NetPlayer> p, int a) {
 		setHasSearchBox(true);
 
 		players = p;
 		allyMode = a;
 
-		setTitle(new StringTextComponent("Allies"));
+		setTitle(new TextComponent("Allies"));
 	}
 
 	@Override
-	public void addButtons(Panel panel)
-	{
-		for (SendPlayerListPacket.NetPlayer p : players)
-		{
+	public void addButtons(Panel panel) {
+		for (SendPlayerListPacket.NetPlayer p : players) {
 			Icon icon;
 
-			if (p.isAlly() && p.isAllyBack())
-			{
+			if (p.isAlly() && p.isAllyBack()) {
 				icon = GuiIcons.CHECK;
-			}
-			else if (p.isAlly())
-			{
+			} else if (p.isAlly()) {
 				icon = GuiIcons.RIGHT;
-			}
-			else if (p.isAllyBack())
-			{
+			} else if (p.isAllyBack()) {
 				icon = GuiIcons.LEFT;
-			}
-			else
-			{
+			} else {
 				icon = GuiIcons.ADD_GRAY;
 			}
 
-			panel.add(new SimpleTextButton(panel, new StringTextComponent(p.name).withStyle(p.isFake() ? TextFormatting.YELLOW : TextFormatting.WHITE), icon)
-			{
+			panel.add(new SimpleTextButton(panel, new TextComponent(p.name).withStyle(p.isFake() ? ChatFormatting.YELLOW : ChatFormatting.WHITE), icon) {
 				@Override
-				public void addMouseOverText(TooltipList list)
-				{
-					if (p.isFake())
-					{
+				public void addMouseOverText(TooltipList list) {
+					if (p.isFake()) {
 						list.string("Fake player");
 						list.string("UUID: " + p.uuid);
-					}
-					else if (p.isAlly() != p.isAllyBack())
-					{
+					} else if (p.isAlly() != p.isAllyBack()) {
 						list.string("Pending invite...");
 
-						if (p.isAllyBack())
-						{
-							list.styledString("Click to accept", TextFormatting.GRAY);
-							list.styledString("Right-click to deny", TextFormatting.DARK_GRAY);
-						}
-						else
-						{
-							list.styledString("Click to cancel", TextFormatting.GRAY);
+						if (p.isAllyBack()) {
+							list.styledString("Click to accept", ChatFormatting.GRAY);
+							list.styledString("Right-click to deny", ChatFormatting.DARK_GRAY);
+						} else {
+							list.styledString("Click to cancel", ChatFormatting.GRAY);
 						}
 					}
 				}
 
 				@Override
-				public WidgetType getWidgetType()
-				{
-					if (p.isBanned())
-					{
+				public WidgetType getWidgetType() {
+					if (p.isBanned()) {
 						return WidgetType.DISABLED;
 					}
 
@@ -96,42 +75,28 @@ public class AllyScreen extends GuiButtonListBase
 				}
 
 				@Override
-				public void onClicked(MouseButton mouseButton)
-				{
+				public void onClicked(MouseButton mouseButton) {
 					playClickSound();
 
 					boolean cancelPending = !mouseButton.isLeft() && !p.isAlly() && p.isAllyBack();
 
-					if (cancelPending)
-					{
+					if (cancelPending) {
 						p.flags &= ~SendPlayerListPacket.NetPlayer.ALLY_BACK;
-					}
-					else
-					{
-						if (p.isAlly())
-						{
+					} else {
+						if (p.isAlly()) {
 							p.flags &= ~SendPlayerListPacket.NetPlayer.ALLY;
-						}
-						else
-						{
+						} else {
 							p.flags |= SendPlayerListPacket.NetPlayer.ALLY;
 						}
 					}
 
-					if (p.isAlly() && p.isAllyBack())
-					{
+					if (p.isAlly() && p.isAllyBack()) {
 						icon = GuiIcons.CHECK;
-					}
-					else if (p.isAlly())
-					{
+					} else if (p.isAlly()) {
 						icon = GuiIcons.RIGHT;
-					}
-					else if (p.isAllyBack())
-					{
+					} else if (p.isAllyBack()) {
 						icon = GuiIcons.LEFT;
-					}
-					else
-					{
+					} else {
 						icon = GuiIcons.ADD_GRAY;
 					}
 

@@ -1,35 +1,31 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
+import net.minecraft.core.Registry;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 import java.util.Objects;
 
 /**
  * @author LatvianModder
  */
-public class RegionSyncKey
-{
-	public RegistryKey<World> dim;
+public class RegionSyncKey {
+	public ResourceKey<Level> dim;
 	public int x, z;
 	public int random;
 
-	public RegionSyncKey()
-	{
+	public RegionSyncKey() {
 	}
 
-	public RegionSyncKey(PacketBuffer buf)
-	{
-		dim = RegistryKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+	public RegionSyncKey(FriendlyByteBuf buf) {
+		dim = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		random = buf.readInt();
 	}
 
-	public void write(PacketBuffer buf)
-	{
+	public void write(FriendlyByteBuf buf) {
 		buf.writeResourceLocation(dim.location());
 		buf.writeVarInt(x);
 		buf.writeVarInt(z);
@@ -37,14 +33,11 @@ public class RegionSyncKey
 	}
 
 	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o)
-		{
+	public boolean equals(Object o) {
+		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass())
-		{
+		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
 		RegionSyncKey key = (RegionSyncKey) o;
@@ -55,8 +48,7 @@ public class RegionSyncKey
 	}
 
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return Objects.hash(dim, x, z, random);
 	}
 }

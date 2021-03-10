@@ -1,1 +1,10 @@
-rootProject.name = 'FTB-Chunks-1.16.4'
+pluginManagement {
+	repositories {
+		maven { url "https://maven.fabricmc.net/" }
+		maven { url "https://maven.shedaniel.me/" }
+		maven { url "https://forge.modpacks.ch/maven/" }
+		gradlePluginPortal()
+	}
+}
+
+rootProject.name = 'FTB-Chunks-1.16.5'

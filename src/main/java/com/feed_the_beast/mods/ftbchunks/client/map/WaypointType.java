@@ -1,12 +1,11 @@
 package com.feed_the_beast.mods.ftbchunks.client.map;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * @author LatvianModder
  */
-public enum WaypointType
-{
+public enum WaypointType {
 	DEFAULT(new ResourceLocation("ftbchunks:textures/waypoint_default.png")),
 	DEATH(new ResourceLocation("ftbchunks:textures/waypoint_death.png")),
 	SPAWN(new ResourceLocation("ftbchunks:textures/waypoint_spawn.png")),
@@ -16,8 +15,7 @@ public enum WaypointType
 
 	public final ResourceLocation texture;
 
-	WaypointType(ResourceLocation t)
-	{
+	WaypointType(ResourceLocation t) {
 		texture = t;
 	}
 }

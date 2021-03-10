@@ -13,60 +13,54 @@ import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author LatvianModder
  */
-public class WaypointButton extends Widget
-{
+public class WaypointButton extends Widget {
 	public final Waypoint waypoint;
 	public Icon icon;
 
-	public WaypointButton(Panel panel, Waypoint w)
-	{
+	public WaypointButton(Panel panel, Waypoint w) {
 		super(panel);
 		icon = Icon.getIcon(w.type.texture).withTint(Color4I.rgb(w.color).withAlpha(w.hidden ? 100 : 255));
 		waypoint = w;
 	}
 
 	@Override
-	public void addMouseOverText(TooltipList list)
-	{
+	public void addMouseOverText(TooltipList list) {
 		list.string(waypoint.name);
 		long dist = (long) MathUtils.dist(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ(), waypoint.x, waypoint.z);
-		list.styledString(dist + " m", TextFormatting.GRAY);
+		list.styledString(dist + " m", ChatFormatting.GRAY);
 	}
 
 	@Override
-	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h)
-	{
+	public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		icon.draw(matrixStack, x, y, w, h);
 	}
 
-	public boolean mousePressed(MouseButton button)
-	{
-		if (isMouseOver() && button.isRight())
-		{
+	public boolean mousePressed(MouseButton button) {
+		if (isMouseOver() && button.isRight()) {
 			List<ContextMenuItem> contextMenu = new ArrayList<>();
-			contextMenu.add(new ContextMenuItem(new StringTextComponent(waypoint.name), icon, () -> {}));
+			contextMenu.add(new ContextMenuItem(new TextComponent(waypoint.name), icon, () -> {
+			}));
 			contextMenu.add(ContextMenuItem.SEPARATOR);
 
-			contextMenu.add(new ContextMenuItem(new TranslationTextComponent("gui.rename"), GuiIcons.CHAT, () -> {
+			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.rename"), GuiIcons.CHAT, () -> {
 				ConfigString config = new ConfigString();
 				config.defaultValue = "";
 				config.value = waypoint.name;
 				config.onClicked(MouseButton.LEFT, b -> {
-					if (b)
-					{
+					if (b) {
 						waypoint.name = config.value;
 						waypoint.dimension.saveData = true;
 					}
@@ -75,9 +69,8 @@ public class WaypointButton extends Widget
 				});
 			}));
 
-			if (waypoint.type == WaypointType.DEFAULT)
-			{
-				contextMenu.add(new ContextMenuItem(new StringTextComponent("Change Color"), GuiIcons.COLOR_RGB, () -> {
+			if (waypoint.type == WaypointType.DEFAULT) {
+				contextMenu.add(new ContextMenuItem(new TextComponent("Change Color"), GuiIcons.COLOR_RGB, () -> {
 					int r = (waypoint.color >> 16) & 0xFF;
 					int g = (waypoint.color >> 8) & 0xFF;
 					int b = (waypoint.color >> 0) & 0xFF;
@@ -89,15 +82,15 @@ public class WaypointButton extends Widget
 					contextMenu.get(0).icon = icon;
 				}).setCloseMenu(false));
 
-				contextMenu.add(new ContextMenuItem(new StringTextComponent(waypoint.hidden ? "Show" : "Hide"), GuiIcons.BEACON, () -> {
+				contextMenu.add(new ContextMenuItem(new TextComponent(waypoint.hidden ? "Show" : "Hide"), GuiIcons.BEACON, () -> {
 					waypoint.hidden = !waypoint.hidden;
 					waypoint.dimension.saveData = true;
-					contextMenu.get(0).title = new StringTextComponent(waypoint.hidden ? "Show" : "Hide");
+					contextMenu.get(0).title = new TextComponent(waypoint.hidden ? "Show" : "Hide");
 					getGui().refreshWidgets();
 				}));
 			}
 
-			contextMenu.add(new ContextMenuItem(new TranslationTextComponent("gui.remove"), GuiIcons.REMOVE, () -> {
+			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), GuiIcons.REMOVE, () -> {
 				waypoint.dimension.getWaypoints().remove(waypoint);
 				waypoint.dimension.saveData = true;
 				parent.widgets.remove(this);

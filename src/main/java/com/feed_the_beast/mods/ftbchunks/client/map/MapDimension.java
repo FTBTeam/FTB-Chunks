@@ -7,8 +7,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -25,35 +25,30 @@ import java.util.Map;
 /**
  * @author LatvianModder
  */
-public class MapDimension implements MapTask
-{
+public class MapDimension implements MapTask {
 	private static MapDimension current;
 
-	public static MapDimension getCurrent()
-	{
-		if (current == null)
-		{
+	public static MapDimension getCurrent() {
+		if (current == null) {
 			current = MapManager.inst.getDimension(Minecraft.getInstance().level.dimension());
 		}
 
 		return current;
 	}
 
-	public static void updateCurrent()
-	{
+	public static void updateCurrent() {
 		current = null;
 	}
 
 	public final MapManager manager;
-	public final RegistryKey<World> dimension;
+	public final ResourceKey<Level> dimension;
 	public final String safeDimensionId;
 	public final Path directory;
 	private Map<XZ, MapRegion> regions;
 	private List<Waypoint> waypoints;
 	public boolean saveData;
 
-	public MapDimension(MapManager m, RegistryKey<World> id)
-	{
+	public MapDimension(MapManager m, ResourceKey<Level> id) {
 		manager = m;
 		dimension = id;
 		safeDimensionId = dimension.location().toString().replace(':', '_');
@@ -62,36 +57,27 @@ public class MapDimension implements MapTask
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return safeDimensionId;
 	}
 
-	public Collection<MapRegion> getLoadedRegions()
-	{
+	public Collection<MapRegion> getLoadedRegions() {
 		return regions == null ? Collections.emptyList() : regions.values();
 	}
 
-	public MapDimension created()
-	{
+	public MapDimension created() {
 		manager.saveData = true;
 		return this;
 	}
 
-	public Map<XZ, MapRegion> getRegions()
-	{
-		if (regions == null)
-		{
+	public Map<XZ, MapRegion> getRegions() {
+		if (regions == null) {
 			regions = new HashMap<>();
 
-			if (Files.notExists(directory))
-			{
-				try
-				{
+			if (Files.notExists(directory)) {
+				try {
 					Files.createDirectories(directory);
-				}
-				catch (Exception ex)
-				{
+				} catch (Exception ex) {
 					throw new RuntimeException(ex);
 				}
 			}
@@ -101,16 +87,14 @@ public class MapDimension implements MapTask
 				int version = stream.readByte();
 				int s = stream.readShort();
 
-				for (int i = 0; i < s; i++)
-				{
+				for (int i = 0; i < s; i++) {
 					int x = stream.readByte();
 					int z = stream.readByte();
 
 					MapRegion c = new MapRegion(this, XZ.of(x, z));
 					regions.put(c.pos, c);
 				}
-			}))
-			{
+			})) {
 				saveData = true;
 			}
 		}
@@ -118,60 +102,47 @@ public class MapDimension implements MapTask
 		return regions;
 	}
 
-	public MapRegion getRegion(XZ pos)
-	{
+	public MapRegion getRegion(XZ pos) {
 		return getRegions().computeIfAbsent(pos, p -> new MapRegion(this, p).created());
 	}
 
-	public List<Waypoint> getWaypoints()
-	{
-		if (waypoints == null)
-		{
+	public List<Waypoint> getWaypoints() {
+		if (waypoints == null) {
 			waypoints = new ArrayList<>();
 
 			Path file = directory.resolve("waypoints.json");
 
-			if (Files.exists(file))
-			{
-				try (Reader reader = Files.newBufferedReader(file))
-				{
+			if (Files.exists(file)) {
+				try (Reader reader = Files.newBufferedReader(file)) {
 					JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
 
-					if (json.has("waypoints"))
-					{
-						for (JsonElement e : json.get("waypoints").getAsJsonArray())
-						{
+					if (json.has("waypoints")) {
+						for (JsonElement e : json.get("waypoints").getAsJsonArray()) {
 							JsonObject o = e.getAsJsonObject();
 
 							Waypoint w = new Waypoint(this);
 							w.hidden = o.get("hidden").getAsBoolean();
 							w.name = o.get("name").getAsString();
 							w.x = o.get("x").getAsInt();
+							w.y = o.has("y") ? o.get("y").getAsInt() : -1;
 							w.z = o.get("z").getAsInt();
 							w.color = 0xFFFFFF;
 
-							if (o.has("color"))
-							{
-								try
-								{
+							if (o.has("color")) {
+								try {
 									w.color = Integer.decode(o.get("color").getAsString());
-								}
-								catch (Exception ex)
-								{
+								} catch (Exception ex) {
 								}
 							}
 
-							if (o.has("type"))
-							{
+							if (o.has("type")) {
 								w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
 							}
 
 							waypoints.add(w);
 						}
 					}
-				}
-				catch (Exception ex)
-				{
+				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 			}
@@ -180,10 +151,8 @@ public class MapDimension implements MapTask
 		return waypoints;
 	}
 
-	public void release()
-	{
-		for (MapRegion region : getLoadedRegions())
-		{
+	public void release() {
+		for (MapRegion region : getLoadedRegions()) {
 			region.release();
 		}
 
@@ -192,19 +161,17 @@ public class MapDimension implements MapTask
 	}
 
 	@Override
-	public void runMapTask()
-	{
-		try
-		{
+	public void runMapTask() {
+		try {
 			JsonObject json = new JsonObject();
 			JsonArray waypointArray = new JsonArray();
 
-			for (Waypoint w : getWaypoints())
-			{
+			for (Waypoint w : getWaypoints()) {
 				JsonObject o = new JsonObject();
 				o.addProperty("hidden", w.hidden);
 				o.addProperty("name", w.name);
 				o.addProperty("x", w.x);
+				o.addProperty("y", w.y);
 				o.addProperty("z", w.z);
 				o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
 				o.addProperty("type", w.type.name().toLowerCase());
@@ -213,15 +180,13 @@ public class MapDimension implements MapTask
 
 			json.add("waypoints", waypointArray);
 
-			try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json")))
-			{
+			try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json"))) {
 				FTBChunks.GSON.toJson(json, writer);
 			}
 
 			Collection<MapRegion> regionList = getRegions().values();
 
-			if (regionList.isEmpty())
-			{
+			if (regionList.isEmpty()) {
 				return;
 			}
 
@@ -230,21 +195,17 @@ public class MapDimension implements MapTask
 				stream.writeByte(1);
 				stream.writeShort(regionList.size());
 
-				for (MapRegion region : regionList)
-				{
+				for (MapRegion region : regionList) {
 					stream.writeByte(region.pos.x);
 					stream.writeByte(region.pos.z);
 				}
 			});
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	public void sync()
-	{
+	public void sync() {
 		long now = System.currentTimeMillis();
 		getRegions().values().stream().sorted(Comparator.comparingDouble(MapRegion::distToPlayer)).forEach(region -> FTBChunksClient.queue(new SyncTXTask(region, now)));
 	}

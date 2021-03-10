@@ -5,14 +5,12 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class KnownFakePlayer
-{
+public class KnownFakePlayer {
 	public final UUID uuid;
 	public final String name;
 	public boolean banned;
 
-	public KnownFakePlayer(UUID id, String n, boolean b)
-	{
+	public KnownFakePlayer(UUID id, String n, boolean b) {
 		uuid = id;
 		name = n;
 		banned = b;

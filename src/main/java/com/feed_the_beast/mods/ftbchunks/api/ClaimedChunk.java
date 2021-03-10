@@ -1,11 +1,12 @@
 package com.feed_the_beast.mods.ftbchunks.api;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -13,8 +14,7 @@ import java.time.Instant;
 /**
  * @author LatvianModder
  */
-public interface ClaimedChunk extends ClaimResult
-{
+public interface ClaimedChunk extends ClaimResult {
 	ClaimedChunkPlayerData getPlayerData();
 
 	ChunkDimPos getPos();
@@ -22,16 +22,14 @@ public interface ClaimedChunk extends ClaimResult
 	@Nullable
 	Instant getForceLoadedTime();
 
-	default boolean isForceLoaded()
-	{
+	default boolean isForceLoaded() {
 		return getForceLoadedTime() != null;
 	}
 
 	@Nullable
 	ClaimedChunkGroup getGroup();
 
-	default String getGroupID()
-	{
+	default String getGroupID() {
 		ClaimedChunkGroup g = getGroup();
 		return g == null ? "" : g.getId();
 	}
@@ -39,34 +37,30 @@ public interface ClaimedChunk extends ClaimResult
 	Instant getTimeClaimed();
 
 	@Override
-	default boolean isSuccess()
-	{
+	default boolean isSuccess() {
 		return true;
 	}
 
-	default int getColor()
-	{
+	default int getColor() {
 		int c = getGroup() == null ? 0 : getGroup().getColorOverride();
 		return c == 0 ? getPlayerData().getColor() : c;
 	}
 
-	boolean canEdit(ServerPlayerEntity player, BlockState state);
+	boolean canEdit(ServerPlayer player, BlockState state);
 
-	boolean canInteract(ServerPlayerEntity player, BlockState state);
+	boolean canInteract(ServerPlayer player, BlockState state);
 
 	boolean canEntitySpawn(Entity entity);
 
 	boolean allowExplosions();
 
-	default ITextComponent getDisplayName()
-	{
+	default Component getDisplayName() {
 		ClaimedChunkGroup group = getGroup();
 
-		if (group != null && group.getCustomName() != null)
-		{
+		if (group != null && group.getCustomName() != null) {
 			return group.getCustomName();
 		}
 
-		return getPlayerData().getDisplayName().withStyle(Style.EMPTY.withColor(Color.fromRgb(getColor() & 0xFFFFFF)));
+		return new TextComponent("").append(getPlayerData().getDisplayName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor() & 0xFFFFFF)));
 	}
 }

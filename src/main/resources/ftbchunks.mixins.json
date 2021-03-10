@@ -6,7 +6,7 @@
 	"mixins": [
 		"BiomeMixin",
 		"BlockStateMixin",
-		"ChunkManagerMixin"
+		"ChunkMapMixin"
 	],
 	"client": [
 		"ChunkRenderMixin"

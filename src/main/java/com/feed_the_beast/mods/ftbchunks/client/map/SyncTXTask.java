@@ -11,24 +11,20 @@ import java.util.zip.DeflaterOutputStream;
 /**
  * @author LatvianModder
  */
-public class SyncTXTask implements MapTask
-{
+public class SyncTXTask implements MapTask {
 	public final MapRegion region;
 	public final long now;
 
-	public SyncTXTask(MapRegion r, long s)
-	{
+	public SyncTXTask(MapRegion r, long s) {
 		region = r;
 		now = s;
 	}
 
 	@Override
-	public void runMapTask()
-	{
+	public void runMapTask() {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out))))
-		{
+		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out)))) {
 			/*
 			MapRegion.Images images = region.getImages();
 
@@ -49,9 +45,7 @@ public class SyncTXTask implements MapTask
 				stream.writeLong(now - chunk.modified);
 			}
 			 */
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 			return;
 		}
@@ -60,8 +54,7 @@ public class SyncTXTask implements MapTask
 	}
 
 	@Override
-	public boolean cancelOtherTasks()
-	{
+	public boolean cancelOtherTasks() {
 		return true;
 	}
 }

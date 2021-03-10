@@ -15,8 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * @author LatvianModder
  */
-public class FTBChunksClientConfig
-{
+public class FTBChunksClientConfig {
 	public static float noise;
 	public static float shadows;
 	public static boolean chunkGrid;
@@ -51,8 +50,7 @@ public class FTBChunksClientConfig
 
 	private static Pair<ClientConfig, ForgeConfigSpec> client;
 
-	public static void init()
-	{
+	public static void init() {
 		FMLJavaModLoadingContext.get().getModEventBus().register(FTBChunksClientConfig.class);
 
 		client = new ForgeConfigSpec.Builder().configure(ClientConfig::new);
@@ -62,12 +60,10 @@ public class FTBChunksClientConfig
 	}
 
 	@SubscribeEvent
-	public static void reload(ModConfig.ModConfigEvent event)
-	{
+	public static void reload(ModConfig.ModConfigEvent event) {
 		ModConfig config = event.getConfig();
 
-		if (config.getSpec() == client.getRight())
-		{
+		if (config.getSpec() == client.getRight()) {
 			ClientConfig c = client.getLeft();
 			noise = c.noise.get().floatValue();
 			shadows = c.shadows.get().floatValue();
@@ -98,15 +94,13 @@ public class FTBChunksClientConfig
 
 			debugInfo = c.debugInfo.get();
 
-			if (MapManager.inst != null)
-			{
+			if (MapManager.inst != null) {
 				MapManager.inst.updateAllRegions(false);
 			}
 		}
 	}
 
-	private static class ClientConfig
-	{
+	private static class ClientConfig {
 		public final ForgeConfigSpec.DoubleValue noise;
 		public final ForgeConfigSpec.DoubleValue shadows;
 		public final ForgeConfigSpec.BooleanValue chunkGrid;
@@ -136,8 +130,7 @@ public class FTBChunksClientConfig
 
 		public final ForgeConfigSpec.BooleanValue debugInfo;
 
-		private ClientConfig(ForgeConfigSpec.Builder builder)
-		{
+		private ClientConfig(ForgeConfigSpec.Builder builder) {
 			noise = builder
 					.comment("Noise added to map to make it look less plastic")
 					.translation("ftbchunks.noise")
@@ -270,8 +263,7 @@ public class FTBChunksClientConfig
 		}
 	}
 
-	public static void openSettings()
-	{
+	public static void openSettings() {
 		ConfigGroup group = new ConfigGroup("ftbchunks");
 
 		group.addDouble("noise", noise, v -> {
@@ -406,13 +398,11 @@ public class FTBChunksClientConfig
 
 		GuiEditConfig gui = new GuiEditConfig(group);
 		group.savedCallback = b -> {
-			if (b)
-			{
+			if (b) {
 				client.getRight().save();
 			}
 
-			if (MapManager.inst != null)
-			{
+			if (MapManager.inst != null) {
 				MapManager.inst.updateAllRegions(false);
 			}
 

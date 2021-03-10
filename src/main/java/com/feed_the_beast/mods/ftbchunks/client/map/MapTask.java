@@ -4,12 +4,10 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
  * @author LatvianModder
  */
 @FunctionalInterface
-public interface MapTask
-{
+public interface MapTask {
 	void runMapTask();
 
-	default boolean cancelOtherTasks()
-	{
+	default boolean cancelOtherTasks() {
 		return false;
 	}
 }

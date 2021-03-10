@@ -3,8 +3,7 @@ package com.feed_the_beast.mods.ftbchunks.client.map;
 /**
  * @author LatvianModder
  */
-public enum MapMode
-{
+public enum MapMode {
 	NONE,
 	NIGHT,
 	TOPOGRAPHY,

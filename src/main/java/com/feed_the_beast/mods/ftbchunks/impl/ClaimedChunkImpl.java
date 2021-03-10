@@ -4,10 +4,10 @@ import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -18,16 +18,14 @@ import java.util.Date;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkImpl implements ClaimedChunk
-{
+public class ClaimedChunkImpl implements ClaimedChunk {
 	public final ClaimedChunkPlayerDataImpl playerData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
 	public ClaimedChunkGroupImpl group;
 	public Instant time;
 
-	public ClaimedChunkImpl(ClaimedChunkPlayerDataImpl p, ChunkDimPos cp)
-	{
+	public ClaimedChunkImpl(ClaimedChunkPlayerDataImpl p, ChunkDimPos cp) {
 		playerData = p;
 		pos = cp;
 		forceLoaded = null;
@@ -35,87 +33,73 @@ public class ClaimedChunkImpl implements ClaimedChunk
 	}
 
 	@Override
-	public ClaimedChunkPlayerDataImpl getPlayerData()
-	{
+	public ClaimedChunkPlayerDataImpl getPlayerData() {
 		return playerData;
 	}
 
 	@Override
-	public ChunkDimPos getPos()
-	{
+	public ChunkDimPos getPos() {
 		return pos;
 	}
 
 	@Nullable
 	@Override
-	public ClaimedChunkGroupImpl getGroup()
-	{
+	public ClaimedChunkGroupImpl getGroup() {
 		return group;
 	}
 
 	@Override
-	public Instant getTimeClaimed()
-	{
+	public Instant getTimeClaimed() {
 		return time;
 	}
 
 	@Override
-	public void setClaimedTime(Instant t)
-	{
+	public void setClaimedTime(Instant t) {
 		time = t;
 		sendUpdateToAll();
 	}
 
 	@Override
 	@Nullable
-	public Instant getForceLoadedTime()
-	{
+	public Instant getForceLoadedTime() {
 		return forceLoaded;
 	}
 
 	@Override
-	public void setForceLoadedTime(@Nullable Instant time)
-	{
+	public void setForceLoadedTime(@Nullable Instant time) {
 		forceLoaded = time;
 	}
 
 	@Override
-	public boolean canEdit(ServerPlayerEntity player, BlockState state)
-	{
+	public boolean canEdit(ServerPlayer player, BlockState state) {
 		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || (!(player instanceof FakePlayer) && player.hasPermissions(2));
 	}
 
 	@Override
-	public boolean canInteract(ServerPlayerEntity player, BlockState state)
-	{
+	public boolean canInteract(ServerPlayer player, BlockState state) {
 		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || (!(player instanceof FakePlayer) && player.hasPermissions(2));
 	}
 
 	@Override
-	public boolean canEntitySpawn(Entity entity)
-	{
+	public boolean canEntitySpawn(Entity entity) {
 		return true;
 	}
 
 	@Override
-	public boolean allowExplosions()
-	{
+	public boolean allowExplosions() {
 		return false;
 	}
 
-	public void postSetForceLoaded(boolean load)
-	{
-		ServerWorld world = getPlayerData().getManager().getMinecraftServer().getLevel(getPos().dimension);
+	public void postSetForceLoaded(boolean load) {
+		ServerLevel world = getPlayerData().getManager().getMinecraftServer().getLevel(getPos().dimension);
 
-		if (world != null)
-		{
+		if (world != null) {
 			world.setChunkForced(getPos().x, getPos().z, load);
 			sendUpdateToAll();
 		}
 	}
 
-	public void sendUpdateToAll()
-	{
+	public void sendUpdateToAll() {
 		SendChunkPacket packet = new SendChunkPacket();
 		packet.dimension = pos.dimension;
 		packet.owner = playerData.getUuid();

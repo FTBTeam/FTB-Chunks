@@ -8,7 +8,6 @@ import com.feed_the_beast.mods.ftbchunks.impl.AllyMode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
@@ -28,8 +27,7 @@ import java.util.Set;
 /**
  * @author LatvianModder
  */
-public class FTBChunksConfig
-{
+public class FTBChunksConfig {
 	public static boolean disableAllFakePlayers;
 	public static int maxClaimedChunks;
 	public static int maxForceLoadedChunks;
@@ -41,8 +39,7 @@ public class FTBChunksConfig
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
-	public static void init()
-	{
+	public static void init() {
 		FMLJavaModLoadingContext.get().getModEventBus().register(FTBChunksConfig.class);
 
 		server = new ForgeConfigSpec.Builder().configure(ServerConfig::new);
@@ -52,12 +49,10 @@ public class FTBChunksConfig
 	}
 
 	@SubscribeEvent
-	public static void reload(ModConfig.ModConfigEvent event)
-	{
+	public static void reload(ModConfig.ModConfigEvent event) {
 		ModConfig config = event.getConfig();
 
-		if (config.getSpec() == server.getRight())
-		{
+		if (config.getSpec() == server.getRight()) {
 			ServerConfig c = server.getLeft();
 			disableAllFakePlayers = c.disableAllFakePlayers.get();
 			maxClaimedChunks = c.maxClaimedChunks.get();
@@ -67,8 +62,7 @@ public class FTBChunksConfig
 			allyMode = c.allyMode.get();
 			claimDimensionBlacklist = new HashSet<>();
 
-			for (String s : c.claimDimensionBlacklist.get())
-			{
+			for (String s : c.claimDimensionBlacklist.get()) {
 				claimDimensionBlacklist.add(RegistryKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
 			}
 
@@ -76,8 +70,7 @@ public class FTBChunksConfig
 		}
 	}
 
-	private static class ServerConfig
-	{
+	private static class ServerConfig {
 		private final ForgeConfigSpec.BooleanValue disableAllFakePlayers;
 		private final ForgeConfigSpec.IntValue maxClaimedChunks;
 		private final ForgeConfigSpec.IntValue maxForceLoadedChunks;
@@ -87,8 +80,7 @@ public class FTBChunksConfig
 		private final ForgeConfigSpec.ConfigValue<List<? extends String>> claimDimensionBlacklist;
 		private final ForgeConfigSpec.BooleanValue patchChunkLoading;
 
-		private ServerConfig(ForgeConfigSpec.Builder builder)
-		{
+		private ServerConfig(ForgeConfigSpec.Builder builder) {
 			disableAllFakePlayers = builder
 					.comment("Disables fake players like miners and auto-clickers.")
 					.define("disable_fake_players", false);
@@ -114,8 +106,8 @@ public class FTBChunksConfig
 					.defineEnum("ally_mode", AllyMode.DEFAULT);
 
 			claimDimensionBlacklist = builder
-					.comment("Blacklist for dimensions where chunks can't be claimed.")
-					.defineList("claim_dimension_blacklist", Util.make(new ArrayList<>(), l -> l.add("minecraft:the_end")), o -> true);
+					.comment("Blacklist for dimensions where chunks can't be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End.")
+					.defineList("claim_dimension_blacklist", new ArrayList<>(), o -> true);
 
 			patchChunkLoading = builder
 					.comment("Patches vanilla chunkloading to allow random block ticks and other environment updates in chunks where no players are nearby. With this off farms and other things won't work. Disable in case this causes issues.")
@@ -123,40 +115,32 @@ public class FTBChunksConfig
 		}
 	}
 
-	public static int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
-	{
-		if (FTBChunks.ranksMod)
-		{
+	public static int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player) {
+		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks) + playerData.getExtraClaimChunks();
 		}
 
 		return maxClaimedChunks + playerData.getExtraClaimChunks();
 	}
 
-	public static int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
-	{
-		if (FTBChunks.ranksMod)
-		{
+	public static int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayerEntity player) {
+		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks) + playerData.getExtraForceLoadChunks();
 		}
 
 		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
 	}
 
-	public static boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayerEntity player)
-	{
-		if (FTBChunks.ranksMod)
-		{
+	public static boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayerEntity player) {
+		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getChunkLoadOffline(player, chunkLoadOffline);
 		}
 
 		return chunkLoadOffline;
 	}
 
-	public static boolean patchChunkLoading(ServerWorld world, ChunkPos pos)
-	{
-		if (patchChunkLoading)
-		{
+	public static boolean patchChunkLoading(ServerWorld world, ChunkPos pos) {
+		if (patchChunkLoading) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(world.dimension(), pos));
 			return chunk != null && chunk.isForceLoaded();
 		}

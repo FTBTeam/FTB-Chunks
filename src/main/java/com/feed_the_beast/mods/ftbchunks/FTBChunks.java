@@ -10,6 +10,7 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
+import com.feed_the_beast.mods.ftbchunks.ingregration.kubejs.KubeJSIntegration;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.PlayerDeathPacket;
@@ -102,6 +103,16 @@ public class FTBChunks
 		proxy.init();
 		FTBChunksAPI.INSTANCE = new FTBChunksAPIImpl();
 		FTBChunksConfig.init();
+
+		if (ModList.get().isLoaded("kubejs"))
+		{
+			loadKJS();
+		}
+	}
+
+	private void loadKJS()
+	{
+		KubeJSIntegration.init();
 	}
 
 	private void init(FMLCommonSetupEvent event)

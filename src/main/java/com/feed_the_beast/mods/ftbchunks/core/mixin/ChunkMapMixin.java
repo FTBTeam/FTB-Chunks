@@ -21,7 +21,7 @@ public class ChunkMapMixin {
 	private ServerLevel level;
 
 	@Inject(method = "noPlayersCloseForSpawning", at = @At("RETURN"), cancellable = true)
-	public void isOutsideSpawningRadiusPatch(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
+	private void noPlayersCloseForSpawningFTBC(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
 		if (ci.getReturnValue() && FTBChunksConfig.patchChunkLoading(level, pos)) {
 			ci.setReturnValue(false);
 		}

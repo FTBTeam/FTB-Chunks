@@ -1,5 +1,5 @@
 plugins {
-	id 'forgified-fabric-loom' version '0.6.70'
+	id 'forgified-fabric-loom' version '0.6-SNAPSHOT'
 	id "com.matthewprenger.cursegradle" version "1.4.0"
 	id 'maven-publish'
 }
@@ -67,7 +67,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
-	withSourcesJar()
+	// withSourcesJar()
 }
 
 jar {
@@ -90,6 +90,10 @@ jar {
 	classifier "dev"
 }
 
+remapJar {
+	classifier "forge"
+}
+
 // configure the maven publication
 publishing {
 	publications {
@@ -97,9 +101,6 @@ publishing {
 			// add all the jars that should be included when publishing to maven
 			artifact(remapJar) {
 				builtBy remapJar
-			}
-			artifact(sourcesJar) {
-				builtBy remapSourcesJar
 			}
 		}
 	}

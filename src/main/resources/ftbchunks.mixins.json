@@ -2,7 +2,6 @@
 	"required": true,
 	"package": "com.feed_the_beast.mods.ftbchunks.core.mixin",
 	"compatibilityLevel": "JAVA_8",
-	"refmap": "ftbchunks.refmap.json",
 	"mixins": [
 		"BiomeMixin",
 		"BlockStateMixin",

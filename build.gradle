@@ -90,10 +90,6 @@ jar {
 	classifier "dev"
 }
 
-remapJar {
-	classifier "forge"
-}
-
 // configure the maven publication
 publishing {
 	publications {
@@ -120,10 +116,12 @@ if (ENV.CURSEFORGE_KEY) {
 		project {
 			id = project.curseforge_id
 			releaseType = "release"
+			addGameVersion "Forge"
 			addGameVersion "1.16.2"
 			addGameVersion "1.16.3"
 			addGameVersion "1.16.4"
 			addGameVersion "1.16.5"
+			mainArtifact(remapJar.archivePath)
 			relations {
 				requiredDependency 'ftb-gui-library'
 				optionalDependency 'ftb-ranks'

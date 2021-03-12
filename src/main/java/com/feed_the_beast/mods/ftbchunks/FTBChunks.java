@@ -265,7 +265,7 @@ public class FTBChunks {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(event.getWorld(), event.getPos()));
 
 			if (chunk != null) {
-				if (!chunk.canInteract((ServerPlayer) event.getPlayer(), event.getWorld().getBlockState(event.getPos()))) {
+				if (!chunk.canRightClickItem((ServerPlayer) event.getPlayer(), event.getItemStack())) {
 					event.setCanceled(true);
 				}
 			}

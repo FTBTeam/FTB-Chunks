@@ -95,6 +95,9 @@ public class FTBChunksCommands {
 				)
 				.then(Commands.literal("admin")
 						.requires(source -> source.hasPermission(2))
+						.then(Commands.literal("bypass_protection")
+								.executes(context -> bypassProtection(context.getSource().getPlayerOrException()))
+						)
 						.then(Commands.literal("extra_claim_chunks")
 								.then(Commands.argument("player", EntityArgument.player())
 										.then(Commands.literal("get")
@@ -137,6 +140,12 @@ public class FTBChunksCommands {
 		);
 
 		event.getDispatcher().register(Commands.literal("chunks").redirect(command));
+	}
+
+	private static int bypassProtection(ServerPlayer player) {
+		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		data.bypassProtection = !data.bypassProtection;
+		return 1;
 	}
 
 	private interface ChunkCallback {

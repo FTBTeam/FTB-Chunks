@@ -6,6 +6,7 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;
@@ -49,6 +50,8 @@ public interface ClaimedChunk extends ClaimResult {
 	boolean canEdit(ServerPlayer player, BlockState state);
 
 	boolean canInteract(ServerPlayer player, BlockState state);
+
+	boolean canRightClickItem(ServerPlayer player, ItemStack item);
 
 	boolean canEntitySpawn(Entity entity);
 

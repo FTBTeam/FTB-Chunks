@@ -2,11 +2,13 @@ package com.feed_the_beast.mods.ftbchunks.impl;
 
 import com.feed_the_beast.mods.ftbchunks.api.ChunkDimPos;
 import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunk;
+import com.feed_the_beast.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -72,12 +74,47 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 
 	@Override
 	public boolean canEdit(ServerPlayer player, BlockState state) {
-		return FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false) || (!(player instanceof FakePlayer) && player.hasPermissions(2));
+		if (FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false)) {
+			return true;
+		}
+
+		if (!(player instanceof FakePlayer)) {
+			ClaimedChunkPlayerData pd = playerData.manager.getData(player);
+			return pd.getBypassProtection(player);
+		}
+
+		return false;
 	}
 
 	@Override
 	public boolean canInteract(ServerPlayer player, BlockState state) {
-		return FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false) || (!(player instanceof FakePlayer) && player.hasPermissions(2));
+		if (FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false)) {
+			return true;
+		}
+
+		if (!(player instanceof FakePlayer)) {
+			ClaimedChunkPlayerData pd = playerData.manager.getData(player);
+			return pd.getBypassProtection(player);
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean canRightClickItem(ServerPlayer player, ItemStack item) {
+		if (playerData.canUse(player, playerData.blockInteractMode, false)) {
+			return true;
+		}
+
+		if (!(player instanceof FakePlayer)) {
+			ClaimedChunkPlayerData pd = playerData.manager.getData(player);
+
+			if (pd.getBypassProtection(player)) {
+				return true;
+			}
+		}
+
+		return !FTBChunksAPIImpl.RIGHT_CLICK_BLACKLIST_TAG.contains(item.getItem());
 	}
 
 	@Override

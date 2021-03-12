@@ -30,6 +30,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -63,6 +64,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 	public int extraClaimChunks;
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
+	public boolean bypassProtection;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -82,6 +84,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
+		bypassProtection = false;
 	}
 
 	@Override
@@ -342,8 +345,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 	public boolean canUse(ServerPlayer p, PrivacyMode mode, boolean explicit) {
 		if (mode == PrivacyMode.PUBLIC) {
 			return true;
-		} else if (p.getServer().isSingleplayer()) {
-			return true;
+		/* } else if (p.getServer().isSingleplayer()) {
+			return true; */
 		} else if (mode == PrivacyMode.ALLIES) {
 			ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(p);
 			return explicit ? isExplicitAlly(data) : isAlly(data);
@@ -526,5 +529,9 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 	public void setChunkLoadOffline(boolean val) {
 		chunkLoadOffline = val;
 		save();
+	}
+
+	public boolean getBypassProtection(ServerPlayer player) {
+		return bypassProtection && !(player instanceof FakePlayer) && player.hasPermissions(2);
 	}
 }

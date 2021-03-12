@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -67,4 +68,6 @@ public interface ClaimedChunkPlayerData {
 	int getExtraForceLoadChunks();
 
 	boolean chunkLoadOffline();
+
+	boolean getBypassProtection(ServerPlayer player);
 }

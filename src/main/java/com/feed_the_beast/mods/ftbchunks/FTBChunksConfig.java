@@ -36,6 +36,7 @@ public class FTBChunksConfig {
 	public static AllyMode allyMode;
 	public static Set<ResourceKey<Level>> claimDimensionBlacklist;
 	public static boolean patchChunkLoading;
+	public static boolean noWilderness;
 
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
 
@@ -67,6 +68,7 @@ public class FTBChunksConfig {
 			}
 
 			patchChunkLoading = c.patchChunkLoading.get();
+			noWilderness = c.noWilderness.get();
 		}
 	}
 
@@ -79,6 +81,7 @@ public class FTBChunksConfig {
 		private final ForgeConfigSpec.EnumValue<AllyMode> allyMode;
 		private final ForgeConfigSpec.ConfigValue<List<? extends String>> claimDimensionBlacklist;
 		private final ForgeConfigSpec.BooleanValue patchChunkLoading;
+		private final ForgeConfigSpec.BooleanValue noWilderness;
 
 		private ServerConfig(ForgeConfigSpec.Builder builder) {
 			disableAllFakePlayers = builder
@@ -112,6 +115,10 @@ public class FTBChunksConfig {
 			patchChunkLoading = builder
 					.comment("Patches vanilla chunkloading to allow random block ticks and other environment updates in chunks where no players are nearby. With this off farms and other things won't work. Disable in case this causes issues.")
 					.define("patch_chunkloading", true);
+
+			noWilderness = builder
+					.comment("Requires you to claim chunks in order to edit and interact with blocks.")
+					.define("no_wilderness", false);
 		}
 	}
 

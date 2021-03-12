@@ -10,7 +10,7 @@ import com.feed_the_beast.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.FTBChunksAPIImpl;
 import com.feed_the_beast.mods.ftbchunks.impl.KnownFakePlayer;
 import com.feed_the_beast.mods.ftbchunks.impl.XZ;
-import com.feed_the_beast.mods.ftbchunks.ingregration.kubejs.KubeJSIntegration;
+import com.feed_the_beast.mods.ftbchunks.integration.kubejs.KubeJSIntegration;
 import com.feed_the_beast.mods.ftbchunks.net.FTBChunksNet;
 import com.feed_the_beast.mods.ftbchunks.net.LoginDataPacket;
 import com.feed_the_beast.mods.ftbchunks.net.PlayerDeathPacket;
@@ -23,7 +23,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -233,6 +236,15 @@ public class FTBChunks {
 		return false;
 	}
 
+	private void printNoWildernessMessage(@Nullable Entity entity) {
+		Component component = new TextComponent("You need to claim this chunk to interact with blocks here!");
+		if (entity instanceof Player) {
+			((Player) entity).displayClientMessage(component, true);
+		} else if (entity != null) {
+			entity.sendMessage(component, Util.NIL_UUID);
+		}
+	}
+
 	@SubscribeEvent
 	public void blockLeftClick(PlayerInteractEvent.LeftClickBlock event) {
 		if (isValidPlayer(event.getPlayer())) {
@@ -242,6 +254,9 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) event.getPlayer(), event.getWorld().getBlockState(event.getPos()))) {
 					event.setCanceled(true);
 				}
+			} else if (FTBChunksConfig.noWilderness && !FTBChunksAPIImpl.RIGHT_CLICK_BLACKLIST_TAG.contains(event.getItemStack().getItem())) {
+				printNoWildernessMessage(event.getPlayer());
+				event.setCanceled(true);
 			}
 		}
 	}
@@ -255,6 +270,9 @@ public class FTBChunks {
 				if (!chunk.canInteract((ServerPlayer) event.getPlayer(), event.getWorld().getBlockState(event.getPos()))) {
 					event.setCanceled(true);
 				}
+			} else if (FTBChunksConfig.noWilderness && !FTBChunksAPIImpl.RIGHT_CLICK_BLACKLIST_TAG.contains(event.getItemStack().getItem())) {
+				printNoWildernessMessage(event.getPlayer());
+				event.setCanceled(true);
 			}
 		}
 	}
@@ -268,6 +286,9 @@ public class FTBChunks {
 				if (!chunk.canRightClickItem((ServerPlayer) event.getPlayer(), event.getItemStack())) {
 					event.setCanceled(true);
 				}
+			} else if (FTBChunksConfig.noWilderness && FTBChunksAPIImpl.RIGHT_CLICK_BLACKLIST_TAG.contains(event.getItemStack().getItem())) {
+				printNoWildernessMessage(event.getPlayer());
+				event.setCanceled(true);
 			}
 		}
 	}
@@ -281,6 +302,9 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) event.getPlayer(), event.getState())) {
 					event.setCanceled(true);
 				}
+			} else if (FTBChunksConfig.noWilderness) {
+				printNoWildernessMessage(event.getPlayer());
+				event.setCanceled(true);
 			}
 		}
 	}
@@ -293,7 +317,13 @@ public class FTBChunks {
 					if (snapshot.getWorld() instanceof Level) {
 						ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((Level) snapshot.getWorld(), snapshot.getPos()));
 
-						if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), snapshot.getCurrentBlock())) {
+						if (chunk != null) {
+							if (!chunk.canEdit((ServerPlayer) event.getEntity(), snapshot.getCurrentBlock())) {
+								event.setCanceled(true);
+								return;
+							}
+						} else if (FTBChunksConfig.noWilderness) {
+							printNoWildernessMessage(event.getEntity());
 							event.setCanceled(true);
 							return;
 						}
@@ -302,7 +332,12 @@ public class FTBChunks {
 			} else if (event.getWorld() instanceof Level) {
 				ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((Level) event.getWorld(), event.getPos()));
 
-				if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), event.getPlacedBlock())) {
+				if (chunk != null) {
+					if (!chunk.canEdit((ServerPlayer) event.getEntity(), event.getPlacedBlock())) {
+						event.setCanceled(true);
+					}
+				} else if (FTBChunksConfig.noWilderness) {
+					printNoWildernessMessage(event.getEntity());
 					event.setCanceled(true);
 				}
 			}
@@ -320,7 +355,12 @@ public class FTBChunks {
 				fluid = ((BucketItem) event.getEmptyBucket().getItem()).getFluid();
 			}
 
-			if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), fluid.defaultFluidState().createLegacyBlock())) {
+			if (chunk != null) {
+				if (!chunk.canEdit((ServerPlayer) event.getEntity(), fluid.defaultFluidState().createLegacyBlock())) {
+					event.setCanceled(true);
+				}
+			} else if (FTBChunksConfig.noWilderness) {
+				printNoWildernessMessage(event.getEntity());
 				event.setCanceled(true);
 			}
 		}
@@ -331,7 +371,12 @@ public class FTBChunks {
 		if (event.getWorld() instanceof ServerLevel && isValidPlayer(event.getEntity())) {
 			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos((ServerLevel) event.getWorld(), event.getPos()));
 
-			if (chunk != null && !chunk.canEdit((ServerPlayer) event.getEntity(), event.getState())) {
+			if (chunk != null) {
+				if (!chunk.canEdit((ServerPlayer) event.getEntity(), event.getState())) {
+					event.setCanceled(true);
+				}
+			} else if (FTBChunksConfig.noWilderness) {
+				printNoWildernessMessage(event.getEntity());
 				event.setCanceled(true);
 			}
 		}

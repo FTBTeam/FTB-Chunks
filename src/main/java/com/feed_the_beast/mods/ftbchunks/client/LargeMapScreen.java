@@ -295,9 +295,9 @@ public class LargeMapScreen extends GuiBase {
 			MapRegionData data = region.getData();
 
 			if (data != null) {
-				int waterLightAndBiome = data.waterLightAndBiome[regionPanel.blockX & 511 + (regionPanel.blockZ & 511) * 512];
+				int waterLightAndBiome = data.waterLightAndBiome[regionPanel.blockIndex] & 0xFFFF;
 				ResourceKey<Biome> biome = dimension.manager.getBiomeKey(waterLightAndBiome);
-				Block block = dimension.manager.getBlock(data.getBlockIndex(regionPanel.blockX & 511 + (regionPanel.blockZ & 511) * 512));
+				Block block = dimension.manager.getBlock(data.getBlockIndex(regionPanel.blockIndex));
 				coords = coords + " | " + I18n.get("biome." + biome.location().getNamespace() + "." + biome.location().getPath()) + " | " + I18n.get(block.getDescriptionId());
 
 				if ((waterLightAndBiome & (1 << 15)) != 0) {

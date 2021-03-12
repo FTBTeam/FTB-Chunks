@@ -30,6 +30,7 @@ public class RegionMapPanel extends Panel {
 	public int blockX = 0;
 	public int blockY = 0;
 	public int blockZ = 0;
+	public int blockIndex = 0;
 
 	public RegionMapPanel(LargeMapScreen panel) {
 		super(panel);
@@ -159,6 +160,7 @@ public class RegionMapPanel extends Panel {
 		regionZ = (parent.getMouseY() - py) / (double) largeMap.scrollHeight * dy + regionMinZ;
 		blockX = Mth.floor(regionX * 512D);
 		blockZ = Mth.floor(regionZ * 512D);
+		blockIndex = (blockX & 511) + (blockZ & 511) * 512;
 		blockY = 0;
 
 		MapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
@@ -167,7 +169,7 @@ public class RegionMapPanel extends Panel {
 			MapRegionData data = r.getData();
 
 			if (data != null) {
-				blockY = data.height[blockX & 511 + (blockZ & 511) * 512] & 0xFFFF;
+				blockY = data.height[blockIndex] & 0xFFFF;
 			}
 		}
 

@@ -23,7 +23,7 @@ build_dev:
     - ./gradlew clean build publish
   artifacts:
     paths:
-      - builds/libs/*.jar
+      - build/libs/*.jar
   rules:
     - if: '$CI_PROJECT_ID == "138"'
 

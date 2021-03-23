@@ -1,0 +1,42 @@
+image: java:8-jdk
+stages:
+  - build
+  - release
+
+# Build and publish public releases to maven
+build_release:
+  stage: build
+  script:
+    - chmod +x gradlew
+    - ./gradlew clean publish
+  artifacts:
+    paths:
+      - build/libs/*.jar
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_ID == "151"'
+
+# Build development versions
+build_dev:
+  stage: build
+  script:
+    - chmod +x gradlew
+    - ./gradlew clean publish
+  artifacts:
+    paths:
+      - builds/libs/*.jar
+  rules:
+    - if: '$CI_PROJECT_ID == "138"'
+
+# If we're on the public facing repo and there's a commit tag, publish to CurseForge
+curseforge_release:
+  stage: release
+  script:
+    - chmod +x gradlew
+    - ./gradlew curseforgePublish
+  artifacts:
+    paths:
+      - build/libs/*.jar
+  rules:
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_ID == "151"'
+

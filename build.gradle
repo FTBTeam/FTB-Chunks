@@ -89,8 +89,8 @@ jar {
 
 	classifier "dev"
 }
-
-publications {
+publishing {
+	publications {
         library(MavenPublication) {
             artifact(remapJar) {
                 builtBy remapJar

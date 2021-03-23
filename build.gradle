@@ -92,6 +92,7 @@ jar {
 publishing {
 	publications {
         library(MavenPublication) {
+			artifactId = project.archives_base_name
             artifact(remapJar) {
                 builtBy remapJar
             }

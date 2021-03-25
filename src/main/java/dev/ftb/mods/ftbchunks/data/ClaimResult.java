@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.api;
+package dev.ftb.mods.ftbchunks.data;
 
 import javax.annotation.Nullable;
 import java.time.Instant;

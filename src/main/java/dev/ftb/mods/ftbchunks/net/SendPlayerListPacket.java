@@ -2,10 +2,10 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksConfig;
-import dev.ftb.mods.ftbchunks.impl.AllyMode;
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
-import dev.ftb.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import dev.ftb.mods.ftbchunks.impl.KnownFakePlayer;
+import dev.ftb.mods.ftbchunks.data.AllyMode;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.data.KnownFakePlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -83,13 +83,13 @@ public class SendPlayerListPacket {
 	}
 
 	public static void send(ServerPlayer player) {
-		ClaimedChunkPlayerDataImpl self = FTBChunksAPIImpl.manager.getData(player);
+		ClaimedChunkPlayerData self = FTBChunksAPIImpl.manager.getData(player);
 		int allyMode = FTBChunksConfig.allyMode == AllyMode.FORCED_ALL ? 2 : FTBChunksConfig.allyMode == AllyMode.FORCED_NONE ? 3 : 0;
 
 		List<NetPlayer> players = new ArrayList<>();
-		ClaimedChunkPlayerDataImpl server = FTBChunksAPIImpl.manager.getServerData();
+		ClaimedChunkPlayerData server = FTBChunksAPIImpl.manager.getServerData();
 
-		for (ClaimedChunkPlayerDataImpl p : FTBChunksAPIImpl.manager.playerData.values()) {
+		for (ClaimedChunkPlayerData p : FTBChunksAPIImpl.manager.playerData.values()) {
 			if (p == server || p == self) {
 				continue;
 			}

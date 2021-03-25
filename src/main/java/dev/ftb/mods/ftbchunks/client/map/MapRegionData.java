@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.impl.XZ;
+import dev.ftb.mods.ftbchunks.data.XZ;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

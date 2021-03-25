@@ -26,8 +26,8 @@ import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.PlayerHeadTexture;
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.impl.XZ;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
+import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
@@ -93,7 +93,7 @@ public class ChunkScreen extends GuiBase {
 				if (Screen.hasAltDown()) {
 					list.add(new TextComponent(chunk.claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 				} else {
-					list.add(new TextComponent(ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+					list.add(new TextComponent(ClaimedChunkManager.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 				}
 
 				if (chunk.forceLoadedDate != null) {
@@ -102,7 +102,7 @@ public class ChunkScreen extends GuiBase {
 					if (Screen.hasAltDown()) {
 						list.add(new TextComponent(chunk.forceLoadedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 					} else {
-						list.add(new TextComponent(ClaimedChunkManagerImpl.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+						list.add(new TextComponent(ClaimedChunkManager.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 					}
 				}
 			}

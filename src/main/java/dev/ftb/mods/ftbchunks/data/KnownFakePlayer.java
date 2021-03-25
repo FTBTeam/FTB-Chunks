@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.impl;
+package dev.ftb.mods.ftbchunks.data;
 
 import java.util.UUID;
 

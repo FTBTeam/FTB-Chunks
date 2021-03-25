@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
-import dev.ftb.mods.ftbchunks.impl.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPIImpl;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -34,7 +34,7 @@ public class RequestAllyStatusChangePacket {
 	void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
 			if (add) {
-				ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(context.get().getSender());
+				ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(context.get().getSender());
 
 				if (data.allies.contains(uuid)) {
 					data.allies.remove(uuid);
@@ -43,7 +43,7 @@ public class RequestAllyStatusChangePacket {
 					data.save();
 				}
 			} else {
-				ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.playerData.get(uuid);
+				ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.playerData.get(uuid);
 
 				if (data != null && data.allies.remove(context.get().getSender().getUUID())) {
 					data.save();

@@ -1,10 +1,11 @@
-package dev.ftb.mods.ftbchunks.impl;
+package dev.ftb.mods.ftbchunks.data;
 
-import dev.ftb.mods.ftbchunks.api.ChunkDimPos;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkPlayerData;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -20,39 +21,50 @@ import java.util.Date;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkImpl implements ClaimedChunk {
-	public final ClaimedChunkPlayerDataImpl playerData;
+public class ClaimedChunk implements ClaimResult {
+	public final ClaimedChunkPlayerData playerData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
-	public ClaimedChunkGroupImpl group;
+	public ClaimedChunkGroup group;
 	public Instant time;
 
-	public ClaimedChunkImpl(ClaimedChunkPlayerDataImpl p, ChunkDimPos cp) {
+	public ClaimedChunk(ClaimedChunkPlayerData p, ChunkDimPos cp) {
 		playerData = p;
 		pos = cp;
 		forceLoaded = null;
 		time = Instant.now();
 	}
 
-	@Override
-	public ClaimedChunkPlayerDataImpl getPlayerData() {
+	public ClaimedChunkPlayerData getPlayerData() {
 		return playerData;
 	}
 
-	@Override
 	public ChunkDimPos getPos() {
 		return pos;
 	}
 
 	@Nullable
-	@Override
-	public ClaimedChunkGroupImpl getGroup() {
+	public ClaimedChunkGroup getGroup() {
 		return group;
 	}
 
-	@Override
+	public String getGroupID() {
+		ClaimedChunkGroup g = getGroup();
+		return g == null ? "" : g.getId();
+	}
+
 	public Instant getTimeClaimed() {
 		return time;
+	}
+
+	@Override
+	public boolean isSuccess() {
+		return true;
+	}
+
+	public int getColor() {
+		int c = getGroup() == null ? 0 : getGroup().getColorOverride();
+		return c == 0 ? getPlayerData().getColor() : c;
 	}
 
 	@Override
@@ -61,10 +73,13 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		sendUpdateToAll();
 	}
 
-	@Override
 	@Nullable
 	public Instant getForceLoadedTime() {
 		return forceLoaded;
+	}
+
+	public boolean isForceLoaded() {
+		return getForceLoadedTime() != null;
 	}
 
 	@Override
@@ -72,7 +87,6 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		forceLoaded = time;
 	}
 
-	@Override
 	public boolean canEdit(ServerPlayer player, BlockState state) {
 		if (FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false)) {
 			return true;
@@ -86,7 +100,6 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return false;
 	}
 
-	@Override
 	public boolean canInteract(ServerPlayer player, BlockState state) {
 		if (FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false)) {
 			return true;
@@ -100,7 +113,6 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return false;
 	}
 
-	@Override
 	public boolean canRightClickItem(ServerPlayer player, ItemStack item) {
 		if (playerData.canUse(player, playerData.blockInteractMode, false)) {
 			return true;
@@ -117,14 +129,22 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return !FTBChunksAPIImpl.RIGHT_CLICK_BLACKLIST_TAG.contains(item.getItem());
 	}
 
-	@Override
 	public boolean canEntitySpawn(Entity entity) {
 		return true;
 	}
 
-	@Override
 	public boolean allowExplosions() {
 		return false;
+	}
+
+	public Component getDisplayName() {
+		ClaimedChunkGroup group = getGroup();
+
+		if (group != null && group.getCustomName() != null) {
+			return group.getCustomName();
+		}
+
+		return new TextComponent("").append(getPlayerData().getDisplayName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor() & 0xFFFFFF)));
 	}
 
 	public void postSetForceLoaded(boolean load) {

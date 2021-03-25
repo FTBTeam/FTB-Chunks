@@ -1,7 +1,6 @@
-package dev.ftb.mods.ftbchunks.impl;
+package dev.ftb.mods.ftbchunks.data;
 
 import com.google.gson.JsonObject;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkGroup;
 import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
@@ -9,34 +8,30 @@ import javax.annotation.Nullable;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkGroupImpl implements ClaimedChunkGroup {
-	private final ClaimedChunkPlayerDataImpl playerData;
+public class ClaimedChunkGroup {
+	private final ClaimedChunkPlayerData playerData;
 	private final String id;
 	public Component customName;
 
-	public ClaimedChunkGroupImpl(ClaimedChunkPlayerDataImpl p, String i) {
+	public ClaimedChunkGroup(ClaimedChunkPlayerData p, String i) {
 		playerData = p;
 		id = i;
 		customName = null;
 	}
 
-	@Override
-	public ClaimedChunkPlayerDataImpl getPlayerData() {
+	public ClaimedChunkPlayerData getPlayerData() {
 		return playerData;
 	}
 
-	@Override
 	public String getId() {
 		return id;
 	}
 
 	@Nullable
-	@Override
 	public Component getCustomName() {
 		return customName;
 	}
 
-	@Override
 	public int getColorOverride() {
 		return 0;
 	}

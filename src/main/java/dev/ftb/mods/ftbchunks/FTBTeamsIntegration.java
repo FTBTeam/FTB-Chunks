@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks;
 
 import com.mojang.authlib.GameProfile;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 

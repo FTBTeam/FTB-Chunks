@@ -1,5 +1,8 @@
-package dev.ftb.mods.ftbchunks.api;
+package dev.ftb.mods.ftbchunks.event;
 
+import dev.ftb.mods.ftbchunks.data.ClaimResult;
+import dev.ftb.mods.ftbchunks.data.ClaimResults;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;

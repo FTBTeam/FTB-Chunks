@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.api;
+package dev.ftb.mods.ftbchunks.data;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;

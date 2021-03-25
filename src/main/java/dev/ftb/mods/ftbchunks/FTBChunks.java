@@ -4,16 +4,15 @@ import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.GameProfile;
-import dev.ftb.mods.ftbchunks.api.ChunkDimPos;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkImpl;
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkPlayerDataImpl;
-import dev.ftb.mods.ftbchunks.impl.FTBChunksAPIImpl;
-import dev.ftb.mods.ftbchunks.impl.KnownFakePlayer;
-import dev.ftb.mods.ftbchunks.impl.XZ;
+import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.data.KnownFakePlayer;
+import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.integration.kubejs.KubeJSIntegration;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
@@ -124,7 +123,7 @@ public class FTBChunks {
 
 	@SubscribeEvent
 	public void serverAboutToStart(FMLServerAboutToStartEvent event) {
-		FTBChunksAPIImpl.manager = new ClaimedChunkManagerImpl(event.getServer());
+		FTBChunksAPIImpl.manager = new ClaimedChunkManager(event.getServer());
 	}
 
 	@SubscribeEvent
@@ -147,7 +146,7 @@ public class FTBChunks {
 	@SubscribeEvent
 	public void loggedIn(PlayerEvent.PlayerLoggedInEvent event) {
 		final ServerPlayer player = (ServerPlayer) event.getPlayer();
-		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(player);
 
 		if (!data.getName().equals(event.getPlayer().getGameProfile().getName())) {
 			data.profile = new GameProfile(data.getUuid(), event.getPlayer().getGameProfile().getName());
@@ -161,7 +160,7 @@ public class FTBChunks {
 		Date now = new Date();
 		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 
-		for (ClaimedChunkImpl chunk : FTBChunksAPIImpl.manager.claimedChunks.values()) {
+		for (ClaimedChunk chunk : FTBChunksAPIImpl.manager.claimedChunks.values()) {
 			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.playerData.getUuid()), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
 		}
 
@@ -175,7 +174,7 @@ public class FTBChunks {
 
 		for (ClaimedChunk c : data.getClaimedChunks()) {
 			if (c.isForceLoaded()) {
-				ClaimedChunkImpl chunk = FTBChunksAPIImpl.manager.claimedChunks.get(c.getPos());
+				ClaimedChunk chunk = FTBChunksAPIImpl.manager.claimedChunks.get(c.getPos());
 
 				if (chunk != null) {
 					chunk.postSetForceLoaded(true);
@@ -190,13 +189,13 @@ public class FTBChunks {
 	@SubscribeEvent
 	public void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
 		final ServerPlayer player = (ServerPlayer) event.getPlayer();
-		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(player);
 		boolean canChunkLoadOffline = FTBChunksConfig.getChunkLoadOffline(data, player);
 		data.setChunkLoadOffline(canChunkLoadOffline);
 
 		if (!canChunkLoadOffline) {
 			for (ClaimedChunk chunk : data.getClaimedChunks()) {
-				ClaimedChunkImpl c = FTBChunksAPIImpl.manager.claimedChunks.get(chunk.getPos());
+				ClaimedChunk c = FTBChunksAPIImpl.manager.claimedChunks.get(chunk.getPos());
 
 				if (c == null) {
 					return;
@@ -387,7 +386,7 @@ public class FTBChunks {
 		}
 
 		ServerPlayer player = (ServerPlayer) event.getEntity();
-		ClaimedChunkPlayerDataImpl data = FTBChunksAPIImpl.manager.getData(player);
+		ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(player);
 
 		int newX = event.getNewChunkX();
 		int newZ = event.getNewChunkZ();

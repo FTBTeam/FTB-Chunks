@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.impl;
+package dev.ftb.mods.ftbchunks.data;
 
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
@@ -8,15 +8,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunksConfig;
 import dev.ftb.mods.ftbchunks.FTBTeamsIntegration;
-import dev.ftb.mods.ftbchunks.api.ChunkDimPos;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
-import dev.ftb.mods.ftbchunks.api.ClaimResults;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkEvent;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkGroup;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkPlayerData;
-import dev.ftb.mods.ftbchunks.api.PrivacyMode;
+import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.commands.CommandSourceStack;
@@ -48,13 +40,13 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
-	public final ClaimedChunkManagerImpl manager;
+public class ClaimedChunkPlayerData {
+	public final ClaimedChunkManager manager;
 	public final Path file;
 	public boolean shouldSave;
 	public GameProfile profile;
 	public int color;
-	private final Map<String, ClaimedChunkGroupImpl> groups;
+	private final Map<String, ClaimedChunkGroup> groups;
 	public final Set<UUID> allies;
 	public PrivacyMode blockEditMode;
 	public PrivacyMode blockInteractMode;
@@ -68,7 +60,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
 
-	public ClaimedChunkPlayerDataImpl(ClaimedChunkManagerImpl m, Path f, UUID id) {
+	public ClaimedChunkPlayerData(ClaimedChunkManager m, Path f, UUID id) {
 		manager = m;
 		file = f;
 		shouldSave = false;
@@ -91,17 +83,22 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return getName();
 	}
 
-	@Override
 	public ClaimedChunkManager getManager() {
 		return manager;
 	}
 
-	@Override
 	public GameProfile getProfile() {
 		return profile;
 	}
 
-	@Override
+	public UUID getUuid() {
+		return getProfile().getId();
+	}
+
+	public String getName() {
+		return getProfile().getName();
+	}
+
 	public int getColor() {
 		int c = FTBTeamsIntegration.getTeamColor(this);
 
@@ -117,11 +114,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return 0xFF000000 | color;
 	}
 
-	@Override
 	public Collection<ClaimedChunk> getClaimedChunks() {
 		List<ClaimedChunk> list = new ArrayList<>();
 
-		for (ClaimedChunkImpl chunk : manager.claimedChunks.values()) {
+		for (ClaimedChunk chunk : manager.claimedChunks.values()) {
 			if (chunk.playerData == this) {
 				list.add(chunk);
 			}
@@ -130,11 +126,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return list;
 	}
 
-	@Override
 	public Collection<ClaimedChunk> getForceLoadedChunks() {
 		List<ClaimedChunk> list = new ArrayList<>();
 
-		for (ClaimedChunkImpl chunk : manager.claimedChunks.values()) {
+		for (ClaimedChunk chunk : manager.claimedChunks.values()) {
 			if (chunk.playerData == this && chunk.isForceLoaded()) {
 				list.add(chunk);
 			}
@@ -143,16 +138,15 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return list;
 	}
 
-	@Override
-	public ClaimedChunkGroupImpl getGroup(String id) {
+	public ClaimedChunkGroup getGroup(String id) {
 		if (id.isEmpty()) {
 			throw new IllegalArgumentException("Invalid group ID!");
 		}
 
-		ClaimedChunkGroupImpl group = groups.get(id);
+		ClaimedChunkGroup group = groups.get(id);
 
 		if (group == null) {
-			group = new ClaimedChunkGroupImpl(this, id);
+			group = new ClaimedChunkGroup(this, id);
 			groups.put(id, group);
 			save();
 		}
@@ -160,15 +154,13 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return group;
 	}
 
-	@Override
 	public boolean hasGroup(String id) {
 		return groups.containsKey(id);
 	}
 
-	@Override
 	@Nullable
-	public ClaimedChunkGroupImpl removeGroup(String id) {
-		ClaimedChunkGroupImpl g = groups.remove(id);
+	public ClaimedChunkGroup removeGroup(String id) {
+		ClaimedChunkGroup g = groups.remove(id);
 
 		if (g != null) {
 			save();
@@ -177,15 +169,12 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return g;
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
 	public Collection<ClaimedChunkGroup> getGroups() {
-		return (Collection<ClaimedChunkGroup>) (Collection) groups.values();
+		return groups.values();
 	}
 
-	@Override
 	public ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunkImpl chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.claimedChunks.get(pos);
 
 		if (chunk != null) {
 			return ClaimResults.ALREADY_CLAIMED;
@@ -195,7 +184,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
-		chunk = new ClaimedChunkImpl(this, pos);
+		chunk = new ClaimedChunk(this, pos);
 
 		ClaimResult r = new ClaimedChunkEvent.Claim.Check(source, chunk).postAndGetResult();
 
@@ -209,9 +198,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return chunk;
 	}
 
-	@Override
 	public ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunkImpl chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.claimedChunks.get(pos);
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
@@ -243,9 +231,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return chunk;
 	}
 
-	@Override
 	public ClaimResult load(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunkImpl chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.claimedChunks.get(pos);
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
@@ -270,9 +257,8 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return chunk;
 	}
 
-	@Override
 	public ClaimResult unload(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunkImpl chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.claimedChunks.get(pos);
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
@@ -299,7 +285,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return chunk;
 	}
 
-	@Override
 	public void save() {
 		shouldSave = true;
 	}
@@ -308,7 +293,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return p == this || FTBTeamsIntegration.isTeamMember(getProfile(), p.getProfile());
 	}
 
-	@Override
 	public boolean isExplicitAlly(ClaimedChunkPlayerData p) {
 		if (getUuid().equals(p.getUuid())) {
 			return true;
@@ -323,12 +307,10 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return getName().equals(p.getName());
 	}
 
-	@Override
 	public boolean isInAllyList(UUID id) {
 		return allies.contains(id);
 	}
 
-	@Override
 	public boolean isAlly(ClaimedChunkPlayerData p) {
 		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p.getUuid())) {
 			return true;
@@ -360,7 +342,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 
 		JsonObject groupJson = new JsonObject();
 
-		for (ClaimedChunkGroupImpl group : groups.values()) {
+		for (ClaimedChunkGroup group : groups.values()) {
 			groupJson.add(group.getId(), group.toJson());
 		}
 
@@ -470,7 +452,7 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 					int x = o.get("x").getAsInt();
 					int z = o.get("z").getAsInt();
 
-					ClaimedChunkImpl chunk = new ClaimedChunkImpl(this, new ChunkDimPos(ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(entry.getKey())), x, z));
+					ClaimedChunk chunk = new ClaimedChunk(this, new ChunkDimPos(ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(entry.getKey())), x, z));
 
 					if (o.has("time")) {
 						chunk.time = Instant.parse(o.get("time").getAsString());
@@ -495,7 +477,6 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		}
 	}
 
-	@Override
 	public Component getDisplayName() {
 		Component component = FTBTeamsIntegration.getTeamName(this);
 
@@ -506,17 +487,14 @@ public class ClaimedChunkPlayerDataImpl implements ClaimedChunkPlayerData {
 		return new TextComponent(getName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor() & 0xFFFFFF)));
 	}
 
-	@Override
 	public int getExtraClaimChunks() {
 		return extraClaimChunks;
 	}
 
-	@Override
 	public int getExtraForceLoadChunks() {
 		return extraForceLoadChunks;
 	}
 
-	@Override
 	public boolean chunkLoadOffline() {
 		return chunkLoadOffline;
 	}

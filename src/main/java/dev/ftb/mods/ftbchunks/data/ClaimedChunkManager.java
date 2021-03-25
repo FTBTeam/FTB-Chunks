@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.impl;
+package dev.ftb.mods.ftbchunks.data;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -7,9 +7,7 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.ChunkDimPos;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
+import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
@@ -29,20 +27,20 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
+public class ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = new LevelResource("data/ftbchunks");
 
 	public final MinecraftServer server;
 	public UUID serverId;
-	public final Map<UUID, ClaimedChunkPlayerDataImpl> playerData;
-	public final Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
+	public final Map<UUID, ClaimedChunkPlayerData> playerData;
+	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
 	public final Map<UUID, KnownFakePlayer> knownFakePlayers;
 	public boolean saveFakePlayers;
 	public Path dataDirectory;
 	public Path localDirectory;
 	private boolean inited;
 
-	public ClaimedChunkManagerImpl(MinecraftServer s) {
+	public ClaimedChunkManager(MinecraftServer s) {
 		server = s;
 		serverId = UUID.randomUUID();
 		playerData = new HashMap<>();
@@ -97,7 +95,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		loadPlayerData();
 		int forceLoaded = 0;
 
-		for (ClaimedChunkImpl chunk : claimedChunks.values()) {
+		for (ClaimedChunk chunk : claimedChunks.values()) {
 			if (chunk.isForceLoaded() && chunk.getPlayerData().chunkLoadOffline()) {
 				forceLoaded++;
 				chunk.postSetForceLoaded(true);
@@ -109,7 +107,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	public void serverSaved() {
-		for (ClaimedChunkPlayerDataImpl data : playerData.values()) {
+		for (ClaimedChunkPlayerData data : playerData.values()) {
 			if (data.shouldSave) {
 				try (Writer writer = Files.newBufferedWriter(data.file)) {
 					FTBChunks.GSON.toJson(data.toJson(), writer);
@@ -154,7 +152,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 					UUID id = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
 
-					ClaimedChunkPlayerDataImpl data = new ClaimedChunkPlayerDataImpl(this, path, id);
+					ClaimedChunkPlayerData data = new ClaimedChunkPlayerData(this, path, id);
 					data.fromJson(json);
 					playerData.put(id, data);
 				} catch (Exception ex) {
@@ -188,22 +186,19 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 	}
 
-	@Override
 	public MinecraftServer getMinecraftServer() {
 		return server;
 	}
 
-	@Override
 	public UUID getServerId() {
 		return serverId;
 	}
 
-	@Override
-	public ClaimedChunkPlayerDataImpl getData(UUID id, String name) {
-		ClaimedChunkPlayerDataImpl data = playerData.get(id);
+	public ClaimedChunkPlayerData getData(UUID id, String name) {
+		ClaimedChunkPlayerData data = playerData.get(id);
 
 		if (data == null) {
-			data = new ClaimedChunkPlayerDataImpl(this, dataDirectory.resolve(UUIDTypeAdapter.fromUUID(id) + "-" + name + ".json"), id);
+			data = new ClaimedChunkPlayerData(this, dataDirectory.resolve(UUIDTypeAdapter.fromUUID(id) + "-" + name + ".json"), id);
 			data.profile = new GameProfile(id, name);
 			playerData.put(id, data);
 			data.save();
@@ -212,26 +207,21 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		return data;
 	}
 
-	@Override
-	public ClaimedChunkPlayerDataImpl getData(ServerPlayer player) {
+	public ClaimedChunkPlayerData getData(ServerPlayer player) {
 		return getData(player.getUUID(), player.getGameProfile().getName());
 	}
 
-	@Override
-	public ClaimedChunkPlayerDataImpl getServerData() {
-		return getData(SERVER_PLAYER_ID, "Server");
+	public ClaimedChunkPlayerData getServerData() {
+		return getData(Util.NIL_UUID, "Server");
 	}
 
-	@Override
 	@Nullable
-	public ClaimedChunkImpl getChunk(ChunkDimPos pos) {
+	public ClaimedChunk getChunk(ChunkDimPos pos) {
 		return claimedChunks.get(pos);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
 	public Collection<ClaimedChunk> getAllClaimedChunks() {
-		return (Collection<ClaimedChunk>) (Collection) claimedChunks.values();
+		return claimedChunks.values();
 	}
 
 	public static String prettyTimeString(long seconds) {

@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks;
 
-import dev.ftb.mods.ftbchunks.api.ChunkDimPos;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkPlayerData;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.impl.AllyMode;
+import dev.ftb.mods.ftbchunks.data.AllyMode;
+import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

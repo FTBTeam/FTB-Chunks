@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
-import dev.ftb.mods.ftbchunks.impl.XZ;
+import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.impl.ClaimedChunkImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -27,7 +27,7 @@ public class SendChunkPacket {
 		public long relativeTimeForceLoaded;
 		public boolean forceLoaded;
 
-		public SingleChunk(Date nowd, int _x, int _z, @Nullable ClaimedChunkImpl claimedChunk) {
+		public SingleChunk(Date nowd, int _x, int _z, @Nullable ClaimedChunk claimedChunk) {
 			x = _x;
 			z = _z;
 

@@ -1,0 +1,52 @@
+image: java:8-jdk
+stages:
+  - build
+  - release
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+
+cache:
+  paths:
+     - .gradle/wrapper
+     - .gradle/caches
+     - build
+
+# Build and publish public releases to maven
+build_release:
+  stage: build
+  script:
+    - rm -rf build/libs
+    - chmod +x gradlew
+    - ./gradlew build publish
+  artifacts:
+    paths:
+      - build/libs/*.jar
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_ROOT_NAMESPACE == "ftb-public"'
+
+# Build development versions
+build_dev:
+  stage: build
+  script:
+    - rm -rf build/libs
+    - chmod +x gradlew
+    - ./gradlew build publish
+  artifacts:
+    paths:
+      - build/libs/*.jar
+  rules:
+    - if: '$CI_PROJECT_ROOT_NAMESPACE != "ftb-public"'
+
+# If we're on the public facing repo and there's a commit tag, publish to CurseForge
+curseforge_release:
+  stage: release
+  script:
+    - chmod +x gradlew
+    - ./gradlew curseforge
+  rules:
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG && $CI_PROJECT_ROOT_NAMESPACE == "ftb-public"'
+  needs:
+    - job: build_release
+      artifacts: true

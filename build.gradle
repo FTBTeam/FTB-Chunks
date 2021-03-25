@@ -36,6 +36,7 @@ loom {
 
 repositories {
 	maven { url "https://www.cursemaven.com" }
+	maven { url "https://maven.latvian.dev" }
 }
 
 dependencies {
@@ -46,7 +47,8 @@ dependencies {
 	modCompile "curse.maven:architectury-fabric-419697:${arch_file}"
 	modCompile "curse.maven:rhino-416294:${rhino_file}"
 	modCompile "curse.maven:ftb-gui-library-404465:${ftbguilibrary_file}"
-	modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
+	// modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
+	modCompile "dev.ftb.mods:ftb-teams-forge:1605.2.0-build.20"
 	modCompile "curse.maven:ftb-ranks-314905:${ftbranks_file}"
 }
 
@@ -124,8 +126,8 @@ if (ENV.CURSEFORGE_KEY) {
 			mainArtifact(remapJar.archivePath)
 			relations {
 				requiredDependency 'ftb-gui-library'
+				requiredDependency 'ftb-teams'
 				optionalDependency 'ftb-ranks'
-				optionalDependency 'ftb-teams'
 				optionalDependency 'kubejs'
 			}
 			changelog = getGitChangelog

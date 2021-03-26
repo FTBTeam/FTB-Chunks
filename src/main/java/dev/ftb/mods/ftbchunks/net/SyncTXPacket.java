@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -43,11 +43,11 @@ public class SyncTXPacket {
 	void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
 			ServerPlayer p = context.get().getSender();
-			ClaimedChunkPlayerData pd = FTBChunksAPIImpl.manager.getData(p);
+			ClaimedChunkPlayerData pd = FTBChunksAPI.getManager().getData(p);
 
 			for (ServerPlayer p1 : p.getServer().getPlayerList().getPlayers()) {
 				if (p1 != p) {
-					if (pd.isAlly(FTBChunksAPIImpl.manager.getData(p))) {
+					if (pd.isAlly(FTBChunksAPI.getManager().getData(p))) {
 						FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> p1), new SyncRXPacket(key, offset, total, data));
 					}
 				}

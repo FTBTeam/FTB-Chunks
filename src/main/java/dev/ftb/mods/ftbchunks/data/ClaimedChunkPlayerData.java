@@ -1,26 +1,23 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunksConfig;
-import dev.ftb.mods.ftbchunks.FTBTeamsIntegration;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -45,7 +42,6 @@ public class ClaimedChunkPlayerData {
 	public final Path file;
 	public boolean shouldSave;
 	public GameProfile profile;
-	public int color;
 	private final Map<String, ClaimedChunkGroup> groups;
 	public final Set<UUID> allies;
 	public PrivacyMode blockEditMode;
@@ -65,7 +61,6 @@ public class ClaimedChunkPlayerData {
 		file = f;
 		shouldSave = false;
 		profile = new GameProfile(id, "");
-		color = 0;
 		groups = new HashMap<>();
 		allies = new HashSet<>();
 		blockEditMode = PrivacyMode.ALLIES;
@@ -100,18 +95,8 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public int getColor() {
-		int c = FTBTeamsIntegration.getTeamColor(this);
-
-		if (c != 0) {
-			return 0xFF000000 | c;
-		}
-
-		if (color == 0) {
-			color = Mth.hsvToRgb(MathUtils.RAND.nextFloat(), 0.65F, 1F);
-			save();
-		}
-
-		return 0xFF000000 | color;
+		Team team = FTBTeamsAPI.getManager().getPlayerTeam(getUuid());
+		return team == null ? 0xFFFFFF : team.getColor();
 	}
 
 	public Collection<ClaimedChunk> getClaimedChunks() {
@@ -265,7 +250,7 @@ public class ClaimedChunkPlayerData {
 		} else if (chunk.playerData != this
 				&& !source.hasPermission(2)
 				&& !source.getServer().isSingleplayer()
-				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(FTBChunksAPIImpl.manager.getData((ServerPlayer) source.getEntity())))
+				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(manager.getData((ServerPlayer) source.getEntity())))
 		) {
 			return ClaimResults.NOT_OWNER;
 		} else if (!chunk.isForceLoaded()) {
@@ -290,7 +275,18 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public boolean isTeamMember(ClaimedChunkPlayerData p) {
-		return p == this || FTBTeamsIntegration.isTeamMember(getProfile(), p.getProfile());
+		if (p == this) {
+			return true;
+		}
+
+		Team team1 = FTBTeamsAPI.getManager().getPlayerTeam(getUuid());
+
+		if (team1 != null) {
+			Team team2 = FTBTeamsAPI.getManager().getPlayerTeam(p.getUuid());
+			return team1.equals(team2);
+		}
+
+		return false;
 	}
 
 	public boolean isExplicitAlly(ClaimedChunkPlayerData p) {
@@ -300,7 +296,7 @@ public class ClaimedChunkPlayerData {
 			return true;
 		} else if (isTeamMember(p)) {
 			return true;
-		} else if (isInAllyList(p.getUuid()) && FTBChunksAPIImpl.manager.knownFakePlayers.containsKey(p.getUuid())) {
+		} else if (isInAllyList(p.getUuid()) && manager.knownFakePlayers.containsKey(p.getUuid())) {
 			return true;
 		}
 
@@ -327,7 +323,7 @@ public class ClaimedChunkPlayerData {
 		/* } else if (p.getServer().isSingleplayer()) {
 			return true; */
 		} else if (mode == PrivacyMode.ALLIES) {
-			ClaimedChunkPlayerData data = FTBChunksAPIImpl.manager.getData(p);
+			ClaimedChunkPlayerData data = manager.getData(p);
 			return explicit ? isExplicitAlly(data) : isAlly(data);
 		}
 
@@ -338,7 +334,6 @@ public class ClaimedChunkPlayerData {
 		JsonObject json = new JsonObject();
 		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(getUuid()));
 		json.addProperty("name", getName());
-		json.addProperty("color", String.format("#%06X", 0xFFFFFF & color));
 
 		JsonObject groupJson = new JsonObject();
 
@@ -398,12 +393,6 @@ public class ClaimedChunkPlayerData {
 
 	public void fromJson(JsonObject json) {
 		profile = new GameProfile(getUuid(), json.get("name").getAsString());
-		color = 0;
-
-		try {
-			color = Integer.decode(json.get("color").getAsString());
-		} catch (Exception ex) {
-		}
 
 		if (json.has("groups")) {
 			for (Map.Entry<String, JsonElement> entry : json.get("groups").getAsJsonObject().entrySet()) {
@@ -478,13 +467,8 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public Component getDisplayName() {
-		Component component = FTBTeamsIntegration.getTeamName(this);
-
-		if (component != null) {
-			return component;
-		}
-
-		return new TextComponent(getName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor() & 0xFFFFFF)));
+		Team team = FTBTeamsAPI.getManager().getPlayerTeam(getUuid());
+		return team == null ? new TextComponent(getName()) : team.getName();
 	}
 
 	public int getExtraClaimChunks() {

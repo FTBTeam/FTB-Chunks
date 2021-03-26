@@ -148,7 +148,7 @@ public class FTBChunksConfig {
 
 	public static boolean patchChunkLoading(ServerLevel world, ChunkPos pos) {
 		if (patchChunkLoading) {
-			ClaimedChunk chunk = FTBChunksAPI.INSTANCE.getManager().getChunk(new ChunkDimPos(world.dimension(), pos));
+			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(world.dimension(), pos));
 			return chunk != null && chunk.isForceLoaded();
 		}
 

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
@@ -49,10 +49,10 @@ public class SendVisiblePlayerListPacket {
 	public static void sendAll() {
 		List<VisiblePlayerListItem> playerList = new ArrayList<>();
 
-		for (ServerPlayer player : FTBChunksAPIImpl.manager.server.getPlayerList().getPlayers()) {
+		for (ServerPlayer player : FTBChunksAPI.getManager().server.getPlayerList().getPlayers()) {
 			VisiblePlayerListItem item = new VisiblePlayerListItem();
 			item.player = player;
-			item.data = FTBChunksAPIImpl.manager.getData(player);
+			item.data = FTBChunksAPI.getManager().getData(player);
 			item.location = new PlayerLocation(player);
 			playerList.add(item);
 		}

@@ -54,7 +54,7 @@ public class RequestChunkChangePacket {
 		context.get().enqueueWork(() -> {
 			ServerPlayer player = context.get().getSender();
 			CommandSourceStack source = player.createCommandSourceStack();
-			ClaimedChunkPlayerData data = FTBChunksAPI.INSTANCE.getManager().getData(player);
+			ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
 			Consumer<XZ> consumer;
 			Instant time = Instant.now();
 

@@ -4,7 +4,7 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksConfig;
 import dev.ftb.mods.ftbchunks.data.AllyMode;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.KnownFakePlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -83,18 +83,18 @@ public class SendPlayerListPacket {
 	}
 
 	public static void send(ServerPlayer player) {
-		ClaimedChunkPlayerData self = FTBChunksAPIImpl.manager.getData(player);
+		ClaimedChunkPlayerData self = FTBChunksAPI.getManager().getData(player);
 		int allyMode = FTBChunksConfig.allyMode == AllyMode.FORCED_ALL ? 2 : FTBChunksConfig.allyMode == AllyMode.FORCED_NONE ? 3 : 0;
 
 		List<NetPlayer> players = new ArrayList<>();
-		ClaimedChunkPlayerData server = FTBChunksAPIImpl.manager.getServerData();
+		ClaimedChunkPlayerData server = FTBChunksAPI.getManager().getServerData();
 
-		for (ClaimedChunkPlayerData p : FTBChunksAPIImpl.manager.playerData.values()) {
+		for (ClaimedChunkPlayerData p : FTBChunksAPI.getManager().playerData.values()) {
 			if (p == server || p == self) {
 				continue;
 			}
 
-			if (FTBChunksAPIImpl.manager.knownFakePlayers.containsKey(p.getUuid())) {
+			if (FTBChunksAPI.getManager().knownFakePlayers.containsKey(p.getUuid())) {
 				continue;
 			}
 
@@ -111,7 +111,7 @@ public class SendPlayerListPacket {
 			players.add(new NetPlayer(p.getUuid(), p.getName(), flags));
 		}
 
-		for (KnownFakePlayer p : FTBChunksAPIImpl.manager.knownFakePlayers.values()) {
+		for (KnownFakePlayer p : FTBChunksAPI.getManager().knownFakePlayers.values()) {
 			players.add(new NetPlayer(p.uuid, p.name, NetPlayer.FAKE | (p.banned ? NetPlayer.BANNED : 0) | (self.allies.contains(p.uuid) ? NetPlayer.ALLY : 0)));
 		}
 

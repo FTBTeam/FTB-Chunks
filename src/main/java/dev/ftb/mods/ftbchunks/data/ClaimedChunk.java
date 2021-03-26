@@ -88,7 +88,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean canEdit(ServerPlayer player, BlockState state) {
-		if (FTBChunksAPIImpl.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false)) {
+		if (FTBChunksAPI.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false)) {
 			return true;
 		}
 
@@ -101,7 +101,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean canInteract(ServerPlayer player, BlockState state) {
-		if (FTBChunksAPIImpl.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false)) {
+		if (FTBChunksAPI.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false)) {
 			return true;
 		}
 
@@ -126,7 +126,7 @@ public class ClaimedChunk implements ClaimResult {
 			}
 		}
 
-		return !FTBChunksAPIImpl.RIGHT_CLICK_BLACKLIST_TAG.contains(item.getItem());
+		return !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(item.getItem());
 	}
 
 	public boolean canEntitySpawn(Entity entity) {
@@ -144,7 +144,7 @@ public class ClaimedChunk implements ClaimResult {
 			return group.getCustomName();
 		}
 
-		return new TextComponent("").append(getPlayerData().getDisplayName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor() & 0xFFFFFF)));
+		return new TextComponent("").append(getPlayerData().getDisplayName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor())));
 	}
 
 	public void postSetForceLoaded(boolean load) {

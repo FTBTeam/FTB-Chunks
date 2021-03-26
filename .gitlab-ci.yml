@@ -23,7 +23,8 @@ build_release:
     paths:
       - build/libs/*.jar
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_PROJECT_ROOT_NAMESPACE == "ftb-public"'
+    - if: '$CI_PROJECT_ROOT_NAMESPACE == "ftb-public"'
+      when: manual
 
 # Build development versions
 build_dev:
@@ -45,8 +46,7 @@ curseforge_release:
     - chmod +x gradlew
     - ./gradlew curseforge
   rules:
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_TAG && $CI_PROJECT_ROOT_NAMESPACE == "ftb-public"'
+    - if: '$CI_PROJECT_ROOT_NAMESPACE == "ftb-public"'
   needs:
     - job: build_release
       artifacts: true

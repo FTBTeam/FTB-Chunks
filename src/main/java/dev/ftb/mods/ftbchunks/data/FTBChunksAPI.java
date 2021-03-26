@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,5 +38,9 @@ public class FTBChunksAPI {
 
 	public static ClaimResult claimAsServer(UUID id, ResourceKey<Level> dimension, ChunkPos pos, boolean checkOnly) {
 		return getManager().getData(id, "Server").claim(getManager().server.createCommandSourceStack(), new ChunkDimPos(dimension, pos), checkOnly);
+	}
+
+	public static void syncPlayer(ServerPlayer player) {
+		SendGeneralDataPacket.send(getManager().getData(player), player);
 	}
 }

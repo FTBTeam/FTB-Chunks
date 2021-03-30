@@ -47,7 +47,7 @@ public class SyncTXPacket {
 
 			for (ServerPlayer p1 : p.getServer().getPlayerList().getPlayers()) {
 				if (p1 != p) {
-					if (pd.isAlly(FTBChunksAPI.getManager().getData(p))) {
+					if (pd.isAlly(p.getUUID())) {
 						FTBChunksNet.MAIN.send(PacketDistributor.PLAYER.with(() -> p1), new SyncRXPacket(key, offset, total, data));
 					}
 				}

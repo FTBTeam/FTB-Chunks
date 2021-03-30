@@ -25,7 +25,6 @@ public class ClaimedChunk implements ClaimResult {
 	public final ClaimedChunkPlayerData playerData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
-	public ClaimedChunkGroup group;
 	public Instant time;
 
 	public ClaimedChunk(ClaimedChunkPlayerData p, ChunkDimPos cp) {
@@ -43,16 +42,6 @@ public class ClaimedChunk implements ClaimResult {
 		return pos;
 	}
 
-	@Nullable
-	public ClaimedChunkGroup getGroup() {
-		return group;
-	}
-
-	public String getGroupID() {
-		ClaimedChunkGroup g = getGroup();
-		return g == null ? "" : g.getId();
-	}
-
 	public Instant getTimeClaimed() {
 		return time;
 	}
@@ -63,8 +52,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public int getColor() {
-		int c = getGroup() == null ? 0 : getGroup().getColorOverride();
-		return c == 0 ? getPlayerData().getColor() : c;
+		return getPlayerData().getColor();
 	}
 
 	@Override
@@ -138,12 +126,6 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public Component getDisplayName() {
-		ClaimedChunkGroup group = getGroup();
-
-		if (group != null && group.getCustomName() != null) {
-			return group.getCustomName();
-		}
-
 		return new TextComponent("").append(getPlayerData().getDisplayName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor())));
 	}
 

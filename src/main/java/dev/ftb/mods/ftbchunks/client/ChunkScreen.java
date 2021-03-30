@@ -31,7 +31,6 @@ import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
-import dev.ftb.mods.ftbchunks.net.RequestPlayerListPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -160,7 +159,7 @@ public class ChunkScreen extends GuiBase {
 		addAll(chunkButtons);
 		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket(player.xChunk - FTBChunks.TILE_OFFSET, player.zChunk - FTBChunks.TILE_OFFSET, player.xChunk + FTBChunks.TILE_OFFSET, player.zChunk + FTBChunks.TILE_OFFSET));
 		add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.large_map"), GuiIcons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
-		add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())).setPosAndSize(1, 19, 16, 16));
+		// add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (simpleButton, mouseButton) -> {}).setPosAndSize(1, 19, 16, 16));
 	}
 
 	@Override

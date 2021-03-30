@@ -6,7 +6,6 @@ import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
 import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendPlayerListPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import net.minecraft.server.level.ServerLevel;
 
@@ -27,9 +26,6 @@ public class FTBChunksCommon {
 	}
 
 	public void updateAllChunks(SendAllChunksPacket packet) {
-	}
-
-	public void openPlayerList(SendPlayerListPacket packet) {
 	}
 
 	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet) {

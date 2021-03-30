@@ -48,7 +48,7 @@ dependencies {
 	modCompile "curse.maven:rhino-416294:${rhino_file}"
 	modCompile "curse.maven:ftb-gui-library-404465:${ftbguilibrary_file}"
 	// modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
-	modCompile "dev.ftb.mods:ftb-teams-forge:1605.2.0-build.21"
+	modCompile "dev.ftb.mods:ftb-teams-forge:1605.2.0-build.23"
 	modCompile "curse.maven:ftb-ranks-314905:${ftbranks_file}"
 }
 

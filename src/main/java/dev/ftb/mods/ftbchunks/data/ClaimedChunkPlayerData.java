@@ -21,17 +21,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -42,8 +38,6 @@ public class ClaimedChunkPlayerData {
 	public final Path file;
 	public boolean shouldSave;
 	public GameProfile profile;
-	private final Map<String, ClaimedChunkGroup> groups;
-	public final Set<UUID> allies;
 	public PrivacyMode blockEditMode;
 	public PrivacyMode blockInteractMode;
 	public PrivacyMode minimapMode;
@@ -52,6 +46,7 @@ public class ClaimedChunkPlayerData {
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
 	public boolean bypassProtection;
+	public boolean allowFakePlayers;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -61,8 +56,6 @@ public class ClaimedChunkPlayerData {
 		file = f;
 		shouldSave = false;
 		profile = new GameProfile(id, "");
-		groups = new HashMap<>();
-		allies = new HashSet<>();
 		blockEditMode = PrivacyMode.ALLIES;
 		blockInteractMode = PrivacyMode.ALLIES;
 		minimapMode = PrivacyMode.ALLIES;
@@ -71,6 +64,7 @@ public class ClaimedChunkPlayerData {
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
 		bypassProtection = false;
+		allowFakePlayers = true;
 	}
 
 	@Override
@@ -121,41 +115,6 @@ public class ClaimedChunkPlayerData {
 		}
 
 		return list;
-	}
-
-	public ClaimedChunkGroup getGroup(String id) {
-		if (id.isEmpty()) {
-			throw new IllegalArgumentException("Invalid group ID!");
-		}
-
-		ClaimedChunkGroup group = groups.get(id);
-
-		if (group == null) {
-			group = new ClaimedChunkGroup(this, id);
-			groups.put(id, group);
-			save();
-		}
-
-		return group;
-	}
-
-	public boolean hasGroup(String id) {
-		return groups.containsKey(id);
-	}
-
-	@Nullable
-	public ClaimedChunkGroup removeGroup(String id) {
-		ClaimedChunkGroup g = groups.remove(id);
-
-		if (g != null) {
-			save();
-		}
-
-		return g;
-	}
-
-	public Collection<ClaimedChunkGroup> getGroups() {
-		return groups.values();
 	}
 
 	public ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
@@ -250,7 +209,7 @@ public class ClaimedChunkPlayerData {
 		} else if (chunk.playerData != this
 				&& !source.hasPermission(2)
 				&& !source.getServer().isSingleplayer()
-				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(manager.getData((ServerPlayer) source.getEntity())))
+				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(source.getEntity().getUUID()))
 		) {
 			return ClaimResults.NOT_OWNER;
 		} else if (!chunk.isForceLoaded()) {
@@ -274,41 +233,42 @@ public class ClaimedChunkPlayerData {
 		shouldSave = true;
 	}
 
-	public boolean isTeamMember(ClaimedChunkPlayerData p) {
-		if (p == this) {
+	public boolean isTeamMember(UUID p) {
+		if (p.equals(getUuid())) {
 			return true;
 		}
 
 		Team team1 = FTBTeamsAPI.getManager().getPlayerTeam(getUuid());
 
 		if (team1 != null) {
-			Team team2 = FTBTeamsAPI.getManager().getPlayerTeam(p.getUuid());
+			Team team2 = FTBTeamsAPI.getManager().getPlayerTeam(p);
 			return team1.equals(team2);
 		}
 
 		return false;
 	}
 
-	public boolean isExplicitAlly(ClaimedChunkPlayerData p) {
-		if (getUuid().equals(p.getUuid())) {
-			return true;
-		} else if (isInAllyList(p.getUuid()) && p.isInAllyList(getUuid())) {
-			return true;
-		} else if (isTeamMember(p)) {
-			return true;
-		} else if (isInAllyList(p.getUuid()) && manager.knownFakePlayers.containsKey(p.getUuid())) {
+	public boolean isExplicitAlly(UUID p) {
+		if (getUuid().equals(p)) {
 			return true;
 		}
 
-		return getName().equals(p.getName());
+		Team team1 = FTBTeamsAPI.getPlayerTeam(getUuid());
+
+		if (team1 != null) {
+			if (team1.isMember(p)) {
+				return true;
+			}
+
+			Team team2 = FTBTeamsAPI.getPlayerTeam(p);
+			return team2 != null && team1.isAlly(p) && team2.isAlly(getUuid());
+		}
+
+		return false;
 	}
 
-	public boolean isInAllyList(UUID id) {
-		return allies.contains(id);
-	}
-
-	public boolean isAlly(ClaimedChunkPlayerData p) {
-		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p.getUuid())) {
+	public boolean isAlly(UUID p) {
+		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p)) {
 			return true;
 		} else if (FTBChunksConfig.allyMode == AllyMode.FORCED_NONE) {
 			return false;
@@ -320,36 +280,22 @@ public class ClaimedChunkPlayerData {
 	public boolean canUse(ServerPlayer p, PrivacyMode mode, boolean explicit) {
 		if (mode == PrivacyMode.PUBLIC) {
 			return true;
-		/* } else if (p.getServer().isSingleplayer()) {
-			return true; */
 		} else if (mode == PrivacyMode.ALLIES) {
-			ClaimedChunkPlayerData data = manager.getData(p);
-			return explicit ? isExplicitAlly(data) : isAlly(data);
+			if (p instanceof FakePlayer) {
+				return allowFakePlayers;
+			}
+
+			return explicit ? isExplicitAlly(p.getUUID()) : isAlly(p.getUUID());
 		}
 
-		return false;
+		Team team = FTBTeamsAPI.getPlayerTeam(getUuid());
+		return team != null && team.isMember(p.getUUID());
 	}
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(getUuid()));
 		json.addProperty("name", getName());
-
-		JsonObject groupJson = new JsonObject();
-
-		for (ClaimedChunkGroup group : groups.values()) {
-			groupJson.add(group.getId(), group.toJson());
-		}
-
-		json.add("groups", groupJson);
-
-		JsonArray alliesJson = new JsonArray();
-
-		for (UUID ally : allies) {
-			alliesJson.add(UUIDTypeAdapter.fromUUID(ally));
-		}
-
-		json.add("allies", alliesJson);
 
 		json.addProperty("block_edit_mode", blockEditMode.name);
 		json.addProperty("block_interact_mode", blockInteractMode.name);
@@ -358,6 +304,7 @@ public class ClaimedChunkPlayerData {
 		json.addProperty("extra_claim_chunks", extraClaimChunks);
 		json.addProperty("extra_force_load_chunks", extraForceLoadChunks);
 		json.addProperty("chunk_load_offline", chunkLoadOffline);
+		json.addProperty("allow_fake_players", allowFakePlayers);
 
 		JsonObject chunksJson = new JsonObject();
 
@@ -379,10 +326,6 @@ public class ClaimedChunkPlayerData {
 				chunkJson.addProperty("force_loaded", chunk.getForceLoadedTime().toString());
 			}
 
-			if (chunk.getGroup() != null) {
-				chunkJson.addProperty("group", chunk.getGroup().getId());
-			}
-
 			e.getAsJsonArray().add(chunkJson);
 		}
 
@@ -393,18 +336,6 @@ public class ClaimedChunkPlayerData {
 
 	public void fromJson(JsonObject json) {
 		profile = new GameProfile(getUuid(), json.get("name").getAsString());
-
-		if (json.has("groups")) {
-			for (Map.Entry<String, JsonElement> entry : json.get("groups").getAsJsonObject().entrySet()) {
-				getGroup(entry.getKey()).fromJson(entry.getValue().getAsJsonObject());
-			}
-		}
-
-		if (json.has("allies")) {
-			for (JsonElement e : json.get("allies").getAsJsonArray()) {
-				allies.add(UUIDTypeAdapter.fromString(e.getAsString()));
-			}
-		}
 
 		if (json.has("block_edit_mode")) {
 			blockEditMode = PrivacyMode.get(json.get("block_edit_mode").getAsString());
@@ -434,6 +365,10 @@ public class ClaimedChunkPlayerData {
 			chunkLoadOffline = json.get("chunk_load_offline").getAsBoolean();
 		}
 
+		if (json.has("allow_fake_players")) {
+			allowFakePlayers = json.get("allow_fake_players").getAsBoolean();
+		}
+
 		if (json.has("chunks")) {
 			for (Map.Entry<String, JsonElement> entry : json.get("chunks").getAsJsonObject().entrySet()) {
 				for (JsonElement e : entry.getValue().getAsJsonArray()) {
@@ -454,10 +389,6 @@ public class ClaimedChunkPlayerData {
 						} else {
 							chunk.forceLoaded = Instant.parse(o.get("force_loaded").getAsString());
 						}
-					}
-
-					if (o.has("group")) {
-						chunk.group = getGroup(o.get("group").getAsString());
 					}
 
 					manager.claimedChunks.put(chunk.pos, chunk);

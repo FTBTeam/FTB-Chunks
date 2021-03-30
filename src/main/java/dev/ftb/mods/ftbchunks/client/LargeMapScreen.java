@@ -24,7 +24,6 @@ import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
-import dev.ftb.mods.ftbchunks.net.RequestPlayerListPacket;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -104,7 +103,7 @@ public class LargeMapScreen extends GuiBase {
 		}));
 		 */
 
-		add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> FTBChunksNet.MAIN.sendToServer(new RequestPlayerListPacket())));
+		// add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
 		add(waypointsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
 			ConfigString name = new ConfigString();
 			new GuiEditConfigFromString<>(name, set -> {
@@ -149,7 +148,7 @@ public class LargeMapScreen extends GuiBase {
 	@Override
 	public void alignWidgets() {
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
-		alliesButton.setPosAndSize(1, 19, 16, 16);
+		// alliesButton.setPosAndSize(1, 19, 16, 16);
 		waypointsButton.setPosAndSize(1, 37, 16, 16);
 		syncButton.setPosAndSize(1, 55, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);

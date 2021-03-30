@@ -1,8 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
@@ -34,8 +32,6 @@ public class ClaimedChunkManager {
 	public UUID serverId;
 	public final Map<UUID, ClaimedChunkPlayerData> playerData;
 	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
-	public final Map<UUID, KnownFakePlayer> knownFakePlayers;
-	public boolean saveFakePlayers;
 	public Path dataDirectory;
 	public Path localDirectory;
 	private boolean inited;
@@ -45,8 +41,6 @@ public class ClaimedChunkManager {
 		serverId = UUID.randomUUID();
 		playerData = new HashMap<>();
 		claimedChunks = new HashMap<>();
-		knownFakePlayers = new HashMap<>();
-		saveFakePlayers = false;
 		inited = false;
 	}
 
@@ -118,26 +112,6 @@ public class ClaimedChunkManager {
 				data.shouldSave = false;
 			}
 		}
-
-		if (saveFakePlayers) {
-			saveFakePlayers = false;
-
-			JsonArray array = new JsonArray();
-
-			for (KnownFakePlayer p : knownFakePlayers.values()) {
-				JsonObject json = new JsonObject();
-				json.addProperty("uuid", UUIDTypeAdapter.fromUUID(p.uuid));
-				json.addProperty("name", p.name);
-				json.addProperty("banned", p.banned);
-				array.add(json);
-			}
-
-			try (Writer writer = Files.newBufferedWriter(dataDirectory.resolve("known_fake_players.json"))) {
-				FTBChunks.GSON.toJson(array, writer);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
 	}
 
 	private void loadPlayerData() {
@@ -167,22 +141,6 @@ public class ClaimedChunkManager {
 			});
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		}
-
-		Path knownFakePlayersFile = dataDirectory.resolve("known_fake_players.json");
-
-		if (Files.exists(knownFakePlayersFile)) {
-			try (Reader reader = Files.newBufferedReader(knownFakePlayersFile)) {
-				for (JsonElement e : FTBChunks.GSON.fromJson(reader, JsonArray.class)) {
-					JsonObject json = e.getAsJsonObject();
-					UUID uuid = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
-					String name = json.get("name").getAsString();
-					boolean banned = json.get("banned").getAsBoolean();
-					knownFakePlayers.put(uuid, new KnownFakePlayer(uuid, name, banned));
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
 		}
 	}
 

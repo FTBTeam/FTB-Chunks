@@ -39,7 +39,6 @@ import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
 import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendPlayerListPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -223,11 +222,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 		for (SendChunkPacket.SingleChunk c : packet.chunks) {
 			queue(new UpdateChunkFromServerTask(dimension, c, now));
 		}
-	}
-
-	@Override
-	public void openPlayerList(SendPlayerListPacket packet) {
-		new AllyScreen(packet.players, packet.allyMode).openGui();
 	}
 
 	@Override

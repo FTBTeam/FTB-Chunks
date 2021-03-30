@@ -24,9 +24,9 @@ public class FTBChunksNet {
 		MAIN.registerMessage(2, SendAllChunksPacket.class, SendAllChunksPacket::write, SendAllChunksPacket::new, SendAllChunksPacket::handle);
 		MAIN.registerMessage(3, LoginDataPacket.class, LoginDataPacket::write, LoginDataPacket::new, LoginDataPacket::handle);
 		MAIN.registerMessage(4, RequestChunkChangePacket.class, RequestChunkChangePacket::write, RequestChunkChangePacket::new, RequestChunkChangePacket::handle);
-		MAIN.registerMessage(5, RequestPlayerListPacket.class, RequestPlayerListPacket::write, RequestPlayerListPacket::new, RequestPlayerListPacket::handle);
-		MAIN.registerMessage(6, SendPlayerListPacket.class, SendPlayerListPacket::write, SendPlayerListPacket::new, SendPlayerListPacket::handle);
-		MAIN.registerMessage(7, RequestAllyStatusChangePacket.class, RequestAllyStatusChangePacket::write, RequestAllyStatusChangePacket::new, RequestAllyStatusChangePacket::handle);
+		// MAIN.registerMessage(5, RequestPlayerListPacket.class, RequestPlayerListPacket::write, RequestPlayerListPacket::new, RequestPlayerListPacket::handle);
+		// MAIN.registerMessage(6, SendPlayerListPacket.class, SendPlayerListPacket::write, SendPlayerListPacket::new, SendPlayerListPacket::handle);
+		// MAIN.registerMessage(7, RequestAllyStatusChangePacket.class, RequestAllyStatusChangePacket::write, RequestAllyStatusChangePacket::new, RequestAllyStatusChangePacket::handle);
 		MAIN.registerMessage(8, SendChunkPacket.class, SendChunkPacket::write, SendChunkPacket::new, SendChunkPacket::handle);
 		MAIN.registerMessage(9, SendGeneralDataPacket.class, SendGeneralDataPacket::write, SendGeneralDataPacket::new, SendGeneralDataPacket::handle);
 		//10

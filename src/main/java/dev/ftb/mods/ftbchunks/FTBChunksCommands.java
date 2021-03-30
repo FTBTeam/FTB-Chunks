@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -12,6 +13,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
@@ -91,6 +93,11 @@ public class FTBChunksCommands {
 								)
 						)
 				)
+				.then(Commands.literal("allow_fake_players")
+						.then(Commands.argument("allow", BoolArgumentType.bool())
+								.executes(context -> allowFakePlayers(context.getSource().getPlayerOrException(), BoolArgumentType.getBool(context, "allow")))
+						)
+				)
 				.then(Commands.literal("admin")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("bypass_protection")
@@ -147,6 +154,7 @@ public class FTBChunksCommands {
 	}
 
 	private interface ChunkCallback {
+
 		void accept(ClaimedChunkPlayerData data, ChunkDimPos pos) throws CommandSyntaxException;
 	}
 
@@ -282,6 +290,14 @@ public class FTBChunksCommands {
 			source.sendSuccess(new TextComponent("Force Loaded: " + chunk.isForceLoaded()), true);
 		}
 
+		return 1;
+	}
+
+	private static int allowFakePlayers(ServerPlayer player, boolean allow) {
+		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		data.allowFakePlayers = allow;
+		data.save();
+		player.sendMessage(new TextComponent("Set fake player interactions to " + allow), Util.NIL_UUID);
 		return 1;
 	}
 

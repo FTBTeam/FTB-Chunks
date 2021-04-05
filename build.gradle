@@ -1,7 +1,7 @@
 plugins {
-	id 'forgified-fabric-loom' version '0.6-SNAPSHOT'
-	id "com.matthewprenger.cursegradle" version "1.4.0"
-	id 'maven-publish'
+    id 'forgified-fabric-loom' version '0.6-SNAPSHOT'
+    id "com.matthewprenger.cursegradle" version "1.4.0"
+    id 'maven-publish'
 }
 
 apply from: 'https://files.latmod.com/public/markdown-git-changelog.gradle'
@@ -15,86 +15,86 @@ archivesBaseName = project.archives_base_name
 group = project.maven_group
 
 loom {
-	silentMojangMappingsLicense()
+    silentMojangMappingsLicense()
 
-	mixinConfigs = [
-			"ftbchunks.mixins.json"
-	]
+    mixinConfigs = [
+            "ftbchunks.mixins.json"
+    ]
 
-	useFabricMixin = true
+    useFabricMixin = true
 
-	dataGen {
-		mod project.mod_id
-	}
+    dataGen {
+        mod project.mod_id
+    }
 
-	launches {
-		data {
-			arg "--existing", file("src/main/resources").absolutePath
-		}
-	}
+    launches {
+        data {
+            arg "--existing", file("src/main/resources").absolutePath
+        }
+    }
 }
 
 repositories {
-	maven { url "https://www.cursemaven.com" }
-	maven { url "https://maven.latvian.dev" }
+    maven { url "https://www.cursemaven.com" }
+    maven { url "https://maven.latvian.dev" }
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings minecraft.officialMojangMappings()
-	forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
-	modCompile "curse.maven:kubejs-fabric-395864:${kubejs_file}"
-	modCompile "curse.maven:architectury-fabric-419697:${arch_file}"
-	modCompile "curse.maven:rhino-416294:${rhino_file}"
-	modCompile "curse.maven:ftb-gui-library-404465:${ftbguilibrary_file}"
-	// modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
-	modCompile "dev.ftb.mods:ftb-teams-forge:1605.2.0-build.23"
-	modCompile "curse.maven:ftb-ranks-314905:${ftbranks_file}"
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings minecraft.officialMojangMappings()
+    forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+    modCompile "curse.maven:kubejs-fabric-395864:${kubejs_file}"
+    modCompile "curse.maven:architectury-fabric-419697:${arch_file}"
+    modCompile "curse.maven:rhino-416294:${rhino_file}"
+    modCompile "curse.maven:ftb-gui-library-404465:${ftbguilibrary_file}"
+    // modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
+    modCompile "dev.ftb.mods:ftb-teams-forge:1605.2.0-build.23"
+    modCompile "curse.maven:ftb-ranks-314905:${ftbranks_file}"
 }
 
 processResources {
-	inputs.property "version", project.version
+    inputs.property "version", project.version
 
-	filesMatching("META-INF/mods.toml") {
-		expand "version": project.version
-	}
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.encoding = "UTF-8"
-	def targetVersion = 8
-	if (JavaVersion.current().isJava9Compatible()) {
-		it.options.release = targetVersion
-	}
+    it.options.encoding = "UTF-8"
+    def targetVersion = 8
+    if (JavaVersion.current().isJava9Compatible()) {
+        it.options.release = targetVersion
+    }
 }
 
 java {
-	// withSourcesJar()
+    // withSourcesJar()
 }
 
 jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}" }
-	}
+    from("LICENSE") {
+        rename { "${it}_${project.archivesBaseName}" }
+    }
 
-	manifest {
-		attributes([
-				"Specification-Title"     : project.mod_id,
-				"Specification-Vendor"    : project.mod_author,
-				"Specification-Version"   : "1",
-				"Implementation-Title"    : project.name,
-				"Implementation-Version"  : version,
-				"Implementation-Vendor"   : project.mod_author,
-				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-		])
-	}
+    manifest {
+        attributes([
+                "Specification-Title"     : project.mod_id,
+                "Specification-Vendor"    : project.mod_author,
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : version,
+                "Implementation-Vendor"   : project.mod_author,
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
 
-	classifier "dev"
+    classifier "dev"
 }
 publishing {
-	publications {
+    publications {
         library(MavenPublication) {
-			artifactId = project.archives_base_name
+            artifactId = project.archives_base_name
             artifact(remapJar) {
                 builtBy remapJar
             }
@@ -111,29 +111,39 @@ publishing {
                 header(HttpHeaderAuthentication)
             }
         }
+
+        if (ENV.SAPS_TOKEN) {
+            maven {
+                url "https://maven.saps.dev/minecraft"
+                credentials {
+                    username = "latvian"
+                    password = "${ENV.SAPS_TOKEN}"
+                }
+            }
+        }
     }
 }
 
 if (ENV.CURSEFORGE_KEY) {
-	curseforge {
-		apiKey = ENV.CURSEFORGE_KEY
-		project {
-			id = project.curseforge_id
-			releaseType = "release"
-			addGameVersion "Forge"
-			addGameVersion "1.16.2"
-			addGameVersion "1.16.3"
-			addGameVersion "1.16.4"
-			addGameVersion "1.16.5"
-			mainArtifact(remapJar.archivePath)
-			relations {
-				requiredDependency 'ftb-gui-library'
-				requiredDependency 'ftb-teams'
-				optionalDependency 'ftb-ranks'
-				optionalDependency 'kubejs'
-			}
-			changelog = getGitChangelog
-			changelogType = 'markdown'
-		}
-	}
+    curseforge {
+        apiKey = ENV.CURSEFORGE_KEY
+        project {
+            id = project.curseforge_id
+            releaseType = "release"
+            addGameVersion "Forge"
+            addGameVersion "1.16.2"
+            addGameVersion "1.16.3"
+            addGameVersion "1.16.4"
+            addGameVersion "1.16.5"
+            mainArtifact(remapJar.archivePath)
+            relations {
+                requiredDependency 'ftb-gui-library'
+                requiredDependency 'ftb-teams'
+                optionalDependency 'ftb-ranks'
+                optionalDependency 'kubejs'
+            }
+            changelog = getGitChangelog
+            changelogType = 'markdown'
+        }
+    }
 }

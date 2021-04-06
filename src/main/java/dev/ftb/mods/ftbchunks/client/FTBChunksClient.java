@@ -209,6 +209,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	@Override
 	public void updateChunk(SendChunkPacket packet) {
+		if (MapManager.inst == null) {
+			return;
+		}
+
 		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 		Date now = new Date();
 		queue(new UpdateChunkFromServerTask(dimension, packet.chunk, now));
@@ -216,6 +220,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	@Override
 	public void updateAllChunks(SendAllChunksPacket packet) {
+		if (MapManager.inst == null) {
+			return;
+		}
+
 		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 		Date now = new Date();
 

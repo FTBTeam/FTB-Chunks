@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.GameProfile;
@@ -19,6 +18,7 @@ import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import dev.ftb.mods.ftbteams.event.TeamPropertiesChangedEvent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;

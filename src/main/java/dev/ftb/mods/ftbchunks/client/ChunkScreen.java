@@ -1,19 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
-import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
-import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
-import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
-import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -32,6 +18,20 @@ import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftbguilibrary.icon.Icon;
+import dev.ftb.mods.ftbguilibrary.icon.ImageIcon;
+import dev.ftb.mods.ftbguilibrary.utils.Key;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
+import dev.ftb.mods.ftbguilibrary.utils.MouseButton;
+import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
+import dev.ftb.mods.ftbguilibrary.widget.BaseScreen;
+import dev.ftb.mods.ftbguilibrary.widget.Button;
+import dev.ftb.mods.ftbguilibrary.widget.GuiHelper;
+import dev.ftb.mods.ftbguilibrary.widget.GuiIcons;
+import dev.ftb.mods.ftbguilibrary.widget.Panel;
+import dev.ftb.mods.ftbguilibrary.widget.SimpleButton;
+import dev.ftb.mods.ftbguilibrary.widget.Theme;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -54,7 +54,7 @@ import java.util.Set;
 /**
  * @author LatvianModder
  */
-public class ChunkScreen extends GuiBase {
+public class ChunkScreen extends BaseScreen {
 	public class ChunkButton extends Button {
 		public final XZ chunkPos;
 		public MapChunk chunk;

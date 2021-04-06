@@ -1,16 +1,16 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
-import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.data.XZ;
+import dev.ftb.mods.ftbguilibrary.utils.MouseButton;
+import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
+import dev.ftb.mods.ftbguilibrary.widget.Panel;
+import dev.ftb.mods.ftbguilibrary.widget.Theme;
+import dev.ftb.mods.ftbguilibrary.widget.Widget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.network.chat.TextComponent;

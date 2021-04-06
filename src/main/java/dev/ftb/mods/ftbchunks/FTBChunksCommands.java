@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -13,6 +12,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

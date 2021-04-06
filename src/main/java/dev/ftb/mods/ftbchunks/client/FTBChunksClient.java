@@ -1,9 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
-import com.feed_the_beast.mods.ftbguilibrary.utils.ClientUtils;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
-import com.feed_the_beast.mods.ftbguilibrary.widget.CustomClickEvent;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
@@ -40,6 +36,10 @@ import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
+import dev.ftb.mods.ftbguilibrary.icon.ImageIcon;
+import dev.ftb.mods.ftbguilibrary.utils.ClientUtils;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
+import dev.ftb.mods.ftbguilibrary.widget.CustomClickEvent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;

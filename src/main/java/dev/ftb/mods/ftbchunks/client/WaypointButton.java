@@ -1,19 +1,19 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.config.ConfigString;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Icon;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
-import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
-import com.feed_the_beast.mods.ftbguilibrary.widget.ContextMenuItem;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbguilibrary.config.StringConfig;
+import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftbguilibrary.icon.Icon;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
+import dev.ftb.mods.ftbguilibrary.utils.MouseButton;
+import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
+import dev.ftb.mods.ftbguilibrary.widget.ContextMenuItem;
+import dev.ftb.mods.ftbguilibrary.widget.GuiIcons;
+import dev.ftb.mods.ftbguilibrary.widget.Panel;
+import dev.ftb.mods.ftbguilibrary.widget.Theme;
+import dev.ftb.mods.ftbguilibrary.widget.Widget;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
@@ -56,7 +56,7 @@ public class WaypointButton extends Widget {
 			contextMenu.add(ContextMenuItem.SEPARATOR);
 
 			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.rename"), GuiIcons.CHAT, () -> {
-				ConfigString config = new ConfigString();
+				StringConfig config = new StringConfig();
 				config.defaultValue = "";
 				config.value = waypoint.name;
 				config.onClicked(MouseButton.LEFT, b -> {

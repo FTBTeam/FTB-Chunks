@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiHelper;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
+import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftbguilibrary.widget.GuiHelper;
+import dev.ftb.mods.ftbguilibrary.widget.Theme;
+import dev.ftb.mods.ftbguilibrary.widget.Widget;
 
 /**
  * @author LatvianModder

@@ -1,18 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.config.ConfigString;
-import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfigFromString;
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.utils.Key;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MouseButton;
-import com.feed_the_beast.mods.ftbguilibrary.utils.StringUtils;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Button;
-import com.feed_the_beast.mods.ftbguilibrary.widget.ContextMenuItem;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiBase;
-import com.feed_the_beast.mods.ftbguilibrary.widget.GuiIcons;
-import com.feed_the_beast.mods.ftbguilibrary.widget.SimpleButton;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -25,6 +12,19 @@ import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
+import dev.ftb.mods.ftbguilibrary.config.StringConfig;
+import dev.ftb.mods.ftbguilibrary.config.gui.EditConfigFromStringScreen;
+import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftbguilibrary.utils.Key;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
+import dev.ftb.mods.ftbguilibrary.utils.MouseButton;
+import dev.ftb.mods.ftbguilibrary.utils.StringUtils;
+import dev.ftb.mods.ftbguilibrary.widget.BaseScreen;
+import dev.ftb.mods.ftbguilibrary.widget.Button;
+import dev.ftb.mods.ftbguilibrary.widget.ContextMenuItem;
+import dev.ftb.mods.ftbguilibrary.widget.GuiIcons;
+import dev.ftb.mods.ftbguilibrary.widget.SimpleButton;
+import dev.ftb.mods.ftbguilibrary.widget.Theme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.resources.language.I18n;
@@ -45,7 +45,7 @@ import java.util.List;
 /**
  * @author LatvianModder
  */
-public class LargeMapScreen extends GuiBase {
+public class LargeMapScreen extends BaseScreen {
 	public Color4I backgroundColor = Color4I.rgb(0x202225);
 
 	public RegionMapPanel regionPanel;
@@ -105,8 +105,8 @@ public class LargeMapScreen extends GuiBase {
 
 		// add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
 		add(waypointsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
-			ConfigString name = new ConfigString();
-			new GuiEditConfigFromString<>(name, set -> {
+			StringConfig name = new StringConfig();
+			new EditConfigFromStringScreen<>(name, set -> {
 				if (set) {
 					Player player = Minecraft.getInstance().player;
 					Waypoint w = new Waypoint(dimension);
@@ -175,8 +175,8 @@ public class LargeMapScreen extends GuiBase {
 			int clickBlockZ = regionPanel.blockZ;
 			List<ContextMenuItem> list = new ArrayList<>();
 			list.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, () -> {
-				ConfigString name = new ConfigString();
-				new GuiEditConfigFromString<>(name, set -> {
+				StringConfig name = new StringConfig();
+				new EditConfigFromStringScreen<>(name, set -> {
 					if (set) {
 						Waypoint w = new Waypoint(dimension);
 						w.name = name.value;

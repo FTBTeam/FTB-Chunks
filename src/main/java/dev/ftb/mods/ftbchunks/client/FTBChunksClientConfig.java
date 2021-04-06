@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.config.ConfigGroup;
-import com.feed_the_beast.mods.ftbguilibrary.config.NameMap;
-import com.feed_the_beast.mods.ftbguilibrary.config.gui.GuiEditConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbguilibrary.config.ConfigGroup;
+import dev.ftb.mods.ftbguilibrary.config.NameMap;
+import dev.ftb.mods.ftbguilibrary.config.gui.EditConfigScreen;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -396,7 +396,7 @@ public class FTBChunksClientConfig {
 			debugInfo = v;
 		}, false);
 
-		GuiEditConfig gui = new GuiEditConfig(group);
+		EditConfigScreen gui = new EditConfigScreen(group);
 		group.savedCallback = b -> {
 			if (b) {
 				client.getRight().save();

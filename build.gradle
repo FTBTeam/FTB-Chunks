@@ -10,7 +10,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 def ENV = System.getenv()
-version = "${mod_version}-${ENV.CI_COMMIT_TAG ? 'build' : 'dev'}.${ENV.CI_COMMIT_TAG ?: ENV.CI_PIPELINE_IID}"
+version = "${mod_version}-build.${ENV.CI_COMMIT_TAG ?: ENV.CI_PIPELINE_IID}"
 archivesBaseName = project.archives_base_name
 group = project.maven_group
 
@@ -36,20 +36,25 @@ loom {
 
 repositories {
     maven { url "https://www.cursemaven.com" }
-    maven { url "https://maven.latvian.dev" }
+    maven {
+        url "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.ftb.mods"
+            includeGroup "dev.latvian.mods"
+        }
+    }
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings minecraft.officialMojangMappings()
     forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
-    modCompile "curse.maven:kubejs-fabric-395864:${kubejs_file}"
-    modCompile "curse.maven:architectury-fabric-419697:${arch_file}"
-    modCompile "curse.maven:rhino-416294:${rhino_file}"
-    modCompile "curse.maven:ftb-gui-library-404465:${ftbguilibrary_file}"
-    // modCompile "curse.maven:ftb-teams-404468:${ftbteams_file}"
-    modCompile "dev.ftb.mods:ftb-teams-forge:1605.2.0-build.23"
-    modCompile "curse.maven:ftb-ranks-314905:${ftbranks_file}"
+    modImplementation "curse.maven:kubejs-fabric-395864:${kubejs_file}"
+    modImplementation "curse.maven:architectury-fabric-419697:${arch_file}"
+    modImplementation "curse.maven:rhino-416294:${rhino_file}"
+    modImplementation "dev.ftb.mods:ftb-gui-library-forge:${rootProject.ftb_gui_library_version}"
+    modImplementation "dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}"
+    modImplementation "curse.maven:ftb-ranks-314905:${ftbranks_file}"
 }
 
 processResources {
@@ -89,7 +94,7 @@ jar {
         ])
     }
 
-    classifier "dev"
+    classifier null
 }
 publishing {
     publications {

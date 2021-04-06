@@ -1,7 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
-import com.feed_the_beast.mods.ftbguilibrary.utils.MathUtils;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -9,6 +7,8 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.data.XZ;
+import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 

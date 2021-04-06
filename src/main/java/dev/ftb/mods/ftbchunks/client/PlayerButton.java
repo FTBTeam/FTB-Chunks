@@ -1,10 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.ImageIcon;
-import com.feed_the_beast.mods.ftbguilibrary.utils.TooltipList;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Panel;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Theme;
-import com.feed_the_beast.mods.ftbguilibrary.widget.Widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -13,6 +8,11 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
 import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.client.map.PlayerHeadTexture;
+import dev.ftb.mods.ftbguilibrary.icon.ImageIcon;
+import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
+import dev.ftb.mods.ftbguilibrary.widget.Panel;
+import dev.ftb.mods.ftbguilibrary.widget.Theme;
+import dev.ftb.mods.ftbguilibrary.widget.Widget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.texture.AbstractTexture;

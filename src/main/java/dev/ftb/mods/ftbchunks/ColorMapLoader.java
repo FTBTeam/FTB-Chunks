@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbguilibrary.icon.Color4I;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -8,6 +7,7 @@ import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
+import dev.ftb.mods.ftbguilibrary.icon.Color4I;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;

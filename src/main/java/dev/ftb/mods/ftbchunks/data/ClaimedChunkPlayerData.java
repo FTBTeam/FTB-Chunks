@@ -420,6 +420,6 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public boolean getBypassProtection(ServerPlayer player) {
-		return bypassProtection && !(player instanceof FakePlayer) && player.hasPermissions(2);
+		return bypassProtection && !(player instanceof FakePlayer);
 	}
 }

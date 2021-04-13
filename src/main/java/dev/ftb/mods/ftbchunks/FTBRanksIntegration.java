@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.feed_the_beast.mods.ftbranks.api.FTBRanksAPI;
+import dev.ftb.mods.ftbranks.api.FTBRanksAPI;
 import net.minecraft.server.level.ServerPlayer;
 
 /**

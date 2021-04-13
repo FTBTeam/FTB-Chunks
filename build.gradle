@@ -36,6 +36,7 @@ loom {
 
 repositories {
     maven { url "https://www.cursemaven.com" }
+    maven { url "https://maven.shedaniel.me/" }
     maven {
         url "https://maven.saps.dev/minecraft"
         content {
@@ -54,7 +55,7 @@ dependencies {
     modImplementation "curse.maven:rhino-416294:${rhino_file}"
     modImplementation "dev.ftb.mods:ftb-gui-library-forge:${rootProject.ftb_gui_library_version}"
     modImplementation "dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}"
-    modImplementation "curse.maven:ftb-ranks-314905:${ftbranks_file}"
+    modImplementation "dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}"
 }
 
 processResources {
@@ -136,9 +137,6 @@ if (ENV.CURSEFORGE_KEY) {
             id = project.curseforge_id
             releaseType = "release"
             addGameVersion "Forge"
-            addGameVersion "1.16.2"
-            addGameVersion "1.16.3"
-            addGameVersion "1.16.4"
             addGameVersion "1.16.5"
             mainArtifact(remapJar.archivePath)
             relations {

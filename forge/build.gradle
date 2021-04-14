@@ -1,0 +1,127 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id "com.matthewprenger.cursegradle" version "1.4.0"
+}
+
+def ENV = System.getenv()
+
+configurations {
+    shadowCommon
+}
+
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+loom {
+    useFabricMixin = true
+}
+
+dependencies {
+    forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
+
+    modApi "me.shedaniel:architectury-forge:${rootProject.architectury_version}"
+    modImplementation "dev.ftb.mods:ftb-gui-library-forge:${rootProject.ftb_gui_library_version}"
+    modImplementation "dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}"
+    modImplementation "dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}"
+    modImplementation "curse.maven:rhino-416294:${rhino_file}"
+    modImplementation "curse.maven:kubejs-fabric-395864:${kubejs_file}"
+
+    implementation(project(path: ":common")) {
+        transitive = false
+    }
+    developmentForge(project(path: ":common")) {
+        transitive = false
+    }
+    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) {
+        transitive = false
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+
+    configurations = [project.configurations.shadowCommon]
+    classifier "dev-shadow"
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    classifier "forge"
+}
+
+jar {
+    classifier "dev"
+}
+
+java {
+    withSourcesJar()
+}
+
+sourcesJar {
+    def commonSources = project(":common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+if (ENV.CURSEFORGE_KEY) {
+    curseforge {
+        apiKey = ENV.CURSEFORGE_KEY
+        project {
+            id = project.curseforge_id_forge
+            releaseType = "release"
+            addGameVersion "Forge"
+            addGameVersion "1.16.5"
+            mainArtifact(remapJar.archivePath)
+            relations {
+                requiredDependency 'architectury-forge'
+            }
+            changelog = getGitChangelog
+            changelogType = 'markdown'
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenForge(MavenPublication) {
+            artifactId = rootProject.archivesBaseName + "-" + project.name
+            artifact(remapJar) {
+                classifier null
+            }
+            artifact(sourcesJar) {
+                builtBy remapSourcesJar
+            }
+        }
+    }
+
+    repositories {
+        if (ENV.LOCAL_MAVEN) {
+            maven {
+                url = "file://${ENV.LOCAL_MAVEN}"
+            }
+        }
+
+        if (ENV.SAPS_TOKEN) {
+            maven {
+                url "https://maven.saps.dev/minecraft"
+                credentials {
+                    username = "latvian"
+                    password = "${ENV.SAPS_TOKEN}"
+                }
+            }
+        }
+    }
+}
+
+rootProject.tasks.getByName("curseforgePublish").dependsOn tasks.getByName("curseforge")

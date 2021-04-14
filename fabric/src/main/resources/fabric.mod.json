@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "ftbchunks",
+	"version": "${version}",
+	"name": "FTB Chunks",
+	"description": "Claim chunks to protect your base from griefers!",
+	"authors": [
+		"LatvianModder"
+	],
+	"contact": {
+		"sources": "https://github.com/FTBTeam/FTB-Chunks",
+		"issues": "https://github.com/FTBTeam/FTB-Chunks/issues"
+	},
+	"license": "All Rights Reserved",
+	"entrypoints": {
+		"main": [
+			"dev.ftb.mods.ftbchunks.fabric.FTBChunksFabric"
+		]
+	},
+	"mixins": [
+		"ftbchunks-common.mixins.json"
+	],
+	"depends": {
+		"fabric": "*",
+		"minecraft": "~1.16.4",
+		"architectury": ">=1.5.112",
+		"ftbguilibrary": ">=1.0.0",
+		"ftbteams": ">=1.0.0"
+	}
+}

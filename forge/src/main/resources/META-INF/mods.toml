@@ -29,6 +29,13 @@ ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
+modId = "architectury"
+mandatory = true
+versionRange = "[1.11,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
 modId = "ftbguilibrary"
 mandatory = true
 versionRange = "[1.0.0,)"

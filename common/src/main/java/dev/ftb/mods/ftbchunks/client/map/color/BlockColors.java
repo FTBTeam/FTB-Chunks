@@ -18,6 +18,7 @@ public class BlockColors {
 		return color;
 	}
 
+	public static final BlockColor ERROR = register("error", (world, pos) -> Color4I.RED);
 	public static final BlockColor FOLIAGE = register("foliage", (world, pos) -> Color4I.rgb(BiomeColors.getAverageFoliageColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
 	public static final BlockColor GRASS = register("grass", (world, pos) -> Color4I.rgb(BiomeColors.getAverageGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
 	public static final BlockColor IGNORED = register("ignored", new IgnoredBlockColor());

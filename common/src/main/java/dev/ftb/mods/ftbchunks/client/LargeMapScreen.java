@@ -148,8 +148,10 @@ public class LargeMapScreen extends BaseScreen {
 	public void alignWidgets() {
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		// alliesButton.setPosAndSize(1, 19, 16, 16);
-		waypointsButton.setPosAndSize(1, 37, 16, 16);
-		syncButton.setPosAndSize(1, 55, 16, 16);
+		//waypointsButton.setPosAndSize(1, 37, 16, 16);
+		//syncButton.setPosAndSize(1, 55, 16, 16);
+		waypointsButton.setPosAndSize(1, 19, 16, 16);
+		syncButton.setPosAndSize(1, 37, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 	}

@@ -9,7 +9,8 @@
 		"ChunkMapMixin"
 	],
 	"client": [
-		"ChunkRenderMixin"
+		"ChunkRenderMixin",
+		"MouseHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

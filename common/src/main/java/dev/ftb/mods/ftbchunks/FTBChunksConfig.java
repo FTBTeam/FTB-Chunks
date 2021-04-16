@@ -11,21 +11,22 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * @author LatvianModder
  */
 public class FTBChunksConfig {
-	public static boolean disableAllFakePlayers;
-	public static int maxClaimedChunks;
-	public static int maxForceLoadedChunks;
-	public static boolean chunkLoadOffline;
-	public static boolean disableProtection;
-	public static AllyMode allyMode;
-	public static Set<ResourceKey<Level>> claimDimensionBlacklist;
-	public static boolean patchChunkLoading;
-	public static boolean noWilderness;
+	public static boolean disableAllFakePlayers = false;
+	public static int maxClaimedChunks = 500;
+	public static int maxForceLoadedChunks = 25;
+	public static boolean chunkLoadOffline = true;
+	public static boolean disableProtection = false;
+	public static AllyMode allyMode = AllyMode.DEFAULT;
+	public static Set<ResourceKey<Level>> claimDimensionBlacklist = new HashSet<>();
+	public static boolean patchChunkLoading = true;
+	public static boolean noWilderness = false;
 
 	/*
 	private static Pair<ServerConfig, ForgeConfigSpec> server;

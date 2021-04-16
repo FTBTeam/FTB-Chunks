@@ -1,39 +1,43 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbguilibrary.config.ConfigGroup;
+import dev.ftb.mods.ftbguilibrary.config.NameMap;
+import dev.ftb.mods.ftbguilibrary.config.gui.EditConfigScreen;
 
 /**
  * @author LatvianModder
  */
 public class FTBChunksClientConfig {
-	public static float noise;
-	public static float shadows;
-	public static boolean chunkGrid;
-	public static boolean reducedColorPalette;
-	public static float saturation;
-	public static boolean claimedChunksOnMap;
-	public static boolean ownClaimedChunksOnMap;
-	public static boolean inWorldWaypoints;
-	public static boolean deathWaypoints;
-	public static MapMode mapMode;
-	public static int waterHeightFactor;
+	public static float noise = 0.05F;
+	public static float shadows = 0.1F;
+	public static boolean chunkGrid = false;
+	public static boolean reducedColorPalette = false;
+	public static float saturation = 1F;
+	public static boolean claimedChunksOnMap = true;
+	public static boolean ownClaimedChunksOnMap = true;
+	public static boolean inWorldWaypoints = true;
+	public static boolean deathWaypoints = true;
+	public static MapMode mapMode = MapMode.NONE;
+	public static int waterHeightFactor = 8;
 
-	public static MinimapPosition minimap;
-	public static double minimapScale;
-	public static boolean minimapLockedNorth;
-	public static boolean minimapWaypoints;
-	public static boolean minimapPlayerHeads;
-	public static boolean minimapEntities;
-	public static boolean minimapEntityHeads;
-	public static boolean minimapLargeEntities;
-	public static boolean minimapXYZ;
-	public static boolean minimapBiome;
-	public static boolean minimapBlur;
-	public static boolean minimapCompass;
-	public static int minimapVisibility;
-	public static boolean minimapZone;
+	public static MinimapPosition minimap = MinimapPosition.TOP_RIGHT;
+	public static double minimapScale = 1D;
+	public static boolean minimapLockedNorth = true;
+	public static boolean minimapWaypoints = true;
+	public static boolean minimapPlayerHeads = true;
+	public static boolean minimapEntities = true;
+	public static boolean minimapEntityHeads = true;
+	public static boolean minimapLargeEntities = false;
+	public static boolean minimapXYZ = true;
+	public static boolean minimapBiome = true;
+	public static boolean minimapBlur = true;
+	public static boolean minimapCompass = true;
+	public static int minimapVisibility = 255;
+	public static boolean minimapZone = true;
 
-	public static boolean debugInfo;
+	public static boolean debugInfo = false;
 	public static int taskQueueTicks = 4;
 	public static int rerenderQueueTicks = 60;
 	public static int taskQueueMax = 100;
@@ -253,146 +257,43 @@ public class FTBChunksClientConfig {
 					.define("debug_info", false);
 		}
 	}
+	 */
+
+	public static void init() {
+	}
 
 	public static void openSettings() {
 		ConfigGroup group = new ConfigGroup("ftbchunks");
 
-		group.addDouble("noise", noise, v -> {
-			client.getLeft().noise.set(v);
-			noise = v.floatValue();
-		}, 0.05D, 0D, 0.5D);
-
-		group.addDouble("shadows", shadows, v -> {
-			client.getLeft().shadows.set(v);
-			shadows = v.floatValue();
-		}, 0.1D, 0D, 0.3D);
-
-		group.addBool("chunk_grid", chunkGrid, v -> {
-			client.getLeft().chunkGrid.set(v);
-			chunkGrid = v;
-		}, false);
-
-		group.addBool("reduced_color_palette", reducedColorPalette, v -> {
-			client.getLeft().reducedColorPalette.set(v);
-			reducedColorPalette = v;
-		}, false);
-
-		group.addDouble("saturation", saturation, v -> {
-			client.getLeft().saturation.set(v);
-			saturation = v.floatValue();
-		}, 1D, 0D, 1D);
-
-		group.addBool("claimed_chunks_on_map", claimedChunksOnMap, v -> {
-			client.getLeft().claimedChunksOnMap.set(v);
-			claimedChunksOnMap = v;
-		}, true);
-
-		group.addBool("own_claimed_chunks_on_map", ownClaimedChunksOnMap, v -> {
-			client.getLeft().ownClaimedChunksOnMap.set(v);
-			ownClaimedChunksOnMap = v;
-		}, true);
-
-		group.addBool("in_world_waypoints", inWorldWaypoints, v -> {
-			client.getLeft().inWorldWaypoints.set(v);
-			inWorldWaypoints = v;
-		}, true);
-
-		group.addBool("death_waypoints", deathWaypoints, v -> {
-			client.getLeft().deathWaypoints.set(v);
-			deathWaypoints = v;
-		}, true);
-
-		group.addEnum("map_mode", mapMode, v -> {
-			client.getLeft().mapMode.set(v);
-			mapMode = v;
-		}, NameMap.of(MapMode.NONE, MapMode.values()).create());
-
-		group.addInt("water_height_factor", waterHeightFactor, v -> {
-			client.getLeft().waterHeightFactor.set(v);
-			waterHeightFactor = v;
-		}, 0, 0, 128);
-
-		group.addEnum("minimap", minimap, v -> {
-			client.getLeft().minimap.set(v);
-			minimap = v;
-		}, NameMap.of(MinimapPosition.TOP_RIGHT, MinimapPosition.values()).create());
-
-		group.addDouble("minimap_scale", minimapScale, v -> {
-			client.getLeft().minimapScale.set(v);
-			minimapScale = v;
-		}, 1D, 0.25D, 4D);
-
-		group.addBool("minimap_locked_north", minimapLockedNorth, v -> {
-			client.getLeft().minimapLockedNorth.set(v);
-			minimapLockedNorth = v;
-		}, true);
-
-		group.addBool("minimap_waypoints", minimapWaypoints, v -> {
-			client.getLeft().minimapWaypoints.set(v);
-			minimapWaypoints = v;
-		}, true);
-
-		group.addBool("minimap_entities", minimapEntities, v -> {
-			client.getLeft().minimapEntities.set(v);
-			minimapEntities = v;
-		}, true);
-
-		group.addBool("minimap_entity_heads", minimapEntityHeads, v -> {
-			client.getLeft().minimapEntityHeads.set(v);
-			minimapEntityHeads = v;
-		}, true);
-
-		group.addBool("minimap_player_heads", minimapPlayerHeads, v -> {
-			client.getLeft().minimapPlayerHeads.set(v);
-			minimapPlayerHeads = v;
-		}, true);
-
-		group.addBool("minimap_large_entities", minimapLargeEntities, v -> {
-			client.getLeft().minimapLargeEntities.set(v);
-			minimapLargeEntities = v;
-		}, false);
-
-		group.addBool("minimap_xyz", minimapXYZ, v -> {
-			client.getLeft().minimapXYZ.set(v);
-			minimapXYZ = v;
-		}, true);
-
-		group.addBool("minimap_biome", minimapBiome, v -> {
-			client.getLeft().minimapBiome.set(v);
-			minimapBiome = v;
-		}, true);
-
-		group.addBool("minimap_blur", minimapBlur, v -> {
-			client.getLeft().minimapBlur.set(v);
-			minimapBlur = v;
-		}, true);
-
-		group.addBool("minimap_compass", minimapCompass, v -> {
-			client.getLeft().minimapCompass.set(v);
-			minimapCompass = v;
-		}, true);
-
-		group.addInt("minimap_visibility", minimapVisibility, v -> {
-			client.getLeft().minimapVisibility.set(v);
-			minimapVisibility = v;
-		}, 255, 0, 255);
-
-		group.addBool("minimap_zone", minimapZone, v -> {
-			client.getLeft().minimapZone.set(v);
-			minimapZone = v;
-		}, true);
-
-		group.addBool("debug_info", debugInfo, v -> {
-			client.getLeft().debugInfo.set(v);
-			debugInfo = v;
-		}, false);
+		group.addDouble("noise", noise, v -> noise = v.floatValue(), 0.05D, 0D, 0.5D);
+		group.addDouble("shadows", shadows, v -> shadows = v.floatValue(), 0.1D, 0D, 0.3D);
+		group.addBool("chunk_grid", chunkGrid, v -> chunkGrid = v, false);
+		group.addBool("reduced_color_palette", reducedColorPalette, v -> reducedColorPalette = v, false);
+		group.addDouble("saturation", saturation, v -> saturation = v.floatValue(), 1D, 0D, 1D);
+		group.addBool("claimed_chunks_on_map", claimedChunksOnMap, v -> claimedChunksOnMap = v, true);
+		group.addBool("own_claimed_chunks_on_map", ownClaimedChunksOnMap, v -> ownClaimedChunksOnMap = v, true);
+		group.addBool("in_world_waypoints", inWorldWaypoints, v -> inWorldWaypoints = v, true);
+		group.addBool("death_waypoints", deathWaypoints, v -> deathWaypoints = v, true);
+		group.addEnum("map_mode", mapMode, v -> mapMode = v, NameMap.of(MapMode.NONE, MapMode.values()).create());
+		group.addInt("water_height_factor", waterHeightFactor, v -> waterHeightFactor = v, 0, 0, 128);
+		group.addEnum("minimap", minimap, v -> minimap = v, NameMap.of(MinimapPosition.TOP_RIGHT, MinimapPosition.values()).create());
+		group.addDouble("minimap_scale", minimapScale, v -> minimapScale = v, 1D, 0.25D, 4D);
+		group.addBool("minimap_locked_north", minimapLockedNorth, v -> minimapLockedNorth = v, true);
+		group.addBool("minimap_waypoints", minimapWaypoints, v -> minimapWaypoints = v, true);
+		group.addBool("minimap_entities", minimapEntities, v -> minimapEntities = v, true);
+		group.addBool("minimap_entity_heads", minimapEntityHeads, v -> minimapEntityHeads = v, true);
+		group.addBool("minimap_player_heads", minimapPlayerHeads, v -> minimapPlayerHeads = v, true);
+		group.addBool("minimap_large_entities", minimapLargeEntities, v -> minimapLargeEntities = v, false);
+		group.addBool("minimap_xyz", minimapXYZ, v -> minimapXYZ = v, true);
+		group.addBool("minimap_biome", minimapBiome, v -> minimapBiome = v, true);
+		group.addBool("minimap_blur", minimapBlur, v -> minimapBlur = v, true);
+		group.addBool("minimap_compass", minimapCompass, v -> minimapCompass = v, true);
+		group.addInt("minimap_visibility", minimapVisibility, v -> minimapVisibility = v, 255, 0, 255);
+		group.addBool("minimap_zone", minimapZone, v -> minimapZone = v, true);
+		group.addBool("debug_info", debugInfo, v -> debugInfo = v, false);
 
 		EditConfigScreen gui = new EditConfigScreen(group);
 		group.savedCallback = b -> {
-			if (b) {
-				client.getRight().save();
-			}
-
 			if (MapManager.inst != null) {
 				MapManager.inst.updateAllRegions(false);
 			}
@@ -401,12 +302,5 @@ public class FTBChunksClientConfig {
 		};
 
 		gui.openGui();
-	}
-	 */
-
-	public static void init() {
-	}
-
-	public static void openSettings() {
 	}
 }

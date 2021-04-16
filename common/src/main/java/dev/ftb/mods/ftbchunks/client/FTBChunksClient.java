@@ -46,6 +46,7 @@ import me.shedaniel.architectury.event.events.client.ClientRawInputEvent;
 import me.shedaniel.architectury.event.events.client.ClientScreenInputEvent;
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
 import me.shedaniel.architectury.platform.Platform;
+import me.shedaniel.architectury.registry.ReloadListeners;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
@@ -69,7 +70,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
@@ -132,8 +133,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 	public void init() {
 		FTBChunksClientConfig.init();
 		registerPlatform();
-		((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(new EntityIcons());
-		((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(new ColorMapLoader());
+		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new EntityIcons());
+		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new ColorMapLoader());
 		ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(this::loggedOut);
 		CustomClickEvent.EVENT.register(this::customClick);
 		ClientRawInputEvent.KEY_PRESSED.register(this::keyPressed);

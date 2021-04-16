@@ -21,6 +21,8 @@ import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import dev.ftb.mods.ftbteams.event.TeamPropertiesChangedEvent;
+import me.shedaniel.architectury.event.CompoundEventResult;
+import me.shedaniel.architectury.event.EventResult;
 import me.shedaniel.architectury.event.events.BlockEvent;
 import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
 import me.shedaniel.architectury.event.events.EntityEvent;
@@ -57,7 +59,6 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BaseSpawner;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -67,7 +68,6 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,7 +103,6 @@ public class FTBChunks {
 
 	public FTBChunks() {
 		PROXY = EnvExecutor.getEnvSpecific(() -> FTBChunksClient::new, () -> FTBChunksCommon::new);
-		PROXY.init();
 		FTBChunksConfig.init();
 		ranksMod = Platform.isModLoaded("ftbranks");
 		FTBChunksNet.init();
@@ -146,13 +145,15 @@ public class FTBChunks {
 		InteractionEvent.RIGHT_CLICK_ITEM.register(this::itemRightClick);
 		BlockEvent.BREAK.register(this::blockBreak);
 		BlockEvent.PLACE.register(this::blockPlace);
-		// fillBucket
-		// farmlandTrample
-		// chunkChange
-		// mobSpawned
+		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
+		InteractionEvent.FARMLAND_TRAMPLE.register(this::farmlandTrample);
+		EntityEvent.ENTER_CHUNK.register(this::chunkChange);
+		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
+
+		PROXY.init();
 	}
 
 	private void loadKJS() {
@@ -367,7 +368,7 @@ public class FTBChunks {
 		return InteractionResult.PASS;
 	}
 
-	public InteractionResultHolder<ItemStack> fillBucket(Player player, ItemStack emptyBucket, @Nullable HitResult target) {
+	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @org.jetbrains.annotations.Nullable HitResult target) {
 		if (checkPlayer(player) && target instanceof BlockHitResult) {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player.level, ((BlockHitResult) target).getBlockPos()));
 
@@ -379,35 +380,35 @@ public class FTBChunks {
 
 			if (chunk != null) {
 				if (!chunk.canEdit((ServerPlayer) player, fluid.defaultFluidState().createLegacyBlock())) {
-					return InteractionResultHolder.fail(null);
+					return CompoundEventResult.interrupt(false, null);
 				}
 			} else if (FTBChunksConfig.noWilderness) {
 				printNoWildernessMessage(player);
-				return InteractionResultHolder.fail(null);
+				return CompoundEventResult.interrupt(false, null);
 			}
 		}
 
-		return InteractionResultHolder.pass(null);
+		return CompoundEventResult.pass();
 	}
 
-	public InteractionResult farmlandTrample(Entity entity, BlockPos pos, BlockState blockState, float fallDistance) {
+	public EventResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, float distance, Entity entity) {
 		if (entity.level instanceof ServerLevel && checkPlayer(entity)) {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(entity.level, pos));
 
 			if (chunk != null) {
 				if (!chunk.canEdit((ServerPlayer) entity, blockState)) {
-					return InteractionResult.FAIL;
+					return EventResult.interrupt(false);
 				}
 			} else if (FTBChunksConfig.noWilderness) {
 				printNoWildernessMessage(entity);
-				return InteractionResult.FAIL;
+				return EventResult.interrupt(false);
 			}
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	public void chunkChange(Entity entity, ChunkPos oldPos, ChunkPos newPos) {
+	public void chunkChange(Entity entity, int chunkX, int chunkZ, int prevX, int prevZ) {
 		if (!(entity instanceof ServerPlayer) || PlayerHooks.isFake((ServerPlayer) entity)) {
 			return;
 		}
@@ -415,7 +416,7 @@ public class FTBChunks {
 		ServerPlayer player = (ServerPlayer) entity;
 		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
 
-		if (data.prevChunkX != newPos.x || data.prevChunkZ != newPos.z) {
+		if (data.prevChunkX != chunkX || data.prevChunkZ != chunkZ) {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player));
 			String s = chunk == null ? "-" : chunk.getPlayerData().getName();
 
@@ -429,30 +430,30 @@ public class FTBChunks {
 				}
 			}
 
-			data.prevChunkX = newPos.x;
-			data.prevChunkZ = newPos.z;
+			data.prevChunkX = chunkX;
+			data.prevChunkZ = chunkZ;
 		}
 	}
 
-	public InteractionResult mobSpawned(LevelAccessor level, LivingEntity entity, @org.jetbrains.annotations.Nullable BaseSpawner spawner, MobSpawnType spawnReason, Vec3 pos) {
+	public EventResult checkSpawn(LivingEntity entity, LevelAccessor level, double x, double y, double z, MobSpawnType type, @org.jetbrains.annotations.Nullable BaseSpawner spawner) {
 		if (!level.isClientSide() && !(entity instanceof Player) && level instanceof Level) {
-			switch (spawnReason) {
+			switch (type) {
 				case NATURAL:
 				case CHUNK_GENERATION:
 				case SPAWNER:
 				case STRUCTURE:
 				case JOCKEY:
 				case PATROL: {
-					ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos((Level) level, new BlockPos(pos)));
+					ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos((Level) level, new BlockPos(x, y, z)));
 
 					if (chunk != null && !chunk.canEntitySpawn(entity)) {
-						return InteractionResult.FAIL;
+						return EventResult.interrupt(false);
 					}
 				}
 			}
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
 	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {

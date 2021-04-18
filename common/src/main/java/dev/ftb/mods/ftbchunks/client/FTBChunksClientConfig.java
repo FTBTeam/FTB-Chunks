@@ -14,6 +14,8 @@ import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.InteractionResult;
 
 import java.io.File;
@@ -33,33 +35,80 @@ public class FTBChunksClientConfig implements ConfigData {
 
 	@Comment("Noise added to map to make it look less plastic")
 	public float noise = 0.05F;
+
+	@Comment("Shadow intensity")
 	public float shadows = 0.1F;
+
+	@Comment("Chunk grid overlay in large map")
 	public boolean chunkGrid = false;
+
+	@Comment("Reduces color palette to 256 colors")
 	public boolean reducedColorPalette = false;
+
+	@Comment("Color intensity")
 	public float saturation = 1F;
+
+	@Comment("Show claimed chunks on the map")
 	public boolean claimedChunksOnMap = true;
+
+	@Comment("Show your own claimed chunks on the map")
 	public boolean ownClaimedChunksOnMap = true;
+
+	@Comment("Show waypoints in world")
 	public boolean inWorldWaypoints = true;
+
+	@Comment("Enables creation of death waypoints")
 	public boolean deathWaypoints = true;
+
+	@Comment("Different ways to render map")
 	public MapMode mapMode = MapMode.NONE;
+
+	@Comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain")
 	public int waterHeightFactor = 8;
 
+	@Comment("Enables minimap to show up in corner")
 	public MinimapPosition minimap = MinimapPosition.TOP_RIGHT;
+
+	@Comment("Scale of minimap")
 	public double minimapScale = 1D;
+
+	@Comment("Minimap will not rotate")
 	public boolean minimapLockedNorth = true;
+
+	@Comment("Show waypoints on minimap")
 	public boolean minimapWaypoints = true;
+
+	@Comment("Show player heads on minimap")
 	public boolean minimapPlayerHeads = true;
+
+	@Comment("Show entities on minimap")
 	public boolean minimapEntities = true;
+
+	@Comment("Show entity heads on minimap")
 	public boolean minimapEntityHeads = true;
+
+	@Comment("Entities in minimap will be larger")
 	public boolean minimapLargeEntities = false;
+
+	@Comment("Show XYZ under minimap")
 	public boolean minimapXYZ = true;
+
+	@Comment("Show biome under minimap")
 	public boolean minimapBiome = true;
+
+	@Comment("Blurs minimap")
 	public boolean minimapBlur = true;
+
+	@Comment("Adds NWSE compass inside minimap")
 	public boolean minimapCompass = true;
+
+	@Comment("Minimap visibility")
 	public int minimapVisibility = 255;
+
+	@Comment("Show zone (claimed chunk or wilderness) under minimap")
 	public boolean minimapZone = true;
 
-	@ConfigEntry.Gui.Excluded
+	@Comment("Enables debug info")
 	public boolean debugInfo = false;
 
 	@ConfigEntry.Gui.Excluded
@@ -70,141 +119,6 @@ public class FTBChunksClientConfig implements ConfigData {
 
 	@ConfigEntry.Gui.Excluded
 	public int taskQueueMax = 100;
-
-	/*
-		private ClientConfig(ForgeConfigSpec.Builder builder) {
-			noise = builder
-					.comment("Noise added to map to make it look less plastic")
-					.translation("ftbchunks.noise")
-					.defineInRange("noise", 0.05D, 0D, 0.5D);
-
-			shadows = builder
-					.comment("Shadow intensity")
-					.translation("ftbchunks.shadows")
-					.defineInRange("shadows", 0.1D, 0D, 0.3D);
-
-			chunkGrid = builder
-					.comment("Chunk grid overlay in large map")
-					.translation("ftbchunks.chunk_grid")
-					.define("chunk_grid", false);
-
-			reducedColorPalette = builder
-					.comment("Reduces color palette to 256 colors")
-					.translation("ftbchunks.reduced_color_palette")
-					.define("reduced_color_palette", false);
-
-			saturation = builder
-					.comment("Color intensity")
-					.translation("ftbchunks.saturation")
-					.defineInRange("saturation", 1D, 0D, 1D);
-
-			claimedChunksOnMap = builder
-					.comment("Show claimed chunks on the map")
-					.translation("ftbchunks.claimed_chunks_on_map")
-					.define("claimed_chunks_on_map", true);
-
-			ownClaimedChunksOnMap = builder
-					.comment("Show your own claimed chunks on the map")
-					.translation("ftbchunks.own_claimed_chunks_on_map")
-					.define("own_claimed_chunks_on_map", true);
-
-			inWorldWaypoints = builder
-					.comment("Show waypoints in world")
-					.translation("ftbchunks.in_world_waypoints")
-					.define("in_world_waypoints", true);
-
-			deathWaypoints = builder
-					.comment("Enables creation of death waypoints")
-					.translation("ftbchunks.death_waypoints")
-					.define("death_waypoints", true);
-
-			mapMode = builder
-					.comment("Different ways to render map")
-					.translation("ftbchunks.map_mode")
-					.defineEnum("map_mode", MapMode.NONE);
-
-			waterHeightFactor = builder
-					.comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain")
-					.translation("ftbchunks.water_height_factor")
-					.defineInRange("water_height_factor", 8, 0, 128);
-
-			minimap = builder
-					.comment("Enables minimap to show up in corner")
-					.translation("ftbchunks.minimap")
-					.defineEnum("minimap", MinimapPosition.TOP_RIGHT);
-
-			minimapScale = builder
-					.comment("Scale of minimap")
-					.translation("ftbchunks.minimap_scale")
-					.defineInRange("minimap_scale", 1D, 0.25D, 4D);
-
-			minimapLockedNorth = builder
-					.comment("Minimap will not rotate")
-					.translation("ftbchunks.minimap_locked_north")
-					.define("minimap_locked_north", true);
-
-			minimapWaypoints = builder
-					.comment("Show waypoints on minimap")
-					.translation("ftbchunks.minimap_waypoints")
-					.define("minimap_waypoints", true);
-
-			minimapEntities = builder
-					.comment("Show entities on minimap")
-					.translation("ftbchunks.minimap_entities")
-					.define("minimap_entities", true);
-
-			minimapEntityHeads = builder
-					.comment("Show entity heads on minimap")
-					.translation("ftbchunks.minimap_entity_heads")
-					.define("minimap_entity_heads", true);
-
-			minimapPlayerHeads = builder
-					.comment("Show player heads on minimap")
-					.translation("ftbchunks.minimap_player_heads")
-					.define("minimap_player_heads", true);
-
-			minimapLargeEntities = builder
-					.comment("Entities in minimap will be larger")
-					.translation("ftbchunks.minimap_large_entities")
-					.define("minimap_large_entities", false);
-
-			minimapXYZ = builder
-					.comment("Show XYZ under minimap")
-					.translation("ftbchunks.minimap_xyz")
-					.define("minimap_xyz", true);
-
-			minimapBiome = builder
-					.comment("Show biome under minimap")
-					.translation("ftbchunks.minimap_biome")
-					.define("minimap_biome", true);
-
-			minimapBlur = builder
-					.comment("Blurs minimap")
-					.translation("ftbchunks.minimap_blur")
-					.define("minimap_blur", true);
-
-			minimapCompass = builder
-					.comment("Adds NWSE compass inside minimap")
-					.translation("ftbchunks.minimap_compass")
-					.define("minimap_compass", true);
-
-			minimapVisibility = builder
-					.comment("Minimap visibility")
-					.translation("ftbchunks.minimap_visibility")
-					.defineInRange("minimap_visibility", 255, 0, 255);
-
-			minimapZone = builder
-					.comment("Show zone (claimed chunk or wilderness) under minimap")
-					.translation("ftbchunks.minimap_zone")
-					.define("minimap_zone", true);
-
-			debugInfo = builder
-					.comment("Enables debug info")
-					.translation("ftbchunks.debug_info")
-					.define("debug_info", false);
-		}
-	}
-	 */
 
 	public static void init() {
 		holder = AutoConfig.register(FTBChunksClientConfig.class, JanksonConfigSerializer::new);
@@ -230,7 +144,9 @@ public class FTBChunksClientConfig implements ConfigData {
 		// maxBlocks = Mth.clamp(maxBlocks, 1, 32768);
 	}
 
-	public void openSettings() {
+	public void openSettings(Screen screen) {
+		//Minecraft.getInstance().setScreen(AutoConfig.getConfigScreen(FTBChunksClientConfig.class, screen).get());
+
 		ConfigGroup group = new ConfigGroup("ftbchunks");
 
 		group.addDouble("noise", noise, v -> noise = v.floatValue(), 0.05D, 0D, 0.5D);
@@ -270,7 +186,7 @@ public class FTBChunksClientConfig implements ConfigData {
 				MapManager.inst.updateAllRegions(false);
 			}
 
-			new LargeMapScreen().openGui();
+			Minecraft.getInstance().setScreen(screen);
 		};
 
 		gui.openGui();

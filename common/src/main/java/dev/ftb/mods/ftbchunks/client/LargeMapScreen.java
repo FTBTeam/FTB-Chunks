@@ -141,7 +141,7 @@ public class LargeMapScreen extends BaseScreen {
 			}
 		}));
 
-		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.get().openSettings()));
+		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.get().openSettings(getWrapper())));
 	}
 
 	@Override

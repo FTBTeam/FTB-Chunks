@@ -4,8 +4,10 @@ dependencies {
     modImplementation "dev.ftb.mods:ftb-gui-library-fabric:${rootProject.ftb_gui_library_version}"
     modImplementation "dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}"
     modImplementation "dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}"
-    modImplementation "curse.maven:rhino-416294:${rhino_file}"
-    modImplementation "curse.maven:kubejs-fabric-395864:${kubejs_file}"
+    modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"
+    modImplementation "dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}"
+    modImplementation "me.shedaniel.cloth:cloth-config:${rootProject.cloth_config_version}"
+    // modImplementation "me.shedaniel.cloth:basic-math:0.5.1"
 
     implementation "com.google.code.findbugs:jsr305:3.+"
 }

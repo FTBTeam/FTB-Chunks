@@ -15,6 +15,9 @@
 	"entrypoints": {
 		"main": [
 			"dev.ftb.mods.ftbchunks.fabric.FTBChunksFabric"
+		],
+		"client": [
+			"dev.ftb.mods.ftbchunks.fabric.FTBChunksFabricClient"
 		]
 	},
 	"mixins": [

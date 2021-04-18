@@ -1,130 +1,77 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbguilibrary.config.ConfigGroup;
 import dev.ftb.mods.ftbguilibrary.config.NameMap;
 import dev.ftb.mods.ftbguilibrary.config.gui.EditConfigScreen;
+import me.shedaniel.architectury.platform.Platform;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.ConfigHolder;
+import me.shedaniel.autoconfig.annotation.Config;
+import me.shedaniel.autoconfig.annotation.ConfigEntry;
+import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
+import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
+import net.minecraft.world.InteractionResult;
+
+import java.io.File;
 
 /**
  * @author LatvianModder
  */
-public class FTBChunksClientConfig {
-	public static float noise = 0.05F;
-	public static float shadows = 0.1F;
-	public static boolean chunkGrid = false;
-	public static boolean reducedColorPalette = false;
-	public static float saturation = 1F;
-	public static boolean claimedChunksOnMap = true;
-	public static boolean ownClaimedChunksOnMap = true;
-	public static boolean inWorldWaypoints = true;
-	public static boolean deathWaypoints = true;
-	public static MapMode mapMode = MapMode.NONE;
-	public static int waterHeightFactor = 8;
+@Config(name = "ftbchunks-client")
+@Config.Gui.Background("minecraft:textures/block/stone.png")
+public class FTBChunksClientConfig implements ConfigData {
+	@ConfigEntry.Gui.Excluded
+	private static ConfigHolder<FTBChunksClientConfig> holder = null;
 
-	public static MinimapPosition minimap = MinimapPosition.TOP_RIGHT;
-	public static double minimapScale = 1D;
-	public static boolean minimapLockedNorth = true;
-	public static boolean minimapWaypoints = true;
-	public static boolean minimapPlayerHeads = true;
-	public static boolean minimapEntities = true;
-	public static boolean minimapEntityHeads = true;
-	public static boolean minimapLargeEntities = false;
-	public static boolean minimapXYZ = true;
-	public static boolean minimapBiome = true;
-	public static boolean minimapBlur = true;
-	public static boolean minimapCompass = true;
-	public static int minimapVisibility = 255;
-	public static boolean minimapZone = true;
+	public static FTBChunksClientConfig get() {
+		return holder.get();
+	}
 
-	public static boolean debugInfo = false;
-	public static int taskQueueTicks = 4;
-	public static int rerenderQueueTicks = 60;
-	public static int taskQueueMax = 100;
+	@Comment("Noise added to map to make it look less plastic")
+	public float noise = 0.05F;
+	public float shadows = 0.1F;
+	public boolean chunkGrid = false;
+	public boolean reducedColorPalette = false;
+	public float saturation = 1F;
+	public boolean claimedChunksOnMap = true;
+	public boolean ownClaimedChunksOnMap = true;
+	public boolean inWorldWaypoints = true;
+	public boolean deathWaypoints = true;
+	public MapMode mapMode = MapMode.NONE;
+	public int waterHeightFactor = 8;
+
+	public MinimapPosition minimap = MinimapPosition.TOP_RIGHT;
+	public double minimapScale = 1D;
+	public boolean minimapLockedNorth = true;
+	public boolean minimapWaypoints = true;
+	public boolean minimapPlayerHeads = true;
+	public boolean minimapEntities = true;
+	public boolean minimapEntityHeads = true;
+	public boolean minimapLargeEntities = false;
+	public boolean minimapXYZ = true;
+	public boolean minimapBiome = true;
+	public boolean minimapBlur = true;
+	public boolean minimapCompass = true;
+	public int minimapVisibility = 255;
+	public boolean minimapZone = true;
+
+	@ConfigEntry.Gui.Excluded
+	public boolean debugInfo = false;
+
+	@ConfigEntry.Gui.Excluded
+	public int taskQueueTicks = 4;
+
+	@ConfigEntry.Gui.Excluded
+	public int rerenderQueueTicks = 60;
+
+	@ConfigEntry.Gui.Excluded
+	public int taskQueueMax = 100;
 
 	/*
-	private static Pair<ClientConfig, ForgeConfigSpec> client;
-
-	public static void init() {
-		FMLJavaModLoadingContext.get().getModEventBus().register(FTBChunksClientConfig.class);
-
-		client = new ForgeConfigSpec.Builder().configure(ClientConfig::new);
-
-		ModLoadingContext modLoadingContext = ModLoadingContext.get();
-		modLoadingContext.registerConfig(ModConfig.Type.CLIENT, client.getRight());
-	}
-
-	@SubscribeEvent
-	public static void reload(ModConfig.ModConfigEvent event) {
-		ModConfig config = event.getConfig();
-
-		if (config.getSpec() == client.getRight()) {
-			ClientConfig c = client.getLeft();
-			noise = c.noise.get().floatValue();
-			shadows = c.shadows.get().floatValue();
-			chunkGrid = c.chunkGrid.get();
-			reducedColorPalette = c.reducedColorPalette.get();
-			saturation = c.saturation.get().floatValue();
-			claimedChunksOnMap = c.claimedChunksOnMap.get();
-			ownClaimedChunksOnMap = c.ownClaimedChunksOnMap.get();
-			inWorldWaypoints = c.inWorldWaypoints.get();
-			deathWaypoints = c.deathWaypoints.get();
-			mapMode = c.mapMode.get();
-			waterHeightFactor = c.waterHeightFactor.get();
-
-			minimap = c.minimap.get();
-			minimapScale = c.minimapScale.get();
-			minimapLockedNorth = c.minimapLockedNorth.get();
-			minimapWaypoints = c.minimapWaypoints.get();
-			minimapPlayerHeads = c.minimapPlayerHeads.get();
-			minimapEntities = c.minimapEntities.get();
-			minimapEntityHeads = c.minimapEntityHeads.get();
-			minimapLargeEntities = c.minimapLargeEntities.get();
-			minimapXYZ = c.minimapXYZ.get();
-			minimapBiome = c.minimapBiome.get();
-			minimapBlur = c.minimapBlur.get();
-			minimapCompass = c.minimapCompass.get();
-			minimapVisibility = c.minimapVisibility.get();
-			minimapZone = c.minimapZone.get();
-
-			debugInfo = c.debugInfo.get();
-
-			if (MapManager.inst != null) {
-				MapManager.inst.updateAllRegions(false);
-			}
-		}
-	}
-
-	private static class ClientConfig {
-		public final ForgeConfigSpec.DoubleValue noise;
-		public final ForgeConfigSpec.DoubleValue shadows;
-		public final ForgeConfigSpec.BooleanValue chunkGrid;
-		public final ForgeConfigSpec.BooleanValue reducedColorPalette;
-		public final ForgeConfigSpec.DoubleValue saturation;
-		public final ForgeConfigSpec.BooleanValue claimedChunksOnMap;
-		public final ForgeConfigSpec.BooleanValue ownClaimedChunksOnMap;
-		public final ForgeConfigSpec.BooleanValue inWorldWaypoints;
-		public final ForgeConfigSpec.BooleanValue deathWaypoints;
-		public final ForgeConfigSpec.EnumValue<MapMode> mapMode;
-		public final ForgeConfigSpec.IntValue waterHeightFactor;
-
-		private final ForgeConfigSpec.EnumValue<MinimapPosition> minimap;
-		public final ForgeConfigSpec.DoubleValue minimapScale;
-		public final ForgeConfigSpec.BooleanValue minimapLockedNorth;
-		public final ForgeConfigSpec.BooleanValue minimapWaypoints;
-		public final ForgeConfigSpec.BooleanValue minimapEntities;
-		public final ForgeConfigSpec.BooleanValue minimapEntityHeads;
-		public final ForgeConfigSpec.BooleanValue minimapPlayerHeads;
-		public final ForgeConfigSpec.BooleanValue minimapLargeEntities;
-		public final ForgeConfigSpec.BooleanValue minimapXYZ;
-		public final ForgeConfigSpec.BooleanValue minimapBiome;
-		public final ForgeConfigSpec.BooleanValue minimapBlur;
-		public final ForgeConfigSpec.BooleanValue minimapCompass;
-		public final ForgeConfigSpec.IntValue minimapVisibility;
-		public final ForgeConfigSpec.BooleanValue minimapZone;
-
-		public final ForgeConfigSpec.BooleanValue debugInfo;
-
 		private ClientConfig(ForgeConfigSpec.Builder builder) {
 			noise = builder
 					.comment("Noise added to map to make it look less plastic")
@@ -260,9 +207,30 @@ public class FTBChunksClientConfig {
 	 */
 
 	public static void init() {
+		holder = AutoConfig.register(FTBChunksClientConfig.class, JanksonConfigSerializer::new);
+
+		holder.registerLoadListener((manager, data) -> {
+			File oldConfig = Platform.getConfigFolder().resolve("ftbchunks-client.toml").toFile();
+			if (oldConfig.exists()) {
+				FTBChunks.LOGGER.warn("Old config file ftbchunks-client.toml found, please use the new config format instead!");
+				FTBChunks.LOGGER.warn("The old config file will automatically be deleted on exit.");
+				oldConfig.deleteOnExit();
+			}
+			return InteractionResult.PASS;
+		});
+
+		holder.registerSaveListener((manager, data) -> {
+			data.validatePostLoad();
+			return InteractionResult.PASS;
+		});
 	}
 
-	public static void openSettings() {
+	@Override
+	public void validatePostLoad() {
+		// maxBlocks = Mth.clamp(maxBlocks, 1, 32768);
+	}
+
+	public void openSettings() {
 		ConfigGroup group = new ConfigGroup("ftbchunks");
 
 		group.addDouble("noise", noise, v -> noise = v.floatValue(), 0.05D, 0D, 0.5D);
@@ -294,6 +262,10 @@ public class FTBChunksClientConfig {
 
 		EditConfigScreen gui = new EditConfigScreen(group);
 		group.savedCallback = b -> {
+			if (b) {
+				holder.save();
+			}
+
 			if (MapManager.inst != null) {
 				MapManager.inst.updateAllRegions(false);
 			}

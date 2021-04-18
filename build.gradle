@@ -64,6 +64,13 @@ allprojects {
                 includeGroup "dev.ftb.mods"
             }
         }
+
+        maven {
+            url "https://maven.dblsaiko.net/"
+            content {
+                includeGroup "grondag"
+            }
+        }
     }
 }
 

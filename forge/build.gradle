@@ -25,8 +25,9 @@ dependencies {
     modImplementation "dev.ftb.mods:ftb-gui-library-forge:${rootProject.ftb_gui_library_version}"
     modImplementation "dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}"
     modImplementation "dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}"
-    modImplementation "curse.maven:rhino-416294:${rhino_file}"
-    modImplementation "curse.maven:kubejs-fabric-395864:${kubejs_file}"
+    modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"
+    modImplementation "dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}"
+    modImplementation "me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config_version}"
 
     implementation(project(path: ":common")) {
         transitive = false

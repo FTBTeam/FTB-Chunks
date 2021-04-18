@@ -141,7 +141,7 @@ public class LargeMapScreen extends BaseScreen {
 			}
 		}));
 
-		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings()));
+		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.get().openSettings()));
 	}
 
 	@Override
@@ -315,7 +315,7 @@ public class LargeMapScreen extends BaseScreen {
 		theme.drawString(matrixStack, coords, 0, 0, Theme.SHADOW);
 		matrixStack.popPose();
 
-		if (FTBChunksClientConfig.debugInfo) {
+		if (FTBChunksClientConfig.get().debugInfo) {
 			long memory = 0L;
 
 			for (MapDimension dim : dimension.manager.getDimensions().values()) {

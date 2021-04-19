@@ -9,7 +9,7 @@
 		"ChunkMapMixin"
 	],
 	"client": [
-		"ChunkRenderMixin",
+		"ClientPacketListenerMixin",
 		"MouseHandlerMixin"
 	],
 	"injectors": {

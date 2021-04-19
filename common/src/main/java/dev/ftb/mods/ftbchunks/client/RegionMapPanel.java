@@ -13,7 +13,6 @@ import dev.ftb.mods.ftbguilibrary.widget.Theme;
 import dev.ftb.mods.ftbguilibrary.widget.Widget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
@@ -224,14 +223,7 @@ public class RegionMapPanel extends Panel {
 		if (button.isLeft() && isMouseOver()) {
 			largeMap.prevMouseX = getMouseX();
 			largeMap.prevMouseY = getMouseY();
-
-			if (FTBChunksClientConfig.get().debugInfo && isCtrlKeyDown()) {
-				FTBChunksClient.rerender(new BlockPos(blockX, blockY, blockZ));
-				FTBChunksClient.taskQueueTicks = 0L;
-			} else {
-				largeMap.grabbed = 1;
-			}
-
+			largeMap.grabbed = 1;
 			return true;
 		}
 

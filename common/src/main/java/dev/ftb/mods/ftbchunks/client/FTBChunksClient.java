@@ -125,6 +125,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	public static int minimapTextureId = -1;
 	private static int currentPlayerChunkX, currentPlayerChunkZ;
+	private static int renderedDebugCount = 0;
 
 	public static boolean updateMinimap = false;
 	public static boolean alwaysRenderChunksOnMap = false;
@@ -133,7 +134,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	public void init() {
 		FTBChunksClientConfig.init();
-		registerPlatform();
 		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new EntityIcons());
 		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new ColorMapLoader());
 		ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(this::loggedOut);
@@ -141,10 +141,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 		ClientRawInputEvent.KEY_PRESSED.register(this::keyPressed);
 		ClientScreenInputEvent.KEY_PRESSED_PRE.register(this::keyPressed);
 		GuiEvent.RENDER_HUD.register(this::renderHud);
-		// renderWorldLast
-		// LevelRenderLastEvent.EVENT.register(this::renderWorldLast);
 		GuiEvent.INIT_PRE.register(this::screenOpened);
 		ClientTickEvent.CLIENT_PRE.register(this::clientTick);
+		registerPlatform();
 	}
 
 	@ExpectPlatform
@@ -195,6 +194,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		MapManager.inst = new MapManager(loginData.serverId, dir);
 		updateMinimap = true;
+		renderedDebugCount = 0;
 	}
 
 	public void loggedOut(@Nullable LocalPlayer player) {
@@ -682,6 +682,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			XZ r = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
 			MINIMAP_TEXT_LIST.add(new TextComponent("Queued tasks: " + taskQueue.size()));
 			MINIMAP_TEXT_LIST.add(new TextComponent(r.toRegionString()));
+			MINIMAP_TEXT_LIST.add(new TextComponent("Total updates: " + renderedDebugCount));
 		}
 
 		if (!MINIMAP_TEXT_LIST.isEmpty()) {
@@ -749,18 +750,18 @@ public class FTBChunksClient extends FTBChunksCommon {
 			visibleWaypoints.sort(Comparator.comparingDouble(value -> -value.distance));
 		}
 
-		Camera activeRenderInfo = mc.getEntityRenderDispatcher().camera;
-		Vec3 projectedView = activeRenderInfo.getPosition();
+		Camera camera = Minecraft.getInstance().getEntityRenderDispatcher().camera;
+		Vec3 cameraPos = camera.getPosition();
 		ms.pushPose();
-		ms.translate(-projectedView.x, -projectedView.y, -projectedView.z);
+		ms.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
 		VertexConsumer depthBuffer = mc.renderBuffers().bufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 
-		float h = (float) (projectedView.y + 30D);
+		float h = (float) (cameraPos.y + 30D);
 		float h2 = h + 70F;
 
 		for (Waypoint waypoint : visibleWaypoints) {
-			double angle = Math.atan2(projectedView.z - waypoint.z - 0.5D, projectedView.x - waypoint.x - 0.5D) * 180D / Math.PI;
+			double angle = Math.atan2(cameraPos.z - waypoint.z - 0.5D, cameraPos.x - waypoint.x - 0.5D) * 180D / Math.PI;
 
 			int r = (waypoint.color >> 16) & 0xFF;
 			int g = (waypoint.color >> 8) & 0xFF;
@@ -844,9 +845,16 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void rerender(BlockPos origin) {
-		if (rerenderCache.add(new ChunkPos(origin))) {
-			FTBChunks.LOGGER.info("Rendered " + new ChunkPos(origin));
+	public static void rerender(BlockPos blockPos) {
+		rerender(new ChunkPos(blockPos));
+	}
+
+	public static void rerender(ChunkPos chunkPos) {
+		if (rerenderCache.add(chunkPos)) {
+			if (FTBChunksClientConfig.get().debugInfo) {
+				renderedDebugCount++;
+				// Minecraft.getInstance().gui.setOverlayMessage(new TextComponent("Minimap re-rendered @ " + chunkPos + " / " + renderedDebugCount), false);
+			}
 		}
 	}
 }

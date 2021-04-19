@@ -112,13 +112,28 @@ public class FTBChunksClientConfig implements ConfigData {
 	public boolean debugInfo = false;
 
 	@ConfigEntry.Gui.Excluded
+	@Comment("Advanced option. How often queued tasks will run")
 	public int taskQueueTicks = 4;
 
 	@ConfigEntry.Gui.Excluded
+	@Comment("Advanced option. How often map render update will be queued")
 	public int rerenderQueueTicks = 60;
 
 	@ConfigEntry.Gui.Excluded
+	@Comment("Advanced option. Max tasks that can queue up")
 	public int taskQueueMax = 100;
+
+	@ConfigEntry.Gui.Excluded
+	@Comment("Advanced option. Water visibility")
+	public int waterVisibility = 220;
+
+	@ConfigEntry.Gui.Excluded
+	@Comment("Advanced option. Grass darkness")
+	public int grassDarkness = 50;
+
+	@ConfigEntry.Gui.Excluded
+	@Comment("Advanced option. Foliage darkness")
+	public int foliageDarkness = 50;
 
 	public static void init() {
 		holder = AutoConfig.register(FTBChunksClientConfig.class, JanksonConfigSerializer::new);

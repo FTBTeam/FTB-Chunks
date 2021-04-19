@@ -139,9 +139,9 @@ public class RenderMapImageTask implements MapTask {
 								if (blockColor instanceof CustomBlockColor) {
 									col = ((CustomBlockColor) blockColor).color;
 								} else if (blockColor == BlockColors.FOLIAGE) {
-									col = Color4I.rgb(data.foliage[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(50));
+									col = Color4I.rgb(data.foliage[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(config.foliageDarkness));
 								} else if (blockColor == BlockColors.GRASS) {
-									col = Color4I.rgb(data.grass[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(50));
+									col = Color4I.rgb(data.grass[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(config.grassDarkness));
 								} else {
 									col = blockColor.getBlockColor(world, blockPos).withAlpha(255);
 								}
@@ -151,7 +151,7 @@ public class RenderMapImageTask implements MapTask {
 								}
 
 								if (water) {
-									col = col.withTint(Color4I.rgb(data.water[index]).withAlpha(220));
+									col = col.withTint(Color4I.rgb(data.water[index]).withAlpha(config.waterVisibility));
 								}
 
 								if (config.reducedColorPalette) {

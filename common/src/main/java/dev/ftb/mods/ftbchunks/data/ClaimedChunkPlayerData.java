@@ -134,7 +134,7 @@ public class ClaimedChunkPlayerData {
 
 		chunk = new ClaimedChunk(this, pos);
 
-		ClaimResult r = ClaimedChunkEvent.BEFORE_CLAIM.invoker().before(source, chunk).getObject();
+		ClaimResult r = ClaimedChunkEvent.BEFORE_CLAIM.invoker().before(source, chunk).object();
 
 		if (r == null) {
 			r = chunk;
@@ -159,7 +159,7 @@ public class ClaimedChunkPlayerData {
 			return ClaimResults.NOT_OWNER;
 		}
 
-		ClaimResult r = ClaimedChunkEvent.BEFORE_UNCLAIM.invoker().before(source, chunk).getObject();
+		ClaimResult r = ClaimedChunkEvent.BEFORE_UNCLAIM.invoker().before(source, chunk).object();
 
 		if (r == null) {
 			r = chunk;
@@ -200,7 +200,7 @@ public class ClaimedChunkPlayerData {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
-		ClaimResult r = ClaimedChunkEvent.BEFORE_LOAD.invoker().before(source, chunk).getObject();
+		ClaimResult r = ClaimedChunkEvent.BEFORE_LOAD.invoker().before(source, chunk).object();
 
 		if (r == null) {
 			r = chunk;
@@ -232,7 +232,7 @@ public class ClaimedChunkPlayerData {
 			return ClaimResults.NOT_LOADED;
 		}
 
-		ClaimResult r = ClaimedChunkEvent.BEFORE_UNLOAD.invoker().before(source, chunk).getObject();
+		ClaimResult r = ClaimedChunkEvent.BEFORE_UNLOAD.invoker().before(source, chunk).object();
 
 		if (r == null) {
 			r = chunk;

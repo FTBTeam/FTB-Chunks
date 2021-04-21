@@ -11,7 +11,6 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.XZ;
-import dev.ftb.mods.ftbchunks.integration.kubejs.KubeJSIntegration;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
@@ -111,10 +110,6 @@ public class FTBChunks {
 			RELATIVE_SPIRAL_POSITIONS[i] = XZ.of(MathUtils.getSpiralPoint(i + 1));
 		}
 
-		if (Platform.isModLoaded("kubejs")) {
-			loadKJS();
-		}
-
 		TeamPropertiesChangedEvent.EVENT.register(event -> {
 			Date now = new Date();
 			for (ServerPlayer player : event.getTeam().getOnlineMembers()) {
@@ -154,10 +149,6 @@ public class FTBChunks {
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 
 		PROXY.init();
-	}
-
-	private void loadKJS() {
-		KubeJSIntegration.init();
 	}
 
 	public void serverAboutToStart(MinecraftServer server) {

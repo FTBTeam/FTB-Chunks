@@ -15,6 +15,7 @@ architectury {
 }
 
 loom {
+    mixinConfigs = ["ftbchunks-common.mixins.json"]
     useFabricMixin = true
 }
 

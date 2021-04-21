@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
-import dev.ftb.mods.ftbchunks.FTBChunksConfig;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -126,9 +126,9 @@ public class ClaimedChunkPlayerData {
 
 		if (chunk != null) {
 			return ClaimResults.ALREADY_CLAIMED;
-		} else if (FTBChunksConfig.claimDimensionBlacklist.contains(pos.dimension)) {
+		} else if (FTBChunksWorldConfig.get().claimDimensionBlacklistSet.contains(pos.dimension)) {
 			return ClaimResults.DIMENSION_FORBIDDEN;
-		} else if (source.getEntity() instanceof ServerPlayer && getClaimedChunks().size() >= FTBChunksConfig.getMaxClaimedChunks(this, (ServerPlayer) source.getEntity())) {
+		} else if (source.getEntity() instanceof ServerPlayer && getClaimedChunks().size() >= FTBChunksWorldConfig.get().getMaxClaimedChunks(this, (ServerPlayer) source.getEntity())) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -196,7 +196,7 @@ public class ClaimedChunkPlayerData {
 			return ClaimResults.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResults.ALREADY_LOADED;
-		} else if (source.getEntity() instanceof ServerPlayer && getForceLoadedChunks().size() >= FTBChunksConfig.getMaxForceLoadedChunks(this, (ServerPlayer) source.getEntity())) {
+		} else if (source.getEntity() instanceof ServerPlayer && getForceLoadedChunks().size() >= FTBChunksWorldConfig.get().getMaxForceLoadedChunks(this, (ServerPlayer) source.getEntity())) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -282,9 +282,9 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public boolean isAlly(UUID p) {
-		if (FTBChunksConfig.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p)) {
+		if (FTBChunksWorldConfig.get().allyMode == AllyMode.FORCED_ALL || getUuid().equals(p)) {
 			return true;
-		} else if (FTBChunksConfig.allyMode == AllyMode.FORCED_NONE) {
+		} else if (FTBChunksWorldConfig.get().allyMode == AllyMode.FORCED_NONE) {
 			return false;
 		}
 

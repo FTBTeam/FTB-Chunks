@@ -5,28 +5,71 @@ import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import me.shedaniel.architectury.hooks.LevelResourceHooks;
+import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
+import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Jankson;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.LevelResource;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
  * @author LatvianModder
  */
-public class FTBChunksConfig {
-	public static boolean disableAllFakePlayers = false;
-	public static int maxClaimedChunks = 500;
-	public static int maxForceLoadedChunks = 25;
-	public static boolean chunkLoadOffline = true;
-	public static boolean disableProtection = false;
-	public static AllyMode allyMode = AllyMode.DEFAULT;
-	public static Set<ResourceKey<Level>> claimDimensionBlacklist = new HashSet<>();
-	public static boolean patchChunkLoading = true;
-	public static boolean noWilderness = false;
+public class FTBChunksWorldConfig {
+	private static FTBChunksWorldConfig instance;
+	public static final LevelResource CONFIG_FILE_PATH = LevelResourceHooks.create("serverconfig/ftbchunks-server.json5");
+
+	public static FTBChunksWorldConfig get() {
+		if (instance == null) {
+			init(FTBChunksAPI.manager.server);
+		}
+
+		return instance;
+	}
+
+	@Comment("Disables fake players like miners and auto-clickers")
+	public boolean disableAllFakePlayers = false;
+
+	@Comment("Max claimed chunks.\nYou can override this with FTB Ranks 'ftbchunks.max_claimed' permission")
+	public int maxClaimedChunks = 500;
+
+	@Comment("Max force loaded chunks.\nYou can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission")
+	public int maxForceLoadedChunks = 25;
+
+	@Comment("Allow players to load chunks while they are offline")
+	public boolean chunkLoadOffline = true;
+
+	@Comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for forceloading")
+	public boolean disableProtection = false;
+
+	@Comment("Forced modes won't let players change their ally settings")
+	public AllyMode allyMode = AllyMode.DEFAULT;
+
+	@Comment("Blacklist for dimensions where chunks can't be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End")
+	public List<String> claimDimensionBlacklist = new ArrayList<>();
+
+	public transient Set<ResourceKey<Level>> claimDimensionBlacklistSet = new HashSet<>();
+
+	@Comment("Patches vanilla chunkloading to allow random block ticks and other environment updates in chunks where no players are nearby. With this off farms and other things won't work. Disable in case this causes issues")
+	public boolean patchChunkLoading = true;
+
+	@Comment("Requires you to claim chunks in order to edit and interact with blocks")
+	public boolean noWilderness = false;
 
 	/*
 	private static Pair<ServerConfig, ForgeConfigSpec> server;
@@ -114,10 +157,40 @@ public class FTBChunksConfig {
 	}
 	 */
 
-	public static void init() {
+	private static final Jankson JANKSON = Jankson.builder().build();
+
+	public static void init(MinecraftServer server) {
+		instance = new FTBChunksWorldConfig();
+
+		Path configPath = server.getWorldPath(CONFIG_FILE_PATH);
+		if (Files.exists(configPath)) {
+			try {
+				instance = JANKSON.fromJson(JANKSON.load(configPath.toFile()), FTBChunksWorldConfig.class);
+			} catch (Throwable ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		for (String s : instance.claimDimensionBlacklist) {
+			instance.claimDimensionBlacklistSet.add(ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
+		}
+
+		instance.save(server);
 	}
 
-	public static int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayer player) {
+	public void save(MinecraftServer server) {
+		Path configPath = server.getWorldPath(CONFIG_FILE_PATH);
+		try {
+			Files.createDirectories(configPath.getParent());
+			BufferedWriter writer = Files.newBufferedWriter(configPath);
+			writer.write(JANKSON.toJson(this).toJson(true, true));
+			writer.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public int getMaxClaimedChunks(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks) + playerData.getExtraClaimChunks();
 		}
@@ -125,7 +198,7 @@ public class FTBChunksConfig {
 		return maxClaimedChunks + playerData.getExtraClaimChunks();
 	}
 
-	public static int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayer player) {
+	public int getMaxForceLoadedChunks(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks) + playerData.getExtraForceLoadChunks();
 		}
@@ -133,7 +206,7 @@ public class FTBChunksConfig {
 		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
 	}
 
-	public static boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayer player) {
+	public boolean getChunkLoadOffline(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getChunkLoadOffline(player, chunkLoadOffline);
 		}
@@ -141,7 +214,7 @@ public class FTBChunksConfig {
 		return chunkLoadOffline;
 	}
 
-	public static boolean patchChunkLoading(ServerLevel world, ChunkPos pos) {
+	public boolean patchChunkLoading(ServerLevel world, ChunkPos pos) {
 		if (patchChunkLoading) {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(world.dimension(), pos));
 			return chunk != null && chunk.isForceLoaded();

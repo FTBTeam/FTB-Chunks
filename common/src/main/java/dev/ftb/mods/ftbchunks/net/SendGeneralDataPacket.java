@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksConfig;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import me.shedaniel.architectury.networking.NetworkManager;
@@ -15,8 +15,8 @@ public class SendGeneralDataPacket extends MessageBase {
 	public static void send(ClaimedChunkPlayerData playerData, ServerPlayer player) {
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
-		data.maxClaimed = FTBChunksConfig.getMaxClaimedChunks(playerData, player);
-		data.maxLoaded = FTBChunksConfig.getMaxForceLoadedChunks(playerData, player);
+		data.maxClaimed = FTBChunksWorldConfig.get().getMaxClaimedChunks(playerData, player);
+		data.maxLoaded = FTBChunksWorldConfig.get().getMaxForceLoadedChunks(playerData, player);
 
 		for (ClaimedChunk chunk : playerData.getClaimedChunks()) {
 			data.claimed++;

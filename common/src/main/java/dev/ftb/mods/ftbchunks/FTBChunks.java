@@ -207,13 +207,13 @@ public class FTBChunks {
 			}
 		}
 
-		boolean canChunkLoadOffline = FTBChunksWorldConfig.get().getChunkLoadOffline(data, player);
+		boolean canChunkLoadOffline = data.manager.config.getChunkLoadOffline(data, player);
 		data.setChunkLoadOffline(canChunkLoadOffline);
 	}
 
 	public void loggedOut(ServerPlayer player) {
 		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
-		boolean canChunkLoadOffline = FTBChunksWorldConfig.get().getChunkLoadOffline(data, player);
+		boolean canChunkLoadOffline = data.manager.config.getChunkLoadOffline(data, player);
 		data.setChunkLoadOffline(canChunkLoadOffline);
 
 		if (!canChunkLoadOffline) {
@@ -229,13 +229,13 @@ public class FTBChunks {
 	}
 
 	private boolean checkPlayer(@Nullable Entity entity) {
-		if (FTBChunksWorldConfig.get().disableProtection) {
+		if (!FTBChunksAPI.isManagerLoaded() || FTBChunksAPI.getManager().config.disableProtection) {
 			return false;
 		}
 
 		if (entity instanceof ServerPlayer) {
 			if (PlayerHooks.isFake((ServerPlayer) entity)) {
-				return !FTBChunksWorldConfig.get().disableAllFakePlayers;
+				return !FTBChunksAPI.getManager().config.disableAllFakePlayers;
 			}
 
 			return true;
@@ -261,7 +261,7 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) player, player.level.getBlockState(pos))) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
 				printNoWildernessMessage(player);
 				return InteractionResult.FAIL;
 			}
@@ -278,7 +278,7 @@ public class FTBChunks {
 				if (!chunk.canInteract((ServerPlayer) player, player.level.getBlockState(pos))) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
 				printNoWildernessMessage(player);
 				return InteractionResult.FAIL;
 			}
@@ -296,7 +296,7 @@ public class FTBChunks {
 				if (!chunk.canRightClickItem((ServerPlayer) player, stack)) {
 					return InteractionResultHolder.fail(stack);
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
 				printNoWildernessMessage(player);
 				return InteractionResultHolder.fail(stack);
 			}
@@ -313,7 +313,7 @@ public class FTBChunks {
 				if (!chunk.canEdit(player, blockState)) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness) {
 				printNoWildernessMessage(player);
 				return InteractionResult.FAIL;
 			}
@@ -346,10 +346,10 @@ public class FTBChunks {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level, pos));
 
 			if (chunk != null) {
-				if (!chunk.canEdit((ServerPlayer) entity, blockState)) {
+				if (entity != null && !chunk.canEdit((ServerPlayer) entity, blockState)) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness) {
 				printNoWildernessMessage(entity);
 				return InteractionResult.FAIL;
 			}
@@ -373,7 +373,7 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) player, fluid.defaultFluidState().createLegacyBlock())) {
 					return CompoundEventResult.interrupt(false, null);
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness) {
 				printNoWildernessMessage(player);
 				return CompoundEventResult.interrupt(false, null);
 			}
@@ -390,7 +390,7 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) entity, blockState)) {
 					return EventResult.interrupt(false);
 				}
-			} else if (FTBChunksWorldConfig.get().noWilderness) {
+			} else if (FTBChunksAPI.getManager().config.noWilderness) {
 				printNoWildernessMessage(entity);
 				return EventResult.interrupt(false);
 			}

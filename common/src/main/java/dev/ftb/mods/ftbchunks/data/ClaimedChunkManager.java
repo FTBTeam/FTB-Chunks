@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import me.shedaniel.architectury.hooks.LevelResourceHooks;
 import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.Util;
@@ -30,6 +31,8 @@ public class ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = LevelResourceHooks.create("data/ftbchunks");
 
 	public final MinecraftServer server;
+	public final FTBChunksWorldConfig config;
+
 	public UUID serverId;
 	public final Map<UUID, ClaimedChunkPlayerData> playerData;
 	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
@@ -39,6 +42,7 @@ public class ClaimedChunkManager {
 
 	public ClaimedChunkManager(MinecraftServer s) {
 		server = s;
+		config = FTBChunksWorldConfig.init(server);
 		serverId = UUID.randomUUID();
 		playerData = new HashMap<>();
 		claimedChunks = new HashMap<>();

@@ -31,16 +31,7 @@ import java.util.Set;
  * @author LatvianModder
  */
 public class FTBChunksWorldConfig {
-	private static FTBChunksWorldConfig instance;
 	public static final LevelResource CONFIG_FILE_PATH = LevelResourceHooks.create("serverconfig/ftbchunks-server.json5");
-
-	public static FTBChunksWorldConfig get() {
-		if (instance == null) {
-			init(FTBChunksAPI.manager.server);
-		}
-
-		return instance;
-	}
 
 	@Comment("Disables fake players like miners and auto-clickers")
 	public boolean disableAllFakePlayers = false;
@@ -159,8 +150,8 @@ public class FTBChunksWorldConfig {
 
 	private static final Jankson JANKSON = Jankson.builder().build();
 
-	public static void init(MinecraftServer server) {
-		instance = new FTBChunksWorldConfig();
+	public static FTBChunksWorldConfig init(MinecraftServer server) {
+		FTBChunksWorldConfig instance = new FTBChunksWorldConfig();
 
 		Path configPath = server.getWorldPath(CONFIG_FILE_PATH);
 		if (Files.exists(configPath)) {
@@ -176,6 +167,7 @@ public class FTBChunksWorldConfig {
 		}
 
 		instance.save(server);
+		return instance;
 	}
 
 	public void save(MinecraftServer server) {

@@ -31,6 +31,10 @@ public class FTBChunksAPI {
 		return manager;
 	}
 
+	public static boolean isManagerLoaded() {
+		return manager != null;
+	}
+
 	public static ClaimResult claimAsPlayer(ServerPlayer player, ResourceKey<Level> dimension, ChunkPos pos, boolean checkOnly) {
 		return getManager().getData(player).claim(player.createCommandSourceStack(), new ChunkDimPos(dimension, pos), checkOnly);
 	}

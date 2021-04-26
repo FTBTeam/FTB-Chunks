@@ -199,7 +199,7 @@ public class ClaimedChunkManager {
 		return claimedChunks.entrySet().stream().filter(map->map.getKey().dimension.equals(level))
 			.map(map-> map.getValue()).collect(Collectors.toList());
 	}
-	public Collection<String> getNamesOfRegionFilesWithClaimedChunks(ResourceKey<Level> dimension){
+	public Collection<String> getNamesOfRegionFilesWithClaimedChunks(ResourceKey<Level> level){
 		java.util.HashSet<String> namesOfRegionFilesWithClaimedChunks = new  java.util.HashSet<String>();
 		
 		for (ClaimedChunk claimedChunk : this.getAllClaimedChunks()) {	

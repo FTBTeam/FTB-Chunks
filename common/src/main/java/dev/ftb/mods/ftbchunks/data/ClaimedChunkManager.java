@@ -194,12 +194,16 @@ public class ClaimedChunkManager {
 	public Collection<ClaimedChunk> getAllClaimedChunks() {
 		return claimedChunks.values();
 	}
-
+	
+	public Collection<ClaimedChunk> getAllClaimedChunksForLevel(ResourceKey<Level> level) {
+		return claimedChunks.entrySet().stream().filter(map->map.getKey().dimension.equals(level))
+			.map(map-> map.getValue()).collect(Collectors.toList());
+	}
 	public Collection<String> getNamesOfRegionFilesWithClaimedChunks(ResourceKey<Level> dimension){
 		java.util.HashSet<String> namesOfRegionFilesWithClaimedChunks = new  java.util.HashSet<String>();
 		
 		for (ClaimedChunk claimedChunk : this.getAllClaimedChunks()) {	
-			claimedChunks.entrySet().stream().filter(map->map.getKey().dimension.equals(dimension));
+			;
 			XZ region = XZ.regionFromChunk(claimedChunk.getPos().getChunkPos());
 			namesOfRegionFilesWithClaimedChunks.add("r."+ region.x +"."+ region.z+ ".mca");
 		}

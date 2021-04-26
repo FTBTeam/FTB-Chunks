@@ -7,11 +7,13 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
+
 import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.LevelDataDirectory;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import net.minecraft.Util;
@@ -23,16 +25,21 @@ import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * @author LatvianModder
@@ -132,6 +139,33 @@ public class FTBChunksCommands {
 												)
 										)
 								)
+						).then(Commands.literal("prune")
+							.then(Commands.literal("region_files_with_no_claimed_chunks")
+								.executes(context -> prune(context.getSource(), null, "region", false))
+								.then(Commands.literal("dimension")
+									.then(Commands.argument("dim", DimensionArgument.dimension())
+										.executes(context -> prune(context.getSource(), DimensionArgument.getDimension(context, "dim"), "region", false))
+										.then(Commands.literal("do_not_backup")
+											.then(Commands.argument("doNotBackup", BoolArgumentType.bool())
+												.executes(context -> prune(context.getSource(), DimensionArgument.getDimension(context, "dim"), "region", BoolArgumentType.getBool(context, "doNotBackup")))
+											)
+										)
+									)
+								)
+							)
+							.then(Commands.literal("poi_files_with_no_claimed_chunks")
+								.executes(context -> prune(context.getSource(), null, "poi", false))
+								.then(Commands.literal("dimension")
+									.then(Commands.argument("dim", DimensionArgument.dimension())
+										.executes(context -> prune(context.getSource(), DimensionArgument.getDimension(context, "dim"), "poi", false))
+										.then(Commands.literal("do_not_backup")
+											.then(Commands.argument("doNotBackup", BoolArgumentType.bool())
+												.executes(context -> prune(context.getSource(), DimensionArgument.getDimension(context, "dim"), "poi", BoolArgumentType.getBool(context, "doNotBackup")))
+											)
+										)
+									)
+								)
+							)
 						)
 				)
 				.then(Commands.literal("block_color")
@@ -342,6 +376,19 @@ public class FTBChunksCommands {
 		data.save();
 		SendGeneralDataPacket.send(data, player);
 		source.sendSuccess(new TextComponent("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
+		return 1;
+	}
+	private static int prune(CommandSourceStack source, @Nullable ServerLevel level, String subDirectory, boolean doNotBackup){
+		ResourceKey<Level> levelKey = level==null? Level.OVERWORLD: level.dimension();
+		String levelDataPath = LevelDataDirectory.getDirectoryFromDimensionKey(levelKey, subDirectory);
+		String backupPath = doNotBackup? null: levelDataPath + "pruned\\" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss")) + "\\";
+
+		Collection<String> namesOfRegionFilesWithClaimedChunks = FTBChunksAPI.getManager().getNamesOfRegionFilesWithClaimedChunks(levelKey);
+		if(FTBChunksAPI.getManager().pruneRegionFiles(levelDataPath, backupPath, namesOfRegionFilesWithClaimedChunks, !doNotBackup)){
+			source.sendSuccess(new TextComponent(doNotBackup? "Pruned successfuly!": "Completed successfuly!, pruned files backed up to: " + backupPath), false);
+			return 1;
+		}
+		source.sendFailure(new TextComponent("Failed to prune, check the log for details."));
 		return 1;
 	}
 }

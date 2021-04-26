@@ -202,8 +202,7 @@ public class ClaimedChunkManager {
 	public Collection<String> getNamesOfRegionFilesWithClaimedChunks(ResourceKey<Level> level){
 		java.util.HashSet<String> namesOfRegionFilesWithClaimedChunks = new  java.util.HashSet<String>();
 		
-		for (ClaimedChunk claimedChunk : this.getAllClaimedChunks()) {	
-			;
+		for (ClaimedChunk claimedChunk : this.getAllClaimedChunksForLevel(level)) {	
 			XZ region = XZ.regionFromChunk(claimedChunk.getPos().getChunkPos());
 			namesOfRegionFilesWithClaimedChunks.add("r."+ region.x +"."+ region.z+ ".mca");
 		}

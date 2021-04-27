@@ -381,7 +381,7 @@ public class FTBChunksCommands {
 	private static int prune(CommandSourceStack source, @Nullable ServerLevel level, String subDirectory, boolean doNotBackup){
 		ResourceKey<Level> levelKey = level==null? Level.OVERWORLD: level.dimension();
 		String levelDataPath = LevelDataDirectory.getDirectoryFromDimensionKey(levelKey, subDirectory);
-		String backupPath = doNotBackup? null: levelDataPath + "pruned\\" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss")) + "\\";
+		String backupPath = doNotBackup? null: levelDataPath + "pruned/" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss")) + "/";
 
 		Collection<String> namesOfRegionFilesWithClaimedChunks = FTBChunksAPI.getManager().getNamesOfRegionFilesWithClaimedChunks(levelKey);
 		if(FTBChunksAPI.getManager().pruneRegionFiles(levelDataPath, backupPath, namesOfRegionFilesWithClaimedChunks, !doNotBackup)){

@@ -209,7 +209,7 @@ public class ClaimedChunkManager {
 		return new ArrayList<String>(namesOfRegionFilesWithClaimedChunks);
 	}
 
-public boolean pruneRegionFiles(String fromPath,@Nullable String toPath, Collection<String> filterFileNames, boolean doBackup){
+	public boolean pruneRegionFiles(String fromPath,@Nullable String toPath, Collection<String> filterFileNames, boolean doBackup){
 			
 		try(java.util.stream.Stream<Path> stream =  Files.list(Paths.get(fromPath))){
 			

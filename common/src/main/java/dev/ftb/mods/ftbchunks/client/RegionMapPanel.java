@@ -124,12 +124,12 @@ public class RegionMapPanel extends Panel {
 				double y = (qy - regionMinZ) * z;
 				w.setPosAndSize((int) x, (int) y, (int) (z * qw), (int) (z * qh));
 			} else if (w instanceof WaypointButton) {
-				double qx = ((WaypointButton) w).waypoint.x / 512D;
-				double qy = ((WaypointButton) w).waypoint.z / 512D;
+				double qx = (((WaypointButton) w).waypoint.x + 0.5D) / 512D;
+				double qy = (((WaypointButton) w).waypoint.z + 0.5D) / 512D;
 				int s = Math.max(8, z / 128);
 
 				double x = (qx - regionMinX) * z - s / 2D;
-				double y = (qy - regionMinZ) * z - s / 2D;
+				double y = (qy - regionMinZ) * z - s;
 				w.setPosAndSize((int) x, (int) y, s, s);
 			} else if (w instanceof PlayerButton) {
 				double qx = ((PlayerButton) w).playerX / 512D;

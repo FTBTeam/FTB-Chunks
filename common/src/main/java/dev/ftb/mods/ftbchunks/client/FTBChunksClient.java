@@ -10,7 +10,6 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
@@ -19,7 +18,6 @@ import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.MapTask;
-import dev.ftb.mods.ftbchunks.client.map.PlayerHeadTexture;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.client.map.ReloadChunkTask;
 import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
@@ -35,7 +33,7 @@ import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
-import dev.ftb.mods.ftbguilibrary.icon.ImageIcon;
+import dev.ftb.mods.ftbguilibrary.icon.FaceIcon;
 import dev.ftb.mods.ftbguilibrary.utils.ClientUtils;
 import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import dev.ftb.mods.ftbguilibrary.widget.CustomClickEvent;
@@ -59,8 +57,6 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.ClickEvent;
@@ -606,31 +602,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 				}
 
 				double angle = Math.atan2(mc.player.getZ() - player.getZ(), mc.player.getX() - player.getX()) + minimapRotation * Math.PI / 180D;
-
 				float wx = (float) (x + s / 2D + Math.cos(angle) * d);
 				float wy = (float) (y + s / 2D + Math.sin(angle) * d);
 				float ws = s / 32F;
 
-				String uuid = UUIDTypeAdapter.fromUUID(player.getUUID());
-				ResourceLocation texture = new ResourceLocation("head", uuid);
-
-				TextureManager texturemanager = mc.getTextureManager();
-				AbstractTexture t = texturemanager.getTexture(texture);
-
-				if (t == null) {
-					t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/16", ImageIcon.MISSING_IMAGE);
-					texturemanager.register(texture, t);
-				}
-
-				m = matrixStack.last().pose();
-
-				RenderSystem.bindTexture(t.getId());
-				buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-				buffer.vertex(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
-				buffer.vertex(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
-				buffer.vertex(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
-				buffer.vertex(m, wx + ws, wy - ws, z).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
-				tessellator.end();
+				matrixStack.pushPose();
+				matrixStack.translate(wx, wy, z);
+				matrixStack.scale(ws, ws, 1F);
+				FaceIcon.getFace(player.getGameProfile()).draw(matrixStack, -1, -1, 2, 2);
+				matrixStack.popPose();
 			}
 		}
 

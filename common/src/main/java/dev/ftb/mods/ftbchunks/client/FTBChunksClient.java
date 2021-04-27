@@ -37,6 +37,9 @@ import dev.ftb.mods.ftbguilibrary.icon.FaceIcon;
 import dev.ftb.mods.ftbguilibrary.utils.ClientUtils;
 import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
 import dev.ftb.mods.ftbguilibrary.widget.CustomClickEvent;
+import dev.ftb.mods.ftbteams.data.ClientTeam;
+import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
+import dev.ftb.mods.ftbteams.event.TeamEvent;
 import me.shedaniel.architectury.annotations.ExpectPlatform;
 import me.shedaniel.architectury.event.events.GuiEvent;
 import me.shedaniel.architectury.event.events.client.ClientPlayerEvent;
@@ -65,6 +68,9 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkPacket;
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
@@ -139,6 +145,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		GuiEvent.RENDER_HUD.register(this::renderHud);
 		GuiEvent.INIT_PRE.register(this::screenOpened);
 		ClientTickEvent.CLIENT_PRE.register(this::clientTick);
+		TeamEvent.CLIENT_PROPERTIES_CHANGED.register(this::teamPropertiesChanged);
 		registerPlatform();
 	}
 
@@ -222,7 +229,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 		Date now = new Date();
-		queue(new UpdateChunkFromServerTask(dimension, packet.chunk, now));
+		queue(new UpdateChunkFromServerTask(dimension, packet.chunk, packet.teamId, now));
 	}
 
 	@Override
@@ -235,7 +242,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		Date now = new Date();
 
 		for (SendChunkPacket.SingleChunk c : packet.chunks) {
-			queue(new UpdateChunkFromServerTask(dimension, c, now));
+			queue(new UpdateChunkFromServerTask(dimension, c, packet.teamId, now));
 		}
 	}
 
@@ -638,10 +645,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 			MapRegionData data = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getData();
 
 			if (data != null) {
-				Component currentChunkOwner = data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).owner;
+				ClientTeam team = data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam();
 
-				if (currentChunkOwner != TextComponent.EMPTY) {
-					MINIMAP_TEXT_LIST.add(currentChunkOwner);
+				if (team != null) {
+					MINIMAP_TEXT_LIST.add(team.getName());
 				}
 			}
 		}
@@ -825,6 +832,12 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
+	public void teamPropertiesChanged(ClientTeamPropertiesChangedEvent event) {
+		if (MapManager.inst != null) {
+			MapManager.inst.updateAllRegions(false);
+		}
+	}
+
 	public static void rerender(BlockPos blockPos) {
 		rerender(new ChunkPos(blockPos));
 	}
@@ -836,5 +849,20 @@ public class FTBChunksClient extends FTBChunksCommon {
 				// Minecraft.getInstance().gui.setOverlayMessage(new TextComponent("Minimap re-rendered @ " + chunkPos + " / " + renderedDebugCount), false);
 			}
 		}
+	}
+
+	public static void handlePacket(ClientboundSectionBlocksUpdatePacket packet) {
+		// TODO: Use this data from server to render image rather than re-reading from client world later
+		packet.runUpdates((blockPos, blockState) -> rerender(blockPos));
+	}
+
+	public static void handlePacket(ClientboundLevelChunkPacket packet) {
+		// TODO: Same as above
+		rerender(new ChunkPos(packet.getX(), packet.getZ()));
+	}
+
+	public static void handlePacket(ClientboundBlockUpdatePacket packet) {
+		// TODO: Only update specific block if its visible
+		rerender(packet.getPos());
 	}
 }

@@ -16,7 +16,7 @@ import java.util.UUID;
  */
 public class SendAllChunksPacket extends MessageBase {
 	public ResourceKey<Level> dimension;
-	public UUID owner;
+	public UUID teamId;
 	public List<SendChunkPacket.SingleChunk> chunks;
 
 	public SendAllChunksPacket() {
@@ -24,27 +24,24 @@ public class SendAllChunksPacket extends MessageBase {
 
 	SendAllChunksPacket(FriendlyByteBuf buf) {
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
-		owner = new UUID(buf.readLong(), buf.readLong());
+		teamId = buf.readUUID();
 
 		int s = buf.readVarInt();
 		chunks = new ArrayList<>(s);
 
 		for (int i = 0; i < s; i++) {
-			SendChunkPacket.SingleChunk chunk = new SendChunkPacket.SingleChunk(buf);
-			chunk.ownerId = owner;
-			chunks.add(chunk);
+			chunks.add(new SendChunkPacket.SingleChunk(buf, teamId));
 		}
 	}
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
 		buf.writeResourceLocation(dimension.location());
-		buf.writeLong(owner.getMostSignificantBits());
-		buf.writeLong(owner.getLeastSignificantBits());
+		buf.writeUUID(teamId);
 		buf.writeVarInt(chunks.size());
 
 		for (SendChunkPacket.SingleChunk chunk : chunks) {
-			chunk.write(buf);
+			chunk.write(buf, teamId);
 		}
 	}
 

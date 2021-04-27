@@ -7,12 +7,12 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.util.UUIDTypeAdapter;
+import dev.ftb.mods.ftbchunks.FTBCUtils;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.PlayerHeadTexture;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
@@ -84,15 +84,15 @@ public class ChunkScreen extends BaseScreen {
 		@Override
 		@SuppressWarnings("deprecation")
 		public void addMouseOverText(TooltipList list) {
-			if (chunk != null && chunk.owner != TextComponent.EMPTY) {
-				list.add(chunk.owner);
+			if (chunk != null && chunk.team != null) {
+				list.add(chunk.team.getName());
 
 				Date date = new Date();
 
 				if (Screen.hasAltDown()) {
 					list.add(new TextComponent(chunk.claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 				} else {
-					list.add(new TextComponent(ClaimedChunkManager.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+					list.add(new TextComponent(FTBCUtils.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 				}
 
 				if (chunk.forceLoadedDate != null) {
@@ -101,7 +101,7 @@ public class ChunkScreen extends BaseScreen {
 					if (Screen.hasAltDown()) {
 						list.add(new TextComponent(chunk.forceLoadedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 					} else {
-						list.add(new TextComponent(ClaimedChunkManager.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+						list.add(new TextComponent(FTBCUtils.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 					}
 				}
 			}

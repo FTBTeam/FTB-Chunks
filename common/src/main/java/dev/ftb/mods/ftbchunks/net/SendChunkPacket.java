@@ -3,9 +3,9 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import me.shedaniel.architectury.networking.NetworkManager;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
@@ -18,10 +18,7 @@ import java.util.UUID;
  */
 public class SendChunkPacket extends MessageBase {
 	public static class SingleChunk {
-		public UUID ownerId;
 		public int x, z;
-		public int color;
-		public Component owner;
 		public long relativeTimeClaimed;
 		public long relativeTimeForceLoaded;
 		public boolean forceLoaded;
@@ -32,8 +29,6 @@ public class SendChunkPacket extends MessageBase {
 
 			if (claimedChunk != null) {
 				long now = nowd.getTime();
-				owner = claimedChunk.getDisplayName();
-				color = 0xFF000000 | claimedChunk.getColor();
 				relativeTimeClaimed = now - Date.from(claimedChunk.getTimeClaimed()).getTime();
 				forceLoaded = claimedChunk.isForceLoaded();
 
@@ -43,13 +38,11 @@ public class SendChunkPacket extends MessageBase {
 			}
 		}
 
-		public SingleChunk(FriendlyByteBuf buf) {
+		public SingleChunk(FriendlyByteBuf buf, UUID teamId) {
 			x = buf.readVarInt();
 			z = buf.readVarInt();
-			color = buf.readInt();
 
-			if (color != 0) {
-				owner = buf.readComponent();
+			if (!teamId.equals(Util.NIL_UUID)) {
 				relativeTimeClaimed = buf.readVarLong();
 				forceLoaded = buf.readBoolean();
 
@@ -59,13 +52,11 @@ public class SendChunkPacket extends MessageBase {
 			}
 		}
 
-		public void write(FriendlyByteBuf buf) {
+		public void write(FriendlyByteBuf buf, UUID teamId) {
 			buf.writeVarInt(x);
 			buf.writeVarInt(z);
-			buf.writeInt(color);
 
-			if (color != 0) {
-				buf.writeComponent(owner);
+			if (!teamId.equals(Util.NIL_UUID)) {
 				buf.writeVarLong(relativeTimeClaimed);
 				buf.writeBoolean(forceLoaded);
 
@@ -77,7 +68,7 @@ public class SendChunkPacket extends MessageBase {
 	}
 
 	public ResourceKey<Level> dimension;
-	public UUID owner;
+	public UUID teamId;
 	public SingleChunk chunk;
 
 	public SendChunkPacket() {
@@ -85,17 +76,15 @@ public class SendChunkPacket extends MessageBase {
 
 	SendChunkPacket(FriendlyByteBuf buf) {
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
-		owner = new UUID(buf.readLong(), buf.readLong());
-		chunk = new SingleChunk(buf);
-		chunk.ownerId = owner;
+		teamId = buf.readUUID();
+		chunk = new SingleChunk(buf, teamId);
 	}
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
 		buf.writeResourceLocation(dimension.location());
-		buf.writeLong(owner.getMostSignificantBits());
-		buf.writeLong(owner.getLeastSignificantBits());
-		chunk.write(buf);
+		buf.writeUUID(teamId);
+		chunk.write(buf, teamId);
 	}
 
 	@Override

@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkTeamData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.XZ;
 import me.shedaniel.architectury.networking.NetworkManager;
@@ -54,7 +54,7 @@ public class RequestChunkChangePacket extends MessageBase {
 	public void handle(NetworkManager.PacketContext context) {
 		ServerPlayer player = (ServerPlayer) context.getPlayer();
 		CommandSourceStack source = player.createCommandSourceStack();
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		Consumer<XZ> consumer;
 		Instant time = Instant.now();
 

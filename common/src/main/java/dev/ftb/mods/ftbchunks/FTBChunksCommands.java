@@ -11,11 +11,13 @@ import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkPlayerData;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkTeamData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.LevelDataDirectory;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -178,18 +180,18 @@ public class FTBChunksCommands {
 	}
 
 	private static int bypassProtection(ServerPlayer player) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.bypassProtection = !data.bypassProtection;
 		return 1;
 	}
 
 	private interface ChunkCallback {
 
-		void accept(ClaimedChunkPlayerData data, ChunkDimPos pos) throws CommandSyntaxException;
+		void accept(ClaimedChunkTeamData data, ChunkDimPos pos) throws CommandSyntaxException;
 	}
 
 	private static void forEachChunk(CommandSourceStack source, int r, ChunkCallback callback) throws CommandSyntaxException {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(source.getPlayerOrException());
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(source.getPlayerOrException());
 		ResourceKey<Level> dimId = source.getLevel().dimension();
 		int ox = Mth.floor(source.getPosition().x) >> 4;
 		int oz = Mth.floor(source.getPosition().z) >> 4;
@@ -276,7 +278,7 @@ public class FTBChunksCommands {
 
 	private static int unclaimAll(CommandSourceStack source, Collection<GameProfile> players) {
 		for (GameProfile profile : players) {
-			ClaimedChunkPlayerData data = FTBChunksAPI.getManager().playerData.get(profile.getId());
+			ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(FTBTeamsAPI.getPlayerTeam(profile.getId()));
 
 			if (data != null) {
 				for (ClaimedChunk c : data.getClaimedChunks()) {
@@ -292,9 +294,11 @@ public class FTBChunksCommands {
 
 	private static int unloadAll(CommandSourceStack source, Collection<GameProfile> players) {
 		for (GameProfile profile : players) {
-			ClaimedChunkPlayerData data = FTBChunksAPI.getManager().playerData.get(profile.getId());
+			Team team = FTBTeamsAPI.getPlayerTeam(profile.getId());
 
-			if (data != null) {
+			if (team != null) {
+				ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(team);
+
 				for (ClaimedChunk c : data.getClaimedChunks()) {
 					data.unload(source, c.getPos(), false);
 				}
@@ -314,7 +318,7 @@ public class FTBChunksCommands {
 			return 0;
 		}
 
-		source.sendSuccess(new TextComponent("Owner: " + chunk.getPlayerData().getName() + " / " + UUIDTypeAdapter.fromUUID(chunk.getPlayerData().getUuid())), true);
+		source.sendSuccess(new TextComponent("Owner: ").append(chunk.getPlayerData().getDisplayName()).append(" / " + UUIDTypeAdapter.fromUUID(chunk.getPlayerData().getTeamId())), true);
 
 		if (source.hasPermission(2)) {
 			source.sendSuccess(new TextComponent("Force Loaded: " + chunk.isForceLoaded()), true);
@@ -324,7 +328,7 @@ public class FTBChunksCommands {
 	}
 
 	private static int allowFakePlayers(ServerPlayer player, boolean allow) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.allowFakePlayers = allow;
 		data.save();
 		player.sendMessage(new TextComponent("Set fake player interactions to " + allow), Util.NIL_UUID);
@@ -332,13 +336,13 @@ public class FTBChunksCommands {
 	}
 
 	private static int getExtraClaimChunks(CommandSourceStack source, ServerPlayer player) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		source.sendSuccess(new TextComponent("").append(player.getDisplayName()).append(" == " + data.extraClaimChunks), false);
 		return 1;
 	}
 
 	private static int setExtraClaimChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.extraClaimChunks = Math.max(0, i);
 		data.save();
 		SendGeneralDataPacket.send(data, player);
@@ -347,7 +351,7 @@ public class FTBChunksCommands {
 	}
 
 	private static int addExtraClaimChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.extraClaimChunks = Math.max(0, data.extraClaimChunks + i);
 		data.save();
 		SendGeneralDataPacket.send(data, player);
@@ -356,13 +360,13 @@ public class FTBChunksCommands {
 	}
 
 	private static int getExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		source.sendSuccess(new TextComponent("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
 		return 1;
 	}
 
 	private static int setExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.extraForceLoadChunks = Math.max(0, i);
 		data.save();
 		SendGeneralDataPacket.send(data, player);
@@ -371,7 +375,7 @@ public class FTBChunksCommands {
 	}
 
 	private static int addExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		ClaimedChunkPlayerData data = FTBChunksAPI.getManager().getData(player);
+		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.extraForceLoadChunks = Math.max(0, data.extraForceLoadChunks + i);
 		data.save();
 		SendGeneralDataPacket.send(data, player);

@@ -11,8 +11,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
-import java.util.UUID;
-
 /**
  * @author LatvianModder
  */
@@ -37,10 +35,6 @@ public class FTBChunksAPI {
 
 	public static ClaimResult claimAsPlayer(ServerPlayer player, ResourceKey<Level> dimension, ChunkPos pos, boolean checkOnly) {
 		return getManager().getData(player).claim(player.createCommandSourceStack(), new ChunkDimPos(dimension, pos), checkOnly);
-	}
-
-	public static ClaimResult claimAsServer(UUID id, ResourceKey<Level> dimension, ChunkPos pos, boolean checkOnly) {
-		return getManager().getData(id, "Server").claim(getManager().server.createCommandSourceStack(), new ChunkDimPos(dimension, pos), checkOnly);
 	}
 
 	public static void syncPlayer(ServerPlayer player) {

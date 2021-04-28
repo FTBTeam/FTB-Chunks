@@ -11,9 +11,9 @@ import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
 import dev.ftb.mods.ftbguilibrary.widget.Panel;
 import dev.ftb.mods.ftbguilibrary.widget.Theme;
 import dev.ftb.mods.ftbguilibrary.widget.Widget;
+import dev.ftb.mods.ftbteams.data.ClientTeam;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -124,12 +124,12 @@ public class RegionMapPanel extends Panel {
 				double y = (qy - regionMinZ) * z;
 				w.setPosAndSize((int) x, (int) y, (int) (z * qw), (int) (z * qh));
 			} else if (w instanceof WaypointButton) {
-				double qx = ((WaypointButton) w).waypoint.x / 512D;
-				double qy = ((WaypointButton) w).waypoint.z / 512D;
+				double qx = (((WaypointButton) w).waypoint.x + 0.5D) / 512D;
+				double qy = (((WaypointButton) w).waypoint.z + 0.5D) / 512D;
 				int s = Math.max(8, z / 128);
 
 				double x = (qx - regionMinX) * z - s / 2D;
-				double y = (qy - regionMinZ) * z - s / 2D;
+				double y = (qy - regionMinZ) * z - s;
 				w.setPosAndSize((int) x, (int) y, s, s);
 			} else if (w instanceof PlayerButton) {
 				double qx = ((PlayerButton) w).playerX / 512D;
@@ -206,9 +206,10 @@ public class RegionMapPanel extends Panel {
 
 			if (data != null) {
 				MapChunk c = data.chunks.get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+				ClientTeam team = c == null ? null : c.getTeam();
 
-				if (c != null && c.owner != TextComponent.EMPTY) {
-					list.add(c.owner);
+				if (team != null) {
+					list.add(team.getName());
 				}
 			}
 		}

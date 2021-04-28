@@ -9,6 +9,9 @@ import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbguilibrary.icon.Color4I;
 import dev.ftb.mods.ftbguilibrary.icon.Icon;
+import dev.ftb.mods.ftbteams.data.ClientTeam;
+import dev.ftb.mods.ftbteams.data.ClientTeamManager;
+import dev.ftb.mods.ftbteams.data.TeamBase;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -17,7 +20,6 @@ import net.minecraft.world.level.biome.Biome;
 
 import java.awt.Color;
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * @author LatvianModder
@@ -80,7 +82,7 @@ public class RenderMapImageTask implements MapTask {
 		}
 
 		float[] hsb = new float[3];
-		UUID ownId = Minecraft.getInstance().player.getUUID();
+		ClientTeam ownTeam = ClientTeamManager.INSTANCE.selfTeam;
 		Level world = Minecraft.getInstance().level;
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		Int2ObjectOpenHashMap<Biome> biomeMap = new Int2ObjectOpenHashMap<>();
@@ -92,8 +94,8 @@ public class RenderMapImageTask implements MapTask {
 				Color4I claimColor, fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
 
-				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownId.equals(c.ownerId) ? config.ownClaimedChunksOnMap : config.claimedChunksOnMap))) {
-					claimColor = Color4I.rgb(c.color).withAlpha(100);
+				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownTeam.equals(c.getTeam()) ? config.ownClaimedChunksOnMap : config.claimedChunksOnMap))) {
+					claimColor = c.getTeam().getProperty(TeamBase.COLOR).withAlpha(100);
 					fullClaimColor = claimColor.withAlpha(255);
 					claimBarUp = !c.connects(c.offsetBlocking(0, -1));
 					claimBarDown = !c.connects(c.offsetBlocking(0, 1));

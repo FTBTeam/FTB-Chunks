@@ -22,7 +22,7 @@ public class ChunkMapMixin {
 
 	@Inject(method = "noPlayersCloseForSpawning", at = @At("RETURN"), cancellable = true)
 	private void noPlayersCloseForSpawningFTBC(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
-		if (ci.getReturnValue() && FTBChunksAPI.getManager().config.patchChunkLoading(level, pos)) {
+		if (ci.getReturnValue() && FTBChunksAPI.isManagerLoaded() && FTBChunksAPI.getManager().config.patchChunkLoading(level, pos)) {
 			ci.setReturnValue(false);
 		}
 	}

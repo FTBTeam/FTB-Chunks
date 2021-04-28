@@ -3,22 +3,24 @@ package dev.ftb.mods.ftbchunks.data;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import me.shedaniel.architectury.hooks.PlayerHooks;
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -31,11 +33,11 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkPlayerData {
+public class ClaimedChunkTeamData {
 	public final ClaimedChunkManager manager;
+	private final Team team;
 	public final Path file;
-	public boolean shouldSave;
-	public GameProfile profile;
+	private boolean shouldSave;
 	public PrivacyMode blockEditMode;
 	public PrivacyMode blockInteractMode;
 	public PrivacyMode minimapMode;
@@ -49,11 +51,11 @@ public class ClaimedChunkPlayerData {
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
 
-	public ClaimedChunkPlayerData(ClaimedChunkManager m, Path f, UUID id) {
+	public ClaimedChunkTeamData(ClaimedChunkManager m, Path f, Team t) {
 		manager = m;
+		team = t;
 		file = f;
 		shouldSave = false;
-		profile = new GameProfile(id, "");
 		blockEditMode = PrivacyMode.ALLIES;
 		blockInteractMode = PrivacyMode.ALLIES;
 		minimapMode = PrivacyMode.ALLIES;
@@ -67,33 +69,20 @@ public class ClaimedChunkPlayerData {
 
 	@Override
 	public String toString() {
-		return getName();
+		return getTeam().getStringID();
 	}
 
 	public ClaimedChunkManager getManager() {
 		return manager;
 	}
 
-	public GameProfile getProfile() {
-		return profile;
-	}
-
-	public UUID getUuid() {
-		return getProfile().getId();
-	}
-
-	public String getName() {
-		return getProfile().getName();
+	public UUID getTeamId() {
+		return team.getId();
 	}
 
 	@Nullable
 	public Team getTeam() {
-		return FTBTeamsAPI.getManager().getPlayerTeam(getUuid());
-	}
-
-	public int getColor() {
-		Team team = getTeam();
-		return team == null ? 0xFFFFFF : team.getColor();
+		return FTBTeamsAPI.getManager().getPlayerTeam(getTeamId());
 	}
 
 	public Collection<ClaimedChunk> getClaimedChunks() {
@@ -180,7 +169,7 @@ public class ClaimedChunkPlayerData {
 
 		SendChunkPacket packet = new SendChunkPacket();
 		packet.dimension = pos.dimension;
-		packet.owner = getUuid();
+		packet.teamId = Util.NIL_UUID;
 		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, null);
 		packet.sendToAll();
 		return chunk;
@@ -250,10 +239,11 @@ public class ClaimedChunkPlayerData {
 
 	public void save() {
 		shouldSave = true;
+		team.save();
 	}
 
 	public boolean isTeamMember(UUID p) {
-		if (p.equals(getUuid())) {
+		if (p.equals(getTeamId())) {
 			return true;
 		}
 
@@ -262,7 +252,7 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public boolean isExplicitAlly(UUID p) {
-		if (getUuid().equals(p)) {
+		if (getTeamId().equals(p)) {
 			return true;
 		}
 
@@ -274,14 +264,14 @@ public class ClaimedChunkPlayerData {
 			}
 
 			Team team2 = FTBTeamsAPI.getPlayerTeam(p);
-			return team2 != null && team1.isAlly(p) && team2.isAlly(getUuid());
+			return team2 != null && team1.isAlly(p) && team2.isAlly(getTeamId());
 		}
 
 		return false;
 	}
 
 	public boolean isAlly(UUID p) {
-		if (manager.config.allyMode == AllyMode.FORCED_ALL || getUuid().equals(p)) {
+		if (manager.config.allyMode == AllyMode.FORCED_ALL || getTeamId().equals(p)) {
 			return true;
 		} else if (manager.config.allyMode == AllyMode.FORCED_NONE) {
 			return false;
@@ -307,8 +297,7 @@ public class ClaimedChunkPlayerData {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(getUuid()));
-		json.addProperty("name", getName());
+		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(getTeamId()));
 
 		json.addProperty("block_edit_mode", blockEditMode.name);
 		json.addProperty("block_interact_mode", blockInteractMode.name);
@@ -348,8 +337,6 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public void fromJson(JsonObject json) {
-		profile = new GameProfile(getUuid(), json.get("name").getAsString());
-
 		if (json.has("block_edit_mode")) {
 			blockEditMode = PrivacyMode.get(json.get("block_edit_mode").getAsString());
 		}
@@ -411,8 +398,7 @@ public class ClaimedChunkPlayerData {
 	}
 
 	public Component getDisplayName() {
-		Team team = getTeam();
-		return team == null ? new TextComponent(getName()) : team.getName();
+		return getTeam().getName();
 	}
 
 	public int getExtraClaimChunks() {
@@ -434,5 +420,17 @@ public class ClaimedChunkPlayerData {
 
 	public boolean getBypassProtection(ServerPlayer player) {
 		return bypassProtection && !PlayerHooks.isFake(player);
+	}
+
+	public void saveNow() {
+		if (shouldSave) {
+			shouldSave = false;
+
+			try (Writer writer = Files.newBufferedWriter(file)) {
+				FTBChunks.GSON.toJson(toJson(), writer);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
 	}
 }

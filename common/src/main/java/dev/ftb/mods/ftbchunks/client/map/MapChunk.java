@@ -5,9 +5,9 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbteams.data.ClientTeam;
+import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,26 +27,28 @@ public class MapChunk {
 	public final XZ pos;
 	public long modified;
 
-	public UUID ownerId;
+	public ClientTeam team;
 	public Date claimedDate;
 	public Date forceLoadedDate;
-	public int color;
-	public Component owner;
 
 	public MapChunk(MapRegion r, XZ p) {
 		region = r;
 		pos = p;
 		modified = 0L;
 
-		ownerId = null;
+		team = null;
 		claimedDate = null;
 		forceLoadedDate = null;
-		color = 0;
-		owner = TextComponent.EMPTY;
+	}
+
+	@Nullable
+	public ClientTeam getTeam() {
+		// TODO: Check invalidity
+		return team;
 	}
 
 	public boolean connects(MapChunk chunk) {
-		return (color & 0xFFFFFF) == (chunk.color & 0xFFFFFF) && Objects.equals(ownerId, chunk.ownerId);
+		return Objects.equals(getTeam(), chunk.getTeam());
 	}
 
 	public XZ getActualPos() {
@@ -108,12 +110,10 @@ public class MapChunk {
 		return region.dimension.getRegion(XZ.regionFromChunk(pos.x, pos.z)).getDataBlocking().getChunk(pos);
 	}
 
-	public void updateFrom(Date now, SendChunkPacket.SingleChunk packet) {
-		ownerId = packet.ownerId;
-		claimedDate = packet.owner == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
+	public void updateFrom(Date now, SendChunkPacket.SingleChunk packet, UUID t) {
+		team = ClientTeamManager.INSTANCE.teamMap.get(t);
+		claimedDate = team == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
 		forceLoadedDate = packet.forceLoaded && claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
-		color = packet.color;
-		owner = packet.owner == null ? TextComponent.EMPTY : packet.owner;
 		region.update(false);
 	}
 }

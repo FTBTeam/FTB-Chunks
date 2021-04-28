@@ -1,41 +1,28 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.math.Matrix4f;
-import com.mojang.util.UUIDTypeAdapter;
-import dev.ftb.mods.ftbchunks.client.map.PlayerHeadTexture;
-import dev.ftb.mods.ftbguilibrary.icon.ImageIcon;
+import dev.ftb.mods.ftbguilibrary.icon.FaceIcon;
+import dev.ftb.mods.ftbguilibrary.icon.Icon;
 import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
 import dev.ftb.mods.ftbguilibrary.widget.Panel;
 import dev.ftb.mods.ftbguilibrary.widget.Theme;
 import dev.ftb.mods.ftbguilibrary.widget.Widget;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import org.lwjgl.opengl.GL11;
 
 /**
  * @author LatvianModder
  */
 public class PlayerButton extends Widget {
 	public final Component name;
-	public final String uuid;
-	private final ResourceLocation texture;
+	public final Icon icon;
 	public final double playerX, playerZ;
 	public final float rotation;
 
 	public PlayerButton(Panel panel, AbstractClientPlayer e) {
 		super(panel);
 		name = e.getDisplayName();
-		uuid = UUIDTypeAdapter.fromUUID(e.getUUID());
-		texture = new ResourceLocation("head", uuid);
+		icon = FaceIcon.getFace(e.getGameProfile());
 		playerX = e.getX();
 		playerZ = e.getZ();
 		rotation = e.getYHeadRot();
@@ -48,23 +35,6 @@ public class PlayerButton extends Widget {
 
 	@Override
 	public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
-		AbstractTexture t = texturemanager.getTexture(texture);
-		if (t == null) {
-			t = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/8", ImageIcon.MISSING_IMAGE);
-			texturemanager.register(texture, t);
-		}
-
-		Matrix4f m = matrixStack.last().pose();
-
-		RenderSystem.bindTexture(t.getId());
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder buffer = tessellator.getBuilder();
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-		buffer.vertex(m, x, y + h, 0).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
-		buffer.vertex(m, x + w, y + h, 0).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
-		buffer.vertex(m, x + w, y, 0).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
-		buffer.vertex(m, x, y, 0).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
-		tessellator.end();
+		icon.draw(matrixStack, x, y, w, h);
 	}
 }

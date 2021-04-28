@@ -2,10 +2,6 @@ package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import me.shedaniel.architectury.hooks.PlayerHooks;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -20,19 +16,19 @@ import java.util.Date;
  * @author LatvianModder
  */
 public class ClaimedChunk implements ClaimResult {
-	public final ClaimedChunkPlayerData playerData;
+	public final ClaimedChunkTeamData playerData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
 	public Instant time;
 
-	public ClaimedChunk(ClaimedChunkPlayerData p, ChunkDimPos cp) {
+	public ClaimedChunk(ClaimedChunkTeamData p, ChunkDimPos cp) {
 		playerData = p;
 		pos = cp;
 		forceLoaded = null;
 		time = Instant.now();
 	}
 
-	public ClaimedChunkPlayerData getPlayerData() {
+	public ClaimedChunkTeamData getPlayerData() {
 		return playerData;
 	}
 
@@ -47,10 +43,6 @@ public class ClaimedChunk implements ClaimResult {
 	@Override
 	public boolean isSuccess() {
 		return true;
-	}
-
-	public int getColor() {
-		return getPlayerData().getColor();
 	}
 
 	@Override
@@ -79,7 +71,7 @@ public class ClaimedChunk implements ClaimResult {
 		}
 
 		if (!PlayerHooks.isFake(player)) {
-			ClaimedChunkPlayerData pd = playerData.manager.getData(player);
+			ClaimedChunkTeamData pd = playerData.manager.getData(player);
 			return pd.getBypassProtection(player);
 		}
 
@@ -92,7 +84,7 @@ public class ClaimedChunk implements ClaimResult {
 		}
 
 		if (!PlayerHooks.isFake(player)) {
-			ClaimedChunkPlayerData pd = playerData.manager.getData(player);
+			ClaimedChunkTeamData pd = playerData.manager.getData(player);
 			return pd.getBypassProtection(player);
 		}
 
@@ -105,7 +97,7 @@ public class ClaimedChunk implements ClaimResult {
 		}
 
 		if (!PlayerHooks.isFake(player)) {
-			ClaimedChunkPlayerData pd = playerData.manager.getData(player);
+			ClaimedChunkTeamData pd = playerData.manager.getData(player);
 
 			if (pd.getBypassProtection(player)) {
 				return true;
@@ -123,10 +115,6 @@ public class ClaimedChunk implements ClaimResult {
 		return false;
 	}
 
-	public Component getDisplayName() {
-		return new TextComponent("").append(getPlayerData().getDisplayName()).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getColor())));
-	}
-
 	public void postSetForceLoaded(boolean load) {
 		ServerLevel world = getPlayerData().getManager().getMinecraftServer().getLevel(getPos().dimension);
 
@@ -139,7 +127,7 @@ public class ClaimedChunk implements ClaimResult {
 	public void sendUpdateToAll() {
 		SendChunkPacket packet = new SendChunkPacket();
 		packet.dimension = pos.dimension;
-		packet.owner = playerData.getUuid();
+		packet.teamId = playerData.getTeamId();
 		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, this);
 		packet.sendToAll();
 	}

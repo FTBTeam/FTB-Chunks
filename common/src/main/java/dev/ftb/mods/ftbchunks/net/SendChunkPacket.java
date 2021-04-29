@@ -10,7 +10,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -23,17 +22,16 @@ public class SendChunkPacket extends MessageBase {
 		public long relativeTimeForceLoaded;
 		public boolean forceLoaded;
 
-		public SingleChunk(Date nowd, int _x, int _z, @Nullable ClaimedChunk claimedChunk) {
+		public SingleChunk(long now, int _x, int _z, @Nullable ClaimedChunk claimedChunk) {
 			x = _x;
 			z = _z;
 
 			if (claimedChunk != null) {
-				long now = nowd.getTime();
-				relativeTimeClaimed = now - Date.from(claimedChunk.getTimeClaimed()).getTime();
+				relativeTimeClaimed = now - claimedChunk.getTimeClaimed();
 				forceLoaded = claimedChunk.isForceLoaded();
 
 				if (forceLoaded) {
-					relativeTimeForceLoaded = now - Date.from(claimedChunk.getForceLoadedTime()).getTime();
+					relativeTimeForceLoaded = now - claimedChunk.getForceLoadedTime();
 				}
 			}
 		}

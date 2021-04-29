@@ -846,7 +846,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 		if (rerenderCache.add(chunkPos)) {
 			if (FTBChunksClientConfig.get().debugInfo) {
 				renderedDebugCount++;
-				// Minecraft.getInstance().gui.setOverlayMessage(new TextComponent("Minimap re-rendered @ " + chunkPos + " / " + renderedDebugCount), false);
 			}
 		}
 	}
@@ -858,7 +857,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	public static void handlePacket(ClientboundLevelChunkPacket packet) {
 		// TODO: Same as above
-		rerender(new ChunkPos(packet.getX(), packet.getZ()));
+		if (packet.isFullChunk()) {
+			rerender(new ChunkPos(packet.getX(), packet.getZ()));
+		}
 	}
 
 	public static void handlePacket(ClientboundBlockUpdatePacket packet) {

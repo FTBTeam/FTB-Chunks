@@ -10,7 +10,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -56,7 +55,7 @@ public class RequestChunkChangePacket extends MessageBase {
 		CommandSourceStack source = player.createCommandSourceStack();
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		Consumer<XZ> consumer;
-		Instant time = Instant.now();
+		long now = System.currentTimeMillis();
 
 		switch (action) {
 			case 0:
@@ -64,7 +63,7 @@ public class RequestChunkChangePacket extends MessageBase {
 					ClaimResult result = data.claim(source, pos.dim(player.level), false);
 
 					if (result.isSuccess()) {
-						result.setClaimedTime(time);
+						result.setClaimedTime(now);
 					}
 				};
 				break;
@@ -76,7 +75,7 @@ public class RequestChunkChangePacket extends MessageBase {
 					ClaimResult result = data.load(source, pos.dim(player.level), false);
 
 					if (result.isSuccess()) {
-						result.setForceLoadedTime(time);
+						result.setForceLoadedTime(now);
 					}
 				};
 				break;

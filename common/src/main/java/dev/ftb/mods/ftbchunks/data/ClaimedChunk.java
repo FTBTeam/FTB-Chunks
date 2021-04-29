@@ -1,32 +1,31 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import me.shedaniel.architectury.hooks.PlayerHooks;
+import net.minecraft.Util;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
-import javax.annotation.Nullable;
-import java.time.Instant;
-import java.util.Date;
-
 /**
  * @author LatvianModder
  */
 public class ClaimedChunk implements ClaimResult {
-	public final FTBChunksTeamData teamData;
+	public FTBChunksTeamData teamData;
 	public final ChunkDimPos pos;
-	public Instant forceLoaded;
-	public Instant time;
+	public long forceLoaded;
+	public long time;
 
 	public ClaimedChunk(FTBChunksTeamData p, ChunkDimPos cp) {
 		teamData = p;
 		pos = cp;
-		forceLoaded = null;
-		time = Instant.now();
+		forceLoaded = 0L;
+		time = System.currentTimeMillis();
 	}
 
 	public FTBChunksTeamData getTeamData() {
@@ -37,7 +36,7 @@ public class ClaimedChunk implements ClaimResult {
 		return pos;
 	}
 
-	public Instant getTimeClaimed() {
+	public long getTimeClaimed() {
 		return time;
 	}
 
@@ -47,22 +46,21 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	@Override
-	public void setClaimedTime(Instant t) {
+	public void setClaimedTime(long t) {
 		time = t;
 		sendUpdateToAll();
 	}
 
-	@Nullable
-	public Instant getForceLoadedTime() {
+	public long getForceLoadedTime() {
 		return forceLoaded;
 	}
 
 	public boolean isForceLoaded() {
-		return getForceLoadedTime() != null;
+		return forceLoaded > 0L;
 	}
 
 	@Override
-	public void setForceLoadedTime(@Nullable Instant time) {
+	public void setForceLoadedTime(long time) {
 		forceLoaded = time;
 	}
 
@@ -120,8 +118,9 @@ public class ClaimedChunk implements ClaimResult {
 		ServerLevel world = getTeamData().getManager().getMinecraftServer().getLevel(getPos().dimension);
 
 		if (world != null) {
-			world.setChunkForced(getPos().x, getPos().z, load);
-			sendUpdateToAll();
+			if (world.setChunkForced(getPos().x, getPos().z, load)) {
+				sendUpdateToAll();
+			}
 		}
 	}
 
@@ -129,7 +128,30 @@ public class ClaimedChunk implements ClaimResult {
 		SendChunkPacket packet = new SendChunkPacket();
 		packet.dimension = pos.dimension;
 		packet.teamId = teamData.getTeamId();
-		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, this);
+		packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this);
+		packet.sendToAll();
+	}
+
+	public void unload(CommandSourceStack source) {
+		if (isForceLoaded()) {
+			setForceLoadedTime(0L);
+			postSetForceLoaded(false);
+			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, this);
+			teamData.save();
+		}
+	}
+
+	public void unclaim(CommandSourceStack source) {
+		unload(source);
+
+		teamData.manager.claimedChunks.remove(pos);
+		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, this);
+		teamData.save();
+
+		SendChunkPacket packet = new SendChunkPacket();
+		packet.dimension = pos.dimension;
+		packet.teamId = Util.NIL_UUID;
+		packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null);
 		packet.sendToAll();
 	}
 }

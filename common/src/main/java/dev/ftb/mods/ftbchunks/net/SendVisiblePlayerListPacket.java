@@ -48,7 +48,7 @@ public class SendVisiblePlayerListPacket extends MessageBase {
 	public static void sendAll() {
 		List<VisiblePlayerListItem> playerList = new ArrayList<>();
 
-		for (ServerPlayer player : FTBChunksAPI.getManager().server.getPlayerList().getPlayers()) {
+		for (ServerPlayer player : FTBChunksAPI.getManager().teamManager.server.getPlayerList().getPlayers()) {
 			VisiblePlayerListItem item = new VisiblePlayerListItem();
 			item.player = player;
 			item.data = FTBChunksAPI.getManager().getData(player);

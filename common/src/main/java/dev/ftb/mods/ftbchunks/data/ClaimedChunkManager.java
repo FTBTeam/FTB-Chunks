@@ -28,7 +28,6 @@ import java.util.UUID;
 public class ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = LevelResourceHooks.create("ftbchunks");
 
-	public final MinecraftServer server;
 	public final TeamManager teamManager;
 	public final FTBChunksWorldConfig config;
 
@@ -38,13 +37,12 @@ public class ClaimedChunkManager {
 	public Path localDirectory;
 
 	public ClaimedChunkManager(TeamManager m) {
-		server = m.server;
 		teamManager = m;
-		config = FTBChunksWorldConfig.init(server);
+		config = FTBChunksWorldConfig.init(getMinecraftServer());
 		teamData = new HashMap<>();
 		claimedChunks = new HashMap<>();
 
-		dataDirectory = server.getWorldPath(DATA_DIR);
+		dataDirectory = getMinecraftServer().getWorldPath(DATA_DIR);
 		localDirectory = Platform.getGameFolder().resolve("local/ftbchunks");
 
 		try {
@@ -97,7 +95,7 @@ public class ClaimedChunkManager {
 	}
 
 	public MinecraftServer getMinecraftServer() {
-		return server;
+		return teamManager.server;
 	}
 
 	public FTBChunksTeamData getData(@Nullable Team team) {

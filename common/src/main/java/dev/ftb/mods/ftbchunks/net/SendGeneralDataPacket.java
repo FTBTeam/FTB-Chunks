@@ -14,8 +14,8 @@ public class SendGeneralDataPacket extends MessageBase {
 	public static void send(FTBChunksTeamData playerData, ServerPlayer player) {
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
-		data.maxClaimed = playerData.manager.config.getMaxClaimedChunks(playerData, player);
-		data.maxLoaded = playerData.manager.config.getMaxForceLoadedChunks(playerData, player);
+		data.maxClaimChunks = playerData.maxClaimChunks;
+		data.maxForceLoadChunks = playerData.maxForceLoadChunks;
 
 		for (ClaimedChunk chunk : playerData.getClaimedChunks()) {
 			data.claimed++;
@@ -30,8 +30,8 @@ public class SendGeneralDataPacket extends MessageBase {
 
 	public int claimed;
 	public int loaded;
-	public int maxClaimed;
-	public int maxLoaded;
+	public int maxClaimChunks;
+	public int maxForceLoadChunks;
 
 	public SendGeneralDataPacket() {
 	}
@@ -39,16 +39,16 @@ public class SendGeneralDataPacket extends MessageBase {
 	SendGeneralDataPacket(FriendlyByteBuf buf) {
 		claimed = buf.readVarInt();
 		loaded = buf.readVarInt();
-		maxClaimed = buf.readVarInt();
-		maxLoaded = buf.readVarInt();
+		maxClaimChunks = buf.readVarInt();
+		maxForceLoadChunks = buf.readVarInt();
 	}
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
 		buf.writeVarInt(claimed);
 		buf.writeVarInt(loaded);
-		buf.writeVarInt(maxClaimed);
-		buf.writeVarInt(maxLoaded);
+		buf.writeVarInt(maxClaimChunks);
+		buf.writeVarInt(maxForceLoadChunks);
 	}
 
 	@Override

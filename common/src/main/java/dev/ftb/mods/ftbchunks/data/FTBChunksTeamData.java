@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.OrderedCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
@@ -13,7 +13,6 @@ import dev.ftb.mods.ftbteams.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.property.PrivacyProperty;
 import me.shedaniel.architectury.hooks.PlayerHooks;
 import me.shedaniel.architectury.utils.NbtType;
-import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -24,10 +23,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +42,8 @@ public class FTBChunksTeamData {
 	private final Team team;
 	public final Path file;
 	private boolean shouldSave;
+	public int maxClaimChunks;
+	public int maxForceLoadChunks;
 	public int extraClaimChunks;
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
@@ -58,6 +57,8 @@ public class FTBChunksTeamData {
 		team = t;
 		file = f;
 		shouldSave = false;
+		maxClaimChunks = -1;
+		maxForceLoadChunks = -1;
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
@@ -105,6 +106,26 @@ public class FTBChunksTeamData {
 		return list;
 	}
 
+	public void updateLimits(ServerPlayer player) {
+		if (maxClaimChunks != -1 && team.getType().isParty() && !player.getUUID().equals(team.getOwner())) {
+			return;
+		}
+
+		int c = manager.config.getMaxClaimedChunks(this, player);
+		int f = manager.config.getMaxForceLoadedChunks(this, player);
+
+		if (maxClaimChunks != c || maxForceLoadChunks != f) {
+			maxClaimChunks = c;
+			maxForceLoadChunks = f;
+
+			for (ServerPlayer p : team.getOnlineMembers()) {
+				SendGeneralDataPacket.send(this, player);
+			}
+
+			save();
+		}
+	}
+
 	public ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
 		ClaimedChunk chunk = manager.claimedChunks.get(pos);
 
@@ -112,7 +133,7 @@ public class FTBChunksTeamData {
 			return ClaimResults.ALREADY_CLAIMED;
 		} else if (manager.config.claimDimensionBlacklistSet.contains(pos.dimension)) {
 			return ClaimResults.DIMENSION_FORBIDDEN;
-		} else if (source.getEntity() instanceof ServerPlayer && getClaimedChunks().size() >= manager.config.getMaxClaimedChunks(this, (ServerPlayer) source.getEntity())) {
+		} else if (!team.getType().isServer() && getClaimedChunks().size() >= maxClaimChunks) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -153,21 +174,7 @@ public class FTBChunksTeamData {
 			return r;
 		}
 
-		if (chunk.isForceLoaded()) {
-			chunk.setForceLoadedTime(null);
-			chunk.postSetForceLoaded(false);
-			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, chunk);
-		}
-
-		manager.claimedChunks.remove(pos);
-		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, chunk);
-		chunk.teamData.save();
-
-		SendChunkPacket packet = new SendChunkPacket();
-		packet.dimension = pos.dimension;
-		packet.teamId = Util.NIL_UUID;
-		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, null);
-		packet.sendToAll();
+		chunk.unclaim(source);
 		return chunk;
 	}
 
@@ -180,7 +187,7 @@ public class FTBChunksTeamData {
 			return ClaimResults.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResults.ALREADY_LOADED;
-		} else if (source.getEntity() instanceof ServerPlayer && getForceLoadedChunks().size() >= manager.config.getMaxForceLoadedChunks(this, (ServerPlayer) source.getEntity())) {
+		} else if (!team.getType().isServer() && getForceLoadedChunks().size() >= maxForceLoadChunks) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -194,7 +201,7 @@ public class FTBChunksTeamData {
 			return r;
 		}
 
-		chunk.setForceLoadedTime(Instant.now());
+		chunk.setForceLoadedTime(System.currentTimeMillis());
 		chunk.postSetForceLoaded(true);
 		ClaimedChunkEvent.AFTER_LOAD.invoker().after(source, chunk);
 		chunk.teamData.save();
@@ -226,10 +233,7 @@ public class FTBChunksTeamData {
 			return r;
 		}
 
-		chunk.setForceLoadedTime(null);
-		chunk.postSetForceLoaded(false);
-		ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, chunk);
-		chunk.teamData.save();
+		chunk.unload(source);
 		return chunk;
 	}
 
@@ -274,6 +278,8 @@ public class FTBChunksTeamData {
 
 	public OrderedCompoundTag serializeNBT() {
 		OrderedCompoundTag tag = new OrderedCompoundTag();
+		tag.putInt("max_claim_chunks", maxClaimChunks);
+		tag.putInt("max_force_load_chunks", maxForceLoadChunks);
 		tag.putInt("extra_claim_chunks", extraClaimChunks);
 		tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
 		tag.putBoolean("chunk_load_offline", chunkLoadOffline);
@@ -292,10 +298,10 @@ public class FTBChunksTeamData {
 			o.singleLine = true;
 			o.putInt("x", chunk.getPos().x);
 			o.putInt("z", chunk.getPos().z);
-			o.putString("time", chunk.getTimeClaimed().toString());
+			o.putLong("time", chunk.getTimeClaimed());
 
 			if (chunk.isForceLoaded()) {
-				o.putString("force_loaded", chunk.getForceLoadedTime().toString());
+				o.putLong("force_loaded", chunk.getForceLoadedTime());
 			}
 
 			chunksListTag.add(o);
@@ -307,6 +313,8 @@ public class FTBChunksTeamData {
 	}
 
 	public void deserializeNBT(CompoundTag tag) {
+		maxClaimChunks = tag.getInt("max_claim_chunks");
+		maxForceLoadChunks = tag.getInt("max_force_load_chunks");
 		extraClaimChunks = tag.getInt("extra_claim_chunks");
 		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
 		chunkLoadOffline = tag.getBoolean("chunk_load_offline");
@@ -319,19 +327,9 @@ public class FTBChunksTeamData {
 
 			for (int i = 0; i < chunksListTag.size(); i++) {
 				CompoundTag o = chunksListTag.getCompound(i);
-				int x = o.getInt("x");
-				int z = o.getInt("z");
-
-				ClaimedChunk chunk = new ClaimedChunk(this, new ChunkDimPos(dimKey, x, z));
-
-				if (o.contains("time")) {
-					chunk.time = Instant.parse(o.getString("time"));
-				}
-
-				if (o.contains("force_loaded")) {
-					chunk.forceLoaded = Instant.parse(o.getString("force_loaded"));
-				}
-
+				ClaimedChunk chunk = new ClaimedChunk(this, new ChunkDimPos(dimKey, o.getInt("x"), o.getInt("z")));
+				chunk.time = o.getLong("time");
+				chunk.forceLoaded = o.getLong("force_loaded");
 				manager.claimedChunks.put(chunk.pos, chunk);
 			}
 		}

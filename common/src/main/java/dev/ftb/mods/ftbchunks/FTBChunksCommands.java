@@ -15,6 +15,7 @@ import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.data.TeamArgument;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
@@ -27,7 +28,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,25 +43,25 @@ public class FTBChunksCommands {
 				.then(Commands.literal("claim")
 						.executes(context -> claim(context.getSource(), 0))
 						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
-								.executes(context -> claim(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
+								.executes(context -> claim(context.getSource(), IntegerArgumentType.getInteger(context, "radius_in_blocks")))
 						)
 				)
 				.then(Commands.literal("unclaim")
 						.executes(context -> unclaim(context.getSource(), 0))
 						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
-								.executes(context -> unclaim(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
+								.executes(context -> unclaim(context.getSource(), IntegerArgumentType.getInteger(context, "radius_in_blocks")))
 						)
 				)
 				.then(Commands.literal("load")
 						.executes(context -> load(context.getSource(), 0))
 						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
-								.executes(context -> load(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
+								.executes(context -> load(context.getSource(), IntegerArgumentType.getInteger(context, "radius_in_blocks")))
 						)
 				)
 				.then(Commands.literal("unload")
 						.executes(context -> unload(context.getSource(), 0))
 						.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
-								.executes(context -> unload(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))
+								.executes(context -> unload(context.getSource(), IntegerArgumentType.getInteger(context, "radius_in_blocks")))
 						)
 				)
 				.then(Commands.literal("unclaim_all")
@@ -128,6 +128,14 @@ public class FTBChunksCommands {
 										)
 								)
 						)
+						.then(Commands.literal("claim_server")
+								.then(Commands.argument("server_team", TeamArgument.create())
+										.executes(context -> claimServer(context.getSource(), TeamArgument.get(context, "server_team"), 0))
+										.then(Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 200))
+												.executes(context -> claimServer(context.getSource(), TeamArgument.get(context, "server_team"), IntegerArgumentType.getInteger(context, "radius_in_blocks")))
+										)
+								)
+						)
 				)
 				.then(Commands.literal("block_color")
 						.requires(source -> source.getServer().isSingleplayer())
@@ -173,13 +181,13 @@ public class FTBChunksCommands {
 
 	private static int claim(CommandSourceStack source, int r) throws CommandSyntaxException {
 		int[] success = new int[1];
-		Instant time = Instant.now();
+		long now = System.currentTimeMillis();
 
 		forEachChunk(source, r, (data, pos) -> {
 			ClaimResult result = data.claim(source, pos, false);
 
 			if (result.isSuccess()) {
-				result.setClaimedTime(time);
+				result.setClaimedTime(now);
 				success[0]++;
 			}
 		});
@@ -205,13 +213,13 @@ public class FTBChunksCommands {
 
 	private static int load(CommandSourceStack source, int r) throws CommandSyntaxException {
 		int[] success = new int[1];
-		Instant time = Instant.now();
+		long now = System.currentTimeMillis();
 
 		forEachChunk(source, r, (data, pos) -> {
 			ClaimResult result = data.load(source, pos, false);
 
 			if (result.isSuccess()) {
-				result.setForceLoadedTime(time);
+				result.setForceLoadedTime(now);
 				success[0]++;
 			}
 		});
@@ -332,5 +340,27 @@ public class FTBChunksCommands {
 		SendGeneralDataPacket.send(data, player);
 		source.sendSuccess(new TextComponent("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
 		return 1;
+	}
+
+	private static int claimServer(CommandSourceStack source, Team team, int r) throws CommandSyntaxException {
+		if (!team.getType().isServer()) {
+			return 0;
+		}
+
+		int[] success = new int[1];
+		long now = System.currentTimeMillis();
+
+		forEachChunk(source, r, (data, pos) -> {
+			ClaimResult result = data.claim(source, pos, false);
+
+			if (result.isSuccess()) {
+				result.setClaimedTime(now);
+				success[0]++;
+			}
+		});
+
+		source.sendSuccess(new TextComponent("Claimed " + success[0] + " chunks!"), false);
+		FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
+		return success[0];
 	}
 }

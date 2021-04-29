@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.util.UUIDTypeAdapter;
-import dev.ftb.mods.ftbchunks.FTBCUtils;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
@@ -31,6 +30,7 @@ import dev.ftb.mods.ftblibrary.ui.SimpleButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -92,7 +92,7 @@ public class ChunkScreen extends BaseScreen {
 				if (Screen.hasAltDown()) {
 					list.add(new TextComponent(chunk.claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 				} else {
-					list.add(new TextComponent(FTBCUtils.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+					list.add(new TextComponent(TimeUtils.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 				}
 
 				if (chunk.forceLoadedDate != null) {
@@ -101,7 +101,7 @@ public class ChunkScreen extends BaseScreen {
 					if (Screen.hasAltDown()) {
 						list.add(new TextComponent(chunk.forceLoadedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 					} else {
-						list.add(new TextComponent(FTBCUtils.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+						list.add(new TextComponent(TimeUtils.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 					}
 				}
 			}
@@ -277,9 +277,9 @@ public class ChunkScreen extends BaseScreen {
 		if (d != null) {
 			List<Component> list = new ArrayList<>(4);
 			list.add(new TranslatableComponent("ftbchunks.gui.claimed"));
-			list.add(new TextComponent(d.claimed + " / " + d.maxClaimed).withStyle(d.claimed > d.maxClaimed ? ChatFormatting.RED : d.claimed == d.maxClaimed ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+			list.add(new TextComponent(d.claimed + " / " + d.maxClaimChunks).withStyle(d.claimed > d.maxClaimChunks ? ChatFormatting.RED : d.claimed == d.maxClaimChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
 			list.add(new TranslatableComponent("ftbchunks.gui.force_loaded"));
-			list.add(new TextComponent(d.loaded + " / " + d.maxLoaded).withStyle(d.loaded > d.maxLoaded ? ChatFormatting.RED : d.loaded == d.maxLoaded ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+			list.add(new TextComponent(d.loaded + " / " + d.maxForceLoadChunks).withStyle(d.loaded > d.maxForceLoadChunks ? ChatFormatting.RED : d.loaded == d.maxForceLoadChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
 
 			for (int i = 0; i < list.size(); i++) {
 				theme.drawString(matrixStack, list.get(i), 3, getScreen().getGuiScaledHeight() - 10 * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);

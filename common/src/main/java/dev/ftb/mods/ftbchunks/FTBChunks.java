@@ -20,7 +20,9 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
 import dev.ftb.mods.ftbteams.event.PlayerLoggedInAfterTeamEvent;
+import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
@@ -41,6 +43,7 @@ import me.shedaniel.architectury.utils.EnvExecutor;
 import me.shedaniel.architectury.utils.IntValue;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -76,7 +79,6 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +121,7 @@ public class FTBChunks {
 		TeamEvent.CREATED.register(this::teamCreated);
 		TeamEvent.LOADED.register(this::teamLoaded);
 		TeamEvent.SAVED.register(this::teamSaved);
+		TeamEvent.DELETED.register(this::teamDeleted);
 		PlayerEvent.PLAYER_QUIT.register(this::loggedOut);
 		InteractionEvent.LEFT_CLICK_BLOCK.register(this::blockLeftClick);
 		InteractionEvent.RIGHT_CLICK_BLOCK.register(this::blockRightClick);
@@ -133,6 +136,8 @@ public class FTBChunks {
 		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 		TeamEvent.COLLECT_PROPERTIES.register(this::teamConfig);
+		TeamEvent.PLAYER_CHANGED.register(this::playerChangedTeam);
+		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
 
 		PROXY.init();
 	}
@@ -148,12 +153,13 @@ public class FTBChunks {
 	private void loggedIn(PlayerLoggedInAfterTeamEvent event) {
 		ServerPlayer player = event.getPlayer();
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
+		data.updateLimits(player);
 
 		new LoginDataPacket(event.getTeam().manager.getId()).sendTo(player);
 		SendGeneralDataPacket.send(data, player);
 		SendVisiblePlayerListPacket.sendAll();
 
-		Date now = new Date();
+		long now = System.currentTimeMillis();
 		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 
 		for (ClaimedChunk chunk : FTBChunksAPI.getManager().claimedChunks.values()) {
@@ -178,8 +184,9 @@ public class FTBChunks {
 			}
 		}
 
-		boolean canChunkLoadOffline = data.manager.config.getChunkLoadOffline(data, player);
-		data.setChunkLoadOffline(canChunkLoadOffline);
+		if (data.getTeam().getOwner().equals(player.getUUID())) {
+			data.setChunkLoadOffline(data.manager.config.getChunkLoadOffline(data, player));
+		}
 	}
 
 	private void teamCreated(TeamCreatedEvent teamEvent) {
@@ -192,6 +199,16 @@ public class FTBChunks {
 
 	private void teamSaved(TeamEvent teamEvent) {
 		FTBChunksAPI.manager.getData(teamEvent.getTeam()).saveNow();
+	}
+
+	private void teamDeleted(TeamEvent teamEvent) {
+		if (!teamEvent.getTeam().getType().isPlayer()) {
+			CommandSourceStack sourceStack = teamEvent.getTeam().manager.server.createCommandSourceStack();
+
+			for (ClaimedChunk chunk : FTBChunksAPI.manager.getData(teamEvent.getTeam()).getClaimedChunks()) {
+				chunk.unclaim(sourceStack);
+			}
+		}
 	}
 
 	public void loggedOut(ServerPlayer player) {
@@ -484,5 +501,45 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
 		// event.add(FTBChunksTeamData.LOCATION_MODE);
+	}
+
+	private void playerChangedTeam(PlayerChangedTeamEvent event) {
+		if (event.getPreviousTeam().isPresent() && event.getPreviousTeam().get().getType().isPlayer()) {
+			FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam().get());
+			FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
+
+			if (event.getPlayer() != null) {
+				newData.updateLimits(event.getPlayer());
+			}
+
+			Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+			int chunks = 0;
+			long now = System.currentTimeMillis();
+
+			for (ClaimedChunk chunk : oldData.getClaimedChunks()) {
+				chunk.teamData = newData;
+				chunksToSend.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
+				chunks++;
+			}
+
+			if (chunks == 0) {
+				return;
+			}
+
+			for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
+				SendAllChunksPacket packet = new SendAllChunksPacket();
+				packet.dimension = entry.getKey();
+				packet.teamId = newData.getTeamId();
+				packet.chunks = entry.getValue();
+				packet.sendToAll();
+			}
+
+			FTBChunks.LOGGER.info("Transferred " + chunks + " chunks from " + oldData + " to " + newData);
+		}
+	}
+
+	private void teamOwnershipTransferred(PlayerTransferredTeamOwnershipEvent event) {
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(event.getTeam());
+		data.updateLimits(event.getTo());
 	}
 }

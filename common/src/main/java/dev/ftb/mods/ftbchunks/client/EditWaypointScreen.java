@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import dev.ftb.mods.ftbguilibrary.widget.BaseScreen;
-import dev.ftb.mods.ftbguilibrary.widget.TextBox;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.TextBox;
 
 /**
  * @author LatvianModder

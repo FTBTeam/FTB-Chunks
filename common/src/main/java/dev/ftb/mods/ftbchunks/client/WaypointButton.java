@@ -3,17 +3,17 @@ package dev.ftb.mods.ftbchunks.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
-import dev.ftb.mods.ftbguilibrary.config.StringConfig;
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
-import dev.ftb.mods.ftbguilibrary.icon.Icon;
-import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
-import dev.ftb.mods.ftbguilibrary.utils.MouseButton;
-import dev.ftb.mods.ftbguilibrary.utils.TooltipList;
-import dev.ftb.mods.ftbguilibrary.widget.ContextMenuItem;
-import dev.ftb.mods.ftbguilibrary.widget.GuiIcons;
-import dev.ftb.mods.ftbguilibrary.widget.Panel;
-import dev.ftb.mods.ftbguilibrary.widget.Theme;
-import dev.ftb.mods.ftbguilibrary.widget.Widget;
+import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
@@ -55,7 +55,7 @@ public class WaypointButton extends Widget {
 			}));
 			contextMenu.add(ContextMenuItem.SEPARATOR);
 
-			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.rename"), GuiIcons.CHAT, () -> {
+			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.rename"), Icons.CHAT, () -> {
 				StringConfig config = new StringConfig();
 				config.defaultValue = "";
 				config.value = waypoint.name;
@@ -70,7 +70,7 @@ public class WaypointButton extends Widget {
 			}));
 
 			if (waypoint.type == WaypointType.DEFAULT) {
-				contextMenu.add(new ContextMenuItem(new TextComponent("Change Color"), GuiIcons.COLOR_RGB, () -> {
+				contextMenu.add(new ContextMenuItem(new TextComponent("Change Color"), Icons.COLOR_RGB, () -> {
 					int r = (waypoint.color >> 16) & 0xFF;
 					int g = (waypoint.color >> 8) & 0xFF;
 					int b = (waypoint.color >> 0) & 0xFF;
@@ -82,7 +82,7 @@ public class WaypointButton extends Widget {
 					contextMenu.get(0).icon = icon;
 				}).setCloseMenu(false));
 
-				contextMenu.add(new ContextMenuItem(new TextComponent(waypoint.hidden ? "Show" : "Hide"), GuiIcons.BEACON, () -> {
+				contextMenu.add(new ContextMenuItem(new TextComponent(waypoint.hidden ? "Show" : "Hide"), Icons.BEACON, () -> {
 					waypoint.hidden = !waypoint.hidden;
 					waypoint.dimension.saveData = true;
 					contextMenu.get(0).title = new TextComponent(waypoint.hidden ? "Show" : "Hide");
@@ -90,7 +90,7 @@ public class WaypointButton extends Widget {
 				}));
 			}
 
-			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), GuiIcons.REMOVE, () -> {
+			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), Icons.REMOVE, () -> {
 				waypoint.dimension.getWaypoints().remove(waypoint);
 				waypoint.dimension.saveData = true;
 				parent.widgets.remove(this);

@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkTeamData;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public class VisiblePlayerListItem {
 	public ServerPlayer player;
-	public ClaimedChunkTeamData data;
+	public FTBChunksTeamData data;
 	public PlayerLocation location;
 
 	@Override

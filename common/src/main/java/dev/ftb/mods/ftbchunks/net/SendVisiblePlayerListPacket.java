@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.core.Registry;
@@ -60,7 +61,7 @@ public class SendVisiblePlayerListPacket extends MessageBase {
 			List<PlayerLocation> players = new ArrayList<>();
 
 			for (VisiblePlayerListItem other : playerList) {
-				if (other.player.level == self.player.level && self.data.canUse(other.player, self.data.locationMode, false)) {
+				if (other.player.level == self.player.level && self.data.canUse(other.player, FTBChunksTeamData.LOCATION_MODE)) {
 					players.add(other.location);
 				}
 			}

@@ -3,10 +3,10 @@ package dev.ftb.mods.ftbchunks.client;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
-import dev.ftb.mods.ftbguilibrary.widget.GuiHelper;
-import dev.ftb.mods.ftbguilibrary.widget.Theme;
-import dev.ftb.mods.ftbguilibrary.widget.Widget;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
 
 /**
  * @author LatvianModder

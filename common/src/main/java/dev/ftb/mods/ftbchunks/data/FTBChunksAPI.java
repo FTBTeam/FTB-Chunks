@@ -1,6 +1,8 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import me.shedaniel.architectury.hooks.TagHooks;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -15,9 +17,9 @@ import net.minecraft.world.level.block.Block;
  * @author LatvianModder
  */
 public class FTBChunksAPI {
-	public static final Tag<Block> EDIT_TAG = TagHooks.getBlockOptional(new ResourceLocation("ftbchunks", "edit_whitelist"));
-	public static final Tag<Block> INTERACT_TAG = TagHooks.getBlockOptional(new ResourceLocation("ftbchunks", "interact_whitelist"));
-	public static final Tag<Item> RIGHT_CLICK_BLACKLIST_TAG = TagHooks.getItemOptional(new ResourceLocation("ftbchunks", "right_click_blacklist"));
+	public static final Tag<Block> EDIT_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "edit_whitelist"));
+	public static final Tag<Block> INTERACT_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "interact_whitelist"));
+	public static final Tag<Item> RIGHT_CLICK_BLACKLIST_TAG = TagHooks.getItemOptional(new ResourceLocation(FTBChunks.MOD_ID, "right_click_blacklist"));
 
 	public static ClaimedChunkManager manager;
 

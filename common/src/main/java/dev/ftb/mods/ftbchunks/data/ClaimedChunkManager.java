@@ -1,21 +1,20 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import com.google.gson.JsonObject;
-import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import me.shedaniel.architectury.hooks.LevelResourceHooks;
 import me.shedaniel.architectury.platform.Platform;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -33,7 +32,7 @@ public class ClaimedChunkManager {
 	public final TeamManager teamManager;
 	public final FTBChunksWorldConfig config;
 
-	public final Map<UUID, ClaimedChunkTeamData> teamData;
+	public final Map<UUID, FTBChunksTeamData> teamData;
 	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
 	public Path dataDirectory;
 	public Path localDirectory;
@@ -67,7 +66,7 @@ public class ClaimedChunkManager {
 		int forceLoaded = 0;
 
 		for (ClaimedChunk chunk : claimedChunks.values()) {
-			if (chunk.isForceLoaded() && chunk.getPlayerData().chunkLoadOffline()) {
+			if (chunk.isForceLoaded() && chunk.getTeamData().getChunkLoadOffline()) {
 				forceLoaded++;
 				chunk.postSetForceLoaded(true);
 			}
@@ -76,32 +75,22 @@ public class ClaimedChunkManager {
 		FTBChunks.LOGGER.info("Server " + teamManager.getId() + ": Loaded " + claimedChunks.size() + " chunks (" + forceLoaded + " force loaded) from " + teamData.size() + " teams in " + ((System.nanoTime() - nanos) / 1000000D) + "ms");
 	}
 
-	public ClaimedChunkTeamData loadTeamData(Team team) {
-		Path path = dataDirectory.resolve(UUIDTypeAdapter.fromUUID(team.getId()) + ".json");
-		ClaimedChunkTeamData data = new ClaimedChunkTeamData(this, path, team);
+	private FTBChunksTeamData loadTeamData(Team team) {
+		Path path = dataDirectory.resolve(team.getId() + ".snbt");
+		FTBChunksTeamData data = new FTBChunksTeamData(this, path, team);
+		CompoundTag dataFile = SNBT.read(path);
 
-		if (Files.exists(path)) {
-			try (Reader reader = Files.newBufferedReader(path)) {
-				JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
-				data.fromJson(json);
-				teamData.put(team.getId(), data);
+		if (dataFile != null) {
+			data.deserializeNBT(dataFile);
+			teamData.put(team.getId(), data);
 
-				for (ClaimedChunk chunk : data.getClaimedChunks()) {
-					if (chunk.isForceLoaded() && chunk.getPlayerData().chunkLoadOffline()) {
-						chunk.postSetForceLoaded(true);
-					}
-				}
-
-				return data;
-			} catch (Exception ex) {
-				FTBChunks.LOGGER.error("Failed to load " + path + ": " + ex + ". Deleting the file...");
-
-				try {
-					Files.deleteIfExists(path);
-				} catch (IOException e) {
-					e.printStackTrace();
+			for (ClaimedChunk chunk : data.getClaimedChunks()) {
+				if (chunk.isForceLoaded() && chunk.getTeamData().getChunkLoadOffline()) {
+					chunk.postSetForceLoaded(true);
 				}
 			}
+
+			return data;
 		}
 
 		return data;
@@ -111,21 +100,22 @@ public class ClaimedChunkManager {
 		return server;
 	}
 
-	public ClaimedChunkTeamData getData(@Nullable Team team) {
+	public FTBChunksTeamData getData(@Nullable Team team) {
 		if (team == null) {
 			throw new IllegalArgumentException("Team not found!");
 		}
 
-		ClaimedChunkTeamData data = teamData.get(team.getId());
+		FTBChunksTeamData data = teamData.get(team.getId());
 
 		if (data == null) {
 			data = loadTeamData(team);
+			teamData.put(team.getId(), data);
 		}
 
 		return data;
 	}
 
-	public ClaimedChunkTeamData getData(ServerPlayer player) {
+	public FTBChunksTeamData getData(ServerPlayer player) {
 		return getData(FTBTeamsAPI.getPlayerTeam(player));
 	}
 

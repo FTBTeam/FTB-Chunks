@@ -36,9 +36,9 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
-modId = "ftbguilibrary"
+modId = "ftblibrary"
 mandatory = true
-versionRange = "[1.0.0,)"
+versionRange = "[1,)"
 ordering = "AFTER"
 side = "BOTH"
 
@@ -50,7 +50,7 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
-modId = "kubjes"
+modId = "kubejs"
 mandatory = false
 versionRange = "[1.0.0,)"
 ordering = "BEFORE"

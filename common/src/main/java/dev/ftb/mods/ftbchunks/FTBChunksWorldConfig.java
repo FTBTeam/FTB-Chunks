@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks;
 
 import dev.ftb.mods.ftbchunks.data.AllyMode;
-import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkTeamData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import me.shedaniel.architectury.hooks.LevelResourceHooks;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Jankson;
@@ -182,7 +182,7 @@ public class FTBChunksWorldConfig {
 		}
 	}
 
-	public int getMaxClaimedChunks(ClaimedChunkTeamData playerData, ServerPlayer player) {
+	public int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxClaimedChunks(player, maxClaimedChunks) + playerData.getExtraClaimChunks();
 		}
@@ -190,7 +190,7 @@ public class FTBChunksWorldConfig {
 		return maxClaimedChunks + playerData.getExtraClaimChunks();
 	}
 
-	public int getMaxForceLoadedChunks(ClaimedChunkTeamData playerData, ServerPlayer player) {
+	public int getMaxForceLoadedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getMaxForceLoadedChunks(player, maxForceLoadedChunks) + playerData.getExtraForceLoadChunks();
 		}
@@ -198,7 +198,7 @@ public class FTBChunksWorldConfig {
 		return maxForceLoadedChunks + playerData.getExtraForceLoadChunks();
 	}
 
-	public boolean getChunkLoadOffline(ClaimedChunkTeamData playerData, ServerPlayer player) {
+	public boolean getChunkLoadOffline(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod) {
 			return FTBRanksIntegration.getChunkLoadOffline(player, chunkLoadOffline);
 		}

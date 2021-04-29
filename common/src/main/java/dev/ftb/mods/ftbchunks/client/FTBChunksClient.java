@@ -25,7 +25,6 @@ import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
-import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
@@ -33,10 +32,11 @@ import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
-import dev.ftb.mods.ftbguilibrary.icon.FaceIcon;
-import dev.ftb.mods.ftbguilibrary.utils.ClientUtils;
-import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
-import dev.ftb.mods.ftbguilibrary.widget.CustomClickEvent;
+import dev.ftb.mods.ftblibrary.icon.FaceIcon;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
+import dev.ftb.mods.ftblibrary.util.ClientUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
@@ -648,7 +648,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 				ClientTeam team = data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam();
 
 				if (team != null) {
-					MINIMAP_TEXT_LIST.add(team.getName());
+					MINIMAP_TEXT_LIST.add(team.getColoredName());
 				}
 			}
 		}

@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;

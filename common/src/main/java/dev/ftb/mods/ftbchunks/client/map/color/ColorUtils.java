@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map.color;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;

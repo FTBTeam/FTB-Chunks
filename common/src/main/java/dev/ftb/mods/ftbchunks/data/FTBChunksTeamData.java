@@ -1,95 +1,91 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.snbt.OrderedCompoundTag;
+import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.property.BooleanProperty;
+import dev.ftb.mods.ftbteams.property.PrivacyProperty;
 import me.shedaniel.architectury.hooks.PlayerHooks;
+import me.shedaniel.architectury.utils.NbtType;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
-import net.minecraft.network.chat.Component;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.Level;
 
-import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
  * @author LatvianModder
  */
-public class ClaimedChunkTeamData {
+public class FTBChunksTeamData {
+	public static final BooleanProperty ALLOW_FAKE_PLAYERS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_fake_players"), true);
+	public static final PrivacyProperty BLOCK_EDIT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_edit_mode"), PrivacyMode.ALLIES);
+	public static final PrivacyProperty BLOCK_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_interact_mode"), PrivacyMode.ALLIES);
+	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
+	public static final PrivacyProperty LOCATION_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.ALLIES);
+
 	public final ClaimedChunkManager manager;
 	private final Team team;
 	public final Path file;
 	private boolean shouldSave;
-	public PrivacyMode blockEditMode;
-	public PrivacyMode blockInteractMode;
-	public PrivacyMode minimapMode;
-	public PrivacyMode locationMode;
 	public int extraClaimChunks;
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
 	public boolean bypassProtection;
-	public boolean allowFakePlayers;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
 
-	public ClaimedChunkTeamData(ClaimedChunkManager m, Path f, Team t) {
+	public FTBChunksTeamData(ClaimedChunkManager m, Path f, Team t) {
 		manager = m;
 		team = t;
 		file = f;
 		shouldSave = false;
-		blockEditMode = PrivacyMode.ALLIES;
-		blockInteractMode = PrivacyMode.ALLIES;
-		minimapMode = PrivacyMode.ALLIES;
-		locationMode = PrivacyMode.ALLIES;
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
 		bypassProtection = false;
-		allowFakePlayers = true;
 	}
 
 	@Override
 	public String toString() {
-		return getTeam().getStringID();
+		return team.getStringID();
 	}
 
 	public ClaimedChunkManager getManager() {
 		return manager;
 	}
 
-	public UUID getTeamId() {
-		return team.getId();
+	public Team getTeam() {
+		return team;
 	}
 
-	@Nullable
-	public Team getTeam() {
-		return FTBTeamsAPI.getManager().getPlayerTeam(getTeamId());
+	public UUID getTeamId() {
+		return team.getId();
 	}
 
 	public Collection<ClaimedChunk> getClaimedChunks() {
 		List<ClaimedChunk> list = new ArrayList<>();
 
 		for (ClaimedChunk chunk : manager.claimedChunks.values()) {
-			if (chunk.playerData == this) {
+			if (chunk.teamData == this) {
 				list.add(chunk);
 			}
 		}
@@ -101,7 +97,7 @@ public class ClaimedChunkTeamData {
 		List<ClaimedChunk> list = new ArrayList<>();
 
 		for (ClaimedChunk chunk : manager.claimedChunks.values()) {
-			if (chunk.playerData == this && chunk.isForceLoaded()) {
+			if (chunk.teamData == this && chunk.isForceLoaded()) {
 				list.add(chunk);
 			}
 		}
@@ -143,7 +139,7 @@ public class ClaimedChunkTeamData {
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
-		} else if (chunk.playerData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
+		} else if (chunk.teamData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
 			return ClaimResults.NOT_OWNER;
 		}
 
@@ -165,7 +161,7 @@ public class ClaimedChunkTeamData {
 
 		manager.claimedChunks.remove(pos);
 		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, chunk);
-		chunk.playerData.save();
+		chunk.teamData.save();
 
 		SendChunkPacket packet = new SendChunkPacket();
 		packet.dimension = pos.dimension;
@@ -180,7 +176,7 @@ public class ClaimedChunkTeamData {
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
-		} else if (chunk.playerData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
+		} else if (chunk.teamData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
 			return ClaimResults.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResults.ALREADY_LOADED;
@@ -201,7 +197,7 @@ public class ClaimedChunkTeamData {
 		chunk.setForceLoadedTime(Instant.now());
 		chunk.postSetForceLoaded(true);
 		ClaimedChunkEvent.AFTER_LOAD.invoker().after(source, chunk);
-		chunk.playerData.save();
+		chunk.teamData.save();
 		return chunk;
 	}
 
@@ -210,7 +206,7 @@ public class ClaimedChunkTeamData {
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
-		} else if (chunk.playerData != this
+		} else if (chunk.teamData != this
 				&& !source.hasPermission(2)
 				&& !source.getServer().isSingleplayer()
 				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(source.getEntity().getUUID()))
@@ -233,7 +229,7 @@ public class ClaimedChunkTeamData {
 		chunk.setForceLoadedTime(null);
 		chunk.postSetForceLoaded(false);
 		ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, chunk);
-		chunk.playerData.save();
+		chunk.teamData.save();
 		return chunk;
 	}
 
@@ -247,158 +243,98 @@ public class ClaimedChunkTeamData {
 			return true;
 		}
 
-		Team team1 = getTeam();
-		return team1 != null && team1.equals(FTBTeamsAPI.getManager().getPlayerTeam(p));
-	}
-
-	public boolean isExplicitAlly(UUID p) {
-		if (getTeamId().equals(p)) {
-			return true;
-		}
-
-		Team team1 = getTeam();
-
-		if (team1 != null) {
-			if (team1.isMember(p)) {
-				return true;
-			}
-
-			Team team2 = FTBTeamsAPI.getPlayerTeam(p);
-			return team2 != null && team1.isAlly(p) && team2.isAlly(getTeamId());
-		}
-
-		return false;
+		return team.equals(FTBTeamsAPI.getManager().getPlayerTeam(p));
 	}
 
 	public boolean isAlly(UUID p) {
-		if (manager.config.allyMode == AllyMode.FORCED_ALL || getTeamId().equals(p)) {
+		if (manager.config.allyMode == AllyMode.FORCED_ALL || team.isMember(p)) {
 			return true;
 		} else if (manager.config.allyMode == AllyMode.FORCED_NONE) {
 			return false;
 		}
 
-		return isExplicitAlly(p);
+		return team.isAlly(p);
 	}
 
-	public boolean canUse(ServerPlayer p, PrivacyMode mode, boolean explicit) {
+	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
+		PrivacyMode mode = team.getProperty(property);
+
 		if (mode == PrivacyMode.PUBLIC) {
 			return true;
 		} else if (mode == PrivacyMode.ALLIES) {
 			if (PlayerHooks.isFake(p)) {
-				return allowFakePlayers;
+				return team.getProperty(ALLOW_FAKE_PLAYERS);
 			}
 
-			return explicit ? isExplicitAlly(p.getUUID()) : isAlly(p.getUUID());
+			return isAlly(p.getUUID());
 		}
 
-		Team team = getTeam();
-		return team != null && team.isMember(p.getUUID());
+		return team.isMember(p.getUUID());
 	}
 
-	public JsonObject toJson() {
-		JsonObject json = new JsonObject();
-		json.addProperty("uuid", UUIDTypeAdapter.fromUUID(getTeamId()));
+	public OrderedCompoundTag serializeNBT() {
+		OrderedCompoundTag tag = new OrderedCompoundTag();
+		tag.putInt("extra_claim_chunks", extraClaimChunks);
+		tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
+		tag.putBoolean("chunk_load_offline", chunkLoadOffline);
 
-		json.addProperty("block_edit_mode", blockEditMode.name);
-		json.addProperty("block_interact_mode", blockInteractMode.name);
-		json.addProperty("minimap_mode", minimapMode.name);
-		json.addProperty("location_mode", locationMode.name);
-		json.addProperty("extra_claim_chunks", extraClaimChunks);
-		json.addProperty("extra_force_load_chunks", extraForceLoadChunks);
-		json.addProperty("chunk_load_offline", chunkLoadOffline);
-		json.addProperty("allow_fake_players", allowFakePlayers);
-
-		JsonObject chunksJson = new JsonObject();
+		CompoundTag chunksTag = new CompoundTag();
 
 		for (ClaimedChunk chunk : getClaimedChunks()) {
-			String dim = chunk.getPos().dimension.location().toString();
-			JsonElement e = chunksJson.get(dim);
+			String key = chunk.getPos().dimension.location().toString();
+			ListTag chunksListTag = chunksTag.getList(key, NbtType.COMPOUND);
 
-			if (e == null || e.isJsonNull()) {
-				e = new JsonArray();
-				chunksJson.add(dim, e);
+			if (chunksListTag.isEmpty()) {
+				chunksTag.put(key, chunksListTag);
 			}
 
-			JsonObject chunkJson = new JsonObject();
-			chunkJson.addProperty("x", chunk.getPos().x);
-			chunkJson.addProperty("z", chunk.getPos().z);
-			chunkJson.addProperty("time", chunk.getTimeClaimed().toString());
+			OrderedCompoundTag o = new OrderedCompoundTag();
+			o.singleLine = true;
+			o.putInt("x", chunk.getPos().x);
+			o.putInt("z", chunk.getPos().z);
+			o.putString("time", chunk.getTimeClaimed().toString());
 
 			if (chunk.isForceLoaded()) {
-				chunkJson.addProperty("force_loaded", chunk.getForceLoadedTime().toString());
+				o.putString("force_loaded", chunk.getForceLoadedTime().toString());
 			}
 
-			e.getAsJsonArray().add(chunkJson);
+			chunksListTag.add(o);
 		}
 
-		json.add("chunks", chunksJson);
+		tag.put("chunks", chunksTag);
 
-		return json;
+		return tag;
 	}
 
-	public void fromJson(JsonObject json) {
-		if (json.has("block_edit_mode")) {
-			blockEditMode = PrivacyMode.get(json.get("block_edit_mode").getAsString());
-		}
+	public void deserializeNBT(CompoundTag tag) {
+		extraClaimChunks = tag.getInt("extra_claim_chunks");
+		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
+		chunkLoadOffline = tag.getBoolean("chunk_load_offline");
 
-		if (json.has("block_interact_mode")) {
-			blockInteractMode = PrivacyMode.get(json.get("block_interact_mode").getAsString());
-		}
+		CompoundTag chunksTag = tag.getCompound("chunks");
 
-		if (json.has("minimap_mode")) {
-			minimapMode = PrivacyMode.get(json.get("minimap_mode").getAsString());
-		}
+		for (String key : chunksTag.getAllKeys()) {
+			ResourceKey<Level> dimKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(key));
+			ListTag chunksListTag = chunksTag.getList(key, NbtType.COMPOUND);
 
-		if (json.has("location_mode")) {
-			locationMode = PrivacyMode.get(json.get("location_mode").getAsString());
-		}
+			for (int i = 0; i < chunksListTag.size(); i++) {
+				CompoundTag o = chunksListTag.getCompound(i);
+				int x = o.getInt("x");
+				int z = o.getInt("z");
 
-		if (json.has("extra_claim_chunks")) {
-			extraClaimChunks = json.get("extra_claim_chunks").getAsInt();
-		}
+				ClaimedChunk chunk = new ClaimedChunk(this, new ChunkDimPos(dimKey, x, z));
 
-		if (json.has("extra_force_load_chunks")) {
-			extraForceLoadChunks = json.get("extra_force_load_chunks").getAsInt();
-		}
-
-		if (json.has("chunk_load_offline")) {
-			chunkLoadOffline = json.get("chunk_load_offline").getAsBoolean();
-		}
-
-		if (json.has("allow_fake_players")) {
-			allowFakePlayers = json.get("allow_fake_players").getAsBoolean();
-		}
-
-		if (json.has("chunks")) {
-			for (Map.Entry<String, JsonElement> entry : json.get("chunks").getAsJsonObject().entrySet()) {
-				for (JsonElement e : entry.getValue().getAsJsonArray()) {
-					JsonObject o = e.getAsJsonObject();
-					int x = o.get("x").getAsInt();
-					int z = o.get("z").getAsInt();
-
-					ClaimedChunk chunk = new ClaimedChunk(this, new ChunkDimPos(ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(entry.getKey())), x, z));
-
-					if (o.has("time")) {
-						chunk.time = Instant.parse(o.get("time").getAsString());
-					}
-
-					if (o.has("force_loaded")) {
-						if (o.get("force_loaded").getAsJsonPrimitive().isBoolean()) {
-							chunk.forceLoaded = chunk.time;
-							save();
-						} else {
-							chunk.forceLoaded = Instant.parse(o.get("force_loaded").getAsString());
-						}
-					}
-
-					manager.claimedChunks.put(chunk.pos, chunk);
+				if (o.contains("time")) {
+					chunk.time = Instant.parse(o.getString("time"));
 				}
+
+				if (o.contains("force_loaded")) {
+					chunk.forceLoaded = Instant.parse(o.getString("force_loaded"));
+				}
+
+				manager.claimedChunks.put(chunk.pos, chunk);
 			}
 		}
-	}
-
-	public Component getDisplayName() {
-		return getTeam().getName();
 	}
 
 	public int getExtraClaimChunks() {
@@ -409,7 +345,7 @@ public class ClaimedChunkTeamData {
 		return extraForceLoadChunks;
 	}
 
-	public boolean chunkLoadOffline() {
+	public boolean getChunkLoadOffline() {
 		return chunkLoadOffline;
 	}
 
@@ -424,12 +360,8 @@ public class ClaimedChunkTeamData {
 
 	public void saveNow() {
 		if (shouldSave) {
-			shouldSave = false;
-
-			try (Writer writer = Files.newBufferedWriter(file)) {
-				FTBChunks.GSON.toJson(toJson(), writer);
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			if (SNBT.write(file, serializeNBT())) {
+				shouldSave = false;
 			}
 		}
 	}

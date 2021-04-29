@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkTeamData;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
  * @author LatvianModder
  */
 public class SendGeneralDataPacket extends MessageBase {
-	public static void send(ClaimedChunkTeamData playerData, ServerPlayer player) {
+	public static void send(FTBChunksTeamData playerData, ServerPlayer player) {
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
 		data.maxClaimed = playerData.manager.config.getMaxClaimedChunks(playerData, player);

@@ -23,7 +23,7 @@ dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 
     modApi "me.shedaniel:architectury-forge:${rootProject.architectury_version}"
-    modImplementation "dev.ftb.mods:ftb-gui-library-forge:${rootProject.ftb_gui_library_version}"
+    modImplementation "dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}"
     modImplementation "dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}"
     modImplementation "dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}"
     modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"

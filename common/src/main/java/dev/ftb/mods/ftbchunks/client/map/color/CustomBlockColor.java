@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map.color;
 
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 

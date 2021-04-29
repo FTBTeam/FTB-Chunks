@@ -10,22 +10,22 @@ import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.core.MouseHandlerFTBC;
-import dev.ftb.mods.ftbchunks.data.XZ;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
-import dev.ftb.mods.ftbguilibrary.config.StringConfig;
-import dev.ftb.mods.ftbguilibrary.config.gui.EditConfigFromStringScreen;
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
-import dev.ftb.mods.ftbguilibrary.utils.Key;
-import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
-import dev.ftb.mods.ftbguilibrary.utils.MouseButton;
-import dev.ftb.mods.ftbguilibrary.utils.StringUtils;
-import dev.ftb.mods.ftbguilibrary.widget.BaseScreen;
-import dev.ftb.mods.ftbguilibrary.widget.Button;
-import dev.ftb.mods.ftbguilibrary.widget.ContextMenuItem;
-import dev.ftb.mods.ftbguilibrary.widget.GuiIcons;
-import dev.ftb.mods.ftbguilibrary.widget.SimpleButton;
-import dev.ftb.mods.ftbguilibrary.widget.Theme;
+import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.SimpleButton;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.TextComponent;
@@ -95,7 +95,7 @@ public class LargeMapScreen extends BaseScreen {
 	public void addWidgets() {
 		add(regionPanel);
 
-		add(claimChunksButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.claimed_chunks"), GuiIcons.MAP, (b, m) -> new ChunkScreen().openGui()));
+		add(claimChunksButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.claimed_chunks"), Icons.MAP, (b, m) -> new ChunkScreen().openGui()));
 		/*
 		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.waypoints"), GuiIcons.BEACON, (b, m) -> {
 			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
@@ -103,7 +103,7 @@ public class LargeMapScreen extends BaseScreen {
 		 */
 
 		// add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
-		add(waypointsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, (b, m) -> {
+		add(waypointsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.add_waypoint"), Icons.ADD, (b, m) -> {
 			StringConfig name = new StringConfig();
 			new EditConfigFromStringScreen<>(name, set -> {
 				if (set) {
@@ -123,11 +123,11 @@ public class LargeMapScreen extends BaseScreen {
 			}).openGui();
 		}));
 
-		add(syncButton = new SimpleButton(this, /*new TranslationTextComponent("ftbchunks.gui.sync")*/new TextComponent("Currently disabled due to a bug!"), GuiIcons.REFRESH, (b, m) -> {
+		add(syncButton = new SimpleButton(this, /*new TranslationTextComponent("ftbchunks.gui.sync")*/new TextComponent("Currently disabled due to a bug!"), Icons.REFRESH, (b, m) -> {
 			// dimension.sync();
 		}));
 
-		add(dimensionButton = new SimpleButton(this, new TextComponent(dimension.dimension.location().getPath().replace('_', ' ')), GuiIcons.GLOBE, (b, m) -> {
+		add(dimensionButton = new SimpleButton(this, new TextComponent(dimension.dimension.location().getPath().replace('_', ' ')), Icons.GLOBE, (b, m) -> {
 			try {
 				List<MapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
 				int i = list.indexOf(dimension);
@@ -141,7 +141,7 @@ public class LargeMapScreen extends BaseScreen {
 			}
 		}));
 
-		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), GuiIcons.SETTINGS, (b, m) -> FTBChunksClientConfig.get().openSettings(getWrapper())));
+		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.get().openSettings(getWrapper())));
 	}
 
 	@Override
@@ -175,7 +175,7 @@ public class LargeMapScreen extends BaseScreen {
 			int clickBlockX = regionPanel.blockX;
 			int clickBlockZ = regionPanel.blockZ;
 			List<ContextMenuItem> list = new ArrayList<>();
-			list.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.add_waypoint"), GuiIcons.ADD, () -> {
+			list.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.add_waypoint"), Icons.ADD, () -> {
 				StringConfig name = new StringConfig();
 				new EditConfigFromStringScreen<>(name, set -> {
 					if (set) {

@@ -4,12 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.FluidItemFTBC;
-import dev.ftb.mods.ftbchunks.data.ChunkDimPos;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkTeamData;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.XZ;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
@@ -17,10 +15,13 @@ import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
-import dev.ftb.mods.ftbguilibrary.utils.MathUtils;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.event.PlayerLoggedInAfterTeamEvent;
+import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import dev.ftb.mods.ftbteams.event.TeamManagerEvent;
@@ -109,7 +110,7 @@ public class FTBChunks {
 		FTBChunksNet.init();
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
-			RELATIVE_SPIRAL_POSITIONS[i] = XZ.of(MathUtils.getSpiralPoint(i + 1));
+			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);
 		}
 
 		TeamManagerEvent.CREATED.register(this::teamManagerCreated);
@@ -131,6 +132,7 @@ public class FTBChunks {
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
+		TeamEvent.COLLECT_PROPERTIES.register(this::teamConfig);
 
 		PROXY.init();
 	}
@@ -145,7 +147,7 @@ public class FTBChunks {
 
 	private void loggedIn(PlayerLoggedInAfterTeamEvent event) {
 		ServerPlayer player = event.getPlayer();
-		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 
 		new LoginDataPacket(event.getTeam().manager.getId()).sendTo(player);
 		SendGeneralDataPacket.send(data, player);
@@ -155,7 +157,7 @@ public class FTBChunks {
 		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 
 		for (ClaimedChunk chunk : FTBChunksAPI.getManager().claimedChunks.values()) {
-			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.playerData.getTeamId()), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
+			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.teamData.getTeamId()), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
 		}
 
 		for (Map.Entry<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
@@ -193,7 +195,7 @@ public class FTBChunks {
 	}
 
 	public void loggedOut(ServerPlayer player) {
-		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(player);
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		boolean canChunkLoadOffline = data.manager.config.getChunkLoadOffline(data, player);
 		data.setChunkLoadOffline(canChunkLoadOffline);
 
@@ -398,17 +400,17 @@ public class FTBChunks {
 			return;
 		}
 
-		ClaimedChunkTeamData data = FTBChunksAPI.getManager().getData(team);
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
 
 		if (data.prevChunkX != chunkX || data.prevChunkZ != chunkZ) {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player));
-			String s = chunk == null ? "-" : chunk.getPlayerData().getTeamId().toString();
+			String s = chunk == null ? "-" : chunk.getTeamData().getTeamId().toString();
 
 			if (!data.lastChunkID.equals(s)) {
 				data.lastChunkID = s;
 
 				if (chunk != null) {
-					player.displayClientMessage(chunk.getPlayerData().getDisplayName(), true);
+					player.displayClientMessage(chunk.getTeamData().getTeam().getColoredName(), true);
 				} else {
 					player.displayClientMessage(new TranslatableComponent("wilderness").withStyle(ChatFormatting.DARK_GREEN), true);
 				}
@@ -474,5 +476,13 @@ public class FTBChunks {
 		}
 
 		return InteractionResult.PASS;
+	}
+
+	private void teamConfig(TeamCollectPropertiesEvent event) {
+		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
+		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+		// event.add(FTBChunksTeamData.MINIMAP_MODE);
+		// event.add(FTBChunksTeamData.LOCATION_MODE);
 	}
 }

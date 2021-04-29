@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import me.shedaniel.architectury.hooks.PlayerHooks;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,20 +17,20 @@ import java.util.Date;
  * @author LatvianModder
  */
 public class ClaimedChunk implements ClaimResult {
-	public final ClaimedChunkTeamData playerData;
+	public final FTBChunksTeamData teamData;
 	public final ChunkDimPos pos;
 	public Instant forceLoaded;
 	public Instant time;
 
-	public ClaimedChunk(ClaimedChunkTeamData p, ChunkDimPos cp) {
-		playerData = p;
+	public ClaimedChunk(FTBChunksTeamData p, ChunkDimPos cp) {
+		teamData = p;
 		pos = cp;
 		forceLoaded = null;
 		time = Instant.now();
 	}
 
-	public ClaimedChunkTeamData getPlayerData() {
-		return playerData;
+	public FTBChunksTeamData getTeamData() {
+		return teamData;
 	}
 
 	public ChunkDimPos getPos() {
@@ -66,12 +67,12 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean canEdit(ServerPlayer player, BlockState state) {
-		if (FTBChunksAPI.EDIT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockEditMode, false)) {
+		if (FTBChunksAPI.EDIT_TAG.contains(state.getBlock()) || teamData.canUse(player, FTBChunksTeamData.BLOCK_EDIT_MODE)) {
 			return true;
 		}
 
 		if (!PlayerHooks.isFake(player)) {
-			ClaimedChunkTeamData pd = playerData.manager.getData(player);
+			FTBChunksTeamData pd = teamData.manager.getData(player);
 			return pd.getBypassProtection(player);
 		}
 
@@ -79,12 +80,12 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean canInteract(ServerPlayer player, BlockState state) {
-		if (FTBChunksAPI.INTERACT_TAG.contains(state.getBlock()) || playerData.canUse(player, playerData.blockInteractMode, false)) {
+		if (FTBChunksAPI.INTERACT_TAG.contains(state.getBlock()) || teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
 			return true;
 		}
 
 		if (!PlayerHooks.isFake(player)) {
-			ClaimedChunkTeamData pd = playerData.manager.getData(player);
+			FTBChunksTeamData pd = teamData.manager.getData(player);
 			return pd.getBypassProtection(player);
 		}
 
@@ -92,12 +93,12 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean canRightClickItem(ServerPlayer player, ItemStack item) {
-		if (playerData.canUse(player, playerData.blockInteractMode, false)) {
+		if (teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
 			return true;
 		}
 
 		if (!PlayerHooks.isFake(player)) {
-			ClaimedChunkTeamData pd = playerData.manager.getData(player);
+			FTBChunksTeamData pd = teamData.manager.getData(player);
 
 			if (pd.getBypassProtection(player)) {
 				return true;
@@ -116,7 +117,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public void postSetForceLoaded(boolean load) {
-		ServerLevel world = getPlayerData().getManager().getMinecraftServer().getLevel(getPos().dimension);
+		ServerLevel world = getTeamData().getManager().getMinecraftServer().getLevel(getPos().dimension);
 
 		if (world != null) {
 			world.setChunkForced(getPos().x, getPos().z, load);
@@ -127,7 +128,7 @@ public class ClaimedChunk implements ClaimResult {
 	public void sendUpdateToAll() {
 		SendChunkPacket packet = new SendChunkPacket();
 		packet.dimension = pos.dimension;
-		packet.teamId = playerData.getTeamId();
+		packet.teamId = teamData.getTeamId();
 		packet.chunk = new SendChunkPacket.SingleChunk(new Date(), pos.x, pos.z, this);
 		packet.sendToAll();
 	}

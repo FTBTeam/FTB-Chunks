@@ -6,9 +6,9 @@ import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
-import dev.ftb.mods.ftbchunks.data.XZ;
-import dev.ftb.mods.ftbguilibrary.icon.Color4I;
-import dev.ftb.mods.ftbguilibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.TeamBase;
@@ -90,7 +90,7 @@ public class RenderMapImageTask implements MapTask {
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
 				MapChunk c = data.chunks.get(XZ.of(cx, cz));
-				Random random = new Random(region.pos.asLong() ^ (c == null ? 0L : c.pos.asLong()));
+				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.pos.toLong()));
 				Color4I claimColor, fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
 

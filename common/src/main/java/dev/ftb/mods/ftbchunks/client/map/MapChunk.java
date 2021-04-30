@@ -43,7 +43,10 @@ public class MapChunk {
 
 	@Nullable
 	public ClientTeam getTeam() {
-		// TODO: Check invalidity
+		if (team != null && team.invalid) {
+			team = team.manager.getTeam(team.getId());
+		}
+
 		return team;
 	}
 

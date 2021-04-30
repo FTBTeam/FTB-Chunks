@@ -82,7 +82,7 @@ if (ENV.CURSEFORGE_KEY) {
             relations {
                 requiredDependency 'architectury-fabric'
                 requiredDependency 'fabric-api'
-                requiredDependency 'ftb-gui-library-fabric'
+                requiredDependency 'ftb-library-fabric'
                 requiredDependency 'ftb-teams-fabric'
                 optionalDependency 'ftb-ranks-fabric'
             }

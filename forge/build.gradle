@@ -87,9 +87,9 @@ if (ENV.CURSEFORGE_KEY) {
             mainArtifact(remapJar.archivePath)
             relations {
                 requiredDependency 'architectury-forge'
-                requiredDependency 'ftb-gui-library'
-                requiredDependency 'ftb-teams'
-                optionalDependency 'ftb-ranks'
+                requiredDependency 'ftb-library-forge'
+                requiredDependency 'ftb-teams-forge'
+                optionalDependency 'ftb-ranks-forge'
             }
             changelog = getGitChangelog
             changelogType = 'markdown'

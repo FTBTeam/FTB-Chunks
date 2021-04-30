@@ -6,20 +6,18 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.client.map.PlayerHeadTexture;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
@@ -35,12 +33,10 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -84,8 +80,8 @@ public class ChunkScreen extends BaseScreen {
 		@Override
 		@SuppressWarnings("deprecation")
 		public void addMouseOverText(TooltipList list) {
-			if (chunk != null && chunk.team != null) {
-				list.add(chunk.team.getName());
+			if (chunk != null && chunk.getTeam() != null) {
+				list.add(chunk.getTeam().getName());
 
 				Date date = new Date();
 
@@ -253,24 +249,9 @@ public class ChunkScreen extends BaseScreen {
 		RenderSystem.enableTexture();
 		RenderSystem.lineWidth(1F);
 
-		String uuid = UUIDTypeAdapter.fromUUID(player.getUUID());
-		ResourceLocation headTextureLocation = new ResourceLocation("uuid", uuid);
-		AbstractTexture headTexture = texturemanager.getTexture(headTextureLocation);
-		if (headTexture == null) {
-			headTexture = new PlayerHeadTexture("https://minotar.net/avatar/" + uuid + "/8", ImageIcon.MISSING_IMAGE);
-			texturemanager.register(headTextureLocation, headTexture);
-		}
-
 		double hx = sx + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
 		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
-
-		RenderSystem.bindTexture(headTexture.getId());
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-		buffer.vertex(hx - 4, hy + 4, 0.0D).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
-		buffer.vertex(hx + 4, hy + 4, 0.0D).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
-		buffer.vertex(hx + 4, hy - 4, 0.0D).color(255, 255, 255, 255).uv(1F, 0F).endVertex();
-		buffer.vertex(hx - 4, hy - 4, 0.0D).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
-		tessellator.end();
+		FaceIcon.getFace(player.getGameProfile()).draw(matrixStack, (int) (hx - 8D), (int) (hy - 8D), 8, 8);
 
 		SendGeneralDataPacket d = FTBChunksClient.generalData;
 

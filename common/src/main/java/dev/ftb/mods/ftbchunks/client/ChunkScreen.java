@@ -10,7 +10,6 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
@@ -153,7 +152,7 @@ public class ChunkScreen extends BaseScreen {
 		}
 
 		addAll(chunkButtons);
-		FTBChunksNet.MAIN.sendToServer(new RequestMapDataPacket(player.xChunk - FTBChunks.TILE_OFFSET, player.zChunk - FTBChunks.TILE_OFFSET, player.xChunk + FTBChunks.TILE_OFFSET, player.zChunk + FTBChunks.TILE_OFFSET));
+		new RequestMapDataPacket(player.xChunk - FTBChunks.TILE_OFFSET, player.zChunk - FTBChunks.TILE_OFFSET, player.xChunk + FTBChunks.TILE_OFFSET, player.zChunk + FTBChunks.TILE_OFFSET).sendToServer();
 		add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.large_map"), Icons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
 		// add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), Icons.FRIENDS, (simpleButton, mouseButton) -> {}).setPosAndSize(1, 19, 16, 16));
 	}
@@ -163,7 +162,7 @@ public class ChunkScreen extends BaseScreen {
 		super.mouseReleased(button);
 
 		if (!selectedChunks.isEmpty()) {
-			FTBChunksNet.MAIN.sendToServer(new RequestChunkChangePacket(isShiftKeyDown() ? (button.isLeft() ? 2 : 3) : (button.isLeft() ? 0 : 1), selectedChunks));
+			new RequestChunkChangePacket(isShiftKeyDown() ? (button.isLeft() ? 2 : 3) : (button.isLeft() ? 0 : 1), selectedChunks).sendToServer();
 			selectedChunks.clear();
 			playClickSound();
 		}

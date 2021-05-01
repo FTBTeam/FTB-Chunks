@@ -1,6 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -9,7 +11,7 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class LoginDataPacket extends MessageBase {
+public class LoginDataPacket extends BasePacket {
 	public final UUID serverId;
 
 	public LoginDataPacket(UUID id) {
@@ -18,6 +20,11 @@ public class LoginDataPacket extends MessageBase {
 
 	LoginDataPacket(FriendlyByteBuf buf) {
 		serverId = new UUID(buf.readLong(), buf.readLong());
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.LOGIN_DATA;
 	}
 
 	@Override

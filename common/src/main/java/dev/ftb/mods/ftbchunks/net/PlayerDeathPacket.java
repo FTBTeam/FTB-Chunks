@@ -1,6 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
@@ -10,7 +12,7 @@ import net.minecraft.world.level.Level;
 /**
  * @author LatvianModder
  */
-public class PlayerDeathPacket extends MessageBase {
+public class PlayerDeathPacket extends BasePacket {
 	public final ResourceKey<Level> dimension;
 	public final int x, y, z, number;
 
@@ -28,6 +30,11 @@ public class PlayerDeathPacket extends MessageBase {
 		y = buf.readVarInt();
 		z = buf.readVarInt();
 		number = buf.readVarInt();
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.PLAYER_DEATH;
 	}
 
 	@Override

@@ -5,6 +5,8 @@ import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
@@ -17,7 +19,7 @@ import java.util.function.Consumer;
 /**
  * @author LatvianModder
  */
-public class RequestChunkChangePacket extends MessageBase {
+public class RequestChunkChangePacket extends BasePacket {
 	private final int action;
 	private final Set<XZ> chunks;
 
@@ -36,6 +38,11 @@ public class RequestChunkChangePacket extends MessageBase {
 			int z = buf.readVarInt();
 			chunks.add(XZ.of(x, z));
 		}
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.REQUEST_CHUNK_CHANGE;
 	}
 
 	@Override

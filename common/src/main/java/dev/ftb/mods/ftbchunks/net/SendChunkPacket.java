@@ -2,6 +2,8 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
@@ -15,7 +17,7 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class SendChunkPacket extends MessageBase {
+public class SendChunkPacket extends BasePacket {
 	public static class SingleChunk {
 		public int x, z;
 		public long relativeTimeClaimed;
@@ -70,6 +72,11 @@ public class SendChunkPacket extends MessageBase {
 	public SingleChunk chunk;
 
 	public SendChunkPacket() {
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.SEND_CHUNK;
 	}
 
 	SendChunkPacket(FriendlyByteBuf buf) {

@@ -3,6 +3,8 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -10,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 /**
  * @author LatvianModder
  */
-public class SyncTXPacket extends MessageBase {
+public class SyncTXPacket extends BasePacket {
 	public final RegionSyncKey key;
 	public final int offset;
 	public final int total;
@@ -28,6 +30,11 @@ public class SyncTXPacket extends MessageBase {
 		offset = buf.readVarInt();
 		total = buf.readVarInt();
 		data = buf.readByteArray(Integer.MAX_VALUE);
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.SYNC_TX;
 	}
 
 	@Override

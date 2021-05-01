@@ -10,7 +10,6 @@ import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.core.MouseHandlerFTBC;
-import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
@@ -203,7 +202,7 @@ public class LargeMapScreen extends BaseScreen {
 	@Override
 	public boolean keyPressed(Key key) {
 		if (key.is(GLFW.GLFW_KEY_T)) {
-			FTBChunksNet.MAIN.sendToServer(new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ, dimension.dimension));
+			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ, dimension.dimension).sendToServer();
 			closeGui(false);
 			return true;
 		} else if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode)) {

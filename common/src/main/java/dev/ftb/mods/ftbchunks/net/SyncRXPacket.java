@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -15,6 +16,11 @@ public class SyncRXPacket extends SyncTXPacket {
 
 	SyncRXPacket(FriendlyByteBuf buf) {
 		super(buf);
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.SYNC_RX;
 	}
 
 	@Override

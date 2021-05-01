@@ -3,6 +3,8 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -10,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 /**
  * @author LatvianModder
  */
-public class SendGeneralDataPacket extends MessageBase {
+public class SendGeneralDataPacket extends BasePacket {
 	public static void send(FTBChunksTeamData playerData, ServerPlayer player) {
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
@@ -34,6 +36,11 @@ public class SendGeneralDataPacket extends MessageBase {
 	public int maxForceLoadChunks;
 
 	public SendGeneralDataPacket() {
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.SEND_GENERAL_DATA;
 	}
 
 	SendGeneralDataPacket(FriendlyByteBuf buf) {

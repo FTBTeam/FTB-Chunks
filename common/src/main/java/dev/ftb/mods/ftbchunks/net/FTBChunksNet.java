@@ -1,32 +1,24 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import me.shedaniel.architectury.networking.NetworkChannel;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import dev.ftb.mods.ftblibrary.net.FTBNetworkHandler;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 
-import java.util.function.Function;
+public interface FTBChunksNet {
+	FTBNetworkHandler MAIN = FTBNetworkHandler.create(FTBChunks.MOD_ID);
 
-public class FTBChunksNet {
-	public static NetworkChannel MAIN;
+	PacketID REQUEST_MAP_DATA = MAIN.register("request_map_data", RequestMapDataPacket::new);
+	PacketID SEND_ALL_CHUNKS = MAIN.register("send_all_chunks", SendAllChunksPacket::new);
+	PacketID LOGIN_DATA = MAIN.register("login_data", LoginDataPacket::new);
+	PacketID REQUEST_CHUNK_CHANGE = MAIN.register("request_chunk_change", RequestChunkChangePacket::new);
+	PacketID SEND_CHUNK = MAIN.register("send_chunk", SendChunkPacket::new);
+	PacketID SEND_GENERAL_DATA = MAIN.register("send_general_data", SendGeneralDataPacket::new);
+	PacketID TELEPORT_FROM_MAP = MAIN.register("teleport_from_map", TeleportFromMapPacket::new);
+	PacketID PLAYER_DEATH = MAIN.register("player_death", PlayerDeathPacket::new);
+	PacketID SEND_VISIBLE_PLAYER_LIST = MAIN.register("send_visible_player_list", SendVisiblePlayerListPacket::new);
+	PacketID SYNC_TX = MAIN.register("sync_tx", SyncTXPacket::new);
+	PacketID SYNC_RX = MAIN.register("sync_rx", SyncRXPacket::new);
 
-	private static <T extends MessageBase> void register(Class<T> c, Function<FriendlyByteBuf, T> s) {
-		MAIN.register(c, MessageBase::write, s, MessageBase::handle);
-	}
-
-	public static void init() {
-		MAIN = NetworkChannel.create(new ResourceLocation(FTBChunks.MOD_ID, "main"));
-
-		register(RequestMapDataPacket.class, RequestMapDataPacket::new);
-		register(SendAllChunksPacket.class, SendAllChunksPacket::new);
-		register(LoginDataPacket.class, LoginDataPacket::new);
-		register(RequestChunkChangePacket.class, RequestChunkChangePacket::new);
-		register(SendChunkPacket.class, SendChunkPacket::new);
-		register(SendGeneralDataPacket.class, SendGeneralDataPacket::new);
-		register(TeleportFromMapPacket.class, TeleportFromMapPacket::new);
-		register(PlayerDeathPacket.class, PlayerDeathPacket::new);
-		register(SendVisiblePlayerListPacket.class, SendVisiblePlayerListPacket::new);
-		register(SyncTXPacket.class, SyncTXPacket::new);
-		register(SyncRXPacket.class, SyncRXPacket::new);
+	static void init() {
 	}
 }

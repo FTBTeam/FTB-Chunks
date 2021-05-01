@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -18,7 +20,7 @@ import javax.annotation.Nullable;
 /**
  * @author LatvianModder
  */
-public class TeleportFromMapPacket extends MessageBase {
+public class TeleportFromMapPacket extends BasePacket {
 	public final int x, z;
 	public final ResourceKey<Level> dimension;
 
@@ -32,6 +34,11 @@ public class TeleportFromMapPacket extends MessageBase {
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.TELEPORT_FROM_MAP;
 	}
 
 	@Override

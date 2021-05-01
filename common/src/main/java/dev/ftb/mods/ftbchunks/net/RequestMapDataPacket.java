@@ -1,12 +1,14 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.ftb.mods.ftblibrary.net.BasePacket;
+import dev.ftb.mods.ftblibrary.net.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 
 /**
  * @author LatvianModder
  */
-public class RequestMapDataPacket extends MessageBase {
+public class RequestMapDataPacket extends BasePacket {
 	public final int fromX, fromZ, toX, toZ;
 
 	public RequestMapDataPacket(int fx, int fz, int tx, int tz) {
@@ -21,6 +23,11 @@ public class RequestMapDataPacket extends MessageBase {
 		fromZ = buf.readVarInt();
 		toX = buf.readVarInt();
 		toZ = buf.readVarInt();
+	}
+
+	@Override
+	public PacketID getId() {
+		return FTBChunksNet.REQUEST_MAP_DATA;
 	}
 
 	@Override

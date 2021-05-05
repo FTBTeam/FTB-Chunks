@@ -1,14 +1,14 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftblibrary.net.BasePacket;
-import dev.ftb.mods.ftblibrary.net.PacketID;
+import dev.ftb.mods.ftblibrary.net.snm.BaseC2SPacket;
+import dev.ftb.mods.ftblibrary.net.snm.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.network.FriendlyByteBuf;
 
 /**
  * @author LatvianModder
  */
-public class RequestMapDataPacket extends BasePacket {
+public class RequestMapDataPacket extends BaseC2SPacket {
 	public final int fromX, fromZ, toX, toZ;
 
 	public RequestMapDataPacket(int fx, int fz, int tx, int tz) {

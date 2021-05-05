@@ -217,7 +217,7 @@ public class FTBChunks {
 				packet.dimension = entry.getKey();
 				packet.teamId = Util.NIL_UUID;
 				packet.chunks = entry.getValue();
-				packet.sendToAll();
+				packet.sendToAll(sourceStack.getServer());
 			}
 		}
 	}
@@ -548,7 +548,7 @@ public class FTBChunks {
 			packet.dimension = entry.getKey();
 			packet.teamId = newData.getTeamId();
 			packet.chunks = entry.getValue();
-			packet.sendToAll();
+			packet.sendToAll(sourceStack.getServer());
 		}
 
 		for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
@@ -556,7 +556,7 @@ public class FTBChunks {
 			packet.dimension = entry.getKey();
 			packet.teamId = Util.NIL_UUID;
 			packet.chunks = entry.getValue();
-			packet.sendToAll();
+			packet.sendToAll(sourceStack.getServer());
 		}
 
 		FTBChunks.LOGGER.info("Transferred " + chunks + "/" + total + " chunks from " + oldData + " to " + newData);

@@ -129,7 +129,7 @@ public class ClaimedChunk implements ClaimResult {
 		packet.dimension = pos.dimension;
 		packet.teamId = teamData.getTeamId();
 		packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this);
-		packet.sendToAll();
+		packet.sendToAll(teamData.manager.getMinecraftServer());
 	}
 
 	public void unload(CommandSourceStack source) {
@@ -153,7 +153,7 @@ public class ClaimedChunk implements ClaimResult {
 			packet.dimension = pos.dimension;
 			packet.teamId = Util.NIL_UUID;
 			packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null);
-			packet.sendToAll();
+			packet.sendToAll(source.getServer());
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftblibrary.net.BasePacket;
-import dev.ftb.mods.ftblibrary.net.PacketID;
+import dev.ftb.mods.ftblibrary.net.snm.BaseC2SPacket;
+import dev.ftb.mods.ftblibrary.net.snm.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 /**
  * @author LatvianModder
  */
-public class TeleportFromMapPacket extends BasePacket {
+public class TeleportFromMapPacket extends BaseC2SPacket {
 	public final int x, z;
 	public final ResourceKey<Level> dimension;
 

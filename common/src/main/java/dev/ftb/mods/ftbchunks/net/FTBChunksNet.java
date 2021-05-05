@@ -8,7 +8,7 @@ public interface FTBChunksNet {
 	FTBNetworkHandler MAIN = FTBNetworkHandler.create(FTBChunks.MOD_ID);
 
 	PacketID REQUEST_MAP_DATA = MAIN.register("request_map_data", RequestMapDataPacket::new);
-	PacketID SEND_ALL_CHUNKS = MAIN.register("send_all_chunks", SendAllChunksPacket::new);
+	PacketID SEND_ALL_CHUNKS = MAIN.register("send_all_chunks", SendManyChunksPacket::new);
 	PacketID LOGIN_DATA = MAIN.register("login_data", LoginDataPacket::new);
 	PacketID REQUEST_CHUNK_CHANGE = MAIN.register("request_chunk_change", RequestChunkChangePacket::new);
 	PacketID SEND_CHUNK = MAIN.register("send_chunk", SendChunkPacket::new);

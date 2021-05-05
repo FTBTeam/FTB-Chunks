@@ -3,9 +3,9 @@ package dev.ftb.mods.ftbchunks;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import net.minecraft.server.level.ServerLevel;
 
@@ -25,7 +25,7 @@ public class FTBChunksCommon {
 	public void updateChunk(SendChunkPacket packet) {
 	}
 
-	public void updateAllChunks(SendAllChunksPacket packet) {
+	public void updateAllChunks(SendManyChunksPacket packet) {
 	}
 
 	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet) {

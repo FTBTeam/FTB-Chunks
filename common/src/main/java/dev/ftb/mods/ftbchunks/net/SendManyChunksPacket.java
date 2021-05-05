@@ -16,12 +16,12 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class SendAllChunksPacket extends BasePacket {
+public class SendManyChunksPacket extends BasePacket {
 	public ResourceKey<Level> dimension;
 	public UUID teamId;
 	public List<SendChunkPacket.SingleChunk> chunks;
 
-	public SendAllChunksPacket() {
+	public SendManyChunksPacket() {
 	}
 
 	@Override
@@ -29,7 +29,7 @@ public class SendAllChunksPacket extends BasePacket {
 		return FTBChunksNet.SEND_ALL_CHUNKS;
 	}
 
-	SendAllChunksPacket(FriendlyByteBuf buf) {
+	SendManyChunksPacket(FriendlyByteBuf buf) {
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		teamId = buf.readUUID();
 

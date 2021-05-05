@@ -28,9 +28,9 @@ import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendAllChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -233,7 +233,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	@Override
-	public void updateAllChunks(SendAllChunksPacket packet) {
+	public void updateAllChunks(SendManyChunksPacket packet) {
 		if (MapManager.inst == null) {
 			return;
 		}

@@ -106,20 +106,20 @@ public class FTBChunksTeamData {
 		return list;
 	}
 
-	public void updateLimits(ServerPlayer player) {
-		if (maxClaimChunks != -1 && team.getType().isParty() && !player.getUUID().equals(team.getOwner())) {
+	public void updateLimits(ServerPlayer ownerPlayer) {
+		if (maxClaimChunks != -1 && team.getType().isParty() && !ownerPlayer.getUUID().equals(team.getOwner())) {
 			return;
 		}
 
-		int c = manager.config.getMaxClaimedChunks(this, player);
-		int f = manager.config.getMaxForceLoadedChunks(this, player);
+		int c = manager.config.getMaxClaimedChunks(this, ownerPlayer);
+		int f = manager.config.getMaxForceLoadedChunks(this, ownerPlayer);
 
 		if (maxClaimChunks != c || maxForceLoadChunks != f) {
 			maxClaimChunks = c;
 			maxForceLoadChunks = f;
 
 			for (ServerPlayer p : team.getOnlineMembers()) {
-				SendGeneralDataPacket.send(this, player);
+				SendGeneralDataPacket.send(this, p);
 			}
 
 			save();
@@ -174,7 +174,7 @@ public class FTBChunksTeamData {
 			return r;
 		}
 
-		chunk.unclaim(source);
+		chunk.unclaim(source, true);
 		return chunk;
 	}
 

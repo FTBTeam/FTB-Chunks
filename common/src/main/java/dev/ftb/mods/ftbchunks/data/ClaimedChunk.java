@@ -141,17 +141,19 @@ public class ClaimedChunk implements ClaimResult {
 		}
 	}
 
-	public void unclaim(CommandSourceStack source) {
+	public void unclaim(CommandSourceStack source, boolean sync) {
 		unload(source);
 
 		teamData.manager.claimedChunks.remove(pos);
 		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, this);
 		teamData.save();
 
-		SendChunkPacket packet = new SendChunkPacket();
-		packet.dimension = pos.dimension;
-		packet.teamId = Util.NIL_UUID;
-		packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null);
-		packet.sendToAll();
+		if (sync) {
+			SendChunkPacket packet = new SendChunkPacket();
+			packet.dimension = pos.dimension;
+			packet.teamId = Util.NIL_UUID;
+			packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null);
+			packet.sendToAll();
+		}
 	}
 }

@@ -84,6 +84,7 @@ if (ENV.CURSEFORGE_KEY) {
                 requiredDependency 'fabric-api'
                 requiredDependency 'ftb-library-fabric'
                 requiredDependency 'ftb-teams-fabric'
+                requiredDependency 'cloth-config'
                 optionalDependency 'ftb-ranks-fabric'
             }
             changelog = getGitChangelog

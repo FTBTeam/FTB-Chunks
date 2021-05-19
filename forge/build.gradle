@@ -89,6 +89,7 @@ if (ENV.CURSEFORGE_KEY) {
                 requiredDependency 'architectury-forge'
                 requiredDependency 'ftb-library-forge'
                 requiredDependency 'ftb-teams-forge'
+                requiredDependency 'cloth-config-forge'
                 optionalDependency 'ftb-ranks-forge'
             }
             changelog = getGitChangelog

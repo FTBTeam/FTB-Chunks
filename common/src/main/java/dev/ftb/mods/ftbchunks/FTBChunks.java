@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.core.ExplosionFTBC;
 import dev.ftb.mods.ftbchunks.core.FluidItemFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
@@ -470,10 +471,16 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
-		// TODO: check config if explosion blocking is disabled
+	private boolean ignoreExplosion(Level level, Explosion explosion) {
+		if (level.isClientSide() || explosion.getToBlow().isEmpty() || !(explosion instanceof ExplosionFTBC)) {
+			return true;
+		}
 
-		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
+		return ((ExplosionFTBC) explosion).getSourceFTBC() == null;
+	}
+
+	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
+		if (ignoreExplosion(level, explosion)) {
 			return;
 		}
 

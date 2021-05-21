@@ -30,6 +30,8 @@ dependencies {
     modImplementation "dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}"
     modImplementation "me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config_version}"
 
+    modImplementation "curse.maven:waystones-245755:3309624"
+
     implementation(project(path: ":common")) {
         transitive = false
     }

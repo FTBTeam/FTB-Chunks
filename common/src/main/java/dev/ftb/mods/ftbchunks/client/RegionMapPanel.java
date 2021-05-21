@@ -98,6 +98,8 @@ public class RegionMapPanel extends Panel {
 			}
 		}
 
+		FTBChunksClient.addWidgets(this);
+
 		alignWidgets();
 	}
 
@@ -138,6 +140,14 @@ public class RegionMapPanel extends Panel {
 
 				double x = (qx - regionMinX) * z - s / 2D;
 				double y = (qy - regionMinZ) * z - s / 2D;
+				w.setPosAndSize((int) x, (int) y, s, s);
+			} else if (w instanceof CustomMapWidget) {
+				double qx = (((CustomMapWidget) w).getX() + 0.5D) / 512D;
+				double qy = (((CustomMapWidget) w).getZ() + 0.5D) / 512D;
+				int s = Math.max(8, z / 128);
+
+				double x = (qx - regionMinX) * z - s / 2D;
+				double y = (qy - regionMinZ) * z - s;
 				w.setPosAndSize((int) x, (int) y, s, s);
 			}
 		}

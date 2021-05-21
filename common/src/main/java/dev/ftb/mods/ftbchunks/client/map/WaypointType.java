@@ -9,7 +9,8 @@ public enum WaypointType {
 	DEFAULT(new ResourceLocation("ftbchunks:textures/waypoint_default.png")),
 	DEATH(new ResourceLocation("ftbchunks:textures/waypoint_death.png")),
 	SPAWN(new ResourceLocation("ftbchunks:textures/waypoint_spawn.png")),
-	HOME(new ResourceLocation("ftbchunks:textures/waypoint_home.png"));
+	HOME(new ResourceLocation("ftbchunks:textures/waypoint_home.png")),
+	WAYSTONE(new ResourceLocation("ftbchunks:textures/waystone.png"));
 
 	public static final WaypointType[] VALUES = values();
 

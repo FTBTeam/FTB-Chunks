@@ -16,6 +16,12 @@ public class WaystonesCompat {
 
     private static List<IWaystone> WAYSTONES = Collections.emptyList();
 
+    private static final int GLOBAL_COLOR = 0xeb78e5;
+
+    public static int colorFor(IWaystone waystone) {
+        return waystone.isGlobal() ? GLOBAL_COLOR : 0xFFFFFF;
+    }
+
     @SubscribeEvent
     public static void onWaystonesReceived(KnownWaystonesEvent event) {
         WAYSTONES = event.getWaystones();

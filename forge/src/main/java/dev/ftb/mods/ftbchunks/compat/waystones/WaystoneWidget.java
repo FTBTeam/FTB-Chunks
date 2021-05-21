@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.CustomMapWidget;
 import dev.ftb.mods.ftbchunks.client.WaypointButton;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -23,7 +24,7 @@ public class WaystoneWidget extends CustomMapWidget {
 
     public WaystoneWidget(Panel panel, IWaystone waystone) {
         super(panel);
-        this.icon = Icon.getIcon(WaypointType.WAYSTONE.texture);
+        this.icon = Icon.getIcon(WaypointType.WAYSTONE.texture).withTint(Color4I.rgb(WaystonesCompat.colorFor(waystone)));
         this.waystone = waystone;
     }
 

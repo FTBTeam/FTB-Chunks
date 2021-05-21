@@ -49,7 +49,6 @@ public class FTBChunksClientImpl {
     public static void renderMinimap(Minecraft mc, int x, int y, MapDimension dim, float scale, float minimapRotation, PoseStack matrixStack, BufferBuilder buffer, Tesselator tesselator) {
         double magicNumber = 3.2D;
         int s = (int) (64D * scale);
-        int globalColor = 0xeb78e5;
 
         WaystonesCompat.getWaystones(dim.dimension).forEach(waystone -> {
 
@@ -68,7 +67,7 @@ public class FTBChunksClientImpl {
             float wy = (float) (y + s / 2D + Math.sin(angle) * d);
             float ws = s / 32F;
 
-            int color = waystone.isGlobal() ? globalColor : 0xFFFFFF;
+            int color = WaystonesCompat.colorFor(waystone);
             int r = (color >> 16) & 0xFF;
             int g = (color >> 8) & 0xFF;
             int b = (color >> 0) & 0xFF;

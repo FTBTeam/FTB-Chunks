@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.MinimapRenderer;
 import dev.ftb.mods.ftbchunks.client.RegionMapPanel;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -26,7 +27,7 @@ public class FTBChunksClientImpl {
         ((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(context.matrixStack());
     }
 
-    public static void renderMinimap(Minecraft mc, int x, int y, MapDimension dim, float scale, float minimapRotation, PoseStack matrixStack, BufferBuilder buffer, Tesselator tesselator) {
+    public static void renderMinimap(MapDimension dimension, MinimapRenderer renderer) {
     }
 
     public static void addWidgets(RegionMapPanel panel) {

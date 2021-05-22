@@ -17,6 +17,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * @author LatvianModder
@@ -142,8 +143,9 @@ public class RegionMapPanel extends Panel {
 				double y = (qy - regionMinZ) * z - s / 2D;
 				w.setPosAndSize((int) x, (int) y, s, s);
 			} else if (w instanceof CustomMapWidget) {
-				double qx = (((CustomMapWidget) w).getX() + 0.5D) / 512D;
-				double qy = (((CustomMapWidget) w).getZ() + 0.5D) / 512D;
+				Vec3 pos = ((CustomMapWidget) w).getPos();
+				double qx = (pos.x + 0.5D) / 512D;
+				double qy = (pos.z + 0.5D) / 512D;
 				int s = Math.max(8, z / 128);
 
 				double x = (qx - regionMinX) * z - s / 2D;

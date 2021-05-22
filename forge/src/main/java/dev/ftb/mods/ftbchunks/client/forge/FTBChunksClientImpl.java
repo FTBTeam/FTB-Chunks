@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.MinimapRenderer;
 import dev.ftb.mods.ftbchunks.client.RegionMapPanel;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
@@ -46,43 +47,10 @@ public class FTBChunksClientImpl {
         );
     }
 
-    public static void renderMinimap(Minecraft mc, int x, int y, MapDimension dim, float scale, float minimapRotation, PoseStack matrixStack, BufferBuilder buffer, Tesselator tesselator) {
-        double magicNumber = 3.2D;
-        int s = (int) (64D * scale);
-
-        WaystonesCompat.getWaystones(dim.dimension).forEach(waystone -> {
-
-            BlockPos pos = waystone.getPos();
-            double distance = MathUtils.dist(mc.player.getX(), mc.player.getZ(), pos.getX() + 0.5D, pos.getZ() + 0.5D);
-
-            double d = distance / magicNumber * scale;
-
-            if (d > s / 2D) {
-                d = s / 2D;
-            }
-
-            double angle = Math.atan2(mc.player.getZ() - pos.getZ() - 0.5D, mc.player.getX() - pos.getX() - 0.5D) + minimapRotation * Math.PI / 180D;
-
-            float wx = (float) (x + s / 2D + Math.cos(angle) * d);
-            float wy = (float) (y + s / 2D + Math.sin(angle) * d);
-            float ws = s / 32F;
-
-            int color = WaystonesCompat.colorFor(waystone);
-            int r = (color >> 16) & 0xFF;
-            int g = (color >> 8) & 0xFF;
-            int b = (color >> 0) & 0xFF;
-
-            Matrix4f m = matrixStack.last().pose();
-
-            mc.getTextureManager().bind(WaypointType.WAYSTONE.texture);
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-            buffer.vertex(m, wx - ws, wy - ws, 0).color(r, g, b, 255).uv(0F, 0F).endVertex();
-            buffer.vertex(m, wx - ws, wy + ws, 0).color(r, g, b, 255).uv(0F, 1F).endVertex();
-            buffer.vertex(m, wx + ws, wy + ws, 0).color(r, g, b, 255).uv(1F, 1F).endVertex();
-            buffer.vertex(m, wx + ws, wy - ws, 0).color(r, g, b, 255).uv(1F, 0F).endVertex();
-            tesselator.end();
-
-        });
+    public static void renderMinimap(MapDimension dimension, MinimapRenderer renderer) {
+        WaystonesCompat.getWaystones(dimension.dimension).forEach(waystone ->
+                renderer.render(waystone.getPos().getX(), waystone.getPos().getZ(), WaystonesCompat.colorFor(waystone), 0)
+        );
     }
 
 }

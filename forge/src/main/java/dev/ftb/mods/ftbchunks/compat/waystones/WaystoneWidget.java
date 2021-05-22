@@ -16,6 +16,8 @@ import net.blay09.mods.waystones.block.ModBlocks;
 import net.blay09.mods.waystones.block.WaystoneBlock;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 public class WaystoneWidget extends CustomMapWidget {
 
@@ -44,12 +46,9 @@ public class WaystoneWidget extends CustomMapWidget {
     }
 
     @Override
-    public int getX() {
-        return waystone.getPos().getX();
+    public Vec3 getPos() {
+        BlockPos pos = waystone.getPos();
+        return new Vec3(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    @Override
-    public int getZ() {
-        return waystone.getPos().getZ();
-    }
 }

@@ -97,6 +97,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 /**
  * @author LatvianModder
@@ -155,7 +156,7 @@ public class FTBChunksClient extends FTBChunksCommon {
     }
 
     @ExpectPlatform
-    public static void renderMinimap(Minecraft mc, int x, int y, MapDimension dim, float scale, float minimapRotation, PoseStack matrixStack, BufferBuilder buffer, Tesselator tesselator) {
+    public static void renderMinimap(MapDimension dimension, MinimapRenderer renderer) {
         throw new AssertionError();
     }
 
@@ -561,7 +562,37 @@ public class FTBChunksClient extends FTBChunksCommon {
             }
         }
 
-        renderMinimap(mc, x, y, dim, scale, minimapRotation, matrixStack, buffer, tessellator);
+        renderMinimap(dim , (px, pz, color, maxDistance) -> {
+            double distance = MathUtils.dist(mc.player.getX(), mc.player.getZ(), px + 0.5D, pz + 0.5D);
+
+            double d = distance / magicNumber * scale;
+            if(maxDistance > 0 && distance > maxDistance) return;
+
+            if (d > s / 2D) {
+                if(maxDistance == 0) return;
+                d = s / 2D;
+            }
+
+            double angle = Math.atan2(mc.player.getZ() - pz - 0.5D, mc.player.getX() - px - 0.5D) + minimapRotation * Math.PI / 180D;
+
+            float wx = (float) (x + s / 2D + Math.cos(angle) * d);
+            float wy = (float) (y + s / 2D + Math.sin(angle) * d);
+            float ws = s / 32F;
+
+            int r = (color >> 16) & 0xFF;
+            int g = (color >> 8) & 0xFF;
+            int b = (color >> 0) & 0xFF;
+
+            Matrix4f matrix = matrixStack.last().pose();
+
+            mc.getTextureManager().bind(WaypointType.WAYSTONE.texture);
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+            buffer.vertex(matrix, wx - ws, wy - ws, 0).color(r, g, b, 255).uv(0F, 0F).endVertex();
+            buffer.vertex(matrix, wx - ws, wy + ws, 0).color(r, g, b, 255).uv(0F, 1F).endVertex();
+            buffer.vertex(matrix, wx + ws, wy + ws, 0).color(r, g, b, 255).uv(1F, 1F).endVertex();
+            buffer.vertex(matrix, wx + ws, wy - ws, 0).color(r, g, b, 255).uv(1F, 0F).endVertex();
+            tessellator.end();
+        });
 
         if (config.minimapEntities) {
             for (Entity entity : mc.level.entitiesForRendering()) {

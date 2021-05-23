@@ -5,7 +5,6 @@
 	"mixins": [
 		"BiomeMixin",
 		"BlockStateMixin",
-		"BucketItemMixin",
 		"ChunkMapMixin",
 		"ExplosionMixin"
 	],

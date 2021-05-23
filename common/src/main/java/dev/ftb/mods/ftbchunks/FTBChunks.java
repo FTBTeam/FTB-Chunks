@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.ExplosionFTBC;
-import dev.ftb.mods.ftbchunks.core.FluidItemFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
@@ -70,15 +69,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -335,7 +332,7 @@ public class FTBChunks {
 		return InteractionResult.PASS;
 	}
 
-	public InteractionResult blockPlace(Level level, BlockPos pos, BlockState blockState, @org.jetbrains.annotations.Nullable Entity entity) {
+	public InteractionResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
 		if (checkPlayer(entity)) {
 			/*if (event instanceof BlockEvent.EntityMultiPlaceEvent) {
 				for (BlockSnapshot snapshot : ((BlockEvent.EntityMultiPlaceEvent) event).getReplacedBlockSnapshots()) {
@@ -372,18 +369,12 @@ public class FTBChunks {
 		return InteractionResult.PASS;
 	}
 
-	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @org.jetbrains.annotations.Nullable HitResult target) {
+	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
 		if (checkPlayer(player) && target instanceof BlockHitResult) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player.level, ((BlockHitResult) target).getBlockPos()));
-
-			Fluid fluid = Fluids.EMPTY;
-
-			if (emptyBucket.getItem() instanceof FluidItemFTBC) {
-				fluid = ((FluidItemFTBC) emptyBucket.getItem()).getFluidFTBC();
-			}
+			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level, ((BlockHitResult) target).getBlockPos()));
 
 			if (chunk != null) {
-				if (!chunk.canEdit((ServerPlayer) player, fluid.defaultFluidState().createLegacyBlock())) {
+				if (!chunk.canEdit((ServerPlayer) player, level.getFluidState(((BlockHitResult) target).getBlockPos()).createLegacyBlock())) {
 					return CompoundEventResult.interrupt(false, null);
 				}
 			} else if (FTBChunksAPI.getManager().config.noWilderness) {
@@ -450,7 +441,7 @@ public class FTBChunks {
 		}
 	}
 
-	public EventResult checkSpawn(LivingEntity entity, LevelAccessor level, double x, double y, double z, MobSpawnType type, @org.jetbrains.annotations.Nullable BaseSpawner spawner) {
+	public EventResult checkSpawn(LivingEntity entity, LevelAccessor level, double x, double y, double z, MobSpawnType type, @Nullable BaseSpawner spawner) {
 		if (!level.isClientSide() && !(entity instanceof Player) && level instanceof Level) {
 			switch (type) {
 				case NATURAL:

@@ -44,7 +44,7 @@ publishing {
 			maven {
 				url "https://maven.saps.dev/minecraft"
 				credentials {
-					username = "latvian"
+					username = "ftb"
 					password = "${ENV.SAPS_TOKEN}"
 				}
 			}

@@ -1,5 +1,5 @@
 plugins {
-    id "architectury-plugin" version "3.0-SNAPSHOT"
+    id "architectury-plugin" version "3.1-SNAPSHOT"
     id "dev.architectury.loom" version "0.7.2-SNAPSHOT" apply false
 }
 
@@ -12,6 +12,7 @@ subprojects {
 
     loom {
         silentMojangMappingsLicense()
+        useFabricMixin = true
     }
 
     dependencies {
@@ -33,6 +34,16 @@ allprojects {
 
     sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
+    configurations {
+        modOptional
+        modCompileOnly.extendsFrom(modOptional)
+        modRuntime.extendsFrom(modOptional)
+
+        optional
+        compileOnly.extendsFrom(optional)
+        runtime.extendsFrom(optional)
+    }
+
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
 
@@ -50,6 +61,10 @@ allprojects {
     }
 
     repositories {
+        maven {
+            url "https://maven.architectury.dev/"
+        }
+
         maven {
             url "https://www.cursemaven.com"
             content {

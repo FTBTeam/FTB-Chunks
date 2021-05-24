@@ -1,128 +1,127 @@
 plugins {
-    id "com.github.johnrengelman.shadow" version "5.0.0"
-    id "com.matthewprenger.cursegradle" version "1.4.0"
+	id "com.github.johnrengelman.shadow" version "5.0.0"
+	id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
 def ENV = System.getenv()
 
 configurations {
-    shadowCommon
+	shadowCommon
 }
 
 architectury {
-    platformSetupLoomIde()
-    fabric()
+	platformSetupLoomIde()
+	fabric()
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
-    modApi "me.shedaniel:architectury-fabric:${rootProject.architectury_version}"
-    modImplementation "dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}"
-    modImplementation "dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}"
-    modImplementation "dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}"
-    modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"
-    modImplementation "dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}"
-    modImplementation "me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config_version}"
-    // modImplementation "me.shedaniel.cloth:basic-math:0.5.1"
+	modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+	modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+	modApi "me.shedaniel:architectury-fabric:${rootProject.architectury_version}"
+	modImplementation "dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}"
+	modImplementation "dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}"
+	modImplementation "dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}"
+	modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"
+	modImplementation "dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}"
+	modImplementation "me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config_version}"
+	// modImplementation "me.shedaniel.cloth:basic-math:0.5.1"
 
-    implementation(project(path: ":common")) {
-        transitive = false
-    }
-    developmentFabric(project(path: ":common")) {
-        transitive = false
-    }
-    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) {
-        transitive = false
-    }
+	implementation(project(path: ":common")) {
+		transitive = false
+	}
+	developmentFabric(project(path: ":common")) {
+		transitive = false
+	}
+	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) {
+		transitive = false
+	}
 }
 
 processResources {
-    inputs.property "version", project.version
+	inputs.property "version", project.version
 
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
 }
 
 shadowJar {
-    configurations = [project.configurations.shadowCommon]
-    classifier "dev-shadow"
+	configurations = [project.configurations.shadowCommon]
+	classifier "dev-shadow"
 }
 
 remapJar {
-    input.set shadowJar.archiveFile
-    dependsOn shadowJar
-    classifier "fabric"
+	input.set shadowJar.archiveFile
+	dependsOn shadowJar
+	archiveBaseName.set "${rootProject.mod_name}-${project.name}"
+	archiveClassifier.set null
 }
 
 jar {
-    classifier "dev"
+	classifier "dev"
 }
 
 java {
-    withSourcesJar()
+	withSourcesJar()
 }
 
 sourcesJar {
-    def commonSources = project(":common").sourcesJar
-    dependsOn commonSources
-    from commonSources.archiveFile.map { zipTree(it) }
+	def commonSources = project(":common").sourcesJar
+	dependsOn commonSources
+	from commonSources.archiveFile.map { zipTree(it) }
 }
 
 if (ENV.CURSEFORGE_KEY) {
-    curseforge {
-        apiKey = ENV.CURSEFORGE_KEY
-        project {
-            id = project.curseforge_id_fabric
-            releaseType = project.curseforge_type
-            addGameVersion "Fabric"
-            addGameVersion "1.16.5"
-            mainArtifact(remapJar.archivePath)
-            relations {
-                requiredDependency 'architectury-fabric'
-                requiredDependency 'fabric-api'
-                requiredDependency 'ftb-library-fabric'
-                requiredDependency 'ftb-teams-fabric'
-                requiredDependency 'cloth-config'
-                optionalDependency 'ftb-ranks-fabric'
-            }
-            changelog = getGitChangelog
-            changelogType = 'markdown'
-        }
-    }
+	curseforge {
+		apiKey = ENV.CURSEFORGE_KEY
+		project {
+			id = project.curseforge_id_fabric
+			releaseType = project.curseforge_type
+			addGameVersion "Fabric"
+			addGameVersion "1.16.5"
+			mainArtifact(remapJar.archivePath)
+			relations {
+				requiredDependency 'architectury-fabric'
+				requiredDependency 'fabric-api'
+				requiredDependency 'ftb-library-fabric'
+				requiredDependency 'ftb-teams-fabric'
+				requiredDependency 'cloth-config'
+				optionalDependency 'ftb-ranks-fabric'
+			}
+			changelog = getGitChangelog
+			changelogType = 'markdown'
+		}
+	}
 }
 
 publishing {
-    publications {
-        mavenFabric(MavenPublication) {
-            artifactId = rootProject.archivesBaseName + "-" + project.name
-            artifact(remapJar) {
-                classifier null
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-        }
-    }
+	publications {
+		mavenFabric(MavenPublication) {
+			artifactId = "${rootProject.mod_name}-${project.name}"
+			artifact(remapJar)
+			artifact(sourcesJar) {
+				builtBy remapSourcesJar
+			}
+		}
+	}
 
-    repositories {
-        if (ENV.LOCAL_MAVEN) {
-            maven {
-                url "file://${ENV.LOCAL_MAVEN}"
-            }
-        }
+	repositories {
+		if (ENV.LOCAL_MAVEN) {
+			maven {
+				url "file://${ENV.LOCAL_MAVEN}"
+			}
+		}
 
-        if (ENV.SAPS_TOKEN) {
-            maven {
-                url "https://maven.saps.dev/minecraft"
-                credentials {
-                    username = "ftb"
-                    password = "${ENV.SAPS_TOKEN}"
-                }
-            }
-        }
-    }
+		if (ENV.SAPS_TOKEN) {
+			maven {
+				url "https://maven.saps.dev/minecraft"
+				credentials {
+					username = "ftb"
+					password = "${ENV.SAPS_TOKEN}"
+				}
+			}
+		}
+	}
 }
 
 rootProject.tasks.getByName("curseforgePublish").dependsOn tasks.getByName("curseforge")

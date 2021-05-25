@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import dev.ftb.mods.ftblibrary.snbt.SNBT;
+import dev.ftb.mods.ftblibrary.snbt.SNBTParser;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
@@ -15,6 +15,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -76,7 +78,12 @@ public class ClaimedChunkManager {
 	private FTBChunksTeamData loadTeamData(Team team) {
 		Path path = dataDirectory.resolve(team.getId() + ".snbt");
 		FTBChunksTeamData data = new FTBChunksTeamData(this, path, team);
-		CompoundTag dataFile = SNBT.read(path);
+		CompoundTag dataFile = null;
+		try (BufferedReader reader = Files.newBufferedReader(path)) {
+			dataFile = SNBTParser.read(reader);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		if (dataFile != null) {
 			data.deserializeNBT(dataFile);

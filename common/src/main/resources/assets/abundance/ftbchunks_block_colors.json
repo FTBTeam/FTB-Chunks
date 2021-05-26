@@ -1,15 +1,14 @@
 {
-   "budding_jacaranda_leaves": "#7752de",
-   "flowering_jacaranda_leaves": "#7752de",
-   "budding_jacaranda_leaf_hedge": "#7752de",
-   "flowering_jacaranda_leaf_hedge": "#7752de",
-   "budding_jacaranda_hedge": "#7752de",
-   "flowering_jacaranda_hedge": "#7752de",
-   
-   "budding_redbud_leaves": "#e381d6",
-   "flowering_redbud_leaves": "#e381d6",
-   "budding_redbud_leaf_hedge": "#e381d6",
-   "flowering_redbud_leaf_hedge": "#e381d6",
-   "budding_redbud_hedge": "#e381d6",
-   "flowering_redbud_hedge": "#e381d6"
+	"budding_jacaranda_leaves": "#7752DE",
+	"flowering_jacaranda_leaves": "#7752DE",
+	"budding_jacaranda_leaf_hedge": "#7752DE",
+	"flowering_jacaranda_leaf_hedge": "#7752DE",
+	"budding_jacaranda_hedge": "#7752DE",
+	"flowering_jacaranda_hedge": "#7752DE",
+	"budding_redbud_leaves": "#E381D6",
+	"flowering_redbud_leaves": "#E381D6",
+	"budding_redbud_leaf_hedge": "#E381D6",
+	"flowering_redbud_leaf_hedge": "#E381D6",
+	"budding_redbud_hedge": "#E381D6",
+	"flowering_redbud_hedge": "#E381D6"
 }

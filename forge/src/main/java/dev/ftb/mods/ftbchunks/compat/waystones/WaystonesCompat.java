@@ -1,15 +1,15 @@
 package dev.ftb.mods.ftbchunks.compat.waystones;
 
+import dev.ftb.mods.ftbchunks.client.MinimapRenderer;
+import dev.ftb.mods.ftbchunks.client.RegionMapPanel;
+import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import net.blay09.mods.waystones.api.IWaystone;
 import net.blay09.mods.waystones.api.KnownWaystonesEvent;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class WaystonesCompat {
 	public static void init() {
@@ -29,8 +29,19 @@ public class WaystonesCompat {
 		WAYSTONES = event.getWaystones();
 	}
 
-	public static Stream<IWaystone> getWaystones(ResourceKey<Level> dimension) {
-		return WAYSTONES.stream().filter(w -> w.getDimension().equals(dimension));
+	public static void addWidgets(RegionMapPanel panel) {
+		for (IWaystone waystone : WAYSTONES) {
+			if (waystone.getDimension() == panel.largeMap.dimension.dimension) {
+				panel.add(new WaystoneWidget(panel, waystone));
+			}
+		}
 	}
 
+	public static void renderMinimap(MapDimension dimension, MinimapRenderer renderer) {
+		for (IWaystone waystone : WAYSTONES) {
+			if (waystone.getDimension() == dimension.dimension) {
+				renderer.render(waystone.getPos().getX(), waystone.getPos().getZ(), colorFor(waystone), 0);
+			}
+		}
+	}
 }

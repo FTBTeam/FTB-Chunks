@@ -23,8 +23,6 @@ dependencies {
 	modImplementation "dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}"
 	modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"
 	modImplementation "dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}"
-	modImplementation "me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config_version}"
-	// modImplementation "me.shedaniel.cloth:basic-math:0.5.1"
 
 	implementation(project(path: ":common")) {
 		transitive = false
@@ -85,7 +83,6 @@ if (ENV.CURSEFORGE_KEY) {
 				requiredDependency 'fabric-api'
 				requiredDependency 'ftb-library-fabric'
 				requiredDependency 'ftb-teams-fabric'
-				requiredDependency 'cloth-config'
 				optionalDependency 'ftb-ranks-fabric'
 			}
 			changelog = getGitChangelog

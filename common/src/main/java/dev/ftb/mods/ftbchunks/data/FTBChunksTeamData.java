@@ -4,8 +4,8 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import dev.ftb.mods.ftblibrary.snbt.OrderedCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
+import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -276,8 +276,8 @@ public class FTBChunksTeamData {
 		return team.isMember(p.getUUID());
 	}
 
-	public OrderedCompoundTag serializeNBT() {
-		OrderedCompoundTag tag = new OrderedCompoundTag();
+	public SNBTCompoundTag serializeNBT() {
+		SNBTCompoundTag tag = new SNBTCompoundTag();
 		tag.putInt("max_claim_chunks", maxClaimChunks);
 		tag.putInt("max_force_load_chunks", maxForceLoadChunks);
 		tag.putInt("extra_claim_chunks", extraClaimChunks);
@@ -294,8 +294,8 @@ public class FTBChunksTeamData {
 				chunksTag.put(key, chunksListTag);
 			}
 
-			OrderedCompoundTag o = new OrderedCompoundTag();
-			o.singleLine = true;
+			SNBTCompoundTag o = new SNBTCompoundTag();
+			o.singleLine();
 			o.putInt("x", chunk.getPos().x);
 			o.putInt("z", chunk.getPos().z);
 			o.putLong("time", chunk.getTimeClaimed());

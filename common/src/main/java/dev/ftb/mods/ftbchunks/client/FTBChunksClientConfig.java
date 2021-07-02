@@ -4,197 +4,71 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
+import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
+import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
+import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
+import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
+import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
 import me.shedaniel.architectury.platform.Platform;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.ConfigData;
-import me.shedaniel.autoconfig.ConfigHolder;
-import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
-import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
-import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.InteractionResult;
-
-import java.io.File;
 
 /**
  * @author LatvianModder
  */
-@Config(name = "ftbchunks-client")
-@Config.Gui.Background("minecraft:textures/block/stone.png")
-public class FTBChunksClientConfig implements ConfigData {
-	@ConfigEntry.Gui.Excluded
-	private static ConfigHolder<FTBChunksClientConfig> holder = null;
+public interface FTBChunksClientConfig {
+	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-client");
 
-	public static FTBChunksClientConfig get() {
-		return holder.get();
+	DoubleValue NOISE = CONFIG.getDouble("noise", 0.05D, 0D, 0.5D).fader().comment("Noise added to map to make it look less plastic");
+	DoubleValue SHADOWS = CONFIG.getDouble("shadows", 0.1D, 0D, 0.3D).fader().comment("Shadow intensity");
+	BooleanValue CHUNK_GRID = CONFIG.getBoolean("chunk_grid", false).comment("Chunk grid overlay in large map");
+	BooleanValue REDUCED_COLOR_PALETTE = CONFIG.getBoolean("reduced_color_palette", false).comment("Reduces color palette to 256 colors");
+	DoubleValue SATURATION = CONFIG.getDouble("saturation", 1D, 0D, 1D).fader().comment("Color intensity");
+	BooleanValue CLAIMED_CHUNKS_ON_MAP = CONFIG.getBoolean("claimed_chunks_on_map", true).comment("Show claimed chunks on the map");
+	BooleanValue OWN_CLAIMED_CHUNKS_ON_MAP = CONFIG.getBoolean("own_claimed_chunks_on_map", true).comment("Show your own claimed chunks on the map");
+	BooleanValue IN_WORLD_WAYPOINTS = CONFIG.getBoolean("in_world_waypoints", true).comment("Show waypoints in world");
+	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
+	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
+	IntValue WATER_HEIGHT_FACTOR = CONFIG.getInt("water_height_factor", 8, 0, 128).comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain");
+
+	SNBTConfig MINIMAP = CONFIG.getGroup("minimap");
+
+	EnumValue<MinimapPosition> MINIMAP_POSITION = MINIMAP.getEnum("position", MinimapPosition.NAME_MAP).comment("Enables minimap to show up in corner");
+	DoubleValue MINIMAP_SCALE = MINIMAP.getDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
+	BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.getBoolean("locked_north", true).comment("Minimap will not rotate");
+	BooleanValue MINIMAP_WAYPOINTS = MINIMAP.getBoolean("waypoints", true).comment("Show waypoints on minimap");
+	BooleanValue MINIMAP_PLAYER_HEADS = MINIMAP.getBoolean("player_heads", true).comment("Show player heads on minimap");
+	BooleanValue MINIMAP_ENTITIES = MINIMAP.getBoolean("entities", true).comment("Show entities on minimap");
+	BooleanValue MINIMAP_ENTITY_HEADS = MINIMAP.getBoolean("entity_heads", true).comment("Show entity heads on minimap");
+	BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.getBoolean("large_entities", false).comment("Entities in minimap will be larger");
+	BooleanValue MINIMAP_XYZ = MINIMAP.getBoolean("xyz", true).comment("Show XYZ under minimap");
+	BooleanValue MINIMAP_BIOME = MINIMAP.getBoolean("biome", true).comment("Show biome under minimap");
+	BooleanValue MINIMAP_BLUR = MINIMAP.getBoolean("blur", true).comment("Blurs minimap");
+	BooleanValue MINIMAP_COMPASS = MINIMAP.getBoolean("compass", true).comment("Adds NWSE compass inside minimap");
+	IntValue MINIMAP_VISIBILITY = MINIMAP.getInt("visibility", 255, 0, 255).comment("Minimap visibility");
+	BooleanValue MINIMAP_ZONE = MINIMAP.getBoolean("zone", true).comment("Show zone (claimed chunk or wilderness) under minimap");
+
+	BooleanValue DEBUG_INFO = CONFIG.getBoolean("debug_info", false).comment("Enables debug info");
+	IntValue TASK_QUEUE_TICKS = CONFIG.getInt("task_queue_ticks", 4, 1, 300).excluded().comment("Advanced option. How often queued tasks will run");
+	IntValue RERENDER_QUEUE_TICKS = CONFIG.getInt("rerender_queue_ticks", 60, 1, 600).excluded().comment("Advanced option. How often map render update will be queued");
+	IntValue TASK_QUEUE_MAX = CONFIG.getInt("task_queue_max", 100, 1, 10000).excluded().comment("Advanced option. Max tasks that can queue up");
+	IntValue WATER_VISIBILITY = CONFIG.getInt("water_visibility", 220, 0, 255).excluded().comment("Advanced option. Water visibility");
+	IntValue GRASS_DARKNESS = CONFIG.getInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
+	IntValue FOLIAGE_DARKNESS = CONFIG.getInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
+
+	static void init() {
+		CONFIG.load(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
 
-	@Comment("Noise added to map to make it look less plastic")
-	public float noise = 0.05F;
-
-	@Comment("Shadow intensity")
-	public float shadows = 0.1F;
-
-	@Comment("Chunk grid overlay in large map")
-	public boolean chunkGrid = false;
-
-	@Comment("Reduces color palette to 256 colors")
-	public boolean reducedColorPalette = false;
-
-	@Comment("Color intensity")
-	public float saturation = 1F;
-
-	@Comment("Show claimed chunks on the map")
-	public boolean claimedChunksOnMap = true;
-
-	@Comment("Show your own claimed chunks on the map")
-	public boolean ownClaimedChunksOnMap = true;
-
-	@Comment("Show waypoints in world")
-	public boolean inWorldWaypoints = true;
-
-	@Comment("Enables creation of death waypoints")
-	public boolean deathWaypoints = true;
-
-	@Comment("Different ways to render map")
-	public MapMode mapMode = MapMode.NONE;
-
-	@Comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain")
-	public int waterHeightFactor = 8;
-
-	@Comment("Enables minimap to show up in corner")
-	public MinimapPosition minimap = MinimapPosition.TOP_RIGHT;
-
-	@Comment("Scale of minimap")
-	public double minimapScale = 1D;
-
-	@Comment("Minimap will not rotate")
-	public boolean minimapLockedNorth = true;
-
-	@Comment("Show waypoints on minimap")
-	public boolean minimapWaypoints = true;
-
-	@Comment("Show player heads on minimap")
-	public boolean minimapPlayerHeads = true;
-
-	@Comment("Show entities on minimap")
-	public boolean minimapEntities = true;
-
-	@Comment("Show entity heads on minimap")
-	public boolean minimapEntityHeads = true;
-
-	@Comment("Entities in minimap will be larger")
-	public boolean minimapLargeEntities = false;
-
-	@Comment("Show XYZ under minimap")
-	public boolean minimapXYZ = true;
-
-	@Comment("Show biome under minimap")
-	public boolean minimapBiome = true;
-
-	@Comment("Blurs minimap")
-	public boolean minimapBlur = true;
-
-	@Comment("Adds NWSE compass inside minimap")
-	public boolean minimapCompass = true;
-
-	@Comment("Minimap visibility")
-	public int minimapVisibility = 255;
-
-	@Comment("Show zone (claimed chunk or wilderness) under minimap")
-	public boolean minimapZone = true;
-
-	@Comment("Enables debug info")
-	public boolean debugInfo = false;
-
-	@ConfigEntry.Gui.Excluded
-	@Comment("Advanced option. How often queued tasks will run")
-	public int taskQueueTicks = 4;
-
-	@ConfigEntry.Gui.Excluded
-	@Comment("Advanced option. How often map render update will be queued")
-	public int rerenderQueueTicks = 60;
-
-	@ConfigEntry.Gui.Excluded
-	@Comment("Advanced option. Max tasks that can queue up")
-	public int taskQueueMax = 100;
-
-	@ConfigEntry.Gui.Excluded
-	@Comment("Advanced option. Water visibility")
-	public int waterVisibility = 220;
-
-	@ConfigEntry.Gui.Excluded
-	@Comment("Advanced option. Grass darkness")
-	public int grassDarkness = 50;
-
-	@ConfigEntry.Gui.Excluded
-	@Comment("Advanced option. Foliage darkness")
-	public int foliageDarkness = 50;
-
-	public static void init() {
-		holder = AutoConfig.register(FTBChunksClientConfig.class, JanksonConfigSerializer::new);
-
-		holder.registerLoadListener((manager, data) -> {
-			File oldConfig = Platform.getConfigFolder().resolve("ftbchunks-client.toml").toFile();
-			if (oldConfig.exists()) {
-				FTBChunks.LOGGER.warn("Old config file ftbchunks-client.toml found, please use the new config format instead!");
-				FTBChunks.LOGGER.warn("The old config file will automatically be deleted on exit.");
-				oldConfig.deleteOnExit();
-			}
-			return InteractionResult.PASS;
-		});
-
-		holder.registerSaveListener((manager, data) -> {
-			data.validatePostLoad();
-			return InteractionResult.PASS;
-		});
-	}
-
-	@Override
-	public void validatePostLoad() {
-		// maxBlocks = Mth.clamp(maxBlocks, 1, 32768);
-	}
-
-	public void openSettings(Screen screen) {
-		//Minecraft.getInstance().setScreen(AutoConfig.getConfigScreen(FTBChunksClientConfig.class, screen).get());
-
+	static void openSettings(Screen screen) {
 		ConfigGroup group = new ConfigGroup("ftbchunks");
-
-		group.addDouble("noise", noise, v -> noise = v.floatValue(), 0.05D, 0D, 0.5D);
-		group.addDouble("shadows", shadows, v -> shadows = v.floatValue(), 0.1D, 0D, 0.3D);
-		group.addBool("chunk_grid", chunkGrid, v -> chunkGrid = v, false);
-		group.addBool("reduced_color_palette", reducedColorPalette, v -> reducedColorPalette = v, false);
-		group.addDouble("saturation", saturation, v -> saturation = v.floatValue(), 1D, 0D, 1D);
-		group.addBool("claimed_chunks_on_map", claimedChunksOnMap, v -> claimedChunksOnMap = v, true);
-		group.addBool("own_claimed_chunks_on_map", ownClaimedChunksOnMap, v -> ownClaimedChunksOnMap = v, true);
-		group.addBool("in_world_waypoints", inWorldWaypoints, v -> inWorldWaypoints = v, true);
-		group.addBool("death_waypoints", deathWaypoints, v -> deathWaypoints = v, true);
-		group.addEnum("map_mode", mapMode, v -> mapMode = v, NameMap.of(MapMode.NONE, MapMode.values()).create());
-		group.addInt("water_height_factor", waterHeightFactor, v -> waterHeightFactor = v, 0, 0, 128);
-		group.addEnum("minimap", minimap, v -> minimap = v, NameMap.of(MinimapPosition.TOP_RIGHT, MinimapPosition.values()).create());
-		group.addDouble("minimap_scale", minimapScale, v -> minimapScale = v, 1D, 0.25D, 4D);
-		group.addBool("minimap_locked_north", minimapLockedNorth, v -> minimapLockedNorth = v, true);
-		group.addBool("minimap_waypoints", minimapWaypoints, v -> minimapWaypoints = v, true);
-		group.addBool("minimap_entities", minimapEntities, v -> minimapEntities = v, true);
-		group.addBool("minimap_entity_heads", minimapEntityHeads, v -> minimapEntityHeads = v, true);
-		group.addBool("minimap_player_heads", minimapPlayerHeads, v -> minimapPlayerHeads = v, true);
-		group.addBool("minimap_large_entities", minimapLargeEntities, v -> minimapLargeEntities = v, false);
-		group.addBool("minimap_xyz", minimapXYZ, v -> minimapXYZ = v, true);
-		group.addBool("minimap_biome", minimapBiome, v -> minimapBiome = v, true);
-		group.addBool("minimap_blur", minimapBlur, v -> minimapBlur = v, true);
-		group.addBool("minimap_compass", minimapCompass, v -> minimapCompass = v, true);
-		group.addInt("minimap_visibility", minimapVisibility, v -> minimapVisibility = v, 255, 0, 255);
-		group.addBool("minimap_zone", minimapZone, v -> minimapZone = v, true);
-		group.addBool("debug_info", debugInfo, v -> debugInfo = v, false);
+		CONFIG.createClientConfig(group);
 
 		EditConfigScreen gui = new EditConfigScreen(group);
 		group.savedCallback = b -> {
 			if (b) {
-				holder.save();
+				CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 			}
 
 			if (MapManager.inst != null) {

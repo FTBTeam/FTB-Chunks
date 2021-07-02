@@ -31,15 +31,15 @@ public class RenderMapImageTask implements MapTask {
 		region = r;
 	}
 
-	private static int getHeight(FTBChunksClientConfig c, short data, short height) {
+	private static int getHeight(MapMode m, int w, short data, short height) {
 		int h = height & 0xFFFF;
 
-		if ((((data & 0xFFFF) >> 15) & 1) != 0 && c.mapMode != MapMode.TOPOGRAPHY) {
-			if (c.waterHeightFactor == 0) {
+		if ((((data & 0xFFFF) >> 15) & 1) != 0 && m != MapMode.TOPOGRAPHY) {
+			if (w == 0) {
 				return 62;
 			}
 
-			return (h / c.waterHeightFactor) * c.waterHeightFactor + c.waterHeightFactor - 1;
+			return (h / w) * w + w - 1;
 		}
 
 		return h;
@@ -47,7 +47,6 @@ public class RenderMapImageTask implements MapTask {
 
 	@Override
 	public void runMapTask() {
-		FTBChunksClientConfig config = FTBChunksClientConfig.get();
 		MapRegionData data = region.getDataBlocking();
 		short[] heightW = new short[512];
 		short[] heightN = new short[512];
@@ -87,6 +86,21 @@ public class RenderMapImageTask implements MapTask {
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		Int2ObjectOpenHashMap<Biome> biomeMap = new Int2ObjectOpenHashMap<>();
 
+		MapMode mapMode = FTBChunksClientConfig.MAP_MODE.get();
+		int waterHeightFactor = FTBChunksClientConfig.WATER_HEIGHT_FACTOR.get();
+		float noise = (float) FTBChunksClientConfig.NOISE.get();
+		boolean ownClaimedChunksOnMap = FTBChunksClientConfig.OWN_CLAIMED_CHUNKS_ON_MAP.get();
+		boolean claimedChunksOnMap = FTBChunksClientConfig.CLAIMED_CHUNKS_ON_MAP.get();
+		float saturation = (float) FTBChunksClientConfig.SATURATION.get();
+		float shadows = (float) FTBChunksClientConfig.SHADOWS.get();
+
+		int foliageDarkness = FTBChunksClientConfig.FOLIAGE_DARKNESS.get();
+		int grassDarkness = FTBChunksClientConfig.GRASS_DARKNESS.get();
+		int waterVisibility = FTBChunksClientConfig.WATER_VISIBILITY.get();
+		boolean reducedColorPalette = FTBChunksClientConfig.REDUCED_COLOR_PALETTE.get();
+
+		boolean chunkGrid = FTBChunksClientConfig.CHUNK_GRID.get();
+
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
 				MapChunk c = data.chunks.get(XZ.of(cx, cz));
@@ -94,7 +108,7 @@ public class RenderMapImageTask implements MapTask {
 				Color4I claimColor, fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
 
-				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownTeam.equals(c.getTeam()) ? config.ownClaimedChunksOnMap : config.claimedChunksOnMap))) {
+				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownTeam.equals(c.getTeam()) ? ownClaimedChunksOnMap : claimedChunksOnMap))) {
 					claimColor = c.getTeam().getProperty(TeamBase.COLOR).withAlpha(100);
 					fullClaimColor = claimColor.withAlpha(255);
 					claimBarUp = !c.connects(c.offsetBlocking(0, -1));
@@ -121,76 +135,76 @@ public class RenderMapImageTask implements MapTask {
 						} else {
 							BlockColor blockColor = region.dimension.manager.getBlockColor(data.getBlockIndex(index));
 							Color4I col;
-							int by = getHeight(config, data.waterLightAndBiome[index], data.height[index]);
+							int by = getHeight(mapMode, waterHeightFactor, data.waterLightAndBiome[index], data.height[index]);
 							boolean water = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
 							blockPos.set(region.pos.x * 512 + ax, by, region.pos.z * 512 + az);
 
-							if (config.mapMode == MapMode.TOPOGRAPHY) {
+							if (mapMode == MapMode.TOPOGRAPHY) {
 								col = ColorUtils.getTopographyPalette()[by + (water ? 256 : 0)];
-							} else if (config.mapMode == MapMode.BLOCKS) {
+							} else if (mapMode == MapMode.BLOCKS) {
 								col = Color4I.rgb(data.getBlockIndex(index));
-							} else if (config.mapMode == MapMode.BIOME_TEMPERATURE) {
+							} else if (mapMode == MapMode.BIOME_TEMPERATURE) {
 								Biome biome = biomeMap.computeIfAbsent(data.waterLightAndBiome[index] & 0b111_11111111, i -> region.dimension.manager.getBiome(world, i));
 								float temp0 = biome.getTemperature(blockPos);
 
 								float temp = (temp0 + 0.5F) / 2F;
 								col = Color4I.hsb((float) (Math.PI - temp * Math.PI), 0.9F, 1F);
-							} else if (config.mapMode == MapMode.LIGHT_SOURCES) {
+							} else if (mapMode == MapMode.LIGHT_SOURCES) {
 								col = ColorUtils.getLightMapPalette()[15][(data.waterLightAndBiome[index] >> 11) & 15];
 							} else {
 								if (blockColor instanceof CustomBlockColor) {
 									col = ((CustomBlockColor) blockColor).color;
 								} else if (blockColor == BlockColors.FOLIAGE) {
-									col = Color4I.rgb(data.foliage[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(config.foliageDarkness));
+									col = Color4I.rgb(data.foliage[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(foliageDarkness));
 								} else if (blockColor == BlockColors.GRASS) {
-									col = Color4I.rgb(data.grass[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(config.grassDarkness));
+									col = Color4I.rgb(data.grass[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(grassDarkness));
 								} else {
 									col = blockColor.getBlockColor(world, blockPos).withAlpha(255);
 								}
 
-								if (config.mapMode == MapMode.NIGHT) {
+								if (mapMode == MapMode.NIGHT) {
 									col = col.withTint(ColorUtils.getLightMapPalette()[(data.waterLightAndBiome[index] >> 11) & 15][15].withAlpha(230));
 								}
 
 								if (water) {
-									col = col.withTint(Color4I.rgb(data.water[index]).withAlpha(config.waterVisibility));
+									col = col.withTint(Color4I.rgb(data.water[index]).withAlpha(waterVisibility));
 								}
 
-								if (config.reducedColorPalette) {
+								if (reducedColorPalette) {
 									col = ColorUtils.reduce(col);
 								}
 							}
 
-							if (config.saturation < 1F) {
+							if (saturation < 1F) {
 								Color.RGBtoHSB(col.redi(), col.greeni(), col.bluei(), hsb);
-								hsb[1] *= config.saturation;
+								hsb[1] *= saturation;
 								col = Color4I.hsb(hsb[0], hsb[1], hsb[2]);
 							}
 
 							float addedBrightness = 0F;
 
-							if (config.shadows > 0F) {
-								int bn = getHeight(config, az == 0 ? waterLightAndBiomeN[ax] : data.waterLightAndBiome[ax + (az - 1) * 512], az == 0 ? heightN[ax] : data.height[ax + (az - 1) * 512]);
-								int bw = getHeight(config, ax == 0 ? waterLightAndBiomeW[az] : data.waterLightAndBiome[ax - 1 + az * 512], ax == 0 ? heightW[az] : data.height[ax - 1 + az * 512]);
+							if (shadows > 0F) {
+								int bn = getHeight(mapMode, waterHeightFactor, az == 0 ? waterLightAndBiomeN[ax] : data.waterLightAndBiome[ax + (az - 1) * 512], az == 0 ? heightN[ax] : data.height[ax + (az - 1) * 512]);
+								int bw = getHeight(mapMode, waterHeightFactor, ax == 0 ? waterLightAndBiomeW[az] : data.waterLightAndBiome[ax - 1 + az * 512], ax == 0 ? heightW[az] : data.height[ax - 1 + az * 512]);
 
 								if (by > bn || by > bw) {
-									addedBrightness += config.shadows * (water ? 0.6F : 1F);
+									addedBrightness += shadows * (water ? 0.6F : 1F);
 								}
 
 								if (by < bn || by < bw) {
-									addedBrightness -= config.shadows * (water ? 0.6F : 1F);
+									addedBrightness -= shadows * (water ? 0.6F : 1F);
 								}
 							}
 
-							if (config.noise > 0F) {
-								addedBrightness += random.nextFloat() * config.noise - config.noise / 2F;
+							if (noise > 0F) {
+								addedBrightness += random.nextFloat() * noise - noise / 2F;
 							}
 
 							if (addedBrightness != 0F) {
 								col = ColorUtils.addBrightness(col, addedBrightness);
 							}
 
-							if (config.chunkGrid && (x == 0 || z == 0)) {
+							if (chunkGrid && (x == 0 || z == 0)) {
 								col = col.withTint(MapRegion.GRID_COLOR);
 							}
 

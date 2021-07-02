@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -111,8 +112,8 @@ public class FTBChunksTeamData {
 			return;
 		}
 
-		int c = manager.config.getMaxClaimedChunks(this, ownerPlayer);
-		int f = manager.config.getMaxForceLoadedChunks(this, ownerPlayer);
+		int c = FTBChunksWorldConfig.getMaxClaimedChunks(this, ownerPlayer);
+		int f = FTBChunksWorldConfig.getMaxForceLoadedChunks(this, ownerPlayer);
 
 		if (maxClaimChunks != c || maxForceLoadChunks != f) {
 			maxClaimChunks = c;
@@ -131,7 +132,7 @@ public class FTBChunksTeamData {
 
 		if (chunk != null) {
 			return ClaimResults.ALREADY_CLAIMED;
-		} else if (manager.config.claimDimensionBlacklistSet.contains(pos.dimension)) {
+		} else if (FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.contains(pos.dimension)) {
 			return ClaimResults.DIMENSION_FORBIDDEN;
 		} else if (!team.getType().isServer() && getClaimedChunks().size() >= maxClaimChunks) {
 			return ClaimResults.NOT_ENOUGH_POWER;
@@ -251,9 +252,9 @@ public class FTBChunksTeamData {
 	}
 
 	public boolean isAlly(UUID p) {
-		if (manager.config.allyMode == AllyMode.FORCED_ALL || team.isMember(p)) {
+		if (FTBChunksWorldConfig.ALLY_MODE.get() == AllyMode.FORCED_ALL || team.isMember(p)) {
 			return true;
-		} else if (manager.config.allyMode == AllyMode.FORCED_NONE) {
+		} else if (FTBChunksWorldConfig.ALLY_MODE.get() == AllyMode.FORCED_NONE) {
 			return false;
 		}
 

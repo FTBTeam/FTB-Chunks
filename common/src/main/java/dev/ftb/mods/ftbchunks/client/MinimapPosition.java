@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import dev.ftb.mods.ftblibrary.config.NameMap;
+
 /**
  * @author LatvianModder
  */
@@ -11,6 +13,8 @@ public enum MinimapPosition {
 	TOP_RIGHT(1, 0),
 	RIGHT(1, 1),
 	BOTTOM_RIGHT(1, 2);
+
+	public static final NameMap<MinimapPosition> NAME_MAP = NameMap.of(TOP_RIGHT, values()).create();
 
 	public final int posX;
 	public final int posY;

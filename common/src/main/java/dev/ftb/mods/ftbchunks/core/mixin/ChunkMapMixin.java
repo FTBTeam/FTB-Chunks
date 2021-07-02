@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.core.mixin;
 
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
@@ -22,7 +23,7 @@ public class ChunkMapMixin {
 
 	@Inject(method = "noPlayersCloseForSpawning", at = @At("RETURN"), cancellable = true)
 	private void noPlayersCloseForSpawningFTBC(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
-		if (ci.getReturnValue() && FTBChunksAPI.isManagerLoaded() && FTBChunksAPI.getManager().config.patchChunkLoading(level, pos)) {
+		if (ci.getReturnValue() && FTBChunksAPI.isManagerLoaded() && FTBChunksWorldConfig.patchChunkLoading(level, pos)) {
 			ci.setReturnValue(false);
 		}
 	}

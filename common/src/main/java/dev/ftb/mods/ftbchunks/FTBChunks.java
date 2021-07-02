@@ -34,6 +34,7 @@ import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
 import me.shedaniel.architectury.event.events.EntityEvent;
 import me.shedaniel.architectury.event.events.ExplosionEvent;
 import me.shedaniel.architectury.event.events.InteractionEvent;
+import me.shedaniel.architectury.event.events.LifecycleEvent;
 import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.hooks.PlayerHooks;
 import me.shedaniel.architectury.platform.Platform;
@@ -50,6 +51,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
@@ -113,6 +116,7 @@ public class FTBChunks {
 			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);
 		}
 
+		LifecycleEvent.SERVER_BEFORE_START.register(this::serverBeforeStart);
 		TeamManagerEvent.CREATED.register(this::teamManagerCreated);
 		TeamManagerEvent.DESTROYED.register(this::teamManagerDestroyed);
 		TeamEvent.PLAYER_LOGGED_IN.register(this::loggedIn);
@@ -138,6 +142,16 @@ public class FTBChunks {
 		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
 
 		PROXY.init();
+	}
+
+	private void serverBeforeStart(MinecraftServer server) {
+		FTBChunksWorldConfig.CONFIG.load(server.getWorldPath(FTBChunksWorldConfig.CONFIG_FILE_PATH));
+
+		FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.clear();
+
+		for (String s : FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST.get()) {
+			FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.add(ResourceKey.create(net.minecraft.core.Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
+		}
 	}
 
 	private void teamManagerCreated(TeamManagerEvent event) {
@@ -183,7 +197,7 @@ public class FTBChunks {
 		}
 
 		if (data.getTeam().getOwner().equals(player.getUUID())) {
-			data.setChunkLoadOffline(data.manager.config.getChunkLoadOffline(data, player));
+			data.setChunkLoadOffline(FTBChunksWorldConfig.getChunkLoadOffline(data, player));
 		}
 	}
 
@@ -221,8 +235,12 @@ public class FTBChunks {
 	}
 
 	public void loggedOut(ServerPlayer player) {
+		if (!FTBTeamsAPI.isManagerLoaded() || !FTBChunksAPI.isManagerLoaded() || !FTBChunksAPI.getManager().hasData(player)) {
+			return;
+		}
+
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		boolean canChunkLoadOffline = data.manager.config.getChunkLoadOffline(data, player);
+		boolean canChunkLoadOffline = FTBChunksWorldConfig.getChunkLoadOffline(data, player);
 		data.setChunkLoadOffline(canChunkLoadOffline);
 
 		if (!canChunkLoadOffline) {
@@ -239,13 +257,13 @@ public class FTBChunks {
 	}
 
 	private boolean checkPlayer(@Nullable Entity entity) {
-		if (!FTBChunksAPI.isManagerLoaded() || FTBChunksAPI.getManager().config.disableProtection) {
+		if (!FTBChunksAPI.isManagerLoaded() || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
 			return false;
 		}
 
 		if (entity instanceof ServerPlayer) {
 			if (PlayerHooks.isFake((ServerPlayer) entity)) {
-				return !FTBChunksAPI.getManager().config.disableAllFakePlayers;
+				return !FTBChunksWorldConfig.DISABLE_ALL_FAKE_PLAYERS.get();
 			}
 
 			return true;
@@ -271,7 +289,7 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) player, player.level.getBlockState(pos))) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get() && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
 				printNoWildernessMessage(player);
 				return InteractionResult.FAIL;
 			}
@@ -288,7 +306,7 @@ public class FTBChunks {
 				if (!chunk.canInteract((ServerPlayer) player, player.level.getBlockState(pos))) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get() && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
 				printNoWildernessMessage(player);
 				return InteractionResult.FAIL;
 			}
@@ -306,7 +324,7 @@ public class FTBChunks {
 				if (!chunk.canRightClickItem((ServerPlayer) player, stack)) {
 					return InteractionResultHolder.fail(stack);
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get() && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
 				printNoWildernessMessage(player);
 				return InteractionResultHolder.fail(stack);
 			}
@@ -323,7 +341,7 @@ public class FTBChunks {
 				if (!chunk.canEdit(player, blockState)) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
 				printNoWildernessMessage(player);
 				return InteractionResult.FAIL;
 			}
@@ -359,7 +377,7 @@ public class FTBChunks {
 				if (entity != null && !chunk.canEdit((ServerPlayer) entity, blockState)) {
 					return InteractionResult.FAIL;
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
 				printNoWildernessMessage(entity);
 				return InteractionResult.FAIL;
 			}
@@ -377,7 +395,7 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) player, level.getFluidState(((BlockHitResult) target).getBlockPos()).createLegacyBlock())) {
 					return CompoundEventResult.interrupt(false, null);
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
 				printNoWildernessMessage(player);
 				return CompoundEventResult.interrupt(false, null);
 			}
@@ -394,7 +412,7 @@ public class FTBChunks {
 				if (!chunk.canEdit((ServerPlayer) entity, blockState)) {
 					return EventResult.interrupt(false);
 				}
-			} else if (FTBChunksAPI.getManager().config.noWilderness) {
+			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
 				printNoWildernessMessage(entity);
 				return EventResult.interrupt(false);
 			}

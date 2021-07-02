@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -29,7 +28,6 @@ public class ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = LevelResourceHooks.create("ftbchunks");
 
 	public final TeamManager teamManager;
-	public final FTBChunksWorldConfig config;
 
 	public final Map<UUID, FTBChunksTeamData> teamData;
 	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
@@ -38,7 +36,6 @@ public class ClaimedChunkManager {
 
 	public ClaimedChunkManager(TeamManager m) {
 		teamManager = m;
-		config = FTBChunksWorldConfig.init(getMinecraftServer());
 		teamData = new HashMap<>();
 		claimedChunks = new HashMap<>();
 
@@ -115,6 +112,11 @@ public class ClaimedChunkManager {
 
 	public FTBChunksTeamData getData(ServerPlayer player) {
 		return getData(FTBTeamsAPI.getPlayerTeam(player));
+	}
+
+	public boolean hasData(ServerPlayer player) {
+		Team team = FTBTeamsAPI.getManager().getPlayerTeam(player.getUUID());
+		return team != null && teamData.containsKey(team.getId());
 	}
 
 	@Nullable

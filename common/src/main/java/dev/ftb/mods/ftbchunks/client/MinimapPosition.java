@@ -14,7 +14,7 @@ public enum MinimapPosition {
 	RIGHT(1, 1),
 	BOTTOM_RIGHT(1, 2);
 
-	public static final NameMap<MinimapPosition> NAME_MAP = NameMap.of(TOP_RIGHT, values()).create();
+	public static final NameMap<MinimapPosition> NAME_MAP = NameMap.of(TOP_RIGHT, values()).baseNameKey("ftbchunks.minimap.position").create();
 
 	public final int posX;
 	public final int posY;

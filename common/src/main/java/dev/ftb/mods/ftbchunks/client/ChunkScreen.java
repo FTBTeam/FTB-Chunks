@@ -250,7 +250,7 @@ public class ChunkScreen extends BaseScreen {
 
 		double hx = sx + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
 		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
-		FaceIcon.getFace(player.getGameProfile()).draw(matrixStack, (int) (hx - 8D), (int) (hy - 8D), 8, 8);
+		FaceIcon.getFace(player.getGameProfile()).draw(matrixStack, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
 		SendGeneralDataPacket d = FTBChunksClient.generalData;
 

@@ -260,4 +260,9 @@ public class MapRegion implements MapTask {
 	public double distToPlayer() {
 		return MathUtils.distSq(pos.x * 512D + 256D, pos.z * 512D + 256D, Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ());
 	}
+
+	@Override
+	public String toString() {
+		return pos.toRegionString();
+	}
 }

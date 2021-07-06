@@ -13,17 +13,20 @@ import com.mojang.math.Vector3f;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
+import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.MapTask;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
+import dev.ftb.mods.ftbchunks.client.map.ReloadChunkFromLevelPacketTask;
 import dev.ftb.mods.ftbchunks.client.map.ReloadChunkTask;
 import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
+import dev.ftb.mods.ftbchunks.core.ClientboundSectionBlocksUpdatePacketFTBC;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
@@ -62,6 +65,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.SectionPos;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -70,7 +74,6 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacket;
-import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
@@ -83,6 +86,9 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -840,10 +846,14 @@ public class FTBChunksClient extends FTBChunksCommon {
 		if (MapManager.inst != null && Minecraft.getInstance().level != null) {
 			if (taskQueueTicks % FTBChunksClientConfig.RERENDER_QUEUE_TICKS.get() == 0L) {
 				if (!rerenderCache.isEmpty()) {
-					Level world = Minecraft.getInstance().level;
+					Level level = Minecraft.getInstance().level;
 
 					for (ChunkPos pos : rerenderCache) {
-						queue(new ReloadChunkTask(world, pos));
+						ChunkAccess chunkAccess = level.getChunk(pos.x, pos.z, ChunkStatus.FULL, false);
+
+						if (chunkAccess != null) {
+							queue(new ReloadChunkTask(level, chunkAccess, pos));
+						}
 					}
 
 					rerenderCache.clear();
@@ -884,8 +894,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void rerender(BlockPos blockPos) {
-		rerender(new ChunkPos(blockPos));
+	public static void rerender(MapChunk chunk, BlockPos pos, BlockState state) {
+		// TODO: Re-render map more efficiently, only updating this block position
+		// rerender(new ChunkPos(pos));
 	}
 
 	public static void rerender(ChunkPos chunkPos) {
@@ -896,20 +907,44 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void handlePacket(ClientboundSectionBlocksUpdatePacket packet) {
-		// TODO: Use this data from server to render image rather than re-reading from client world later
-		packet.runUpdates((blockPos, blockState) -> rerender(blockPos));
-	}
+	public static void handlePacket(ClientboundSectionBlocksUpdatePacketFTBC p) {
+		if (MapManager.inst == null) {
+			return;
+		}
 
-	public static void handlePacket(ClientboundLevelChunkPacket packet) {
-		// TODO: Same as above
-		if (packet.isFullChunk()) {
-			rerender(new ChunkPos(packet.getX(), packet.getZ()));
+		SectionPos sectionPos = p.getSectionPosFTBC();
+		MapChunk chunk = MapDimension.getCurrent().getRegion(XZ.regionFromChunk(sectionPos.chunk())).getDataBlocking().getChunk(XZ.of(sectionPos.chunk()));
+
+		short[] positions = p.getPositionsFTBC();
+		BlockState[] states = p.getStatesFTBC();
+
+		for (int i = 0; i < positions.length; ++i) {
+			rerender(chunk, sectionPos.relativeToBlockPos(positions[i]), states[i]);
 		}
 	}
 
-	public static void handlePacket(ClientboundBlockUpdatePacket packet) {
-		// TODO: Only update specific block if its visible
-		rerender(packet.getPos());
+	public static void handlePacket(ClientboundLevelChunkPacket p) {
+		if (MapManager.inst == null) {
+			return;
+		}
+
+		Level level = Minecraft.getInstance().level;
+
+		if (level != null && p.isFullChunk()) {
+			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
+
+			if (chunkAccess != null) {
+				queue(new ReloadChunkFromLevelPacketTask(level, chunkAccess, p));
+			}
+		}
+	}
+
+	public static void handlePacket(ClientboundBlockUpdatePacket p) {
+		if (MapManager.inst == null) {
+			return;
+		}
+
+		MapChunk chunk = MapDimension.getCurrent().getRegion(XZ.regionFromBlock(p.getPos())).getDataBlocking().getChunk(XZ.chunkFromBlock(p.getPos()));
+		rerender(chunk, p.getPos(), p.getBlockState());
 	}
 }

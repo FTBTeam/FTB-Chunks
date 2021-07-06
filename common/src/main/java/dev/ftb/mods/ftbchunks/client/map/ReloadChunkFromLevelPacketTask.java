@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -20,30 +20,26 @@ import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 /**
  * @author LatvianModder
  */
-public class ReloadChunkTask implements MapTask {
+public class ReloadChunkFromLevelPacketTask implements MapTask {
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
 
 	public final Level level;
 	public final ChunkAccess chunkAccess;
-	public final ChunkPos pos;
-	private final MapManager manager;
+	public final ClientboundLevelChunkPacket packet;
+	public final MapDimension dimension;
 
-	public ReloadChunkTask(Level w, ChunkAccess ca, ChunkPos p) {
-		level = w;
+	public ReloadChunkFromLevelPacketTask(Level l, ChunkAccess ca, ClientboundLevelChunkPacket p) {
+		level = l;
 		chunkAccess = ca;
-		pos = p;
-		manager = MapManager.inst;
+		packet = p;
+		dimension = MapDimension.getCurrent();
 	}
 
 	@Override
 	public void runMapTask() {
-		if (MapManager.inst != manager) {
-			return;
-		}
+		MapChunk mapChunk = dimension.getRegion(XZ.regionFromChunk(packet.getX(), packet.getZ())).getDataBlocking().getChunk(XZ.of(packet.getX(), packet.getZ()));
 
-		ResourceKey<Level> dimId = level.dimension();
-
-		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
+		ChunkPos pos = new ChunkPos(packet.getX(), packet.getZ());
 		MapRegionData data = mapChunk.region.getDataBlocking();
 
 		WritableRegistry<Biome> biomes = level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
@@ -79,18 +75,11 @@ public class ReloadChunkTask implements MapTask {
 				waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos.above()) & 15) << 11; // Light
 
 				ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
-				int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
+				int blockIndex = mapChunk.region.dimension.manager.getBlockColorIndex(id == null ? AIR : id);
 
-				Biome biome;
-
-				// Only update biome, foliage, grass and water colors if its first visit or height changed
-				if (height0 != height || waterLightAndBiome0 == 0) {
-					biome = biomeContainer == null ? level.getBiome(blockPos) : biomeContainer.getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
-					waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
-					waterLightAndBiome |= (manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
-				} else {
-					biome = null;
-				}
+				Biome biome = biomeContainer == null ? level.getBiome(blockPos) : biomeContainer.getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
+				waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
+				waterLightAndBiome |= (mapChunk.region.dimension.manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
 
 				if (height0 != height) {
 					data.height[index] = (short) height;
@@ -99,13 +88,9 @@ public class ReloadChunkTask implements MapTask {
 
 				if (waterLightAndBiome0 != waterLightAndBiome) {
 					data.waterLightAndBiome[index] = (short) waterLightAndBiome;
-
-					if (biome != null) {
-						data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getAverageFoliageColor(level, blockPos) & 0xFFFFFF);
-						data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getAverageGrassColor(level, blockPos) & 0xFFFFFF);
-						data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getAverageWaterColor(level, blockPos) & 0xFFFFFF);
-					}
-
+					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.FOLIAGE_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.GRASS_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.WATER_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
 					changed = true;
 				}
 
@@ -128,6 +113,6 @@ public class ReloadChunkTask implements MapTask {
 
 	@Override
 	public String toString() {
-		return "ReloadChunkTask@" + pos;
+		return "ReloadChunkFromLevelPacketTask@" + packet.getX() + "," + packet.getZ();
 	}
 }

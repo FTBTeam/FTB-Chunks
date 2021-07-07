@@ -9,6 +9,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -100,6 +101,12 @@ public class MapDimension implements MapTask {
 		}
 
 		return regions;
+	}
+
+	@Nullable
+	public int[] getColors(int x, int z, ColorsFromRegion colors) {
+		MapRegion region = getRegions().get(XZ.of(x, z));
+		return region == null ? null : colors.getColors(region.getDataBlocking());
 	}
 
 	public MapRegion getRegion(XZ pos) {

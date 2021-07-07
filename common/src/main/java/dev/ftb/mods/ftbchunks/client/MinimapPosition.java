@@ -6,7 +6,6 @@ import dev.ftb.mods.ftblibrary.config.NameMap;
  * @author LatvianModder
  */
 public enum MinimapPosition {
-	DISABLED(-1, -1),
 	BOTTOM_LEFT(0, 2),
 	LEFT(0, 1),
 	TOP_LEFT(0, 0),
@@ -14,7 +13,7 @@ public enum MinimapPosition {
 	RIGHT(1, 1),
 	BOTTOM_RIGHT(1, 2);
 
-	public static final NameMap<MinimapPosition> NAME_MAP = NameMap.of(TOP_RIGHT, values()).create();
+	public static final NameMap<MinimapPosition> NAME_MAP = NameMap.of(TOP_RIGHT, values()).baseNameKey("ftbchunks.minimap.position").create();
 
 	public final int posX;
 	public final int posY;

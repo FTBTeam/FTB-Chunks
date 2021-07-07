@@ -13,12 +13,17 @@ import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.TeamBase;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 
+import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Random;
 
 /**
@@ -26,6 +31,7 @@ import java.util.Random;
  */
 public class RenderMapImageTask implements MapTask {
 	public final MapRegion region;
+	private static final boolean exportImages = false;
 
 	public RenderMapImageTask(MapRegion r) {
 		region = r;
@@ -45,18 +51,142 @@ public class RenderMapImageTask implements MapTask {
 		return h;
 	}
 
+	private int[][] initColors(BiomeBlendMode blendMode, MapRegionData data, ColorsFromRegion getter) {
+		int[] colors = getter.getColors(data);
+		int blend = blendMode.blend;
+		int s = 512 + blend * 2;
+		int[][] newColors = new int[s][s];
+
+		int[] rWW = blend == 0 ? null : region.dimension.getColors(region.pos.x - 1, region.pos.z, getter);
+		int[] rEE = blend == 0 ? null : region.dimension.getColors(region.pos.x + 1, region.pos.z, getter);
+		int[] rNN = blend == 0 ? null : region.dimension.getColors(region.pos.x, region.pos.z - 1, getter);
+		int[] rSS = blend == 0 ? null : region.dimension.getColors(region.pos.x, region.pos.z + 1, getter);
+
+		int[] rNW = blend == 0 ? null : region.dimension.getColors(region.pos.x - 1, region.pos.z - 1, getter);
+		int[] rSW = blend == 0 ? null : region.dimension.getColors(region.pos.x - 1, region.pos.z + 1, getter);
+		int[] rNE = blend == 0 ? null : region.dimension.getColors(region.pos.x + 1, region.pos.z - 1, getter);
+		int[] rSE = blend == 0 ? null : region.dimension.getColors(region.pos.x + 1, region.pos.z + 1, getter);
+
+		for (int i = 0; i < 512; i++) {
+			for (int j = 0; j < 512; j++) {
+				newColors[i + blend][j + blend] = colors[i + j * 512];
+			}
+
+			for (int j = 0; j < blend; j++) {
+				if (rWW != null) {
+					newColors[j][i + blend] = rWW[j + 512 - blend + i * 512];
+				}
+
+				if (rEE != null) {
+					newColors[j + 512 + blend][i + blend] = rEE[j + i * 512];
+				}
+
+				if (rNN != null) {
+					newColors[i + blend][j] = rNN[i + (j + 512 - blend) * 512];
+				}
+
+				if (rSS != null) {
+					newColors[i + blend][j + blend + 512] = rSS[i + j * 512];
+				}
+			}
+		}
+
+		for (int i = 0; i < blend; i++) {
+			for (int j = 0; j < blend; j++) {
+				if (rNW != null) {
+					newColors[i][j] = rNW[i + 512 - blend + (j + 512 - blend) * 512];
+				}
+
+				if (rNE != null) {
+					newColors[i + 512 + blend][j] = rNE[i + (j + 512 - blend) * 512];
+				}
+
+				if (rSW != null) {
+					newColors[i][j + 512 + blend] = rSW[i + 512 - blend + j * 512];
+				}
+
+				if (rSE != null) {
+					newColors[i + 512 + blend][j + 512 + blend] = rSE[i + j * 512];
+				}
+			}
+		}
+
+		if (exportImages && FTBChunksClientConfig.DEBUG_INFO.get()) {
+			BufferedImage export = new BufferedImage(s, s, BufferedImage.TYPE_INT_RGB);
+
+			for (int y = 0; y < s; y++) {
+				for (int x = 0; x < s; x++) {
+					export.setRGB(x, y, newColors[x][y]);
+				}
+			}
+
+			try (OutputStream stream = Files.newOutputStream(Platform.getGameFolder().resolve("local/ftbchunks/debug/" + region + "-" + getter.getName() + ".png"))) {
+				ImageIO.write(export, "PNG", stream);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		return newColors;
+	}
+
+	private int[][] initFoliage(BiomeBlendMode blend, MapRegionData data) {
+		return initColors(blend, data, ColorsFromRegion.FOLIAGE);
+	}
+
+	private int[][] initGrass(BiomeBlendMode blend, MapRegionData data) {
+		return initColors(blend, data, ColorsFromRegion.GRASS);
+	}
+
+	private int[][] initWater(BiomeBlendMode blend, MapRegionData data) {
+		return initColors(blend, data, ColorsFromRegion.WATER);
+	}
+
+	private Color4I getColor(BiomeBlendMode blendMode, int[][] colors, int ax, int az) {
+		if (blendMode.blend == 0) {
+			return Color4I.rgb(colors[ax][az]);
+		}
+
+		int r = 0;
+		int g = 0;
+		int b = 0;
+		int c = 0;
+
+		for (int i = 0; i < blendMode.size; i++) {
+			int col = colors[ax + blendMode.blend + blendMode.posX[i]][az + blendMode.blend + blendMode.posY[i]];
+
+			if (col != 0) {
+				r += (col >> 16) & 0xFF;
+				g += (col >> 8) & 0xFF;
+				b += col & 0xFF;
+				c++;
+			}
+		}
+
+		if (c == 0) {
+			return Color4I.rgb(colors[ax + blendMode.blend][az + blendMode.blend]);
+		}
+
+		return Color4I.rgb(r / c, g / c, b / c);
+	}
+
 	@Override
 	public void runMapTask() {
+		BiomeBlendMode blend = FTBChunksClientConfig.BIOME_BLEND.get();
+
 		MapRegionData data = region.getDataBlocking();
 		short[] heightW = new short[512];
 		short[] heightN = new short[512];
 		short[] waterLightAndBiomeW = new short[512];
 		short[] waterLightAndBiomeN = new short[512];
+		int[][] foliage = null;
+		int[][] grass = null;
+		int[][] water = null;
 
-		MapRegion rEast = region.dimension.getRegions().get(region.pos.offset(-1, 0));
+		MapRegion rWest = region.dimension.getRegions().get(region.pos.offset(-1, 0));
 
-		if (rEast != null) {
-			MapRegionData d = rEast.getDataBlocking();
+		if (rWest != null) {
+			MapRegionData d = rWest.getDataBlocking();
 
 			for (int i = 0; i < 512; i++) {
 				heightW[i] = d.height[511 + i * 512];
@@ -69,10 +199,10 @@ public class RenderMapImageTask implements MapTask {
 			}
 		}
 
-		MapRegion rTop = region.dimension.getRegions().get(region.pos.offset(0, -1));
+		MapRegion rNorth = region.dimension.getRegions().get(region.pos.offset(0, -1));
 
-		if (rTop != null) {
-			MapRegionData d = rTop.getDataBlocking();
+		if (rNorth != null) {
+			MapRegionData d = rNorth.getDataBlocking();
 			System.arraycopy(d.height, 511 * 512, heightN, 0, 512);
 			System.arraycopy(d.waterLightAndBiome, 511 * 512, waterLightAndBiomeN, 0, 512);
 		} else {
@@ -136,11 +266,11 @@ public class RenderMapImageTask implements MapTask {
 							BlockColor blockColor = region.dimension.manager.getBlockColor(data.getBlockIndex(index));
 							Color4I col;
 							int by = getHeight(mapMode, waterHeightFactor, data.waterLightAndBiome[index], data.height[index]);
-							boolean water = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
+							boolean hasWater = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
 							blockPos.set(region.pos.x * 512 + ax, by, region.pos.z * 512 + az);
 
 							if (mapMode == MapMode.TOPOGRAPHY) {
-								col = ColorUtils.getTopographyPalette()[by + (water ? 256 : 0)];
+								col = ColorUtils.getTopographyPalette()[by + (hasWater ? 256 : 0)];
 							} else if (mapMode == MapMode.BLOCKS) {
 								col = Color4I.rgb(data.getBlockIndex(index));
 							} else if (mapMode == MapMode.BIOME_TEMPERATURE) {
@@ -155,9 +285,17 @@ public class RenderMapImageTask implements MapTask {
 								if (blockColor instanceof CustomBlockColor) {
 									col = ((CustomBlockColor) blockColor).color;
 								} else if (blockColor == BlockColors.FOLIAGE) {
-									col = Color4I.rgb(data.foliage[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(foliageDarkness));
+									if (foliage == null) {
+										foliage = initFoliage(blend, data);
+									}
+
+									col = getColor(blend, foliage, ax, az).withAlpha(255).withTint(Color4I.BLACK.withAlpha(foliageDarkness));
 								} else if (blockColor == BlockColors.GRASS) {
-									col = Color4I.rgb(data.grass[index]).withAlpha(255).withTint(Color4I.BLACK.withAlpha(grassDarkness));
+									if (grass == null) {
+										grass = initGrass(blend, data);
+									}
+
+									col = getColor(blend, grass, ax, az).withAlpha(255).withTint(Color4I.BLACK.withAlpha(grassDarkness));
 								} else {
 									col = blockColor.getBlockColor(world, blockPos).withAlpha(255);
 								}
@@ -166,8 +304,12 @@ public class RenderMapImageTask implements MapTask {
 									col = col.withTint(ColorUtils.getLightMapPalette()[(data.waterLightAndBiome[index] >> 11) & 15][15].withAlpha(230));
 								}
 
-								if (water) {
-									col = col.withTint(Color4I.rgb(data.water[index]).withAlpha(waterVisibility));
+								if (hasWater) {
+									if (water == null) {
+										water = initWater(blend, data);
+									}
+
+									col = col.withTint(getColor(blend, water, ax, az).withAlpha(waterVisibility));
 								}
 
 								if (reducedColorPalette) {
@@ -188,11 +330,11 @@ public class RenderMapImageTask implements MapTask {
 								int bw = getHeight(mapMode, waterHeightFactor, ax == 0 ? waterLightAndBiomeW[az] : data.waterLightAndBiome[ax - 1 + az * 512], ax == 0 ? heightW[az] : data.height[ax - 1 + az * 512]);
 
 								if (by > bn || by > bw) {
-									addedBrightness += shadows * (water ? 0.6F : 1F);
+									addedBrightness += shadows * (hasWater ? 0.6F : 1F);
 								}
 
 								if (by < bn || by < bw) {
-									addedBrightness -= shadows * (water ? 0.6F : 1F);
+									addedBrightness -= shadows * (hasWater ? 0.6F : 1F);
 								}
 							}
 

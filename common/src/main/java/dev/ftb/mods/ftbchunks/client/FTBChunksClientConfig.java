@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
@@ -31,9 +32,11 @@ public interface FTBChunksClientConfig {
 	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
 	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
 	IntValue WATER_HEIGHT_FACTOR = CONFIG.getInt("water_height_factor", 8, 0, 128).comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain");
+	EnumValue<BiomeBlendMode> BIOME_BLEND = CONFIG.getEnum("biome_blend", BiomeBlendMode.NAME_MAP).comment("Biome blend");
 
 	SNBTConfig MINIMAP = CONFIG.getGroup("minimap");
 
+	BooleanValue MINIMAP_ENABLED = MINIMAP.getBoolean("enabled", !hasOtherMinimapMod()).comment("Enable minimap");
 	EnumValue<MinimapPosition> MINIMAP_POSITION = MINIMAP.getEnum("position", MinimapPosition.NAME_MAP).comment("Enables minimap to show up in corner");
 	DoubleValue MINIMAP_SCALE = MINIMAP.getDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
 	BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.getBoolean("locked_north", true).comment("Minimap will not rotate");
@@ -57,6 +60,10 @@ public interface FTBChunksClientConfig {
 	IntValue GRASS_DARKNESS = CONFIG.getInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
 	IntValue FOLIAGE_DARKNESS = CONFIG.getInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
 
+	static boolean hasOtherMinimapMod() {
+		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap");
+	}
+
 	static void init() {
 		CONFIG.load(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
@@ -68,7 +75,7 @@ public interface FTBChunksClientConfig {
 		EditConfigScreen gui = new EditConfigScreen(group);
 		group.savedCallback = b -> {
 			if (b) {
-				CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
+				saveConfig();
 			}
 
 			if (MapManager.inst != null) {
@@ -79,5 +86,9 @@ public interface FTBChunksClientConfig {
 		};
 
 		gui.openGui();
+	}
+
+	static void saveConfig() {
+		CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
 }

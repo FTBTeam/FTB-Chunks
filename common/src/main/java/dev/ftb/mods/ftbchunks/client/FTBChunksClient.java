@@ -319,7 +319,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	public InteractionResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
 		if (openMapKey.isDown()) {
-			if (FTBChunksClientConfig.DEBUG_INFO.get() && Screen.hasControlDown()) {
+			if (Screen.hasControlDown()) {
+				// TODO: Disable minimap here
+			} else if (FTBChunksClientConfig.DEBUG_INFO.get() && Screen.hasAltDown()) {
 				FTBChunks.LOGGER.info("=== Task Queue: " + taskQueue.size());
 
 				for (MapTask task : taskQueue) {

@@ -6,7 +6,6 @@ import dev.ftb.mods.ftblibrary.config.NameMap;
  * @author LatvianModder
  */
 public enum MinimapPosition {
-	DISABLED(-1, -1),
 	BOTTOM_LEFT(0, 2),
 	LEFT(0, 1),
 	TOP_LEFT(0, 0),

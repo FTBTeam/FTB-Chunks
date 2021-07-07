@@ -38,6 +38,7 @@ import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.util.ClientUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
@@ -320,7 +321,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 	public InteractionResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
 		if (openMapKey.isDown()) {
 			if (Screen.hasControlDown()) {
-				// TODO: Disable minimap here
+				SNBTCompoundTag tag = new SNBTCompoundTag();
+				tag.putBoolean(FTBChunksClientConfig.MINIMAP_ENABLED.key, !FTBChunksClientConfig.MINIMAP_ENABLED.get());
+				FTBChunksClientConfig.MINIMAP_ENABLED.read(tag);
+				FTBChunksClientConfig.saveConfig();
 			} else if (FTBChunksClientConfig.DEBUG_INFO.get() && Screen.hasAltDown()) {
 				FTBChunks.LOGGER.info("=== Task Queue: " + taskQueue.size());
 
@@ -417,7 +421,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.options.renderDebug || FTBChunksClientConfig.MINIMAP_POSITION.get() == MinimapPosition.DISABLED || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0) {
+		if (mc.options.renderDebug || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0) {
 			return;
 		}
 

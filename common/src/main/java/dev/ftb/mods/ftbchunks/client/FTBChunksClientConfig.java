@@ -36,6 +36,7 @@ public interface FTBChunksClientConfig {
 
 	SNBTConfig MINIMAP = CONFIG.getGroup("minimap");
 
+	BooleanValue MINIMAP_ENABLED = MINIMAP.getBoolean("enabled", !hasOtherMinimapMod()).comment("Enable minimap");
 	EnumValue<MinimapPosition> MINIMAP_POSITION = MINIMAP.getEnum("position", MinimapPosition.NAME_MAP).comment("Enables minimap to show up in corner");
 	DoubleValue MINIMAP_SCALE = MINIMAP.getDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
 	BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.getBoolean("locked_north", true).comment("Minimap will not rotate");
@@ -59,6 +60,10 @@ public interface FTBChunksClientConfig {
 	IntValue GRASS_DARKNESS = CONFIG.getInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
 	IntValue FOLIAGE_DARKNESS = CONFIG.getInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
 
+	static boolean hasOtherMinimapMod() {
+		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap");
+	}
+
 	static void init() {
 		CONFIG.load(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
@@ -70,7 +75,7 @@ public interface FTBChunksClientConfig {
 		EditConfigScreen gui = new EditConfigScreen(group);
 		group.savedCallback = b -> {
 			if (b) {
-				CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
+				saveConfig();
 			}
 
 			if (MapManager.inst != null) {
@@ -81,5 +86,9 @@ public interface FTBChunksClientConfig {
 		};
 
 		gui.openGui();
+	}
+
+	static void saveConfig() {
+		CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
 }

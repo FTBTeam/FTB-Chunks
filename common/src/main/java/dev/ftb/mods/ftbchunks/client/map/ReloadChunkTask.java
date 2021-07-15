@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -26,11 +27,13 @@ public class ReloadChunkTask implements MapTask {
 	public final Level level;
 	public final ChunkAccess chunkAccess;
 	public final ChunkPos pos;
+	public final IntOpenHashSet blockPosSet;
 
-	public ReloadChunkTask(Level w, ChunkAccess ca, ChunkPos p) {
+	public ReloadChunkTask(Level w, ChunkAccess ca, ChunkPos p, IntOpenHashSet s) {
 		level = w;
 		chunkAccess = ca;
 		pos = p;
+		blockPosSet = s;
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class ReloadChunkTask implements MapTask {
 		boolean[] flags = new boolean[1];
 
 		try {
-			for (int wi = 0; wi < 256; wi++) {
+			for (int wi : blockPosSet) {
 				int wx = wi % 16;
 				int wz = wi / 16;
 				blockPos.set(blockX + wx, topY, blockZ + wz);
@@ -94,7 +97,7 @@ public class ReloadChunkTask implements MapTask {
 				if (waterLightAndBiome0 != waterLightAndBiome) {
 					data.waterLightAndBiome[index] = (short) waterLightAndBiome;
 
-					if (biome != null) {
+					if (biome != null && (waterLightAndBiome0 & 0b111_11111111) != (waterLightAndBiome & 0b111_11111111)) {
 						data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getAverageFoliageColor(level, blockPos) & 0xFFFFFF);
 						data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getAverageGrassColor(level, blockPos) & 0xFFFFFF);
 						data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getAverageWaterColor(level, blockPos) & 0xFFFFFF);

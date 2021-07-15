@@ -44,6 +44,7 @@ import dev.ftb.mods.ftblibrary.util.ClientUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import me.shedaniel.architectury.annotations.ExpectPlatform;
 import me.shedaniel.architectury.event.events.GuiEvent;
 import me.shedaniel.architectury.event.events.client.ClientPlayerEvent;
@@ -102,8 +103,9 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author LatvianModder
@@ -124,7 +126,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	public static long taskQueueTicks = 0L;
-	public static final HashSet<ChunkPos> rerenderCache = new HashSet<>();
+	public static Map<ChunkPos, IntOpenHashSet> rerenderCache = new HashMap<>();
 
 	public static void queue(MapTask task) {
 		taskQueue.addLast(task);
@@ -856,15 +858,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 				if (!rerenderCache.isEmpty()) {
 					Level level = Minecraft.getInstance().level;
 
-					for (ChunkPos pos : rerenderCache) {
-						ChunkAccess chunkAccess = level.getChunk(pos.x, pos.z, ChunkStatus.FULL, false);
+					for (Map.Entry<ChunkPos, IntOpenHashSet> pos : rerenderCache.entrySet()) {
+						ChunkAccess chunkAccess = level.getChunk(pos.getKey().x, pos.getKey().z, ChunkStatus.FULL, false);
 
 						if (chunkAccess != null) {
-							queue(new ReloadChunkTask(level, chunkAccess, pos));
+							queue(new ReloadChunkTask(level, chunkAccess, pos.getKey(), pos.getValue()));
 						}
 					}
 
-					rerenderCache.clear();
+					rerenderCache = new HashMap<>();
 				}
 			}
 
@@ -903,12 +905,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public static void rerender(MapChunk chunk, BlockPos pos, BlockState state) {
-		// TODO: Re-render map more efficiently, only updating this block position
-		// rerender(new ChunkPos(pos));
-	}
+		ChunkPos chunkPos = new ChunkPos(pos);
+		IntOpenHashSet set = rerenderCache.get(chunkPos);
 
-	public static void rerender(ChunkPos chunkPos) {
-		if (rerenderCache.add(chunkPos)) {
+		if (set == null) {
+			set = new IntOpenHashSet();
+			rerenderCache.put(chunkPos, set);
+		}
+
+		if (set.add((pos.getX() & 15) + ((pos.getZ() & 15) * 16))) {
 			if (FTBChunksClientConfig.DEBUG_INFO.get()) {
 				renderedDebugCount++;
 			}

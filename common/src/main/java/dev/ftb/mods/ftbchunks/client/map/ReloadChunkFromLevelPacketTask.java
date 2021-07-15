@@ -87,9 +87,13 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 
 				if (waterLightAndBiome0 != waterLightAndBiome) {
 					data.waterLightAndBiome[index] = (short) waterLightAndBiome;
-					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.FOLIAGE_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
-					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.GRASS_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
-					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.WATER_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+
+					if (biome != null && (waterLightAndBiome0 & 0b111_11111111) != (waterLightAndBiome & 0b111_11111111)) {
+						data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.FOLIAGE_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+						data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.GRASS_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+						data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.WATER_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+					}
+
 					changed = true;
 				}
 

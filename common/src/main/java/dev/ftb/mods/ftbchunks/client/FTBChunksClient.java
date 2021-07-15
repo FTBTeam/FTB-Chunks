@@ -225,7 +225,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			MapTask t;
 
 			while ((t = taskQueue.pollFirst()) != null) {
-				t.runMapTask();
+				t.runMapTask(MapManager.inst);
 			}
 
 			MapDimension.updateCurrent();
@@ -849,7 +849,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public void clientTick(Minecraft client) {
-		if (MapManager.inst != null && Minecraft.getInstance().level != null) {
+		MapManager manager = MapManager.inst;
+
+		if (manager != null && Minecraft.getInstance().level != null) {
 			if (taskQueueTicks % FTBChunksClientConfig.RERENDER_QUEUE_TICKS.get() == 0L) {
 				if (!rerenderCache.isEmpty()) {
 					Level level = Minecraft.getInstance().level;
@@ -883,7 +885,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 					Util.backgroundExecutor().execute(() -> {
 						for (MapTask task : tasks) {
 							if (task != null) {
-								task.runMapTask();
+								task.runMapTask(manager);
 							}
 						}
 					});
@@ -930,10 +932,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public static void handlePacket(ClientboundLevelChunkPacket p) {
-		if (MapManager.inst == null) {
-			return;
-		}
-
 		Level level = Minecraft.getInstance().level;
 
 		if (level != null && p.isFullChunk()) {

@@ -5,7 +5,7 @@ package dev.ftb.mods.ftbchunks.client.map;
  */
 @FunctionalInterface
 public interface MapTask {
-	void runMapTask();
+	void runMapTask(MapManager manager);
 
 	default boolean cancelOtherTasks() {
 		return false;

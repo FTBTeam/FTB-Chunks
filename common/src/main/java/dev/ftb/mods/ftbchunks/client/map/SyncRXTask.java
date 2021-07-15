@@ -20,7 +20,7 @@ public class SyncRXTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask() {
+	public void runMapTask(MapManager m) {
 		ByteArrayInputStream in = new ByteArrayInputStream(data);
 
 		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(in)))) {

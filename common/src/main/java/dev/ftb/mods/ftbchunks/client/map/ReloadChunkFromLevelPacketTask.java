@@ -26,17 +26,16 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 	public final Level level;
 	public final ChunkAccess chunkAccess;
 	public final ClientboundLevelChunkPacket packet;
-	public final MapDimension dimension;
 
 	public ReloadChunkFromLevelPacketTask(Level l, ChunkAccess ca, ClientboundLevelChunkPacket p) {
 		level = l;
 		chunkAccess = ca;
 		packet = p;
-		dimension = MapDimension.getCurrent();
 	}
 
 	@Override
-	public void runMapTask() {
+	public void runMapTask(MapManager manager) {
+		MapDimension dimension = manager.getDimension(level.dimension());
 		MapChunk mapChunk = dimension.getRegion(XZ.regionFromChunk(packet.getX(), packet.getZ())).getDataBlocking().getChunk(XZ.of(packet.getX(), packet.getZ()));
 
 		ChunkPos pos = new ChunkPos(packet.getX(), packet.getZ());

@@ -26,21 +26,15 @@ public class ReloadChunkTask implements MapTask {
 	public final Level level;
 	public final ChunkAccess chunkAccess;
 	public final ChunkPos pos;
-	private final MapManager manager;
 
 	public ReloadChunkTask(Level w, ChunkAccess ca, ChunkPos p) {
 		level = w;
 		chunkAccess = ca;
 		pos = p;
-		manager = MapManager.inst;
 	}
 
 	@Override
-	public void runMapTask() {
-		if (MapManager.inst != manager) {
-			return;
-		}
-
+	public void runMapTask(MapManager manager) {
 		ResourceKey<Level> dimId = level.dimension();
 
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));

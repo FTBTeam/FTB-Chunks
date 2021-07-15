@@ -168,7 +168,7 @@ public class MapDimension implements MapTask {
 	}
 
 	@Override
-	public void runMapTask() {
+	public void runMapTask(MapManager m) {
 		try {
 			JsonObject json = new JsonObject();
 			JsonArray waypointArray = new JsonArray();

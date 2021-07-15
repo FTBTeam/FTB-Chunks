@@ -151,7 +151,7 @@ public class MapManager implements MapTask {
 	}
 
 	@Override
-	public void runMapTask() {
+	public void runMapTask(MapManager m) {
 		try {
 			Files.write(directory.resolve("dimensions.txt"), dimensions
 					.keySet()

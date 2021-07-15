@@ -223,7 +223,7 @@ public class MapRegion implements MapTask {
 	}
 
 	@Override
-	public void runMapTask() {
+	public void runMapTask(MapManager m) {
 		if (data != null) {
 			try {
 				data.write();

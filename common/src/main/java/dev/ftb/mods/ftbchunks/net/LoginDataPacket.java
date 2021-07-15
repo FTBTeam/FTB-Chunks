@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftblibrary.net.snm.BaseS2CPacket;
-import dev.ftb.mods.ftblibrary.net.snm.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.simple.BaseS2CMessage;
+import me.shedaniel.architectury.networking.simple.MessageType;
 import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.UUID;
@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class LoginDataPacket extends BaseS2CPacket {
+public class LoginDataPacket extends BaseS2CMessage {
 	public final UUID serverId;
 
 	public LoginDataPacket(UUID id) {
@@ -23,7 +23,7 @@ public class LoginDataPacket extends BaseS2CPacket {
 	}
 
 	@Override
-	public PacketID getId() {
+	public MessageType getType() {
 		return FTBChunksNet.LOGIN_DATA;
 	}
 

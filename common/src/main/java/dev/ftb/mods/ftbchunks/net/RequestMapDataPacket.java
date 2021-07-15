@@ -1,14 +1,14 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftblibrary.net.snm.BaseC2SPacket;
-import dev.ftb.mods.ftblibrary.net.snm.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.simple.BaseC2SMessage;
+import me.shedaniel.architectury.networking.simple.MessageType;
 import net.minecraft.network.FriendlyByteBuf;
 
 /**
  * @author LatvianModder
  */
-public class RequestMapDataPacket extends BaseC2SPacket {
+public class RequestMapDataPacket extends BaseC2SMessage {
 	public final int fromX, fromZ, toX, toZ;
 
 	public RequestMapDataPacket(int fx, int fz, int tx, int tz) {
@@ -26,7 +26,7 @@ public class RequestMapDataPacket extends BaseC2SPacket {
 	}
 
 	@Override
-	public PacketID getId() {
+	public MessageType getType() {
 		return FTBChunksNet.REQUEST_MAP_DATA;
 	}
 
@@ -38,6 +38,7 @@ public class RequestMapDataPacket extends BaseC2SPacket {
 		buf.writeVarInt(toZ);
 	}
 
+	@Override
 	public void handle(NetworkManager.PacketContext context) {
 		//FIXME: SendMapDataPacket.send(Objects.requireNonNull(context.get().getSender())));
 	}

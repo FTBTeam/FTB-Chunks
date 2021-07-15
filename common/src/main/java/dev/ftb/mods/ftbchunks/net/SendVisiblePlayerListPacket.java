@@ -4,9 +4,9 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
-import dev.ftb.mods.ftblibrary.net.snm.BaseS2CPacket;
-import dev.ftb.mods.ftblibrary.net.snm.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.simple.BaseS2CMessage;
+import me.shedaniel.architectury.networking.simple.MessageType;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
@@ -20,7 +20,7 @@ import java.util.UUID;
 /**
  * @author LatvianModder
  */
-public class SendVisiblePlayerListPacket extends BaseS2CPacket {
+public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 	public final List<PlayerLocation> players;
 	public final ResourceKey<Level> dim;
 
@@ -73,7 +73,7 @@ public class SendVisiblePlayerListPacket extends BaseS2CPacket {
 	}
 
 	@Override
-	public PacketID getId() {
+	public MessageType getType() {
 		return FTBChunksNet.SEND_VISIBLE_PLAYER_LIST;
 	}
 

@@ -5,9 +5,9 @@ import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.net.snm.BaseC2SPacket;
-import dev.ftb.mods.ftblibrary.net.snm.PacketID;
 import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.simple.BaseC2SMessage;
+import me.shedaniel.architectury.networking.simple.MessageType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 /**
  * @author LatvianModder
  */
-public class RequestChunkChangePacket extends BaseC2SPacket {
+public class RequestChunkChangePacket extends BaseC2SMessage {
 	private final int action;
 	private final Set<XZ> chunks;
 
@@ -41,7 +41,7 @@ public class RequestChunkChangePacket extends BaseC2SPacket {
 	}
 
 	@Override
-	public PacketID getId() {
+	public MessageType getType() {
 		return FTBChunksNet.REQUEST_CHUNK_CHANGE;
 	}
 

@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -18,11 +17,11 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamArgument;
+import dev.ftb.mods.ftbteams.data.TeamArgumentProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
 import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.core.BlockPos;
@@ -37,8 +36,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.ToIntBiFunction;
@@ -50,12 +47,12 @@ public class FTBChunksCommands {
 	public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher, Commands.CommandSelection selection) {
 		LiteralCommandNode<CommandSourceStack> command = dispatcher.register(Commands.literal("ftbchunks")
 				.then(Commands.literal("claim")
-						.executes(context -> claim(context.getSource(), 0))
-						.then(radiusArg().executes(context -> claim(context.getSource(), getRadiusArg(context))))
+						.executes(context -> claim(context.getSource(), selfTeam(context.getSource()), 0))
+						.then(radiusArg().executes(context -> claim(context.getSource(), selfTeam(context.getSource()), getRadiusArg(context))))
 				)
 				.then(Commands.literal("unclaim")
-						.executes(context -> unclaim(context.getSource(), 0))
-						.then(radiusArg().executes(context -> unclaim(context.getSource(), getRadiusArg(context))))
+						.executes(context -> unclaim(context.getSource(), selfTeam(context.getSource()), 0))
+						.then(radiusArg().executes(context -> unclaim(context.getSource(), selfTeam(context.getSource()), getRadiusArg(context))))
 				)
 				.then(Commands.literal("load")
 						.executes(context -> load(context.getSource(), 0))
@@ -66,12 +63,12 @@ public class FTBChunksCommands {
 						.then(radiusArg().executes(context -> unload(context.getSource(), getRadiusArg(context))))
 				)
 				.then(Commands.literal("unclaim_all")
-						.executes(context -> unclaimAll(context.getSource(), Collections.singleton(context.getSource().getPlayerOrException().getGameProfile())))
-						.then(forPlayers(FTBChunksCommands::unclaimAll))
+						.executes(context -> unclaimAll(context.getSource(), selfTeam(context.getSource())))
+						.then(forTeam(FTBChunksCommands::unclaimAll))
 				)
 				.then(Commands.literal("unload_all")
-						.executes(context -> unloadAll(context.getSource(), Collections.singleton(context.getSource().getPlayerOrException().getGameProfile())))
-						.then(forPlayers(FTBChunksCommands::unloadAll))
+						.executes(context -> unloadAll(context.getSource(), selfTeam(context.getSource())))
+						.then(forTeam(FTBChunksCommands::unloadAll))
 				)
 				.then(Commands.literal("info")
 						.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getLevel(), new BlockPos(context.getSource().getPosition()))))
@@ -123,15 +120,29 @@ public class FTBChunksCommands {
 										)
 								)
 						)
-						.then(Commands.literal("claim_server")
-								.then(Commands.argument("server_team", TeamArgument.create())
-										.executes(context -> claimServer(context.getSource(), TeamArgument.get(context, "server_team"), 0))
+						.then(Commands.literal("claim_as")
+								.then(Commands.argument("team", TeamArgument.create())
+										.executes(context -> claim(context.getSource(), TeamArgument.get(context, "team"), 0))
 										.then(radiusArg()
-												.executes(context -> claimServer(context.getSource(), TeamArgument.get(context, "server_team"), getRadiusArg(context)))
+												.executes(context -> claim(context.getSource(), TeamArgument.get(context, "team"), getRadiusArg(context)))
 												.then(anchorArg()
-														.executes(context -> claimServer(context.getSource(), TeamArgument.get(context, "server_team"), getRadiusArg(context), getAnchorArg(context), context.getSource().getLevel()))
+														.executes(context -> claim(context.getSource(), TeamArgument.get(context, "team"), getRadiusArg(context), getAnchorArg(context), context.getSource().getLevel()))
 														.then(dimArg()
-																.executes(context -> claimServer(context.getSource(), TeamArgument.get(context, "server_team"), getRadiusArg(context), getAnchorArg(context), getDimArg(context)))
+																.executes(context -> claim(context.getSource(), TeamArgument.get(context, "team"), getRadiusArg(context), getAnchorArg(context), getDimArg(context)))
+														)
+												)
+										)
+								)
+						)
+						.then(Commands.literal("unclaim_as")
+								.then(Commands.argument("team", TeamArgument.create())
+										.executes(context -> unclaim(context.getSource(), TeamArgument.get(context, "team"), 0))
+										.then(radiusArg()
+												.executes(context -> unclaim(context.getSource(), TeamArgument.get(context, "team"), getRadiusArg(context)))
+												.then(anchorArg()
+														.executes(context -> unclaim(context.getSource(), TeamArgument.get(context, "team"), getRadiusArg(context), getAnchorArg(context), context.getSource().getLevel()))
+														.then(dimArg()
+																.executes(context -> unclaim(context.getSource(), TeamArgument.get(context, "team"), getRadiusArg(context), getAnchorArg(context), getDimArg(context)))
 														)
 												)
 										)
@@ -170,7 +181,7 @@ public class FTBChunksCommands {
 		int oz = Mth.floor(anchor.z) >> 4;
 		List<ChunkDimPos> list = new ArrayList<>();
 
-		r = Math.max(1, r >> 4);
+		r = r >> 4;
 
 		for (int z = -r; z <= r; z++) {
 			for (int x = -r; x <= r; x++) {
@@ -185,11 +196,15 @@ public class FTBChunksCommands {
 		}
 	}
 
-	private static int claim(CommandSourceStack source, int r) throws CommandSyntaxException {
+	private static int claim(CommandSourceStack source, Team team, int r) throws CommandSyntaxException {
+		return claim(source, team, r, toColumn(source.getPosition()), source.getLevel());
+	}
+
+	private static int claim(CommandSourceStack source, Team team, int r, ColumnPos anchor, Level level) throws CommandSyntaxException {
 		int[] success = new int[1];
 		long now = System.currentTimeMillis();
 
-		forEachChunk(source, r, (data, pos) -> {
+		forEachChunk(team, level, anchor, r, (data, pos) -> {
 			ClaimResult result = data.claim(source, pos, false);
 
 			if (result.isSuccess()) {
@@ -199,21 +214,31 @@ public class FTBChunksCommands {
 		});
 
 		source.sendSuccess(new TextComponent("Claimed " + success[0] + " chunks!"), false);
-		FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
+
+		ChunkDimPos origin = new ChunkDimPos(level.dimension(), anchor.x >> 4, anchor.z >> 4);
+		FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks around " + origin + "for team " + team.getDisplayName());
+
 		return success[0];
 	}
 
-	private static int unclaim(CommandSourceStack source, int r) throws CommandSyntaxException {
+	private static int unclaim(CommandSourceStack source, Team team, int r) throws CommandSyntaxException {
+		return unclaim(source, team, r, toColumn(source.getPosition()), source.getLevel());
+	}
+
+	private static int unclaim(CommandSourceStack source, Team team, int r, ColumnPos anchor, Level level) throws CommandSyntaxException {
 		int[] success = new int[1];
 
-		forEachChunk(source, r, (data, pos) -> {
+		forEachChunk(team, level, anchor, r, (data, pos) -> {
 			if (data.unclaim(source, pos, false).isSuccess()) {
 				success[0]++;
 			}
 		});
 
 		source.sendSuccess(new TextComponent("Unclaimed " + success[0] + " chunks!"), false);
-		FTBChunks.LOGGER.info(source.getTextName() + " unclaimed " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
+
+		ChunkDimPos origin = new ChunkDimPos(level.dimension(), anchor.x >> 4, anchor.z >> 4);
+		FTBChunks.LOGGER.info(source.getTextName() + " unclaimed " + success[0] + " chunks around " + origin + "for team " + team.getDisplayName());
+
 		return success[0];
 	}
 
@@ -249,34 +274,24 @@ public class FTBChunksCommands {
 		return success[0];
 	}
 
-	private static int unclaimAll(CommandSourceStack source, Collection<GameProfile> players) {
-		for (GameProfile profile : players) {
-			FTBChunksTeamData data = FTBChunksAPI.getManager().getData(FTBTeamsAPI.getPlayerTeam(profile.getId()));
+	private static int unclaimAll(CommandSourceStack source, Team team) {
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
 
-			if (data != null) {
-				for (ClaimedChunk c : data.getClaimedChunks()) {
-					data.unclaim(source, c.getPos(), false);
-				}
-
-				data.save();
-			}
+		for (ClaimedChunk c : data.getClaimedChunks()) {
+			data.unclaim(source, c.getPos(), false);
 		}
+		data.save();
 
 		return 1;
 	}
 
-	private static int unloadAll(CommandSourceStack source, Collection<GameProfile> players) {
-		for (GameProfile profile : players) {
-			Team team = FTBTeamsAPI.getPlayerTeam(profile.getId());
+	private static int unloadAll(CommandSourceStack source, Team team) {
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
 
-			if (team != null) {
-				FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
-
-				for (ClaimedChunk c : data.getClaimedChunks()) {
-					data.unload(source, c.getPos(), false);
-				}
-			}
+		for (ClaimedChunk c : data.getClaimedChunks()) {
+			data.unload(source, c.getPos(), false);
 		}
+		data.save();
 
 		return 1;
 	}
@@ -348,32 +363,6 @@ public class FTBChunksCommands {
 		return 1;
 	}
 
-	private static int claimServer(CommandSourceStack source, Team team, int r) throws CommandSyntaxException {
-		return claimServer(source, team, r, toColumn(source.getPosition()), source.getLevel());
-	}
-
-	private static int claimServer(CommandSourceStack source, Team team, int r, ColumnPos anchor, Level level) throws CommandSyntaxException {
-		if (!team.getType().isServer()) {
-			return 0;
-		}
-
-		int[] success = new int[1];
-		long now = System.currentTimeMillis();
-
-		forEachChunk(team, level, anchor, r, (data, pos) -> {
-			ClaimResult result = data.claim(source, pos, false);
-
-			if (result.isSuccess()) {
-				result.setClaimedTime(now);
-				success[0]++;
-			}
-		});
-
-		source.sendSuccess(new TextComponent("Claimed " + success[0] + " chunks!"), false);
-		FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
-		return success[0];
-	}
-
 	private static RequiredArgumentBuilder<CommandSourceStack, Integer> radiusArg() {
 		return Commands.argument("radius_in_blocks", IntegerArgumentType.integer(0, 512));
 	}
@@ -398,13 +387,17 @@ public class FTBChunksCommands {
 		return DimensionArgument.getDimension(context, "dimension");
 	}
 
-	private static RequiredArgumentBuilder<CommandSourceStack, GameProfileArgument.Result> forPlayers(ToIntBiFunction<CommandSourceStack, Collection<GameProfile>> callback) {
-		return Commands.argument("players", GameProfileArgument.gameProfile())
+	private static RequiredArgumentBuilder<CommandSourceStack, TeamArgumentProvider> forTeam(ToIntBiFunction<CommandSourceStack, Team> callback) {
+		return Commands.argument("team", TeamArgument.create())
 				.requires(source -> source.hasPermission(2))
-				.executes(context -> callback.applyAsInt(context.getSource(), GameProfileArgument.getGameProfiles(context, "players")));
+				.executes(context -> callback.applyAsInt(context.getSource(), TeamArgument.get(context, "team")));
 	}
 
 	private static ColumnPos toColumn(Vec3 pos) {
 		return new ColumnPos(new BlockPos(pos));
+	}
+
+	private static Team selfTeam(CommandSourceStack source) throws CommandSyntaxException {
+		return FTBTeamsAPI.getPlayerTeam(source.getPlayerOrException());
 	}
 }

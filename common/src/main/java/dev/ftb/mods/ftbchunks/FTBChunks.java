@@ -333,7 +333,7 @@ public class FTBChunks {
 		return InteractionResultHolder.pass(stack);
 	}
 
-	public InteractionResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @org.jetbrains.annotations.Nullable IntValue intValue) {
+	public InteractionResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
 		if (checkPlayer(player)) {
 			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level, pos));
 

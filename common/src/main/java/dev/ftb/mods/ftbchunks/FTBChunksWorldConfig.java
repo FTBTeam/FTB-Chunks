@@ -42,7 +42,7 @@ public interface FTBChunksWorldConfig {
 	Set<ResourceKey<Level>> CLAIM_DIMENSION_BLACKLIST_SET = new HashSet<>();
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
-		if (FTBChunks.ranksMod) {
+		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
 		}
 
@@ -50,7 +50,7 @@ public interface FTBChunksWorldConfig {
 	}
 
 	static int getMaxForceLoadedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
-		if (FTBChunks.ranksMod) {
+		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
 		}
 
@@ -58,7 +58,7 @@ public interface FTBChunksWorldConfig {
 	}
 
 	static boolean getChunkLoadOffline(FTBChunksTeamData playerData, ServerPlayer player) {
-		if (FTBChunks.ranksMod) {
+		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get());
 		}
 

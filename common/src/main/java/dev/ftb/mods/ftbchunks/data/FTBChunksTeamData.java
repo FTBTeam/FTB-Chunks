@@ -21,6 +21,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 
 import java.nio.file.Path;
@@ -134,7 +135,7 @@ public class FTBChunksTeamData {
 			return ClaimResults.ALREADY_CLAIMED;
 		} else if (FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.contains(pos.dimension)) {
 			return ClaimResults.DIMENSION_FORBIDDEN;
-		} else if (!team.getType().isServer() && getClaimedChunks().size() >= maxClaimChunks) {
+		} else if (!team.getType().isServer() && getClaimedChunks().size() >= FTBChunksWorldConfig.getMaxClaimedChunks(this, playerOrNull(source))) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -188,7 +189,7 @@ public class FTBChunksTeamData {
 			return ClaimResults.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResults.ALREADY_LOADED;
-		} else if (!team.getType().isServer() && getForceLoadedChunks().size() >= maxForceLoadChunks) {
+		} else if (!team.getType().isServer() && getForceLoadedChunks().size() >= FTBChunksWorldConfig.getMaxForceLoadedChunks(this, playerOrNull(source))) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -363,5 +364,10 @@ public class FTBChunksTeamData {
 				shouldSave = false;
 			}
 		}
+	}
+
+	public static ServerPlayer playerOrNull(CommandSourceStack source) {
+		Entity entity = source.getEntity();
+		return entity instanceof ServerPlayer ? (ServerPlayer) entity : null;
 	}
 }

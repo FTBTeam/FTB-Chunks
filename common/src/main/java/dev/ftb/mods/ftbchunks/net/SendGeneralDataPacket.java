@@ -1,6 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.ftb.mods.ftbchunks.FTBCUtils;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import me.shedaniel.architectury.networking.NetworkManager;
@@ -16,8 +18,8 @@ public class SendGeneralDataPacket extends BaseS2CMessage {
 	public static void send(FTBChunksTeamData playerData, ServerPlayer player) {
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
-		data.maxClaimChunks = playerData.maxClaimChunks;
-		data.maxForceLoadChunks = playerData.maxForceLoadChunks;
+		data.maxClaimChunks = FTBChunksWorldConfig.getMaxClaimedChunks(playerData, player);
+		data.maxForceLoadChunks = FTBChunksWorldConfig.getMaxForceLoadedChunks(playerData, player);
 
 		for (ClaimedChunk chunk : playerData.getClaimedChunks()) {
 			data.claimed++;

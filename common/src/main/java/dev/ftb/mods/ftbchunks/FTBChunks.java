@@ -8,6 +8,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.data.Protection;
 import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
@@ -47,13 +48,10 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
@@ -256,166 +254,57 @@ public class FTBChunks {
 		}
 	}
 
-	private boolean checkPlayer(@Nullable Entity entity) {
-		if (!FTBChunksAPI.isManagerLoaded() || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
-			return false;
-		}
-
-		if (entity instanceof ServerPlayer) {
-			if (PlayerHooks.isFake((ServerPlayer) entity)) {
-				return !FTBChunksWorldConfig.DISABLE_ALL_FAKE_PLAYERS.get();
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private void printNoWildernessMessage(@Nullable Entity entity) {
-		Component component = new TextComponent("You need to claim this chunk to interact with blocks here!");
-		if (entity instanceof Player) {
-			((Player) entity).displayClientMessage(component, true);
-		} else if (entity != null) {
-			entity.sendMessage(component, Util.NIL_UUID);
-		}
-	}
-
 	public InteractionResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (checkPlayer(player)) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player.level, pos));
-
-			if (chunk != null) {
-				if (!chunk.canEdit((ServerPlayer) player, player.level.getBlockState(pos))) {
-					return InteractionResult.FAIL;
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get() && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
-				printNoWildernessMessage(player);
-				return InteractionResult.FAIL;
-			}
+		if (FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK).get()) {
+			return InteractionResult.FAIL;
 		}
 
 		return InteractionResult.PASS;
 	}
 
 	public InteractionResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (checkPlayer(player)) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player.level, pos));
-
-			if (chunk != null) {
-				if (!chunk.canInteract((ServerPlayer) player, player.level.getBlockState(pos))) {
-					return InteractionResult.FAIL;
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get() && !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(player.getItemInHand(hand).getItem())) {
-				printNoWildernessMessage(player);
-				return InteractionResult.FAIL;
-			}
+		if (FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK).get()) {
+			return InteractionResult.FAIL;
 		}
 
 		return InteractionResult.PASS;
 	}
 
 	public InteractionResultHolder<ItemStack> itemRightClick(Player player, InteractionHand hand) {
-		ItemStack stack = player.getItemInHand(hand);
-		if (checkPlayer(player) && !stack.isEdible()) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player.level, new BlockPos(player.getEyePosition(1F))));
-
-			if (chunk != null) {
-				if (!chunk.canRightClickItem((ServerPlayer) player, stack)) {
-					return InteractionResultHolder.fail(stack);
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get() && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
-				printNoWildernessMessage(player);
-				return InteractionResultHolder.fail(stack);
-			}
+		if (FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM).get()) {
+			return InteractionResultHolder.fail(player.getItemInHand(hand));
 		}
 
-		return InteractionResultHolder.pass(stack);
+		return InteractionResultHolder.pass(player.getItemInHand(hand));
 	}
 
 	public InteractionResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
-		if (checkPlayer(player)) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level, pos));
-
-			if (chunk != null) {
-				if (!chunk.canEdit(player, blockState)) {
-					return InteractionResult.FAIL;
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
-				printNoWildernessMessage(player);
-				return InteractionResult.FAIL;
-			}
+		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
+			return InteractionResult.FAIL;
 		}
 
 		return InteractionResult.PASS;
 	}
 
 	public InteractionResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
-		if (checkPlayer(entity)) {
-			/*if (event instanceof BlockEvent.EntityMultiPlaceEvent) {
-				for (BlockSnapshot snapshot : ((BlockEvent.EntityMultiPlaceEvent) event).getReplacedBlockSnapshots()) {
-					if (snapshot.getWorld() instanceof Level) {
-						ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos((Level) snapshot.getWorld(), snapshot.getPos()));
-
-						if (chunk != null) {
-							if (!chunk.canEdit((ServerPlayer) event.getEntity(), snapshot.getCurrentBlock())) {
-								event.setCanceled(true);
-								return;
-							}
-						} else if (FTBChunksConfig.noWilderness) {
-							printNoWildernessMessage(event.getEntity());
-							event.setCanceled(true);
-							return;
-						}
-					}
-				}
-			} else if (event.getWorld() instanceof Level) {
-			 */
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level, pos));
-
-			if (chunk != null) {
-				if (entity != null && !chunk.canEdit((ServerPlayer) entity, blockState)) {
-					return InteractionResult.FAIL;
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
-				printNoWildernessMessage(entity);
-				return InteractionResult.FAIL;
-			}
-			//}
+		if (FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
+			return InteractionResult.FAIL;
 		}
 
 		return InteractionResult.PASS;
 	}
 
 	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
-		if (checkPlayer(player) && target instanceof BlockHitResult) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level, ((BlockHitResult) target).getBlockPos()));
-
-			if (chunk != null) {
-				if (!chunk.canEdit((ServerPlayer) player, level.getFluidState(((BlockHitResult) target).getBlockPos()).createLegacyBlock())) {
-					return CompoundEventResult.interrupt(false, null);
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
-				printNoWildernessMessage(player);
-				return CompoundEventResult.interrupt(false, null);
-			}
+		if (target instanceof BlockHitResult && FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, ((BlockHitResult) target).getBlockPos(), Protection.EDIT_FLUID).get()) {
+			return CompoundEventResult.interrupt(false, null);
 		}
 
 		return CompoundEventResult.pass();
 	}
 
 	public EventResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, float distance, Entity entity) {
-		if (entity.level instanceof ServerLevel && checkPlayer(entity)) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(entity.level, pos));
-
-			if (chunk != null) {
-				if (!chunk.canEdit((ServerPlayer) entity, blockState)) {
-					return EventResult.interrupt(false);
-				}
-			} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
-				printNoWildernessMessage(entity);
-				return EventResult.interrupt(false);
-			}
+		if (FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
+			return EventResult.interrupt(false);
 		}
 
 		return EventResult.pass();

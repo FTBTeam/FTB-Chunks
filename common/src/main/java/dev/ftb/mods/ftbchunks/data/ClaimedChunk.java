@@ -3,14 +3,10 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import me.shedaniel.architectury.hooks.PlayerHooks;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * @author LatvianModder
@@ -62,48 +58,6 @@ public class ClaimedChunk implements ClaimResult {
 	@Override
 	public void setForceLoadedTime(long time) {
 		forceLoaded = time;
-	}
-
-	public boolean canEdit(ServerPlayer player, BlockState state) {
-		if (FTBChunksAPI.EDIT_TAG.contains(state.getBlock()) || teamData.canUse(player, FTBChunksTeamData.BLOCK_EDIT_MODE)) {
-			return true;
-		}
-
-		if (!PlayerHooks.isFake(player)) {
-			FTBChunksTeamData pd = teamData.manager.getData(player);
-			return pd.getBypassProtection(player);
-		}
-
-		return false;
-	}
-
-	public boolean canInteract(ServerPlayer player, BlockState state) {
-		if (FTBChunksAPI.INTERACT_TAG.contains(state.getBlock()) || teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
-			return true;
-		}
-
-		if (!PlayerHooks.isFake(player)) {
-			FTBChunksTeamData pd = teamData.manager.getData(player);
-			return pd.getBypassProtection(player);
-		}
-
-		return false;
-	}
-
-	public boolean canRightClickItem(ServerPlayer player, ItemStack item) {
-		if (teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
-			return true;
-		}
-
-		if (!PlayerHooks.isFake(player)) {
-			FTBChunksTeamData pd = teamData.manager.getData(player);
-
-			if (pd.getBypassProtection(player)) {
-				return true;
-			}
-		}
-
-		return !FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(item.getItem());
 	}
 
 	public boolean canEntitySpawn(Entity entity) {

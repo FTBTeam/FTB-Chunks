@@ -1,16 +1,22 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import me.shedaniel.architectury.hooks.LevelResourceHooks;
+import me.shedaniel.architectury.hooks.PlayerHooks;
 import me.shedaniel.architectury.platform.Platform;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
@@ -126,5 +132,49 @@ public class ClaimedChunkManager {
 
 	public Collection<ClaimedChunk> getAllClaimedChunks() {
 		return claimedChunks.values();
+	}
+
+	public ProtectionOverride protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {
+		if (!(entity instanceof ServerPlayer) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
+			return ProtectionOverride.ALLOW;
+		}
+
+		ServerPlayer player = (ServerPlayer) entity;
+		boolean isFake = PlayerHooks.isFake(player);
+
+		if (isFake && FTBChunksWorldConfig.FAKE_PLAYERS.get().isOverride()) {
+			return FTBChunksWorldConfig.FAKE_PLAYERS.get();
+		}
+
+		ClaimedChunk chunk = getChunk(new ChunkDimPos(player.level, pos));
+
+		if (chunk != null) {
+			ProtectionOverride override = protection.override(player, pos, hand, chunk);
+
+			if (override.isOverride()) {
+				return override;
+			}
+
+			if (!isFake && getData(player).getBypassProtection()) {
+				return ProtectionOverride.ALLOW;
+			}
+
+			return ProtectionOverride.DENY;
+		} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
+			ProtectionOverride override = protection.override(player, pos, hand, null);
+
+			if (override.isOverride()) {
+				return override;
+			}
+
+			if (!isFake && getData(player).getBypassProtection()) {
+				return ProtectionOverride.ALLOW;
+			}
+
+			player.displayClientMessage(new TextComponent("You need to claim this chunk to interact with blocks here!"), true);
+			return ProtectionOverride.DENY;
+		}
+
+		return ProtectionOverride.CHECK;
 	}
 }

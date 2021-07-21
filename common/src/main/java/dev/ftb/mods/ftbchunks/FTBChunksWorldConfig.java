@@ -4,6 +4,8 @@ import dev.ftb.mods.ftbchunks.data.AllyMode;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.data.ProtectionOverride;
+import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
 import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
@@ -29,7 +31,7 @@ public interface FTBChunksWorldConfig {
 	LevelResource CONFIG_FILE_PATH = LevelResourceHooks.create("serverconfig/ftbchunks.snbt");
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
 
-	BooleanValue DISABLE_ALL_FAKE_PLAYERS = CONFIG.getBoolean("disable_all_fake_players", false).comment("Disables fake players like miners and auto-clickers");
+	EnumValue<ProtectionOverride> FAKE_PLAYERS = CONFIG.getEnum("fake_players", NameMap.of(ProtectionOverride.CHECK, ProtectionOverride.values()).create()).comment("Override to disable/enable fake players like miners and auto-clickers globally. Default will check this setting for each team");
 	IntValue MAX_CLAIMED_CHUNKS = CONFIG.getInt("max_claimed_chunks", 500).comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission");
 	IntValue MAX_FORCE_LOADED_CHUNKS = CONFIG.getInt("max_force_loaded_chunks", 25).comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission");
 	BooleanValue CHUNK_LOAD_OFFLINE = CONFIG.getBoolean("chunk_load_offline", true).comment("Allow players to load chunks while they are offline");

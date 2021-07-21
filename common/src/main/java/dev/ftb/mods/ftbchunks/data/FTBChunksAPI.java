@@ -17,9 +17,10 @@ import net.minecraft.world.level.block.Block;
  * @author LatvianModder
  */
 public class FTBChunksAPI {
-	public static final Tag<Block> EDIT_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "edit_whitelist"));
-	public static final Tag<Block> INTERACT_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "interact_whitelist"));
+	public static final Tag<Block> EDIT_WHITELIST_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "edit_whitelist"));
+	public static final Tag<Block> INTERACT_WHITELIST_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "interact_whitelist"));
 	public static final Tag<Item> RIGHT_CLICK_BLACKLIST_TAG = TagHooks.getItemOptional(new ResourceLocation(FTBChunks.MOD_ID, "right_click_blacklist"));
+	public static final Tag<Item> RIGHT_CLICK_WHITELIST_TAG = TagHooks.getItemOptional(new ResourceLocation(FTBChunks.MOD_ID, "right_click_whitelist"));
 
 	public static ClaimedChunkManager manager;
 

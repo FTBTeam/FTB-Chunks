@@ -354,8 +354,8 @@ public class FTBChunksTeamData {
 		save();
 	}
 
-	public boolean getBypassProtection(ServerPlayer player) {
-		return bypassProtection && !PlayerHooks.isFake(player);
+	public boolean getBypassProtection() {
+		return bypassProtection;
 	}
 
 	public void saveNow() {

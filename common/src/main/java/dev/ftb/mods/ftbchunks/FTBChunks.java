@@ -255,7 +255,7 @@ public class FTBChunks {
 	}
 
 	public InteractionResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK).get()) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK).get()) {
 			return InteractionResult.FAIL;
 		}
 
@@ -263,7 +263,7 @@ public class FTBChunks {
 	}
 
 	public InteractionResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK).get()) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK).get()) {
 			return InteractionResult.FAIL;
 		}
 
@@ -271,7 +271,7 @@ public class FTBChunks {
 	}
 
 	public InteractionResultHolder<ItemStack> itemRightClick(Player player, InteractionHand hand) {
-		if (FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM).get()) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM).get()) {
 			return InteractionResultHolder.fail(player.getItemInHand(hand));
 		}
 
@@ -287,7 +287,7 @@ public class FTBChunks {
 	}
 
 	public InteractionResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
-		if (FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
+		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
 			return InteractionResult.FAIL;
 		}
 
@@ -295,7 +295,7 @@ public class FTBChunks {
 	}
 
 	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
-		if (target instanceof BlockHitResult && FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, ((BlockHitResult) target).getBlockPos(), Protection.EDIT_FLUID).get()) {
+		if (player instanceof ServerPlayer && target instanceof BlockHitResult && FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, ((BlockHitResult) target).getBlockPos(), Protection.EDIT_FLUID).get()) {
 			return CompoundEventResult.interrupt(false, null);
 		}
 
@@ -303,7 +303,7 @@ public class FTBChunks {
 	}
 
 	public EventResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, float distance, Entity entity) {
-		if (FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
+		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK).get()) {
 			return EventResult.interrupt(false);
 		}
 

@@ -134,16 +134,16 @@ public class ClaimedChunkManager {
 		return claimedChunks.values();
 	}
 
-	public ProtectionOverride protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {
+	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {
 		if (!(entity instanceof ServerPlayer) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
-			return ProtectionOverride.ALLOW;
+			return false;
 		}
 
 		ServerPlayer player = (ServerPlayer) entity;
 		boolean isFake = PlayerHooks.isFake(player);
 
 		if (isFake && FTBChunksWorldConfig.FAKE_PLAYERS.get().isOverride()) {
-			return FTBChunksWorldConfig.FAKE_PLAYERS.get();
+			return FTBChunksWorldConfig.FAKE_PLAYERS.get().getProtect();
 		}
 
 		ClaimedChunk chunk = getChunk(new ChunkDimPos(player.level, pos));
@@ -152,29 +152,23 @@ public class ClaimedChunkManager {
 			ProtectionOverride override = protection.override(player, pos, hand, chunk);
 
 			if (override.isOverride()) {
-				return override;
+				return override.getProtect();
 			}
 
-			if (!isFake && getData(player).getBypassProtection()) {
-				return ProtectionOverride.ALLOW;
-			}
-
-			return ProtectionOverride.DENY;
+			return isFake || !getData(player).getBypassProtection();
 		} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
 			ProtectionOverride override = protection.override(player, pos, hand, null);
 
 			if (override.isOverride()) {
-				return override;
-			}
-
-			if (!isFake && getData(player).getBypassProtection()) {
-				return ProtectionOverride.ALLOW;
+				return override.getProtect();
+			} else if (!isFake && getData(player).getBypassProtection()) {
+				return false;
 			}
 
 			player.displayClientMessage(new TextComponent("You need to claim this chunk to interact with blocks here!"), true);
-			return ProtectionOverride.DENY;
+			return true;
 		}
 
-		return ProtectionOverride.CHECK;
+		return false;
 	}
 }

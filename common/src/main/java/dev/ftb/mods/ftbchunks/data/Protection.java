@@ -40,26 +40,18 @@ public interface Protection {
 	Protection RIGHT_CLICK_ITEM = (player, pos, hand, chunk) -> {
 		ItemStack stack = player.getItemInHand(hand);
 
-		if (FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
-			return ProtectionOverride.DENY;
-		} else if (stack.isEdible() || FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG.contains(stack.getItem())) {
+		if (stack.isEdible() || FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG.contains(stack.getItem())) {
 			return ProtectionOverride.ALLOW;
+		} else if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
+			return ProtectionOverride.ALLOW;
+		} else if (chunk != null && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
+			return ProtectionOverride.CHECK;
 		}
 
-		if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
-			return ProtectionOverride.ALLOW;
-		}
-
-		return ProtectionOverride.CHECK;
+		return ProtectionOverride.ALLOW;
 	};
 
 	Protection EDIT_FLUID = (player, pos, hand, chunk) -> {
-		Block block = player.level.getFluidState(pos).createLegacyBlock().getBlock();
-
-		if (FTBChunksAPI.EDIT_WHITELIST_TAG.contains(block)) {
-			return ProtectionOverride.ALLOW;
-		}
-
 		if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_EDIT_MODE)) {
 			return ProtectionOverride.ALLOW;
 		}

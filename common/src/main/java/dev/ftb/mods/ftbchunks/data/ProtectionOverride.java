@@ -9,7 +9,7 @@ public enum ProtectionOverride {
 		return this != CHECK;
 	}
 
-	public boolean get() {
+	public boolean getProtect() {
 		return this == DENY;
 	}
 }

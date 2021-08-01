@@ -19,6 +19,7 @@ import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.event.PlayerJoinedPartyTeamEvent;
@@ -165,7 +166,9 @@ public class FTBChunks {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.updateLimits(player);
 
-		new LoginDataPacket(event.getTeam().manager.getId()).sendTo(player);
+		SNBTCompoundTag config = new SNBTCompoundTag();
+		FTBChunksWorldConfig.CONFIG.write(config);
+		new LoginDataPacket(event.getTeam().manager.getId(), config).sendTo(player);
 		SendGeneralDataPacket.send(data, player);
 		SendVisiblePlayerListPacket.sendAll();
 

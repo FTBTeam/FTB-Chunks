@@ -13,6 +13,7 @@ import com.mojang.math.Vector3f;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
@@ -205,6 +206,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	@Override
 	public void login(LoginDataPacket loginData) {
+		FTBChunksWorldConfig.CONFIG.read(loginData.config);
+
 		Path dir = Platform.getGameFolder().resolve("local/ftbchunks/data/" + loginData.serverId);
 
 		if (Files.notExists(dir)) {
@@ -423,7 +426,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.options.renderDebug || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0) {
+		if (mc.options.renderDebug || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || FTBChunksWorldConfig.FORCE_DISABLE_MINIMAP.get()) {
 			return;
 		}
 

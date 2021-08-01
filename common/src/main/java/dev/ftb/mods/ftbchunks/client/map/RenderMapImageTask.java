@@ -218,11 +218,11 @@ public class RenderMapImageTask implements MapTask {
 
 		MapMode mapMode = FTBChunksClientConfig.MAP_MODE.get();
 		int waterHeightFactor = FTBChunksClientConfig.WATER_HEIGHT_FACTOR.get();
-		float noise = (float) FTBChunksClientConfig.NOISE.get();
+		float noise = FTBChunksClientConfig.NOISE.get().floatValue();
 		boolean ownClaimedChunksOnMap = FTBChunksClientConfig.OWN_CLAIMED_CHUNKS_ON_MAP.get();
 		boolean claimedChunksOnMap = FTBChunksClientConfig.CLAIMED_CHUNKS_ON_MAP.get();
-		float saturation = (float) FTBChunksClientConfig.SATURATION.get();
-		float shadows = (float) FTBChunksClientConfig.SHADOWS.get();
+		float saturation = FTBChunksClientConfig.SATURATION.get().floatValue();
+		float shadows = FTBChunksClientConfig.SHADOWS.get().floatValue();
 
 		int foliageDarkness = FTBChunksClientConfig.FOLIAGE_DARKNESS.get();
 		int grassDarkness = FTBChunksClientConfig.GRASS_DARKNESS.get();

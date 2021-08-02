@@ -103,9 +103,13 @@ publishing {
 	}
 
 	repositories {
-		if (ENV.LOCAL_MAVEN) {
+		if (ENV.FTB_MAVEN_TOKEN) {
 			maven {
-				url "file://${ENV.LOCAL_MAVEN}"
+				url "https://maven.ftb.dev/release"
+				credentials {
+					username = "ftb"
+					password = "${ENV.FTB_MAVEN_TOKEN}"
+				}
 			}
 		}
 

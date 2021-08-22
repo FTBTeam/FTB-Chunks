@@ -20,6 +20,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
 import dev.ftb.mods.ftblibrary.ui.SimpleButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -140,7 +141,7 @@ public class LargeMapScreen extends BaseScreen {
 			}
 		}));
 
-		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings(getWrapper())));
+		add(settingsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this))));
 	}
 
 	@Override

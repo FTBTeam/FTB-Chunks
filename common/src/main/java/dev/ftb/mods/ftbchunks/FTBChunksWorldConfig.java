@@ -76,4 +76,12 @@ public interface FTBChunksWorldConfig {
 
 		return false;
 	}
+
+	static boolean noWilderness(ServerPlayer player) {
+		if (FTBChunks.ranksMod && player != null) {
+			return FTBRanksIntegration.getNoWilderness(player, NO_WILDERNESS.get());
+		}
+
+		return NO_WILDERNESS.get();
+	}
 }

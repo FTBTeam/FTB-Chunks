@@ -18,4 +18,8 @@ public class FTBRanksIntegration {
 	public static boolean getChunkLoadOffline(ServerPlayer player, boolean def) {
 		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.chunk_load_offline").asBoolean().orElse(def);
 	}
+
+	public static boolean getNoWilderness(ServerPlayer player, boolean def) {
+		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.no_wilderness").asBoolean().orElse(def);
+	}
 }

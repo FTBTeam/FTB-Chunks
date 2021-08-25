@@ -156,7 +156,7 @@ public class ClaimedChunkManager {
 			}
 
 			return isFake || !getData(player).getBypassProtection();
-		} else if (FTBChunksWorldConfig.NO_WILDERNESS.get()) {
+		} else if (FTBChunksWorldConfig.noWilderness(player)) {
 			ProtectionOverride override = protection.override(player, pos, hand, null);
 
 			if (override.isOverride()) {

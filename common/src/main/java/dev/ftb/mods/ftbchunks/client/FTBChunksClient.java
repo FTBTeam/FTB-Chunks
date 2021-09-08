@@ -887,13 +887,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 						}
 					}
 
-					Util.backgroundExecutor().execute(() -> {
-						for (MapTask task : tasks) {
-							if (task != null) {
-								task.runMapTask(manager);
-							}
+					for (MapTask task : tasks) {
+						if (task != null) {
+							task.runMapTask(manager);
 						}
-					});
+					}
 				}
 			}
 

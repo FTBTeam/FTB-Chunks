@@ -148,6 +148,12 @@ public class FTBChunksCommands {
 										)
 								)
 						)
+						.then(Commands.literal("unclaim_everything")
+								.executes(context -> unclaimEverything(context.getSource()))
+						)
+						.then(Commands.literal("unload_everything")
+								.executes(context -> unloadEverything(context.getSource()))
+						)
 				)
 				.then(Commands.literal("block_color")
 						.requires(source -> source.getServer().isSingleplayer())
@@ -277,7 +283,7 @@ public class FTBChunksCommands {
 	private static int unclaimAll(CommandSourceStack source, Team team) {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
 
-		for (ClaimedChunk c : data.getClaimedChunks()) {
+		for (ClaimedChunk c : new ArrayList<>(data.getClaimedChunks())) {
 			data.unclaim(source, c.getPos(), false);
 		}
 		data.save();
@@ -288,7 +294,7 @@ public class FTBChunksCommands {
 	private static int unloadAll(CommandSourceStack source, Team team) {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
 
-		for (ClaimedChunk c : data.getClaimedChunks()) {
+		for (ClaimedChunk c : new ArrayList<>(data.getClaimedChunks())) {
 			data.unload(source, c.getPos(), false);
 		}
 		data.save();
@@ -360,6 +366,24 @@ public class FTBChunksCommands {
 		data.save();
 		SendGeneralDataPacket.send(data, player);
 		source.sendSuccess(new TextComponent("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
+		return 1;
+	}
+
+	private static int unclaimEverything(CommandSourceStack source) {
+		for (ClaimedChunk c : new ArrayList<>(FTBChunksAPI.getManager().getAllClaimedChunks())) {
+			c.teamData.unclaim(source, c.getPos(), false);
+			c.teamData.save();
+		}
+
+		return 1;
+	}
+
+	private static int unloadEverything(CommandSourceStack source) {
+		for (ClaimedChunk c : new ArrayList<>(FTBChunksAPI.getManager().getAllClaimedChunks())) {
+			c.teamData.unload(source, c.getPos(), false);
+			c.teamData.save();
+		}
+
 		return 1;
 	}
 

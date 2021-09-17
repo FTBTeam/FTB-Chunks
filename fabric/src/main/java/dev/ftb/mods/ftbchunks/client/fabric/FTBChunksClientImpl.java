@@ -14,8 +14,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class FTBChunksClientImpl {
 	public static void registerPlatform() {
-		FTBChunksClient.openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
-		KeyBindingHelper.registerKeyBinding(FTBChunksClient.openMapKey);
 		WorldRenderEvents.AFTER_TRANSLUCENT.register(FTBChunksClientImpl::renderWorldLastFabric);
 	}
 

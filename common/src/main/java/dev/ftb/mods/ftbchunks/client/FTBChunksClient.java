@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -53,6 +54,7 @@ import me.shedaniel.architectury.event.events.client.ClientRawInputEvent;
 import me.shedaniel.architectury.event.events.client.ClientScreenInputEvent;
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
 import me.shedaniel.architectury.platform.Platform;
+import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.ReloadListeners;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -96,6 +98,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.nio.file.Files;
@@ -134,6 +137,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public static KeyMapping openMapKey;
+	public static KeyMapping zoomInKey;
+	public static KeyMapping zoomOutKey;
 
 	public static int minimapTextureId = -1;
 	private static int currentPlayerChunkX, currentPlayerChunkZ;
@@ -147,6 +152,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 	@Override
 	public void init() {
 		FTBChunksClientConfig.init();
+		registerKeys();
+
 		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new EntityIcons());
 		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new ColorMapLoader());
 		ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(this::loggedOut);
@@ -158,6 +165,19 @@ public class FTBChunksClient extends FTBChunksCommon {
 		ClientTickEvent.CLIENT_PRE.register(this::clientTick);
 		TeamEvent.CLIENT_PROPERTIES_CHANGED.register(this::teamPropertiesChanged);
 		registerPlatform();
+	}
+
+	private static void registerKeys() {
+		// Keybinding to open Large map screen
+		openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
+		KeyBindings.registerKeyBinding(openMapKey);
+
+		// Keybindings to zoom in minimap
+		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UP, "key.categories.ui");
+		KeyBindings.registerKeyBinding(zoomInKey);
+
+		zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, "key.categories.ui");
+		KeyBindings.registerKeyBinding(zoomOutKey);
 	}
 
 	@ExpectPlatform
@@ -342,6 +362,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 				openGui();
 				return InteractionResult.SUCCESS;
 			}
+		} else if (zoomInKey.isDown()) {
+			return changeZoom(true);
+		} else if (zoomOutKey.isDown()) {
+			return changeZoom(false);
 		}
 
 		return InteractionResult.PASS;
@@ -358,6 +382,22 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		return InteractionResult.PASS;
+	}
+
+	private InteractionResult changeZoom(boolean zoomIn) {
+		float zoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
+		float zoomFactor = zoomIn ? 1F : -1F;
+
+		if (zoom + zoomFactor > 4F) {
+			zoom = 1F;
+		} else if (zoom + zoomFactor < 1F) {
+			zoom = 4F;
+		} else {
+			zoom += zoomFactor;
+		}
+
+		FTBChunksClientConfig.MINIMAP_ZOOM.set((double) zoom);
+		return InteractionResult.SUCCESS;
 	}
 
 	public void renderHud(PoseStack matrixStack, float tickDelta) {
@@ -430,6 +470,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			return;
 		}
 
+		float zoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
 		float scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / mc.getWindow().getGuiScale());
 		float minimapRotation = (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() ? 180F : -mc.player.yRot) % 360F;
 
@@ -480,6 +521,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
 		RenderSystem.bindTexture(minimapTextureId);
+		matrixStack.scale(zoom, zoom, 1);
 
 		m = matrixStack.last().pose();
 
@@ -552,7 +594,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 					continue;
 				}
 
-				double d = distance / magicNumber * scale;
+				double d = distance / magicNumber * scale * zoom;
 
 				if (d > s / 2D) {
 					d = s / 2D;
@@ -583,7 +625,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		renderMinimap(dim, (px, pz, color, maxDistance) -> {
 			double distance = MathUtils.dist(mc.player.getX(), mc.player.getZ(), px + 0.5D, pz + 0.5D);
 
-			double d = distance / magicNumber * scale;
+			double d = distance / magicNumber * scale * zoom;
 			if (maxDistance > 0 && distance > maxDistance) {
 				return;
 			}
@@ -622,8 +664,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getX(), mc.player.getZ(), entity.getX(), entity.getZ()) / magicNumber * scale;
-
+				double d = MathUtils.dist(mc.player.getX(), mc.player.getZ(), entity.getX(), entity.getZ()) / magicNumber * scale * zoom;
 				if (d > s / 2D) {
 					continue;
 				}
@@ -667,7 +708,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 					continue;
 				}
 
-				double d = MathUtils.dist(mc.player.getX(), mc.player.getZ(), player.getX(), player.getZ()) / magicNumber * scale;
+				double d = MathUtils.dist(mc.player.getX(), mc.player.getZ(), player.getX(), player.getZ()) / magicNumber * scale * zoom;
 
 				if (d > s / 2D) {
 					d = s / 2D;

@@ -501,7 +501,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		matrixStack.pushPose();
 		matrixStack.translate(x + s / 2D, y + s / 2D, -10);
 
-		matrixStack.translate(0, 0, 950);
+		matrixStack.translate(0, 0, 500);
 
 		Matrix4f m = matrixStack.last().pose();
 
@@ -516,7 +516,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 		tessellator.end();
 		RenderSystem.colorMask(true, true, true, true);
 
-		matrixStack.translate(0, 0, -950);
 		matrixStack.mulPose(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);

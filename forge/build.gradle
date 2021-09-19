@@ -26,7 +26,7 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation "dev.latvian.mods:rhino:${rootProject.rhino_version}"
+	modImplementation "dev.latvian.mods:rhino-forge:${rootProject.rhino_version}"
 	modImplementation "dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}"
 
 	modImplementation "curse.maven:waystones-245755:3309624"

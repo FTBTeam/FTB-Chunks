@@ -51,6 +51,7 @@ public interface FTBChunksClientConfig {
 	BooleanValue MINIMAP_COMPASS = MINIMAP.getBoolean("compass", true).comment("Adds NWSE compass inside minimap");
 	IntValue MINIMAP_VISIBILITY = MINIMAP.getInt("visibility", 255, 0, 255).comment("Minimap visibility");
 	BooleanValue MINIMAP_ZONE = MINIMAP.getBoolean("zone", true).comment("Show zone (claimed chunk or wilderness) under minimap");
+	DoubleValue MINIMAP_ZOOM = MINIMAP.getDouble("zoom", 1D, 1D, 4D).comment("Zoom distance of the minimap");
 
 	BooleanValue DEBUG_INFO = CONFIG.getBoolean("debug_info", false).comment("Enables debug info");
 	IntValue TASK_QUEUE_TICKS = CONFIG.getInt("task_queue_ticks", 4, 1, 300).excluded().comment("Advanced option. How often queued tasks will run");

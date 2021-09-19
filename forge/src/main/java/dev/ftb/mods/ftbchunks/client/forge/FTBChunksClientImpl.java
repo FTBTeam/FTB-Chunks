@@ -18,8 +18,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class FTBChunksClientImpl {
 	public static void registerPlatform() {
-		FTBChunksClient.openMapKey = new KeyMapping("key.ftbchunks.map", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
-		ClientRegistry.registerKeyBinding(FTBChunksClient.openMapKey);
 		MinecraftForge.EVENT_BUS.addListener(FTBChunksClientImpl::renderWorldLastForge);
 	}
 

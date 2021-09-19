@@ -305,12 +305,20 @@ public class FTBChunksClient extends FTBChunksCommon {
 	public void playerDeath(PlayerDeathPacket packet) {
 		if (FTBChunksClientConfig.DEATH_WAYPOINTS.get()) {
 			MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
+
+			for (Waypoint w : dimension.getWaypoints()) {
+				if (w.type == WaypointType.DEATH) {
+					w.hidden = true;
+				}
+			}
+
 			Waypoint w = new Waypoint(dimension);
 			w.name = "Death #" + packet.number;
 			w.x = packet.x;
 			w.y = packet.y;
 			w.z = packet.z;
 			w.type = WaypointType.DEATH;
+			w.color = 0xFF0000;
 			dimension.getWaypoints().add(w);
 			dimension.saveData = true;
 		}

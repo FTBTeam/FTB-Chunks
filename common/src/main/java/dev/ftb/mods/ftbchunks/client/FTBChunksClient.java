@@ -141,13 +141,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 	public static KeyMapping zoomOutKey;
 
 	public static int minimapTextureId = -1;
-	private static int currentPlayerChunkX, currentPlayerChunkZ;
+	private int currentPlayerChunkX, currentPlayerChunkZ;
 	private static int renderedDebugCount = 0;
 
 	public static boolean updateMinimap = false;
 	public static boolean alwaysRenderChunksOnMap = false;
 	public static SendGeneralDataPacket generalData;
-	private static long nextRegionSave = 0L;
+	private long nextRegionSave = 0L;
+	private double prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get();
+	private long lastZoomTime = 0L;
 
 	@Override
 	public void init() {
@@ -393,19 +395,39 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	private InteractionResult changeZoom(boolean zoomIn) {
-		float zoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
-		float zoomFactor = zoomIn ? 1F : -1F;
+		prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get();
+		double zoom = prevZoom;
+		double zoomFactor = zoomIn ? 1D : -1D;
 
-		if (zoom + zoomFactor > 4F) {
-			zoom = 1F;
-		} else if (zoom + zoomFactor < 1F) {
-			zoom = 4F;
+		if (zoom + zoomFactor > 4D) {
+			zoom = 4D;
+		} else if (zoom + zoomFactor < 1D) {
+			zoom = 1D;
 		} else {
 			zoom += zoomFactor;
 		}
 
-		FTBChunksClientConfig.MINIMAP_ZOOM.set((double) zoom);
+		lastZoomTime = System.currentTimeMillis();
+		FTBChunksClientConfig.MINIMAP_ZOOM.set(zoom);
 		return InteractionResult.SUCCESS;
+	}
+
+	public float getZoom() {
+		double z = FTBChunksClientConfig.MINIMAP_ZOOM.get();
+
+		if (prevZoom != z) {
+			long max = (long) (400D / z);
+			long t = Mth.clamp(System.currentTimeMillis() - lastZoomTime, 0L, max);
+
+			if (t == max) {
+				lastZoomTime = 0L;
+				return (float) z;
+			}
+
+			return (float) Mth.lerp(t / (double) max, prevZoom, z);
+		}
+
+		return (float) z;
 	}
 
 	public void renderHud(PoseStack matrixStack, float tickDelta) {
@@ -478,7 +500,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			return;
 		}
 
-		float zoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
+		float zoom = getZoom();
 		float scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / mc.getWindow().getGuiScale());
 		float minimapRotation = (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() ? 180F : -mc.player.yRot) % 360F;
 

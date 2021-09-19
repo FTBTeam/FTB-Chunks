@@ -711,7 +711,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		if (FTBChunksClientConfig.MINIMAP_PLAYER_HEADS.get() && mc.level.players().size() > 1) {
 			for (AbstractClientPlayer player : mc.level.players()) {
-				if (player == mc.player) {
+				if (player == mc.player || player.isInvisibleTo(mc.player)) {
 					continue;
 				}
 

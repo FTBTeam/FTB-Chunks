@@ -94,7 +94,7 @@ public class RegionMapPanel extends Panel {
 		ResourceKey<Level> dimId = Minecraft.getInstance().level.dimension();
 
 		for (AbstractClientPlayer player : Minecraft.getInstance().level.players()) {
-			if (largeMap.dimension.dimension == dimId) {
+			if (largeMap.dimension.dimension == dimId && !player.isInvisibleTo(Minecraft.getInstance().player)) {
 				add(new PlayerButton(this, player));
 			}
 		}

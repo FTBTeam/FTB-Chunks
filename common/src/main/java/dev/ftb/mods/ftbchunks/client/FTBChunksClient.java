@@ -175,10 +175,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 		KeyBindings.registerKeyBinding(openMapKey);
 
 		// Keybindings to zoom in minimap
-		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UP, "key.categories.ui");
+		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "key.categories.ui");
 		KeyBindings.registerKeyBinding(zoomInKey);
 
-		zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, "key.categories.ui");
+		zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "key.categories.ui");
 		KeyBindings.registerKeyBinding(zoomOutKey);
 	}
 

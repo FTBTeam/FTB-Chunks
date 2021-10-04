@@ -6,11 +6,15 @@ import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -22,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.DeflaterOutputStream;
 
 /**
  * @author LatvianModder
@@ -168,48 +173,60 @@ public class MapDimension implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) {
-		try {
-			JsonObject json = new JsonObject();
-			JsonArray waypointArray = new JsonArray();
+	public void runMapTask(MapManager m) throws Exception {
+		JsonObject json = new JsonObject();
+		JsonArray waypointArray = new JsonArray();
 
-			for (Waypoint w : getWaypoints()) {
-				JsonObject o = new JsonObject();
-				o.addProperty("hidden", w.hidden);
-				o.addProperty("name", w.name);
-				o.addProperty("x", w.x);
-				o.addProperty("y", w.y);
-				o.addProperty("z", w.z);
-				o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
-				o.addProperty("type", w.type.name().toLowerCase());
-				waypointArray.add(o);
-			}
+		for (Waypoint w : getWaypoints()) {
+			JsonObject o = new JsonObject();
+			o.addProperty("hidden", w.hidden);
+			o.addProperty("name", w.name);
+			o.addProperty("x", w.x);
+			o.addProperty("y", w.y);
+			o.addProperty("z", w.z);
+			o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
+			o.addProperty("type", w.type.name().toLowerCase());
+			waypointArray.add(o);
+		}
 
-			json.add("waypoints", waypointArray);
+		json.add("waypoints", waypointArray);
 
+		Util.ioPool().execute(() -> {
 			try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json"))) {
 				FTBChunks.GSON.toJson(json, writer);
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
+		});
 
-			Collection<MapRegion> regionList = getRegions().values();
+		Collection<MapRegion> regionList = getRegions().values();
 
-			if (regionList.isEmpty()) {
-				return;
+		if (regionList.isEmpty()) {
+			return;
+		}
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(baos)))) {
+			stream.writeByte(0);
+			stream.writeByte(1);
+			stream.writeShort(regionList.size());
+
+			for (MapRegion region : regionList) {
+				stream.writeByte(region.pos.x);
+				stream.writeByte(region.pos.z);
 			}
-
-			MapIOUtils.write(directory.resolve("dimension.regions"), stream -> {
-				stream.writeByte(0);
-				stream.writeByte(1);
-				stream.writeShort(regionList.size());
-
-				for (MapRegion region : regionList) {
-					stream.writeByte(region.pos.x);
-					stream.writeByte(region.pos.z);
-				}
-			});
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
+		Util.ioPool().execute(() -> {
+			try {
+				Files.write(directory.resolve("dimension.regions"), baos.toByteArray());
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
 	}
 
 	public void sync() {

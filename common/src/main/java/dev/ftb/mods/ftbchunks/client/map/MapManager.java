@@ -8,6 +8,7 @@ import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
@@ -151,33 +152,36 @@ public class MapManager implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) {
-		try {
-			Files.write(directory.resolve("dimensions.txt"), dimensions
-					.keySet()
-					.stream()
-					.map(key -> key.location().toString())
-					.collect(Collectors.toList())
-			);
+	public void runMapTask(MapManager m) throws Exception {
+		List<String> dimensionsList = dimensions
+				.keySet()
+				.stream()
+				.map(key -> key.location().toString())
+				.collect(Collectors.toList());
 
-			Files.write(directory.resolve("block_map.txt"), blockColorIndexMap
-					.int2ObjectEntrySet()
-					.stream()
-					.sorted(Map.Entry.comparingByValue())
-					.map(key -> String.format("#%06X %s", key.getIntKey(), key.getValue()))
-					.collect(Collectors.toList())
-			);
+		List<String> blockColorIndexMapList = blockColorIndexMap
+				.int2ObjectEntrySet()
+				.stream()
+				.sorted(Map.Entry.comparingByValue())
+				.map(key -> String.format("#%06X %s", key.getIntKey(), key.getValue()))
+				.collect(Collectors.toList());
 
-			Files.write(directory.resolve("biome_map.txt"), biomeColorIndexMap
-					.int2ObjectEntrySet()
-					.stream()
-					.sorted(Comparator.comparing(o -> o.getValue().location()))
-					.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
-					.collect(Collectors.toList())
-			);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		List<String> biomeColorIndexMapList = biomeColorIndexMap
+				.int2ObjectEntrySet()
+				.stream()
+				.sorted(Comparator.comparing(o -> o.getValue().location()))
+				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
+				.collect(Collectors.toList());
+
+		Util.ioPool().execute(() -> {
+			try {
+				Files.write(directory.resolve("dimensions.txt"), dimensionsList);
+				Files.write(directory.resolve("block_map.txt"), blockColorIndexMapList);
+				Files.write(directory.resolve("biome_map.txt"), biomeColorIndexMapList);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
 	}
 
 	public int getBlockColorIndex(ResourceLocation id) {

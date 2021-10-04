@@ -60,83 +60,85 @@ public class MapRegion implements MapTask {
 	}
 
 	public MapRegionData getDataBlocking() {
-		if (data == null) {
-			data = new MapRegionData(this);
+		if (data != null) {
+			return data;
+		}
 
-			Path chunksFile = dimension.directory.resolve(pos.toRegionString() + "-chunks.dat");
+		data = new MapRegionData(this);
 
-			if (Files.exists(chunksFile) && Files.isReadable(chunksFile)) {
-				FTBChunks.LOGGER.info("Found old map files, converting... [" + dimension.safeDimensionId + "/" + pos.toRegionString() + "]");
+		Path chunksFile = dimension.directory.resolve(pos.toRegionString() + "-chunks.dat");
 
-				try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(Files.newInputStream(chunksFile))))) {
-					stream.readByte();
-					stream.readByte();
-					int s = stream.readShort();
+		if (Files.exists(chunksFile) && Files.isReadable(chunksFile)) {
+			FTBChunks.LOGGER.info("Found old map files, converting... [" + dimension.safeDimensionId + "/" + pos.toRegionString() + "]");
 
-					for (int i = 0; i < s; i++) {
-						int x = stream.readByte();
-						int z = stream.readByte();
-						long m = stream.readLong();
+			try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(Files.newInputStream(chunksFile))))) {
+				stream.readByte();
+				stream.readByte();
+				int s = stream.readShort();
 
-						MapChunk c = new MapChunk(this, XZ.of(x, z));
-						c.modified = m;
-						data.chunks.put(c.pos, c);
+				for (int i = 0; i < s; i++) {
+					int x = stream.readByte();
+					int z = stream.readByte();
+					long m = stream.readLong();
+
+					MapChunk c = new MapChunk(this, XZ.of(x, z));
+					c.modified = m;
+					data.chunks.put(c.pos, c);
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+
+			try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-data.png"))) {
+				BufferedImage img = ImageIO.read(stream);
+
+				for (int y = 0; y < 512; y++) {
+					for (int x = 0; x < 512; x++) {
+						int index = x + y * 512;
+						int d = ColorUtils.convertToNative(img.getRGB(x, y) & 0xFFFFFF);
+						data.height[index] = (short) (d >> 16);
+						data.waterLightAndBiome[index] = (short) d;
+						data.foliage[index] = img.getRGB(x + 512, y) & 0xFFFFFF;
+						data.grass[index] = img.getRGB(x, y + 512) & 0xFFFFFF;
+						data.water[index] = img.getRGB(x + 512, y + 512) & 0xFFFFFF;
 					}
-				} catch (IOException ex) {
-					ex.printStackTrace();
 				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 
-				try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-data.png"))) {
-					BufferedImage img = ImageIO.read(stream);
+			try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"))) {
+				BufferedImage img = ImageIO.read(stream);
 
-					for (int y = 0; y < 512; y++) {
-						for (int x = 0; x < 512; x++) {
-							int index = x + y * 512;
-							int d = ColorUtils.convertToNative(img.getRGB(x, y) & 0xFFFFFF);
-							data.height[index] = (short) (d >> 16);
-							data.waterLightAndBiome[index] = (short) d;
-							data.foliage[index] = img.getRGB(x + 512, y) & 0xFFFFFF;
-							data.grass[index] = img.getRGB(x, y + 512) & 0xFFFFFF;
-							data.water[index] = img.getRGB(x + 512, y + 512) & 0xFFFFFF;
-						}
+				for (int y = 0; y < 512; y++) {
+					for (int x = 0; x < 512; x++) {
+						data.setBlockIndex(x + y * 512, ColorUtils.convertToNative(img.getRGB(x, y)));
 					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
 				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 
-				try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"))) {
-					BufferedImage img = ImageIO.read(stream);
+			try {
+				Files.deleteIfExists(chunksFile);
+				Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
+				Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
 
-					for (int y = 0; y < 512; y++) {
-						for (int x = 0; x < 512; x++) {
-							data.setBlockIndex(x + y * 512, ColorUtils.convertToNative(img.getRGB(x, y)));
-						}
-					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-
-				try {
-					Files.deleteIfExists(chunksFile);
-					Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
-					Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-
-				try {
-					data.write();
-					update(false);
-				} catch (IOException ex) {
-					update(true);
-					ex.printStackTrace();
-				}
-			} else {
-				try {
-					data.read();
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
+			try {
+				data.write();
+				update(false);
+			} catch (IOException ex) {
+				update(true);
+				ex.printStackTrace();
+			}
+		} else {
+			try {
+				data.read();
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
 		}
 
@@ -223,13 +225,9 @@ public class MapRegion implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) {
+	public void runMapTask(MapManager m) throws Exception {
 		if (data != null) {
-			try {
-				data.write();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
+			data.write();
 		}
 	}
 

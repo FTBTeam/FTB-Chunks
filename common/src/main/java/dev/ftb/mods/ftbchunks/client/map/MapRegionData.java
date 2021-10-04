@@ -2,11 +2,13 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import net.minecraft.Util;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -108,7 +110,7 @@ public class MapRegionData {
 							blocksImage = ImageIO.read(zis);
 							break;
 						default:
-							FTBChunks.LOGGER.warn("Unknown file " + ze.getName() + " in " + file.toAbsolutePath().toString());
+							FTBChunks.LOGGER.warn("Unknown file " + ze.getName() + " in " + file.toAbsolutePath());
 					}
 				}
 
@@ -155,13 +157,9 @@ public class MapRegionData {
 			}
 		}
 
-		if (Files.notExists(region.dimension.directory)) {
-			Files.createDirectories(region.dimension.directory);
-		}
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		Path file = region.dimension.directory.resolve(region.pos.toRegionString() + ".zip");
-
-		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(Files.newOutputStream(file));
+		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(baos);
 			 ZipOutputStream out = new ZipOutputStream(bufferedOutputStream)) {
 			DataOutputStream stream = new DataOutputStream(out);
 			out.putNextEntry(new ZipEntry("chunks.dat"));
@@ -198,6 +196,22 @@ public class MapRegionData {
 			ImageIO.write(blocksImage, "PNG", out);
 			out.closeEntry();
 		}
+
+		Util.ioPool().execute(() -> {
+			if (Files.notExists(region.dimension.directory)) {
+				try {
+					Files.createDirectories(region.dimension.directory);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			try {
+				Files.write(region.dimension.directory.resolve(region.pos.toRegionString() + ".zip"), baos.toByteArray());
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
 	}
 
 	public MapChunk getChunk(XZ pos) {

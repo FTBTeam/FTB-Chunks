@@ -20,17 +20,19 @@ import org.jetbrains.annotations.Nullable;
  * @author LatvianModder
  */
 public class TeleportFromMapPacket extends BaseC2SMessage {
-	public final int x, z;
+	public final int x, y, z;
 	public final ResourceKey<Level> dimension;
 
-	public TeleportFromMapPacket(int _x, int _z, ResourceKey<Level> d) {
+	public TeleportFromMapPacket(int _x, int _y, int _z, ResourceKey<Level> d) {
 		x = _x;
+		y = _y;
 		z = _z;
 		dimension = d;
 	}
 
 	TeleportFromMapPacket(FriendlyByteBuf buf) {
 		x = buf.readVarInt();
+		y = buf.readVarInt();
 		z = buf.readVarInt();
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 	}
@@ -43,6 +45,7 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 	@Override
 	public void write(FriendlyByteBuf buf) {
 		buf.writeVarInt(x);
+		buf.writeVarInt(y);
 		buf.writeVarInt(z);
 		buf.writeResourceLocation(dimension.location());
 	}
@@ -81,12 +84,13 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 	public void handle(NetworkManager.PacketContext context) {
 		ServerPlayer p = (ServerPlayer) context.getPlayer();
 		int topY = p.level.getHeight() + 1; //getActualHeight
-		int y = getHeight(p.level.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true), x, z, topY) + 2;
+
+		int y1 = y == -1000 ? (getHeight(p.level.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true), x, z, topY) + 2) : y;
 
 		ServerLevel world = p.getServer().getLevel(dimension);
 
 		if (world != null && p.hasPermissions(2)) {
-			p.teleportTo(world, x + 0.5D, y + 0.1D, z + 0.5D, p.yRot, p.xRot);
+			p.teleportTo(world, x + 0.5D, y1 + 0.1D, z + 0.5D, p.yRot, p.xRot);
 		}
 	}
 }

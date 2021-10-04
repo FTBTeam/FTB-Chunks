@@ -37,7 +37,7 @@ public class ReloadChunkTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager manager) {
+	public void runMapTask(MapManager manager) throws Exception {
 		ResourceKey<Level> dimId = level.dimension();
 
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
@@ -54,67 +54,63 @@ public class ReloadChunkTask implements MapTask {
 		boolean changed = false;
 		boolean[] flags = new boolean[1];
 
-		try {
-			for (int wi : blockPosSet) {
-				int wx = wi % 16;
-				int wz = wi / 16;
-				blockPos.set(blockX + wx, topY, blockZ + wz);
-				int height = Mth.clamp(MapChunk.getHeight(chunkAccess, blockPos, flags).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
-				blockPos.setY(height);
-				BlockState state = chunkAccess.getBlockState(blockPos);
+		for (int wi : blockPosSet) {
+			int wx = wi % 16;
+			int wz = wi / 16;
+			blockPos.set(blockX + wx, topY, blockZ + wz);
+			int height = Mth.clamp(MapChunk.getHeight(chunkAccess, blockPos, flags).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
+			blockPos.setY(height);
+			BlockState state = chunkAccess.getBlockState(blockPos);
 
-				int ax = mapChunk.pos.x * 16 + wx;
-				int az = mapChunk.pos.z * 16 + wz;
-				int index = ax + az * 512;
+			int ax = mapChunk.pos.x * 16 + wx;
+			int az = mapChunk.pos.z * 16 + wz;
+			int index = ax + az * 512;
 
-				int waterLightAndBiome0 = data.waterLightAndBiome[index] & 0xFFFF;
-				int blockIndex0 = data.getBlockIndex(index);
-				int height0 = data.height[index] & 0xFFFF; // Get old height
+			int waterLightAndBiome0 = data.waterLightAndBiome[index] & 0xFFFF;
+			int blockIndex0 = data.getBlockIndex(index);
+			int height0 = data.height[index] & 0xFFFF; // Get old height
 
-				int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
-				waterLightAndBiome |= flags[0] ? (1 << 15) : 0; // Water
-				waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos.above()) & 15) << 11; // Light
+			int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
+			waterLightAndBiome |= flags[0] ? (1 << 15) : 0; // Water
+			waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos.above()) & 15) << 11; // Light
 
-				ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
-				int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
+			ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
+			int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
 
-				Biome biome;
+			Biome biome;
 
-				// Only update biome, foliage, grass and water colors if its first visit or height changed
-				if (height0 != height || waterLightAndBiome0 == 0) {
-					biome = biomeContainer == null ? level.getBiome(blockPos) : biomeContainer.getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
-					waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
-					waterLightAndBiome |= (manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
-				} else {
-					biome = null;
-				}
-
-				if (height0 != height) {
-					data.height[index] = (short) height;
-					changed = true;
-				}
-
-				if (waterLightAndBiome0 != waterLightAndBiome) {
-					data.waterLightAndBiome[index] = (short) waterLightAndBiome;
-
-					if (biome != null && (waterLightAndBiome0 & 0b111_11111111) != (waterLightAndBiome & 0b111_11111111)) {
-						data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getAverageFoliageColor(level, blockPos) & 0xFFFFFF);
-						data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getAverageGrassColor(level, blockPos) & 0xFFFFFF);
-						data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getAverageWaterColor(level, blockPos) & 0xFFFFFF);
-					}
-
-					changed = true;
-				}
-
-				if (blockIndex0 != blockIndex) {
-					data.setBlockIndex(index, blockIndex);
-					changed = true;
-				}
-
-				flags[0] = false;
+			// Only update biome, foliage, grass and water colors if its first visit or height changed
+			if (height0 != height || waterLightAndBiome0 == 0) {
+				biome = biomeContainer == null ? level.getBiome(blockPos) : biomeContainer.getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
+				waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
+				waterLightAndBiome |= (manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
+			} else {
+				biome = null;
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+
+			if (height0 != height) {
+				data.height[index] = (short) height;
+				changed = true;
+			}
+
+			if (waterLightAndBiome0 != waterLightAndBiome) {
+				data.waterLightAndBiome[index] = (short) waterLightAndBiome;
+
+				if (biome != null && (waterLightAndBiome0 & 0b111_11111111) != (waterLightAndBiome & 0b111_11111111)) {
+					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getAverageFoliageColor(level, blockPos) & 0xFFFFFF);
+					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getAverageGrassColor(level, blockPos) & 0xFFFFFF);
+					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getAverageWaterColor(level, blockPos) & 0xFFFFFF);
+				}
+
+				changed = true;
+			}
+
+			if (blockIndex0 != blockIndex) {
+				data.setBlockIndex(index, blockIndex);
+				changed = true;
+			}
+
+			flags[0] = false;
 		}
 
 		if (changed) {

@@ -59,10 +59,18 @@ public class MapChunk {
 	}
 
 	public static boolean isWater(BlockState state) {
+		if (state.getBlock() == Blocks.WATER) {
+			return true;
+		}
+
 		return state instanceof BlockStateFTBC ? ((BlockStateFTBC) state).getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
 	public static boolean skipBlock(BlockState state) {
+		if (state.isAir()) {
+			return true;
+		}
+
 		ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
 		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}

@@ -20,7 +20,7 @@ public class SyncRXTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) {
+	public void runMapTask(MapManager m) throws Exception {
 		ByteArrayInputStream in = new ByteArrayInputStream(data);
 
 		try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(in)))) {
@@ -82,8 +82,6 @@ public class SyncRXTask implements MapTask {
 				region.update(true);
 			}
 			 */
-		} catch (Exception ex) {
-			ex.printStackTrace();
 		}
 	}
 

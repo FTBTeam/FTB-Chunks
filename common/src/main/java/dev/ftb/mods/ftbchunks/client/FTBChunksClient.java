@@ -243,16 +243,24 @@ public class FTBChunksClient extends FTBChunksCommon {
 		MapManager.inst = new MapManager(loginData.serverId, dir);
 		updateMinimap = true;
 		renderedDebugCount = 0;
+		ReloadChunkFromLevelPacketTask.debugLastTime = 0L;
+		ReloadChunkFromLevelPacketTask.debugTotalTime = 0L;
+		ReloadChunkFromLevelPacketTask.debugTotalCount = 0L;
 	}
 
 	public void loggedOut(@Nullable LocalPlayer player) {
 		if (MapManager.inst != null) {
 			saveAllRegions();
 
-			MapTask t;
+			MapTask task;
 
-			while ((t = taskQueue.pollFirst()) != null) {
-				t.runMapTask(MapManager.inst);
+			while ((task = taskQueue.pollFirst()) != null) {
+				try {
+					task.runMapTask(MapManager.inst);
+				} catch (Exception ex) {
+					FTBChunks.LOGGER.error("Failed to run task " + task);
+					ex.printStackTrace();
+				}
 			}
 
 			MapDimension.updateCurrent();
@@ -311,6 +319,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			for (Waypoint w : dimension.getWaypoints()) {
 				if (w.type == WaypointType.DEATH) {
 					w.hidden = true;
+					w.type = WaypointType.DEATH_OLD;
 				}
 			}
 
@@ -805,6 +814,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 			MINIMAP_TEXT_LIST.add(new TextComponent("Queued tasks: " + taskQueue.size()));
 			MINIMAP_TEXT_LIST.add(new TextComponent(r.toRegionString()));
 			MINIMAP_TEXT_LIST.add(new TextComponent("Total updates: " + renderedDebugCount));
+
+			if (ReloadChunkFromLevelPacketTask.debugTotalCount > 0L) {
+				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LCU: %,d ns", ReloadChunkFromLevelPacketTask.debugLastTime)));
+				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("ACU: %,d ns", (long) (ReloadChunkFromLevelPacketTask.debugTotalTime / (double) ReloadChunkFromLevelPacketTask.debugTotalCount))));
+			}
 		}
 
 		if (!MINIMAP_TEXT_LIST.isEmpty()) {
@@ -959,7 +973,12 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 					for (MapTask task : tasks) {
 						if (task != null) {
-							task.runMapTask(manager);
+							try {
+								task.runMapTask(manager);
+							} catch (Exception ex) {
+								FTBChunks.LOGGER.error("Failed to run task " + task);
+								ex.printStackTrace();
+							}
 						}
 					}
 				}

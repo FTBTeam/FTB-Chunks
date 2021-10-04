@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -12,12 +13,14 @@ import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -48,6 +51,18 @@ public class WaypointButton extends Widget {
 		icon.draw(matrixStack, x, y, w, h);
 	}
 
+	@Override
+	public boolean keyPressed(Key key) {
+		if (isMouseOver() && key.is(GLFW.GLFW_KEY_T)) {
+			new TeleportFromMapPacket(waypoint.x, waypoint.y, waypoint.z, waypoint.dimension.dimension).sendToServer();
+			closeGui(false);
+			return true;
+		}
+
+		return super.keyPressed(key);
+	}
+
+	@Override
 	public boolean mousePressed(MouseButton button) {
 		if (isMouseOver() && button.isRight()) {
 			List<ContextMenuItem> contextMenu = new ArrayList<>();

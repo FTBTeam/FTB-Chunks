@@ -21,7 +21,7 @@ public class SyncTXTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) {
+	public void runMapTask(MapManager m) throws Exception {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out)))) {
@@ -45,9 +45,6 @@ public class SyncTXTask implements MapTask {
 				stream.writeLong(now - chunk.modified);
 			}
 			 */
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return;
 		}
 
 		PartialPackets.REGION.write(region.getSyncKey(), out.toByteArray()).forEach(BaseC2SMessage::sendToServer);

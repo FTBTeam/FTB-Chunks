@@ -202,21 +202,21 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (key.is(GLFW.GLFW_KEY_T)) {
-			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockZ, dimension.dimension).sendToServer();
-			closeGui(false);
-			return true;
-		} else if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode)) {
+		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode)) {
 			closeGui(true);
-			return true;
-		} else if (key.is(GLFW.GLFW_KEY_W)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_SPACE)) {
 			movedToPlayer = false;
 			return true;
+		} else if (super.keyPressed(key)) {
+			return true;
+		} else if (key.is(GLFW.GLFW_KEY_T)) {
+			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY == 0 ? -1000 : regionPanel.blockY, regionPanel.blockZ, dimension.dimension).sendToServer();
+			closeGui(false);
+			return true;
 		}
 
-		return super.keyPressed(key);
+		return false;
 	}
 
 	@Override

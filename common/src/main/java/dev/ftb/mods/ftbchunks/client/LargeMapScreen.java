@@ -211,7 +211,7 @@ public class LargeMapScreen extends BaseScreen {
 		} else if (super.keyPressed(key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_T)) {
-			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY == 0 ? -1000 : regionPanel.blockY, regionPanel.blockZ, dimension.dimension).sendToServer();
+			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY == 0 ? -1000 : (regionPanel.blockY + 1), regionPanel.blockZ, dimension.dimension).sendToServer();
 			closeGui(false);
 			return true;
 		}
@@ -320,7 +320,7 @@ public class LargeMapScreen extends BaseScreen {
 
 			for (MapDimension dim : dimension.manager.getDimensions().values()) {
 				for (MapRegion region : dim.getLoadedRegions()) {
-					if (region.data != null) {
+					if (region.isDataLoaded()) {
 						memory += 2L * 2L * 512L * 512L; // height, waterLightAndBiome
 						memory += 3L * 4L * 512L * 512L; // foliage, grass, water
 					}

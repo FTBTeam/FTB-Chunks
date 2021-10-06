@@ -2,7 +2,6 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import net.minecraft.Util;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -197,7 +196,7 @@ public class MapRegionData {
 			out.closeEntry();
 		}
 
-		Util.ioPool().execute(() -> {
+		FTBChunks.EXECUTOR.execute(() -> {
 			if (Files.notExists(region.dimension.directory)) {
 				try {
 					Files.createDirectories(region.dimension.directory);

@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -191,7 +190,7 @@ public class MapDimension implements MapTask {
 
 		json.add("waypoints", waypointArray);
 
-		Util.ioPool().execute(() -> {
+		FTBChunks.EXECUTOR.execute(() -> {
 			try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json"))) {
 				FTBChunks.GSON.toJson(json, writer);
 			} catch (Exception ex) {
@@ -220,7 +219,7 @@ public class MapDimension implements MapTask {
 			ex.printStackTrace();
 		}
 
-		Util.ioPool().execute(() -> {
+		FTBChunks.EXECUTOR.execute(() -> {
 			try {
 				Files.write(directory.resolve("dimension.regions"), baos.toByteArray());
 			} catch (Exception ex) {

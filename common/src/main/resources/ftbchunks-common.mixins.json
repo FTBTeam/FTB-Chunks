@@ -7,7 +7,8 @@
 		"BlockStateMixin",
 		"ChunkMapMixin",
 		"ClientboundSectionBlocksUpdatePacketMixin",
-		"ExplosionMixin"
+		"ExplosionMixin",
+		"UtilMixin"
 	],
 	"client": [
 		"ClientPacketListenerMixin",

@@ -244,8 +244,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		updateMinimap = true;
 		renderedDebugCount = 0;
 		ReloadChunkFromLevelPacketTask.debugLastTime = 0L;
-		ReloadChunkFromLevelPacketTask.debugTotalTime = 0L;
-		ReloadChunkFromLevelPacketTask.debugTotalCount = 0L;
+		ReloadChunkTask.debugLastTime = 0L;
 	}
 
 	public void loggedOut(@Nullable LocalPlayer player) {
@@ -815,9 +814,12 @@ public class FTBChunksClient extends FTBChunksCommon {
 			MINIMAP_TEXT_LIST.add(new TextComponent(r.toRegionString()));
 			MINIMAP_TEXT_LIST.add(new TextComponent("Total updates: " + renderedDebugCount));
 
-			if (ReloadChunkFromLevelPacketTask.debugTotalCount > 0L) {
+			if (ReloadChunkFromLevelPacketTask.debugLastTime > 0L) {
 				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LCU: %,d ns", ReloadChunkFromLevelPacketTask.debugLastTime)));
-				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("ACU: %,d ns", (long) (ReloadChunkFromLevelPacketTask.debugTotalTime / (double) ReloadChunkFromLevelPacketTask.debugTotalCount))));
+			}
+
+			if (ReloadChunkTask.debugLastTime > 0L) {
+				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LBU: %,d ns", ReloadChunkTask.debugLastTime)));
 			}
 		}
 
@@ -949,7 +951,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 						ChunkAccess chunkAccess = level.getChunk(pos.getKey().x, pos.getKey().z, ChunkStatus.FULL, false);
 
 						if (chunkAccess != null) {
-							queue(new ReloadChunkTask(level, chunkAccess, pos.getKey(), pos.getValue()));
+							if (FTBChunksClientConfig.EXPERIMENTAL_PERFORMANCE_IMPROVEMENT.get()) {
+								FTBChunks.EXECUTOR.execute(new ReloadChunkTask(level, chunkAccess, pos.getKey(), pos.getValue()));
+							} else {
+								queue(new ReloadChunkTask(level, chunkAccess, pos.getKey(), pos.getValue()));
+							}
 						}
 					}
 
@@ -1033,7 +1039,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
 
 			if (chunkAccess != null) {
-				queue(new ReloadChunkFromLevelPacketTask(level, chunkAccess, p));
+				if (FTBChunksClientConfig.EXPERIMENTAL_PERFORMANCE_IMPROVEMENT.get()) {
+					FTBChunks.EXECUTOR.execute(new ReloadChunkFromLevelPacketTask(level, chunkAccess, p));
+				} else {
+					queue(new ReloadChunkFromLevelPacketTask(level, chunkAccess, p));
+				}
 			}
 		}
 	}

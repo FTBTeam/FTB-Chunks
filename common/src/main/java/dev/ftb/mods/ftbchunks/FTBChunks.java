@@ -83,6 +83,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author LatvianModder
@@ -91,6 +93,7 @@ public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
+	public static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
 	public static FTBChunks instance;
 	public static FTBChunksCommon PROXY;

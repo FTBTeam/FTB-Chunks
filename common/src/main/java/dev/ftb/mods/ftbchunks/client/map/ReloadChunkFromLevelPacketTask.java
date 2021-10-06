@@ -23,8 +23,6 @@ import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 public class ReloadChunkFromLevelPacketTask implements MapTask {
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
 	public static long debugLastTime = 0L;
-	public static long debugTotalTime = 0L;
-	public static long debugTotalCount = 0L;
 
 	public final Level level;
 	public final ChunkAccess chunkAccess;
@@ -115,8 +113,6 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 		}
 
 		debugLastTime = System.nanoTime() - startTime;
-		debugTotalTime += debugLastTime;
-		debugTotalCount++;
 	}
 
 	@Override

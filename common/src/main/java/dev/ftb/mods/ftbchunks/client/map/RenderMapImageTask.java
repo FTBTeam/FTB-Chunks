@@ -12,12 +12,10 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.TeamBase;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -214,7 +212,6 @@ public class RenderMapImageTask implements MapTask {
 		ClientTeam ownTeam = ClientTeamManager.INSTANCE.selfTeam;
 		Level world = Minecraft.getInstance().level;
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
-		Int2ObjectOpenHashMap<Biome> biomeMap = new Int2ObjectOpenHashMap<>();
 
 		MapMode mapMode = FTBChunksClientConfig.MAP_MODE.get();
 		int waterHeightFactor = FTBChunksClientConfig.WATER_HEIGHT_FACTOR.get();
@@ -261,7 +258,7 @@ public class RenderMapImageTask implements MapTask {
 						int index = ax + az * 512;
 
 						if (c == null) {
-							region.renderedMapImage.setPixelRGBA(ax, az, 0);
+							region.setRenderedMapImageRGBA(ax, az, 0);
 						} else {
 							BlockColor blockColor = region.dimension.manager.getBlockColor(data.getBlockIndex(index));
 							Color4I col;
@@ -273,12 +270,6 @@ public class RenderMapImageTask implements MapTask {
 								col = ColorUtils.getTopographyPalette()[by + (hasWater ? 256 : 0)];
 							} else if (mapMode == MapMode.BLOCKS) {
 								col = Color4I.rgb(data.getBlockIndex(index));
-							} else if (mapMode == MapMode.BIOME_TEMPERATURE) {
-								Biome biome = biomeMap.computeIfAbsent(data.waterLightAndBiome[index] & 0b111_11111111, i -> region.dimension.manager.getBiome(world, i));
-								float temp0 = biome.getTemperature(blockPos);
-
-								float temp = (temp0 + 0.5F) / 2F;
-								col = Color4I.hsb((float) (Math.PI - temp * Math.PI), 0.9F, 1F);
 							} else if (mapMode == MapMode.LIGHT_SOURCES) {
 								col = ColorUtils.getLightMapPalette()[15][(data.waterLightAndBiome[index] >> 11) & 15];
 							} else {
@@ -297,6 +288,7 @@ public class RenderMapImageTask implements MapTask {
 
 									col = getColor(blend, grass, ax, az).withAlpha(255).withTint(Color4I.BLACK.withAlpha(grassDarkness));
 								} else {
+									// This is unsafe but should be *mostly* fine
 									col = blockColor.getBlockColor(world, blockPos).withAlpha(255);
 								}
 
@@ -358,16 +350,14 @@ public class RenderMapImageTask implements MapTask {
 								col = fullClaimColor;
 							}
 
-							region.renderedMapImage.setPixelRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | col.rgb()));
+							region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | col.rgb()));
 						}
 					}
 				}
 			}
 		}
 
-		region.updateRenderedMapTexture = true;
-		FTBChunksClient.updateMinimap = true;
-		region.renderingMapImage = false;
+		region.afterImageRenderTask();
 	}
 
 	@Override

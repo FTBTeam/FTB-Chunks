@@ -23,6 +23,7 @@ import net.minecraft.world.level.chunk.ChunkBiomeContainer;
  */
 public class ReloadChunkTask implements MapTask {
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
+	public static long debugLastTime = 0L;
 
 	public final Level level;
 	public final ChunkAccess chunkAccess;
@@ -38,6 +39,8 @@ public class ReloadChunkTask implements MapTask {
 
 	@Override
 	public void runMapTask(MapManager manager) throws Exception {
+		long startTime = System.nanoTime();
+
 		ResourceKey<Level> dimId = level.dimension();
 
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
@@ -117,6 +120,8 @@ public class ReloadChunkTask implements MapTask {
 			mapChunk.modified = System.currentTimeMillis();
 			mapChunk.region.update(true);
 		}
+
+		debugLastTime = System.nanoTime() - startTime;
 	}
 
 	@Override

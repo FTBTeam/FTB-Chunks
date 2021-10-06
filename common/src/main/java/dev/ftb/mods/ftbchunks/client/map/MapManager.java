@@ -8,7 +8,6 @@ import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
@@ -36,6 +35,7 @@ import java.util.stream.Collectors;
 public class MapManager implements MapTask {
 	public static MapManager inst;
 
+	public final Object lock = new Object();
 	public final UUID serverId;
 	public final Path directory;
 	private final Map<ResourceKey<Level>, MapDimension> dimensions;
@@ -121,7 +121,9 @@ public class MapManager implements MapTask {
 	}
 
 	public Map<ResourceKey<Level>, MapDimension> getDimensions() {
-		return dimensions;
+		synchronized (lock) {
+			return dimensions;
+		}
 	}
 
 	public MapDimension getDimension(ResourceKey<Level> dim) {
@@ -173,7 +175,7 @@ public class MapManager implements MapTask {
 				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
 				.collect(Collectors.toList());
 
-		Util.ioPool().execute(() -> {
+		FTBChunks.EXECUTOR.execute(() -> {
 			try {
 				Files.write(directory.resolve("dimensions.txt"), dimensionsList);
 				Files.write(directory.resolve("block_map.txt"), blockColorIndexMapList);

@@ -63,7 +63,7 @@ public interface FTBChunksClientConfig {
 	IntValue FOLIAGE_DARKNESS = CONFIG.getInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
 
 	static boolean hasOtherMinimapMod() {
-		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap");
+		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas");
 	}
 
 	static void init() {

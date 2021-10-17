@@ -11,6 +11,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -28,14 +29,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.ToIntBiFunction;
@@ -153,6 +160,18 @@ public class FTBChunksCommands {
 						)
 						.then(Commands.literal("unload_everything")
 								.executes(context -> unloadEverything(context.getSource()))
+						)
+						.then(Commands.literal("view_loaded_chunks")
+								.executes(context -> viewLoadedChunks(context.getSource(), context.getSource().getLevel()))
+								.then(Commands.literal("reset")
+										.executes(context -> resetLoadedChunks(context.getSource(), context.getSource().getLevel()))
+										.then(Commands.argument("dimension", DimensionArgument.dimension())
+												.executes(context -> resetLoadedChunks(context.getSource(), DimensionArgument.getDimension(context, "dimension")))
+										)
+								)
+								.then(Commands.argument("dimension", DimensionArgument.dimension())
+										.executes(context -> viewLoadedChunks(context.getSource(), DimensionArgument.getDimension(context, "dimension")))
+								)
 						)
 				)
 				.then(Commands.literal("block_color")
@@ -384,6 +403,32 @@ public class FTBChunksCommands {
 			c.teamData.save();
 		}
 
+		return 1;
+	}
+
+	private static int viewLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
+		Collection<ChunkPos> chunks = new ArrayList<>();
+
+		try {
+			Method getChunks = ChunkMap.class.getDeclaredMethod("getChunks");
+			getChunks.setAccessible(true);
+
+			for (ChunkHolder h : (Iterable<ChunkHolder>) getChunks.invoke(level.getChunkSource().chunkMap)) {
+				chunks.add(h.getPos());
+			}
+
+			source.sendSuccess(new TextComponent(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
+			chunks.forEach(a -> System.out.printf("%s %s%n", level, a));
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		new LoadedChunkViewPacket(level.dimension(), chunks).sendTo(source.getPlayerOrException());
+		return 1;
+	}
+
+	private static int resetLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
+		new LoadedChunkViewPacket(level.dimension(), Collections.emptyList()).sendTo(source.getPlayerOrException());
 		return 1;
 	}
 

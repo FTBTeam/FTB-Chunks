@@ -8,6 +8,7 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,6 +53,7 @@ public class MapDimension implements MapTask {
 	private Map<XZ, MapRegion> regions;
 	private List<Waypoint> waypoints;
 	public boolean saveData;
+	public Collection<ChunkPos> loadedChunkView;
 
 	public MapDimension(MapManager m, ResourceKey<Level> id) {
 		manager = m;
@@ -59,6 +61,7 @@ public class MapDimension implements MapTask {
 		safeDimensionId = dimension.location().toString().replace(':', '_');
 		directory = manager.directory.resolve(safeDimensionId);
 		saveData = false;
+		loadedChunkView = Collections.emptySet();
 	}
 
 	@Override

@@ -105,6 +105,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -350,6 +351,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 		});
 
 		return 1;
+	}
+
+	@Override
+	public void updateLoadedChunkView(ResourceKey<Level> dimension, Collection<ChunkPos> chunks) {
+		MapDimension dim = MapManager.inst.getDimension(dimension);
+		dim.loadedChunkView = chunks;
+		MapManager.inst.updateAllRegions(false);
 	}
 
 	public InteractionResult customClick(CustomClickEvent event) {

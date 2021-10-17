@@ -15,6 +15,7 @@ import dev.ftb.mods.ftbteams.data.TeamBase;
 import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
 import javax.imageio.ImageIO;
@@ -227,9 +228,11 @@ public class RenderMapImageTask implements MapTask {
 		boolean reducedColorPalette = FTBChunksClientConfig.REDUCED_COLOR_PALETTE.get();
 
 		boolean chunkGrid = FTBChunksClientConfig.CHUNK_GRID.get();
+		Color4I loadedViewTint = Color4I.RED.withAlpha(70);
 
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
+				boolean loadedView = region.dimension.loadedChunkView.contains(new ChunkPos((region.pos.x << 5) + cx, (region.pos.z << 5) + cz));
 				MapChunk c = data.chunks.get(XZ.of(cx, cz));
 				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.pos.toLong()));
 				Color4I claimColor, fullClaimColor;
@@ -258,7 +261,11 @@ public class RenderMapImageTask implements MapTask {
 						int index = ax + az * 512;
 
 						if (c == null) {
-							region.setRenderedMapImageRGBA(ax, az, 0);
+							if (loadedView) {
+								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(loadedViewTint).rgb()));
+							} else {
+								region.setRenderedMapImageRGBA(ax, az, 0);
+							}
 						} else {
 							BlockColor blockColor = region.dimension.manager.getBlockColor(data.getBlockIndex(index));
 							Color4I col;
@@ -348,6 +355,10 @@ public class RenderMapImageTask implements MapTask {
 
 							if ((claimBarUp && z == 0) || (claimBarDown && z == 15) || (claimBarLeft && x == 0) || (claimBarRight && x == 15)) {
 								col = fullClaimColor;
+							}
+
+							if (loadedView) {
+								col = col.withTint(loadedViewTint);
 							}
 
 							region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | col.rgb()));

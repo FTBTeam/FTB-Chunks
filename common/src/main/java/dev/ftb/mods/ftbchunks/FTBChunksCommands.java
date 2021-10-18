@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
+import dev.ftb.mods.ftbchunks.core.ChunkMapFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
@@ -30,7 +31,6 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,7 +39,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -409,20 +408,11 @@ public class FTBChunksCommands {
 	private static int viewLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
 		Collection<ChunkPos> chunks = new ArrayList<>();
 
-		try {
-			Method getChunks = ChunkMap.class.getDeclaredMethod("getChunks");
-			getChunks.setAccessible(true);
-
-			for (ChunkHolder h : (Iterable<ChunkHolder>) getChunks.invoke(level.getChunkSource().chunkMap)) {
-				chunks.add(h.getPos());
-			}
-
-			source.sendSuccess(new TextComponent(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
-			chunks.forEach(a -> System.out.printf("%s %s%n", level, a));
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		for (ChunkHolder holder : ((ChunkMapFTBC) level.getChunkSource().chunkMap).getChunksFTBC().values()) {
+			chunks.add(holder.getPos());
 		}
 
+		source.sendSuccess(new TextComponent(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
 		new LoadedChunkViewPacket(level.dimension(), chunks).sendTo(source.getPlayerOrException());
 		return 1;
 	}

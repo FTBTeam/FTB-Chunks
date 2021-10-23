@@ -54,7 +54,7 @@ public interface FTBChunksClientConfig {
 	DoubleValue MINIMAP_ZOOM = MINIMAP.getDouble("zoom", 1D, 1D, 4D).comment("Zoom distance of the minimap");
 
 	BooleanValue DEBUG_INFO = CONFIG.getBoolean("debug_info", false).comment("Enables debug info");
-	BooleanValue EXPERIMENTAL_PERFORMANCE_IMPROVEMENT = CONFIG.getBoolean("experimental_performance_improvement", false).comment("Moves map update tasks to a different thread. May cause CME errors and some weird chunks but could improve performance.");
+	BooleanValue EXPERIMENTAL_PERFORMANCE_IMPROVEMENT = CONFIG.getBoolean("experimental_performance_improvement", true).comment("Moves map update tasks to a different thread. May cause CME errors and some weird chunks but could improve performance.");
 	IntValue TASK_QUEUE_TICKS = CONFIG.getInt("task_queue_ticks", 4, 1, 300).excluded().comment("Advanced option. How often queued tasks will run");
 	IntValue RERENDER_QUEUE_TICKS = CONFIG.getInt("rerender_queue_ticks", 60, 1, 600).excluded().comment("Advanced option. How often map render update will be queued");
 	IntValue TASK_QUEUE_MAX = CONFIG.getInt("task_queue_max", 100, 1, 10000).excluded().comment("Advanced option. Max tasks that can queue up");

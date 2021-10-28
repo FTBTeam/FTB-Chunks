@@ -249,14 +249,16 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public void loggedOut(@Nullable LocalPlayer player) {
-		if (MapManager.inst != null) {
+		MapManager manager = MapManager.inst;
+
+		if (manager != null) {
 			saveAllRegions();
 
 			MapTask task;
 
 			while ((task = taskQueue.pollFirst()) != null) {
 				try {
-					task.runMapTask(MapManager.inst);
+					task.runMapTask(manager);
 				} catch (Exception ex) {
 					FTBChunks.LOGGER.error("Failed to run task " + task);
 					ex.printStackTrace();
@@ -264,9 +266,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 			}
 
 			MapDimension.updateCurrent();
-			MapManager.inst.release();
-			MapManager.inst = null;
+			manager.release();
 		}
+
+		MapManager.inst = null;
 	}
 
 	@Override

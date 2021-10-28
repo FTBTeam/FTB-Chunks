@@ -156,6 +156,17 @@ public class MapRegionData {
 			}
 		}
 
+		FTBChunks.EXECUTOR.execute(() -> {
+			try {
+				writeData(chunkList, dataImage, foliageImage, grassImage, waterImage, blocksImage);
+			} catch (Exception ex) {
+				FTBChunks.LOGGER.error("Failed to write map region " + region.dimension + ":" + region + ":");
+				ex.printStackTrace();
+			}
+		});
+	}
+
+	private void writeData(List<MapChunk> chunkList, BufferedImage dataImage, BufferedImage foliageImage, BufferedImage grassImage, BufferedImage waterImage, BufferedImage blocksImage) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(baos);
@@ -196,21 +207,11 @@ public class MapRegionData {
 			out.closeEntry();
 		}
 
-		FTBChunks.EXECUTOR.execute(() -> {
-			if (Files.notExists(region.dimension.directory)) {
-				try {
-					Files.createDirectories(region.dimension.directory);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
+		if (Files.notExists(region.dimension.directory)) {
+			Files.createDirectories(region.dimension.directory);
+		}
 
-			try {
-				Files.write(region.dimension.directory.resolve(region.pos.toRegionString() + ".zip"), baos.toByteArray());
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		});
+		Files.write(region.dimension.directory.resolve(region.pos.toRegionString() + ".zip"), baos.toByteArray());
 	}
 
 	public MapChunk getChunk(XZ pos) {

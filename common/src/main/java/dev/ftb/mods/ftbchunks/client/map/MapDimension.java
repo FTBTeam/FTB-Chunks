@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -176,10 +177,26 @@ public class MapDimension implements MapTask {
 
 	@Override
 	public void runMapTask(MapManager m) throws Exception {
+		List<Waypoint> waypoints = new ArrayList<>(getWaypoints());
+		List<MapRegion> regionList = new ArrayList<>(getRegions().values());
+
+		if (!waypoints.isEmpty() || !regionList.isEmpty()) {
+			FTBChunks.EXECUTOR.execute(() -> {
+				try {
+					writeData(waypoints, regionList);
+				} catch (Exception ex) {
+					FTBChunks.LOGGER.error("Failed to write map dimension " + safeDimensionId + ":");
+					ex.printStackTrace();
+				}
+			});
+		}
+	}
+
+	private void writeData(List<Waypoint> waypoints, List<MapRegion> regionList) throws IOException {
 		JsonObject json = new JsonObject();
 		JsonArray waypointArray = new JsonArray();
 
-		for (Waypoint w : getWaypoints()) {
+		for (Waypoint w : waypoints) {
 			JsonObject o = new JsonObject();
 			o.addProperty("hidden", w.hidden);
 			o.addProperty("name", w.name);
@@ -193,18 +210,8 @@ public class MapDimension implements MapTask {
 
 		json.add("waypoints", waypointArray);
 
-		FTBChunks.EXECUTOR.execute(() -> {
-			try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json"))) {
-				FTBChunks.GSON.toJson(json, writer);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		});
-
-		Collection<MapRegion> regionList = getRegions().values();
-
-		if (regionList.isEmpty()) {
-			return;
+		try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json"))) {
+			FTBChunks.GSON.toJson(json, writer);
 		}
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -218,17 +225,9 @@ public class MapDimension implements MapTask {
 				stream.writeByte(region.pos.x);
 				stream.writeByte(region.pos.z);
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
 		}
 
-		FTBChunks.EXECUTOR.execute(() -> {
-			try {
-				Files.write(directory.resolve("dimension.regions"), baos.toByteArray());
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		});
+		Files.write(directory.resolve("dimension.regions"), baos.toByteArray());
 	}
 
 	public void sync() {

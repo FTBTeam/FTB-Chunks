@@ -21,7 +21,7 @@ public class SyncTXTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) throws Exception {
+	public void runMapTask() throws Exception {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 		try (DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(out)))) {

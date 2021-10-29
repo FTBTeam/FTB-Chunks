@@ -239,7 +239,7 @@ public class MapRegion implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) throws Exception {
+	public void runMapTask() throws Exception {
 		if (data != null) {
 			data.write();
 		}

@@ -25,12 +25,14 @@ public class ReloadChunkTask implements MapTask {
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
 	public static long debugLastTime = 0L;
 
+	public final MapManager manager;
 	public final Level level;
 	public final ChunkAccess chunkAccess;
 	public final ChunkPos pos;
 	public final IntOpenHashSet blockPosSet;
 
-	public ReloadChunkTask(Level w, ChunkAccess ca, ChunkPos p, IntOpenHashSet s) {
+	public ReloadChunkTask(MapManager m, Level w, ChunkAccess ca, ChunkPos p, IntOpenHashSet s) {
+		manager = m;
 		level = w;
 		chunkAccess = ca;
 		pos = p;
@@ -38,7 +40,11 @@ public class ReloadChunkTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager manager) throws Exception {
+	public void runMapTask() throws Exception {
+		if (manager.invalid) {
+			return;
+		}
+
 		long startTime = System.nanoTime();
 
 		ResourceKey<Level> dimId = level.dimension();

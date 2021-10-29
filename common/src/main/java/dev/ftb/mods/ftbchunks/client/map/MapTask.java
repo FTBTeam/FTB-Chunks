@@ -5,12 +5,12 @@ package dev.ftb.mods.ftbchunks.client.map;
  */
 @FunctionalInterface
 public interface MapTask extends Runnable {
-	void runMapTask(MapManager manager) throws Exception;
+	void runMapTask() throws Exception;
 
 	@Override
 	default void run() {
 		try {
-			runMapTask(MapManager.inst);
+			runMapTask();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

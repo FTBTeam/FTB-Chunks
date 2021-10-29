@@ -258,7 +258,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 			while ((task = taskQueue.pollFirst()) != null) {
 				try {
-					task.runMapTask(manager);
+					task.runMapTask();
 				} catch (Exception ex) {
 					FTBChunks.LOGGER.error("Failed to run task " + task);
 					ex.printStackTrace();
@@ -963,9 +963,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 						if (chunkAccess != null) {
 							if (FTBChunksClientConfig.EXPERIMENTAL_PERFORMANCE_IMPROVEMENT.get()) {
-								FTBChunks.EXECUTOR.execute(new ReloadChunkTask(level, chunkAccess, pos.getKey(), pos.getValue()));
+								FTBChunks.EXECUTOR.execute(new ReloadChunkTask(manager, level, chunkAccess, pos.getKey(), pos.getValue()));
 							} else {
-								queue(new ReloadChunkTask(level, chunkAccess, pos.getKey(), pos.getValue()));
+								queue(new ReloadChunkTask(manager, level, chunkAccess, pos.getKey(), pos.getValue()));
 							}
 						}
 					}
@@ -991,7 +991,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 					for (MapTask task : tasks) {
 						if (task != null) {
 							try {
-								task.runMapTask(manager);
+								task.runMapTask();
 							} catch (Exception ex) {
 								FTBChunks.LOGGER.error("Failed to run task " + task);
 								ex.printStackTrace();
@@ -1044,16 +1044,17 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public static void handlePacket(ClientboundLevelChunkPacket p) {
+		MapManager manager = MapManager.inst;
 		Level level = Minecraft.getInstance().level;
 
-		if (level != null && p.isFullChunk()) {
+		if (manager != null && level != null && p.isFullChunk()) {
 			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
 
 			if (chunkAccess != null) {
 				if (FTBChunksClientConfig.EXPERIMENTAL_PERFORMANCE_IMPROVEMENT.get()) {
-					FTBChunks.EXECUTOR.execute(new ReloadChunkFromLevelPacketTask(level, chunkAccess, p));
+					FTBChunks.EXECUTOR.execute(new ReloadChunkFromLevelPacketTask(manager, level, chunkAccess, p));
 				} else {
-					queue(new ReloadChunkFromLevelPacketTask(level, chunkAccess, p));
+					queue(new ReloadChunkFromLevelPacketTask(manager, level, chunkAccess, p));
 				}
 			}
 		}

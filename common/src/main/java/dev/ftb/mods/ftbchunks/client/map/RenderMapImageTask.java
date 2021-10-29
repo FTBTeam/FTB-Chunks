@@ -170,7 +170,11 @@ public class RenderMapImageTask implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) {
+	public void runMapTask() {
+		if (region.dimension.manager.invalid) {
+			return;
+		}
+
 		BiomeBlendMode blend = FTBChunksClientConfig.BIOME_BLEND.get();
 
 		MapRegionData data = region.getDataBlocking();

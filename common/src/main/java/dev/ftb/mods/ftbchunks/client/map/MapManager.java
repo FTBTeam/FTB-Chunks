@@ -36,6 +36,7 @@ public class MapManager implements MapTask {
 	public static MapManager inst;
 
 	public final Object lock = new Object();
+	public boolean invalid;
 	public final UUID serverId;
 	public final Path directory;
 	private final Map<ResourceKey<Level>, MapDimension> dimensions;
@@ -48,6 +49,7 @@ public class MapManager implements MapTask {
 	private final List<BiomeFTBC> biomesToRelease;
 
 	public MapManager(UUID id, Path dir) {
+		invalid = false;
 		serverId = id;
 		directory = dir;
 		dimensions = new LinkedHashMap<>();
@@ -141,6 +143,7 @@ public class MapManager implements MapTask {
 
 		biomesToRelease.clear();
 		blockIdToColCache.clear();
+		invalid = true;
 	}
 
 	public void updateAllRegions(boolean save) {
@@ -154,7 +157,7 @@ public class MapManager implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) throws Exception {
+	public void runMapTask() throws Exception {
 		List<String> dimensionsList = dimensions
 				.keySet()
 				.stream()

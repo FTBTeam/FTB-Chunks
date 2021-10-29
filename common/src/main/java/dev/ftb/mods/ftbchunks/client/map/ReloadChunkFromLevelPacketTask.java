@@ -24,18 +24,24 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
 	public static long debugLastTime = 0L;
 
+	public final MapManager manager;
 	public final Level level;
 	public final ChunkAccess chunkAccess;
 	public final ClientboundLevelChunkPacket packet;
 
-	public ReloadChunkFromLevelPacketTask(Level l, ChunkAccess ca, ClientboundLevelChunkPacket p) {
+	public ReloadChunkFromLevelPacketTask(MapManager m, Level l, ChunkAccess ca, ClientboundLevelChunkPacket p) {
+		manager = m;
 		level = l;
 		chunkAccess = ca;
 		packet = p;
 	}
 
 	@Override
-	public void runMapTask(MapManager manager) throws Exception {
+	public void runMapTask() throws Exception {
+		if (manager.invalid) {
+			return;
+		}
+
 		long startTime = System.nanoTime();
 
 		MapDimension dimension = manager.getDimension(level.dimension());

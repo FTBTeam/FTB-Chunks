@@ -176,7 +176,7 @@ public class MapDimension implements MapTask {
 	}
 
 	@Override
-	public void runMapTask(MapManager m) throws Exception {
+	public void runMapTask() throws Exception {
 		List<Waypoint> waypoints = new ArrayList<>(getWaypoints());
 		List<MapRegion> regionList = new ArrayList<>(getRegions().values());
 

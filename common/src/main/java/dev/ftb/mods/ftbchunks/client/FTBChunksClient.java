@@ -15,15 +15,13 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.client.map.MapChunk;
+import dev.ftb.mods.ftbchunks.client.map.ChunkUpdateTask;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.MapTask;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
-import dev.ftb.mods.ftbchunks.client.map.ReloadChunkFromLevelPacketTask;
-import dev.ftb.mods.ftbchunks.client.map.ReloadChunkTask;
 import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
@@ -244,8 +242,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		MapManager.inst = new MapManager(loginData.serverId, dir);
 		updateMinimap = true;
 		renderedDebugCount = 0;
-		ReloadChunkFromLevelPacketTask.debugLastTime = 0L;
-		ReloadChunkTask.debugLastTime = 0L;
+		ChunkUpdateTask.debugLastTime = 0L;
 	}
 
 	public void loggedOut(@Nullable LocalPlayer player) {
@@ -825,12 +822,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 			MINIMAP_TEXT_LIST.add(new TextComponent(r.toRegionString()));
 			MINIMAP_TEXT_LIST.add(new TextComponent("Total updates: " + renderedDebugCount));
 
-			if (ReloadChunkFromLevelPacketTask.debugLastTime > 0L) {
-				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LCU: %,d ns", ReloadChunkFromLevelPacketTask.debugLastTime)));
-			}
-
-			if (ReloadChunkTask.debugLastTime > 0L) {
-				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LBU: %,d ns", ReloadChunkTask.debugLastTime)));
+			if (ChunkUpdateTask.debugLastTime > 0L) {
+				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LU: %,d ns", ChunkUpdateTask.debugLastTime)));
 			}
 		}
 
@@ -962,11 +955,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 						ChunkAccess chunkAccess = level.getChunk(pos.getKey().x, pos.getKey().z, ChunkStatus.FULL, false);
 
 						if (chunkAccess != null) {
-							if (FTBChunksClientConfig.EXPERIMENTAL_PERFORMANCE_IMPROVEMENT.get()) {
-								FTBChunks.EXECUTOR.execute(new ReloadChunkTask(manager, level, chunkAccess, pos.getKey(), pos.getValue()));
-							} else {
-								queue(new ReloadChunkTask(manager, level, chunkAccess, pos.getKey(), pos.getValue()));
-							}
+							FTBChunks.EXECUTOR.execute(new ChunkUpdateTask(manager, level, chunkAccess, pos.getKey(), pos.getValue().toIntArray()));
 						}
 					}
 
@@ -1011,7 +1000,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void rerender(MapChunk chunk, BlockPos pos, BlockState state) {
+	public static void rerender(BlockPos pos, BlockState state) {
 		ChunkPos chunkPos = new ChunkPos(pos);
 		IntOpenHashSet set = rerenderCache.get(chunkPos);
 
@@ -1028,44 +1017,32 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public static void handlePacket(ClientboundSectionBlocksUpdatePacketFTBC p) {
-		if (MapManager.inst == null) {
-			return;
-		}
-
 		SectionPos sectionPos = p.getSectionPosFTBC();
-		MapChunk chunk = MapDimension.getCurrent().getRegion(XZ.regionFromChunk(sectionPos.chunk())).getDataBlocking().getChunk(XZ.of(sectionPos.chunk()));
 
 		short[] positions = p.getPositionsFTBC();
 		BlockState[] states = p.getStatesFTBC();
 
 		for (int i = 0; i < positions.length; ++i) {
-			rerender(chunk, sectionPos.relativeToBlockPos(positions[i]), states[i]);
+			rerender(sectionPos.relativeToBlockPos(positions[i]), states[i]);
 		}
 	}
 
 	public static void handlePacket(ClientboundLevelChunkPacket p) {
 		MapManager manager = MapManager.inst;
+
 		Level level = Minecraft.getInstance().level;
 
-		if (manager != null && level != null && p.isFullChunk()) {
+		if (level != null && p.isFullChunk()) {
 			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
 
 			if (chunkAccess != null) {
-				if (FTBChunksClientConfig.EXPERIMENTAL_PERFORMANCE_IMPROVEMENT.get()) {
-					FTBChunks.EXECUTOR.execute(new ReloadChunkFromLevelPacketTask(manager, level, chunkAccess, p));
-				} else {
-					queue(new ReloadChunkFromLevelPacketTask(manager, level, chunkAccess, p));
-				}
+				FTBChunks.EXECUTOR.execute(new ChunkUpdateTask(manager, level, chunkAccess, new ChunkPos(p.getX(), p.getZ()), ChunkUpdateTask.ALL_BLOCKS));
 			}
 		}
+
 	}
 
 	public static void handlePacket(ClientboundBlockUpdatePacket p) {
-		if (MapManager.inst == null) {
-			return;
-		}
-
-		MapChunk chunk = MapDimension.getCurrent().getRegion(XZ.regionFromBlock(p.getPos())).getDataBlocking().getChunk(XZ.chunkFromBlock(p.getPos()));
-		rerender(chunk, p.getPos(), p.getBlockState());
+		rerender(p.getPos(), p.getBlockState());
 	}
 }

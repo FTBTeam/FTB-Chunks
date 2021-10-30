@@ -2,11 +2,12 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import net.minecraft.Util;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkPacket;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -16,38 +17,61 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author LatvianModder
  */
-public class ReloadChunkFromLevelPacketTask implements MapTask {
+public class ChunkUpdateTask implements MapTask {
+	public static final int[] ALL_BLOCKS = Util.make(new int[256], array -> {
+		for (int i = 0; i < 256; i++) {
+			array[i] = i;
+		}
+	});
+
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
 	public static long debugLastTime = 0L;
 
-	public final MapManager manager;
+	public MapManager manager;
 	public final Level level;
 	public final ChunkAccess chunkAccess;
-	public final ClientboundLevelChunkPacket packet;
+	public final ChunkPos pos;
+	public final int[] blocksToUpdate;
+	private final long taskStartTime;
 
-	public ReloadChunkFromLevelPacketTask(MapManager m, Level l, ChunkAccess ca, ClientboundLevelChunkPacket p) {
+	public ChunkUpdateTask(@Nullable MapManager m, Level w, ChunkAccess ca, ChunkPos p, int[] s) {
 		manager = m;
-		level = l;
+		level = w;
 		chunkAccess = ca;
-		packet = p;
+		pos = p;
+		blocksToUpdate = s;
+		taskStartTime = System.currentTimeMillis();
 	}
 
 	@Override
 	public void runMapTask() throws Exception {
+		while (manager == null) {
+			manager = MapManager.inst;
+
+			if (manager == null) {
+				// Safety mechanic in case for some reason the map task hangs
+				if ((System.currentTimeMillis() - taskStartTime) >= 30000L) {
+					return;
+				} else {
+					Thread.sleep(1L);
+				}
+			}
+		}
+
 		if (manager.invalid) {
 			return;
 		}
 
 		long startTime = System.nanoTime();
 
-		MapDimension dimension = manager.getDimension(level.dimension());
-		MapChunk mapChunk = dimension.getRegion(XZ.regionFromChunk(packet.getX(), packet.getZ())).getDataBlocking().getChunk(XZ.of(packet.getX(), packet.getZ()));
+		ResourceKey<Level> dimId = level.dimension();
 
-		ChunkPos pos = new ChunkPos(packet.getX(), packet.getZ());
+		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
 		MapRegionData data = mapChunk.region.getDataBlocking();
 
 		WritableRegistry<Biome> biomes = level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
@@ -61,7 +85,7 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 		boolean changed = false;
 		boolean[] flags = new boolean[1];
 
-		for (int wi = 0; wi < 256; wi++) {
+		for (int wi : blocksToUpdate) {
 			int wx = wi % 16;
 			int wz = wi / 16;
 			blockPos.set(blockX + wx, topY, blockZ + wz);
@@ -82,11 +106,18 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 			waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos.above()) & 15) << 11; // Light
 
 			ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
-			int blockIndex = mapChunk.region.dimension.manager.getBlockColorIndex(id == null ? AIR : id);
+			int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
 
-			Biome biome = biomeContainer == null ? level.getBiome(blockPos) : biomeContainer.getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
-			waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
-			waterLightAndBiome |= (mapChunk.region.dimension.manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
+			Biome biome;
+
+			// Only update biome, foliage, grass and water colors if its first visit or height changed
+			if (height0 != height || waterLightAndBiome0 == 0) {
+				biome = biomeContainer == null ? level.getBiome(blockPos) : biomeContainer.getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
+				waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
+				waterLightAndBiome |= (manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
+			} else {
+				biome = null;
+			}
 
 			if (height0 != height) {
 				data.height[index] = (short) height;
@@ -97,9 +128,9 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 				data.waterLightAndBiome[index] = (short) waterLightAndBiome;
 
 				if (biome != null && (waterLightAndBiome0 & 0b111_11111111) != (waterLightAndBiome & 0b111_11111111)) {
-					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.FOLIAGE_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
-					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.GRASS_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
-					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.WATER_COLOR_RESOLVER.getColor(biome, blockPos.getX(), blockPos.getZ()) & 0xFFFFFF);
+					data.foliage[index] = (data.foliage[index] & 0xFF000000) | (BiomeColors.getAverageFoliageColor(level, blockPos) & 0xFFFFFF);
+					data.grass[index] = (data.grass[index] & 0xFF000000) | (BiomeColors.getAverageGrassColor(level, blockPos) & 0xFFFFFF);
+					data.water[index] = (data.water[index] & 0xFF000000) | (BiomeColors.getAverageWaterColor(level, blockPos) & 0xFFFFFF);
 				}
 
 				changed = true;
@@ -123,6 +154,6 @@ public class ReloadChunkFromLevelPacketTask implements MapTask {
 
 	@Override
 	public String toString() {
-		return "ReloadChunkFromLevelPacketTask@" + packet.getX() + "," + packet.getZ();
+		return "ChunkUpdateTask@" + pos;
 	}
 }

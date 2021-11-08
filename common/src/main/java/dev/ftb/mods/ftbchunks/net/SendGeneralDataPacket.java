@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftbchunks.FTBCUtils;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;

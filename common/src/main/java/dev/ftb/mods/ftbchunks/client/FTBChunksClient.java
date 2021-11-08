@@ -26,6 +26,7 @@ import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
+import dev.ftb.mods.ftbchunks.core.BiomeManagerFTBC;
 import dev.ftb.mods.ftbchunks.core.ClientboundSectionBlocksUpdatePacketFTBC;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
@@ -91,6 +92,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.BlockHitResult;
@@ -950,12 +952,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 			if (taskQueueTicks % FTBChunksClientConfig.RERENDER_QUEUE_TICKS.get() == 0L) {
 				if (!rerenderCache.isEmpty()) {
 					Level level = Minecraft.getInstance().level;
+					long biomeZoomSeed = ((BiomeManagerFTBC) level.getBiomeManager()).getBiomeZoomSeedFTBC();
 
 					for (Map.Entry<ChunkPos, IntOpenHashSet> pos : rerenderCache.entrySet()) {
 						ChunkAccess chunkAccess = level.getChunk(pos.getKey().x, pos.getKey().z, ChunkStatus.FULL, false);
 
 						if (chunkAccess != null) {
-							FTBChunks.EXECUTOR.execute(new ChunkUpdateTask(manager, level, chunkAccess, pos.getKey(), pos.getValue().toIntArray()));
+							queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, pos.getKey(), chunkAccess.getBiomes(), biomeZoomSeed, pos.getValue().toIntArray()));
 						}
 					}
 
@@ -1036,10 +1039,17 @@ public class FTBChunksClient extends FTBChunksCommon {
 			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
 
 			if (chunkAccess != null) {
-				FTBChunks.EXECUTOR.execute(new ChunkUpdateTask(manager, level, chunkAccess, new ChunkPos(p.getX(), p.getZ()), ChunkUpdateTask.ALL_BLOCKS));
+				long biomeZoomSeed = ((BiomeManagerFTBC) level.getBiomeManager()).getBiomeZoomSeedFTBC();
+				ChunkBiomeContainer biomeContainer = p.getBiomes() == null ? null : new ChunkBiomeContainer(level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), p.getBiomes());
+				queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, new ChunkPos(p.getX(), p.getZ()), biomeContainer, biomeZoomSeed, ChunkUpdateTask.ALL_BLOCKS));
 			}
 		}
 
+	}
+
+	public static void queueOrExecute(MapTask task) {
+		// Implement this config later
+		FTBChunks.EXECUTOR.execute(task);
 	}
 
 	public static void handlePacket(ClientboundBlockUpdatePacket p) {

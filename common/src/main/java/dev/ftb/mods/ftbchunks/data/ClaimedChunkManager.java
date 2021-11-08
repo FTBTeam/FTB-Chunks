@@ -134,6 +134,15 @@ public class ClaimedChunkManager {
 		return claimedChunks.values();
 	}
 
+	public boolean getBypassProtection(UUID player) {
+		return teamManager.getInternalPlayerTeam(player).getExtraData().getBoolean("BypassFTBChunksProtection");
+	}
+
+	public void setBypassProtection(UUID player, boolean bypass) {
+		teamManager.getInternalPlayerTeam(player).getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
+		teamManager.getInternalPlayerTeam(player).save();
+	}
+
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {
 		if (!(entity instanceof ServerPlayer) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
 			return false;
@@ -155,13 +164,13 @@ public class ClaimedChunkManager {
 				return override.getProtect();
 			}
 
-			return isFake || !getData(player).getBypassProtection();
+			return isFake || !getBypassProtection(player.getUUID());
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
 			ProtectionOverride override = protection.override(player, pos, hand, null);
 
 			if (override.isOverride()) {
 				return override.getProtect();
-			} else if (!isFake && getData(player).getBypassProtection()) {
+			} else if (!isFake && getBypassProtection(player.getUUID())) {
 				return false;
 			}
 

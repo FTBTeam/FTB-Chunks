@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  * @author LatvianModder
  */
 @Mixin(Util.class)
-public class UtilMixin {
+public abstract class UtilMixin {
 	@Inject(method = "shutdownExecutors", at = @At("RETURN"))
 	private static void shutdownExecutorsFTBC(CallbackInfo ci) {
 		FTBChunks.EXECUTOR.shutdown();

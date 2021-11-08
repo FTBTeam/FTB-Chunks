@@ -82,11 +82,13 @@ public class MapRegionData {
 							int s = stream.readShort();
 
 							for (int i = 0; i < s; i++) {
+								int v = version >= 2 ? stream.readByte() : 0;
 								int x = stream.readByte();
 								int z = stream.readByte();
 								long m = stream.readLong();
 
 								MapChunk c = new MapChunk(region, XZ.of(x, z));
+								c.version = v;
 								c.modified = m;
 								chunks.put(c.pos, c);
 							}
@@ -175,10 +177,11 @@ public class MapRegionData {
 			out.putNextEntry(new ZipEntry("chunks.dat"));
 
 			stream.writeByte(0);
-			stream.writeByte(1);
+			stream.writeByte(2);
 			stream.writeShort(chunkList.size());
 
 			for (MapChunk chunk : chunkList) {
+				stream.writeByte(chunk.version);
 				stream.writeByte(chunk.pos.x);
 				stream.writeByte(chunk.pos.z);
 				stream.writeLong(chunk.modified);

@@ -5,22 +5,13 @@ import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.zip.InflaterInputStream;
 
 /**
  * @author LatvianModder
@@ -75,80 +66,10 @@ public class MapRegion implements MapTask {
 
 		data = new MapRegionData(this);
 
-		Path chunksFile = dimension.directory.resolve(pos.toRegionString() + "-chunks.dat");
-
-		if (Files.exists(chunksFile) && Files.isReadable(chunksFile)) {
-			FTBChunks.LOGGER.info("Found old map files, converting... [" + dimension.safeDimensionId + "/" + pos.toRegionString() + "]");
-
-			try (DataInputStream stream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(Files.newInputStream(chunksFile))))) {
-				stream.readByte();
-				stream.readByte();
-				int s = stream.readShort();
-
-				for (int i = 0; i < s; i++) {
-					int x = stream.readByte();
-					int z = stream.readByte();
-					long m = stream.readLong();
-
-					MapChunk c = new MapChunk(this, XZ.of(x, z));
-					c.modified = m;
-					data.chunks.put(c.pos, c);
-				}
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-
-			try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-data.png"))) {
-				BufferedImage img = ImageIO.read(stream);
-
-				for (int y = 0; y < 512; y++) {
-					for (int x = 0; x < 512; x++) {
-						int index = x + y * 512;
-						int d = ColorUtils.convertToNative(img.getRGB(x, y) & 0xFFFFFF);
-						data.height[index] = (short) (d >> 16);
-						data.waterLightAndBiome[index] = (short) d;
-						data.foliage[index] = img.getRGB(x + 512, y) & 0xFFFFFF;
-						data.grass[index] = img.getRGB(x, y + 512) & 0xFFFFFF;
-						data.water[index] = img.getRGB(x + 512, y + 512) & 0xFFFFFF;
-					}
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-
-			try (InputStream stream = Files.newInputStream(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"))) {
-				BufferedImage img = ImageIO.read(stream);
-
-				for (int y = 0; y < 512; y++) {
-					for (int x = 0; x < 512; x++) {
-						data.setBlockIndex(x + y * 512, ColorUtils.convertToNative(img.getRGB(x, y)));
-					}
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-
-			try {
-				Files.deleteIfExists(chunksFile);
-				Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-data.png"));
-				Files.deleteIfExists(dimension.directory.resolve(pos.toRegionString() + "-blocks.png"));
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-
-			try {
-				data.write();
-				update(false);
-			} catch (IOException ex) {
-				update(true);
-				ex.printStackTrace();
-			}
-		} else {
-			try {
-				data.read();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
+		try {
+			data.read();
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 
 		return data;
@@ -177,7 +98,6 @@ public class MapRegion implements MapTask {
 			updateRenderedMapImage = false;
 			mapImageLoaded = false;
 			renderingMapImage = true;
-			// FTBChunksClient.queue(new RenderMapImageTask(this));
 			FTBChunks.EXECUTOR.execute(new RenderMapImageTask(this));
 		}
 

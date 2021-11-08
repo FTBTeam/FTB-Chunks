@@ -14,12 +14,14 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author LatvianModder
  */
 public class RequestChunkChangePacket extends BaseC2SMessage {
+	private static final String[] ACTION_NAMES = {"claim", "unclaim", "load", "unload"};
+
 	private final int action;
 	private final Set<XZ> chunks;
 
@@ -61,7 +63,7 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 		ServerPlayer player = (ServerPlayer) context.getPlayer();
 		CommandSourceStack source = player.createCommandSourceStack();
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		Consumer<XZ> consumer;
+		Function<XZ, ClaimResult> consumer;
 		long now = System.currentTimeMillis();
 
 		switch (action) {
@@ -72,6 +74,8 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 					if (result.isSuccess()) {
 						result.setClaimedTime(now);
 					}
+
+					return result;
 				};
 				break;
 			case 1:
@@ -84,6 +88,8 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 					if (result.isSuccess()) {
 						result.setForceLoadedTime(now);
 					}
+
+					return result;
 				};
 				break;
 			case 3:
@@ -95,8 +101,11 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 		}
 
 		for (XZ pos : chunks) {
-			consumer.accept(pos);
-			//FIXME: FTBChunksAPIImpl.manager.map.queueSend(player.world, pos, p -> p == player);
+			ClaimResult r = consumer.apply(pos);
+
+			if (!r.isSuccess()) {
+				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(), ACTION_NAMES[action], player.level.dimension().location(), pos.x, pos.z, r));
+			}
 		}
 
 		SendGeneralDataPacket.send(data, player);

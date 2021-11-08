@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
  * @author LatvianModder
  */
 @Mixin(Biome.class)
-public class BiomeMixin implements BiomeFTBC {
+public abstract class BiomeMixin implements BiomeFTBC {
 	private int ftbcBiomeColorIndex = -1;
 
 	@Override

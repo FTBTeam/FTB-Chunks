@@ -49,7 +49,7 @@ public class FTBChunksTeamData {
 	public int extraClaimChunks;
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
-	public boolean bypassProtection;
+	public boolean hasMembersOnline;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -64,7 +64,7 @@ public class FTBChunksTeamData {
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
-		bypassProtection = false;
+		hasMembersOnline = false;
 	}
 
 	@Override
@@ -352,10 +352,6 @@ public class FTBChunksTeamData {
 	public void setChunkLoadOffline(boolean val) {
 		chunkLoadOffline = val;
 		save();
-	}
-
-	public boolean getBypassProtection() {
-		return bypassProtection;
 	}
 
 	public void saveNow() {

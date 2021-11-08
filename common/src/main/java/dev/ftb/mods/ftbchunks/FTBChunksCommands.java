@@ -10,6 +10,7 @@ import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.core.ChunkMapFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
@@ -183,8 +184,8 @@ public class FTBChunksCommands {
 	}
 
 	private static int bypassProtection(ServerPlayer player) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.bypassProtection = !data.bypassProtection;
+		ClaimedChunkManager manager = FTBChunksAPI.getManager();
+		manager.setBypassProtection(player.getUUID(), !manager.getBypassProtection(player.getUUID()));
 		return 1;
 	}
 

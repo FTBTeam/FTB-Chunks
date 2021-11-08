@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -213,6 +214,11 @@ public class LargeMapScreen extends BaseScreen {
 		} else if (key.is(GLFW.GLFW_KEY_T)) {
 			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY == 0 ? -1000 : (regionPanel.blockY + 1), regionPanel.blockZ, dimension.dimension).sendToServer();
 			closeGui(false);
+			return true;
+		} else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_F3)) {
+			FTBChunksClientConfig.CHUNK_GRID.toggle();
+			FTBChunksClientConfig.saveConfig();
+			dimension.manager.updateAllRegions(false);
 			return true;
 		}
 

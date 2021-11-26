@@ -154,6 +154,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	@Override
 	public void init() {
+		if (Minecraft.getInstance() == null) {
+			return;
+		}
+
 		FTBChunksClientConfig.init();
 		registerKeys();
 

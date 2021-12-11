@@ -57,6 +57,11 @@ public class WaypointButton extends Widget {
 			new TeleportFromMapPacket(waypoint.x, waypoint.y, waypoint.z, waypoint.dimension.dimension).sendToServer();
 			closeGui(false);
 			return true;
+		} else if (isMouseOver() && key.is(GLFW.GLFW_KEY_DELETE)) {
+			waypoint.dimension.getWaypoints().remove(waypoint);
+			waypoint.dimension.saveData = true;
+			parent.widgets.remove(this);
+			return true;
 		}
 
 		return super.keyPressed(key);

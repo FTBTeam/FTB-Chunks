@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
-import me.shedaniel.architectury.annotations.ExpectPlatform;
+import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.level.block.Block;
 
 public class FTBCUtils {

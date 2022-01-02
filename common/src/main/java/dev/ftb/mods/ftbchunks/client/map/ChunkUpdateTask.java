@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,7 +98,6 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 		// BiomeManager biomeManager = new BiomeManager(this, biomeZoomSeed, level.dimensionType().getBiomeZoomer());
 
-		int topY = level.getHeight() + 1;
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		int blockX = pos.getMinBlockX();
 		int blockZ = pos.getMinBlockZ();
@@ -113,7 +113,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		for (int wi : blocksToUpdate) {
 			int wx = wi % 16;
 			int wz = wi / 16;
-			blockPos.set(blockX + wx, topY, blockZ + wz);
+			blockPos.set(blockX + wx, level.getHeight(Heightmap.Types.MOTION_BLOCKING, blockX + wx, blockZ + wz) - 1, blockZ + wz);
 			int height = Mth.clamp(getHeight(blockPos).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
 			blockPos.setY(height);
 			BlockState state = chunkAccess.getBlockState(blockPos);
@@ -199,17 +199,13 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 	private BlockPos.MutableBlockPos getHeight(BlockPos.MutableBlockPos pos) {
 		int topY = pos.getY();
+		boolean hasCeiling = level.dimensionType().hasCeiling();
 
-		if (topY == -1) {
-			pos.setY(-1);
-			return pos;
-		}
-
-		for (int by = topY; by > 0; by--) {
+		for (int by = topY; by >= 0; by--) {
 			pos.setY(by);
 			BlockState state = chunkAccess.getBlockState(pos);
 
-			if (by == topY || state.getBlock() == Blocks.BEDROCK) {
+			if (hasCeiling && (by == topY || state.getBlock() == Blocks.BEDROCK)) {
 				for (; by > 0; by--) {
 					pos.setY(by);
 					state = chunkAccess.getBlockState(pos);

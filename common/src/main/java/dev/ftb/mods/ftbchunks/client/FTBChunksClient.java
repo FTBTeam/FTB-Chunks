@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -90,7 +91,6 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -344,16 +344,28 @@ public class FTBChunksClient extends FTBChunksCommon {
 	@Override
 	public int blockColor() {
 		Minecraft mc = Minecraft.getInstance();
+
 		mc.submit(() -> {
-			if (mc.hitResult instanceof BlockHitResult && mc.options.hideGui) {
-				ResourceLocation id = Registry.BLOCK.getKey(mc.level.getBlockState(((BlockHitResult) mc.hitResult).getBlockPos()).getBlock());
-				NativeImage image = Screenshot.takeScreenshot(mc.getWindow().getWidth(), mc.getWindow().getHeight(), mc.getMainRenderTarget());
-				int col = image.getPixelRGBA(image.getWidth() / 2, image.getHeight() / 2);
-				String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
-				mc.player.sendMessage(new TextComponent(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent("Click to copy")))), Util.NIL_UUID);
-			} else {
-				mc.player.sendMessage(new TextComponent("You must be looking at a block in F1 mode!"), Util.NIL_UUID);
-			}
+			mc.setScreen(null);
+
+			new Thread(() -> {
+				try {
+					Thread.sleep(50L);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				mc.submit(() -> {
+					if (mc.hitResult instanceof BlockHitResult) {
+						ResourceLocation id = Registry.BLOCK.getKey(mc.level.getBlockState(((BlockHitResult) mc.hitResult).getBlockPos()).getBlock());
+						Window window = mc.getWindow();
+						NativeImage image = Screenshot.takeScreenshot(window.getWidth(), window.getHeight(), mc.getMainRenderTarget());
+						int col = image.getPixelRGBA(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
+						String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
+						mc.player.sendMessage(new TextComponent(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent("Click to copy")))), Util.NIL_UUID);
+					}
+				});
+			}, "Color getter").start();
 		});
 
 		return 1;
@@ -1007,7 +1019,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void rerender(BlockPos pos, BlockState state) {
+	public static void rerender(BlockPos pos) {
 		ChunkPos chunkPos = new ChunkPos(pos);
 		IntOpenHashSet set = rerenderCache.get(chunkPos);
 
@@ -1027,10 +1039,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 		SectionPos sectionPos = p.getSectionPosFTBC();
 
 		short[] positions = p.getPositionsFTBC();
-		BlockState[] states = p.getStatesFTBC();
 
-		for (int i = 0; i < positions.length; ++i) {
-			rerender(sectionPos.relativeToBlockPos(positions[i]), states[i]);
+		for (short position : positions) {
+			rerender(sectionPos.relativeToBlockPos(position));
 		}
 	}
 
@@ -1057,6 +1068,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public static void handlePacket(ClientboundBlockUpdatePacket p) {
-		rerender(p.getPos(), p.getBlockState());
+		rerender(p.getPos());
 	}
 }

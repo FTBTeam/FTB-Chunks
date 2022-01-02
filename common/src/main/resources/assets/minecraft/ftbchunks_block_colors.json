@@ -1,6 +1,7 @@
 {
-	"sandstone": "#F7E9A3",
-	"end_stone": "#F7E9A3",
+	"sand": "#EEE2A7",
+	"sandstone": "#DFD7AD",
+	"end_stone": "#DFD7AD",
 	"lava": "#CA602E",
 	"obsidian": "#150047",
 	"gravel": "#77706D",

@@ -237,6 +237,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	@Override
 	public void login(LoginDataPacket loginData) {
+		FTBChunks.LOGGER.info("Loading FTB Chunks client data from world " + loginData.serverId);
 		FTBChunksWorldConfig.CONFIG.read(loginData.config);
 
 		Path dir = Platform.getGameFolder().resolve("local/ftbchunks/data/" + loginData.serverId);
@@ -510,9 +511,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.enableTexture();
 		RenderSystem.bindTexture(minimapTextureId);
 
-		float zoom = getZoom() / 3.5F;
+		float zoom0 = getZoom();
+		float zoom = zoom0 / 3.5F;
 		MinimapBlurMode blurMode = FTBChunksClientConfig.MINIMAP_BLUR_MODE.get();
-		boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (zoom < 1.5F) : blurMode == MinimapBlurMode.ON;
+		boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (zoom0 < 1.5F) : blurMode == MinimapBlurMode.ON;
 		int filter = minimapBlur ? GL11.GL_LINEAR : GL11.GL_NEAREST;
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
@@ -956,7 +958,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 						MapRegionData data = region.getData();
 
 						if (data != null) {
-							int y = data.height[(x & 511) + (z & 511) * 512] & 0xFFFF;
+							int y = data.height[(x & 511) + (z & 511) * 512];
 
 							if (entity.getY() >= y - 10) {
 								event.add(new EntityMapIcon(entity, icon));

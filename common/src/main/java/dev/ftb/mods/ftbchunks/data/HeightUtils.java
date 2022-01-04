@@ -11,7 +11,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
 public class HeightUtils {
-	public static final int INVALID_HEIGHT = Short.MIN_VALUE + 1;
+	public static final int UNKNOWN = Short.MIN_VALUE + 1;
 
 	public static boolean isWater(BlockState state) {
 		if (state.getBlock() == Blocks.WATER) {
@@ -27,19 +27,19 @@ public class HeightUtils {
 
 	public static BlockPos.MutableBlockPos getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos, int[] currentWaterY) {
 		if (chunkAccess == null) {
-			pos.setY(70);
 			return pos;
 		}
 
+		int bottomY = 0;
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();
 
-		for (int by = topY; by >= 0; by--) {
+		for (int by = topY; by >= bottomY; by--) {
 			pos.setY(by);
 			BlockState state = chunkAccess.getBlockState(pos);
 
 			if (hasCeiling && (by == topY || state.getBlock() == Blocks.BEDROCK)) {
-				for (; by > 0; by--) {
+				for (; by > bottomY; by--) {
 					pos.setY(by);
 					state = chunkAccess.getBlockState(pos);
 
@@ -51,7 +51,7 @@ public class HeightUtils {
 
 			boolean water = isWater(state);
 
-			if (water && currentWaterY[0] == INVALID_HEIGHT) {
+			if (water && currentWaterY[0] == UNKNOWN) {
 				currentWaterY[0] = by;
 			}
 
@@ -61,7 +61,7 @@ public class HeightUtils {
 			}
 		}
 
-		pos.setY(-1);
+		pos.setY(UNKNOWN);
 		return pos;
 	}
 }

@@ -54,7 +54,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		biomeZoomSeed = zs;
 		blocksToUpdate = s;
 		taskStartTime = System.currentTimeMillis();
-		currentWaterY = new int[]{HeightUtils.INVALID_HEIGHT};
+		currentWaterY = new int[]{HeightUtils.UNKNOWN};
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		for (int wi : blocksToUpdate) {
 			int wx = wi % 16;
 			int wz = wi / 16;
-			blockPos.set(blockX + wx, level.getHeight(Heightmap.Types.MOTION_BLOCKING, blockX + wx, blockZ + wz) - 1, blockZ + wz);
+			blockPos.set(blockX + wx, chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING, blockX + wx, blockZ + wz), blockZ + wz);
 			int height = Mth.clamp(HeightUtils.getHeight(level, chunkAccess, blockPos, currentWaterY).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
 			blockPos.setY(height);
 			BlockState state = chunkAccess.getBlockState(blockPos);
@@ -121,12 +121,12 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 			int waterLightAndBiome0 = data.waterLightAndBiome[index] & 0xFFFF;
 			int blockIndex0 = data.getBlockIndex(index);
-			int height0 = data.height[index] & 0xFFFF; // Get old height
+			int height0 = data.height[index]; // Get old height
 
-			blockPos.setY(currentWaterY[0] == HeightUtils.INVALID_HEIGHT ? height : currentWaterY[0]);
+			blockPos.setY(currentWaterY[0] == HeightUtils.UNKNOWN ? height : currentWaterY[0]);
 
 			int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
-			waterLightAndBiome |= (currentWaterY[0] != HeightUtils.INVALID_HEIGHT) ? (1 << 15) : 0; // Water
+			waterLightAndBiome |= (currentWaterY[0] != HeightUtils.UNKNOWN) ? (1 << 15) : 0; // Water
 			waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos) & 15) << 11; // Light
 
 			ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
@@ -161,7 +161,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 				changed = true;
 			}
 
-			currentWaterY[0] = HeightUtils.INVALID_HEIGHT;
+			currentWaterY[0] = HeightUtils.UNKNOWN;
 		}
 
 		if (changed) {

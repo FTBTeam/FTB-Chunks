@@ -70,15 +70,19 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 
 				int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
 
-				if (topY == 0) {
+				if (topY == -1) {
 					return;
 				}
 
-				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x, topY - 1, z);
-				int[] water = new int[]{HeightUtils.INVALID_HEIGHT};
+				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x, topY, z);
+				int[] water = new int[]{HeightUtils.UNKNOWN};
 				y1 = HeightUtils.getHeight(level, chunkAccess, blockPos, water).getY();
 
-				if (water[0] != HeightUtils.INVALID_HEIGHT) {
+				if (y1 == HeightUtils.UNKNOWN) {
+					y1 = 70;
+				}
+
+				if (water[0] != HeightUtils.UNKNOWN) {
 					y1 = Math.max(y1, water[0]);
 				}
 			}

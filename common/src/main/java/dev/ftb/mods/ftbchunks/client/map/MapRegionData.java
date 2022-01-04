@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 
 import javax.imageio.ImageIO;
@@ -13,6 +14,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ public class MapRegionData {
 
 	public MapRegionData(MapRegion r) {
 		region = r;
+		Arrays.fill(height, (short) HeightUtils.UNKNOWN);
 	}
 
 	public int getBlockIndex(int index) {
@@ -72,13 +75,14 @@ public class MapRegionData {
 				BufferedImage grassImage = null;
 				BufferedImage waterImage = null;
 				BufferedImage blocksImage = null;
+				int version = 0;
 
 				while ((ze = zis.getNextEntry()) != null) {
 					switch (ze.getName()) {
 						case "chunks.dat": {
 							DataInputStream stream = new DataInputStream(zis);
 							stream.readByte();
-							int version = stream.readByte();
+							version = stream.readByte();
 							int s = stream.readShort();
 
 							for (int i = 0; i < s; i++) {
@@ -119,6 +123,12 @@ public class MapRegionData {
 					for (int x = 0; x < 512; x++) {
 						int index = x + y * 512;
 						height[index] = (short) ((dataImage.getRGB(x, y) >> 16) & 0xFFFF);
+
+						if (version < 3 && height[index] == 0) {
+							height[index] = (short) HeightUtils.UNKNOWN;
+							region.saveData = true;
+						}
+
 						waterLightAndBiome[index] = (short) (dataImage.getRGB(x, y) & 0xFFFF);
 						foliage[index] = foliageImage.getRGB(x, y);
 						grass[index] = grassImage.getRGB(x, y);
@@ -177,7 +187,7 @@ public class MapRegionData {
 			out.putNextEntry(new ZipEntry("chunks.dat"));
 
 			stream.writeByte(0);
-			stream.writeByte(2);
+			stream.writeByte(3);
 			stream.writeShort(chunkList.size());
 
 			for (MapChunk chunk : chunkList) {

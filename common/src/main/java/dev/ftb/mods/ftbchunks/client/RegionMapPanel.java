@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
+import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import dev.ftb.mods.ftbchunks.integration.MapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -30,7 +31,7 @@ public class RegionMapPanel extends Panel {
 	public double regionZ = 0;
 	public int regionMinX, regionMinZ, regionMaxX, regionMaxZ;
 	public int blockX = 0;
-	public int blockY = 0;
+	public int blockY = HeightUtils.UNKNOWN;
 	public int blockZ = 0;
 	public int blockIndex = 0;
 	public Rect2i visibleArea = new Rect2i(0, 0, 0, 0);
@@ -169,7 +170,7 @@ public class RegionMapPanel extends Panel {
 		blockX = Mth.floor(regionX * 512D);
 		blockZ = Mth.floor(regionZ * 512D);
 		blockIndex = (blockX & 511) + (blockZ & 511) * 512;
-		blockY = 0;
+		blockY = HeightUtils.UNKNOWN;
 
 		MapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
 
@@ -177,7 +178,7 @@ public class RegionMapPanel extends Panel {
 			MapRegionData data = r.getData();
 
 			if (data != null) {
-				blockY = data.height[blockIndex] & 0xFFFF;
+				blockY = data.height[blockIndex];
 			}
 		}
 	}

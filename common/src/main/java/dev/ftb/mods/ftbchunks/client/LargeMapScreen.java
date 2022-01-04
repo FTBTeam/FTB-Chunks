@@ -11,6 +11,7 @@ import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.core.MouseHandlerFTBC;
+import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
@@ -219,7 +220,7 @@ public class LargeMapScreen extends BaseScreen {
 		} else if (super.keyPressed(key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_T)) {
-			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY + 1, regionPanel.blockZ, regionPanel.blockY == 0, dimension.dimension).sendToServer();
+			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY + 1, regionPanel.blockZ, regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension).sendToServer();
 			closeGui(false);
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_F3)) {
@@ -301,9 +302,9 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public void drawForeground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == 0 ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
+		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == HeightUtils.UNKNOWN ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
 
-		if (regionPanel.blockY != 0) {
+		if (regionPanel.blockY != HeightUtils.UNKNOWN) {
 			MapRegion region = dimension.getRegion(XZ.regionFromBlock(regionPanel.blockX, regionPanel.blockZ));
 			MapRegionData data = region.getData();
 

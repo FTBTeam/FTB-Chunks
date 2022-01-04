@@ -36,18 +36,16 @@ public class RenderMapImageTask implements MapTask {
 		region = r;
 	}
 
-	private static int getHeight(MapMode m, int w, short data, short height) {
-		int h = height & 0xFFFF;
-
+	private static int getHeight(MapMode m, int whf, short data, short height) {
 		if ((((data & 0xFFFF) >> 15) & 1) != 0 && m != MapMode.TOPOGRAPHY) {
-			if (w == 0) {
+			if (whf == 0) {
 				return 62;
 			}
 
-			return (h / w) * w + w - 1;
+			return ((int) height / whf) * whf + whf - 1;
 		}
 
-		return h;
+		return height;
 	}
 
 	private int[][] initColors(BiomeBlendMode blendMode, MapRegionData data, ColorsFromRegion getter) {

@@ -4,7 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.map.Waypoint;
+import dev.ftb.mods.ftbchunks.integration.MapIcon;
+import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -13,11 +15,11 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author LatvianModder
@@ -31,10 +33,13 @@ public class RegionMapPanel extends Panel {
 	public int blockY = 0;
 	public int blockZ = 0;
 	public int blockIndex = 0;
+	public Rect2i visibleArea = new Rect2i(0, 0, 0, 0);
+	public final List<MapIcon> mapIcons;
 
 	public RegionMapPanel(LargeMapScreen panel) {
 		super(panel);
 		largeMap = panel;
+		mapIcons = new ArrayList<>();
 	}
 
 	public void updateMinMax() {
@@ -87,19 +92,20 @@ public class RegionMapPanel extends Panel {
 			add(new RegionMapButton(this, region));
 		}
 
-		for (Waypoint waypoint : largeMap.dimension.getWaypoints()) {
-			add(new WaypointButton(this, waypoint));
+		Minecraft mc = Minecraft.getInstance();
+
+		mapIcons.clear();
+		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(mc, largeMap.dimension, mapIcons, MapType.LARGE_MAP));
+
+		if (mapIcons.size() >= 2) {
+			mapIcons.sort(new MapIconComparator(mc.player.position()));
 		}
 
-		ResourceKey<Level> dimId = Minecraft.getInstance().level.dimension();
-
-		for (AbstractClientPlayer player : Minecraft.getInstance().level.players()) {
-			if (largeMap.dimension.dimension == dimId && !player.isInvisibleTo(Minecraft.getInstance().player)) {
-				add(new PlayerButton(this, player));
+		for (MapIcon icon : mapIcons) {
+			if (icon.isVisible(MapType.LARGE_MAP, MathUtils.dist(mc.player.getX(), mc.player.getZ(), icon.getPos().x, icon.getPos().z), false)) {
+				add(new MapIconWidget(this, icon));
 			}
 		}
-
-		FTBChunksClient.addWidgets(this);
 
 		alignWidgets();
 	}
@@ -126,31 +132,16 @@ public class RegionMapPanel extends Panel {
 				double x = (qx - regionMinX) * z;
 				double y = (qy - regionMinZ) * z;
 				w.setPosAndSize((int) x, (int) y, (int) (z * qw), (int) (z * qh));
-			} else if (w instanceof WaypointButton) {
-				double qx = (((WaypointButton) w).waypoint.x + 0.5D) / 512D;
-				double qy = (((WaypointButton) w).waypoint.z + 0.5D) / 512D;
-				int s = Math.max(8, z / 128);
+			} else if (w instanceof MapIconWidget) {
+				MapIconWidget i = (MapIconWidget) w;
+				double s = Math.max(i.mapIcon.isZoomDependant(MapType.LARGE_MAP) ? 0D : 6D, z / 128D * i.mapIcon.getIconScale(MapType.LARGE_MAP));
 
-				double x = (qx - regionMinX) * z - s / 2D;
-				double y = (qy - regionMinZ) * z - s;
-				w.setPosAndSize((int) x, (int) y, s, s);
-			} else if (w instanceof PlayerButton) {
-				double qx = ((PlayerButton) w).playerX / 512D;
-				double qy = ((PlayerButton) w).playerZ / 512D;
-				int s = Math.max(8, z / 128);
-
-				double x = (qx - regionMinX) * z - s / 2D;
-				double y = (qy - regionMinZ) * z - s / 2D;
-				w.setPosAndSize((int) x, (int) y, s, s);
-			} else if (w instanceof CustomMapWidget) {
-				Vec3 pos = ((CustomMapWidget) w).getPos();
-				double qx = (pos.x + 0.5D) / 512D;
-				double qy = (pos.z + 0.5D) / 512D;
-				int s = Math.max(8, z / 128);
-
-				double x = (qx - regionMinX) * z - s / 2D;
-				double y = (qy - regionMinZ) * z - s;
-				w.setPosAndSize((int) x, (int) y, s, s);
+				if (s <= 1D) {
+					w.setSize(0, 0);
+				} else {
+					w.setSize(Mth.ceil(s), Mth.ceil(s));
+					((MapIconWidget) w).updatePosition();
+				}
 			}
 		}
 
@@ -164,11 +155,17 @@ public class RegionMapPanel extends Panel {
 		int dx = (regionMaxX - regionMinX);
 		int dy = (regionMaxZ - regionMinZ);
 
-		double px = getX() - getScrollX();
-		double py = getY() - getScrollY();
+		double px = getScrollX() - getX();
+		double py = getScrollY() - getY();
 
-		regionX = (parent.getMouseX() - px) / (double) largeMap.scrollWidth * dx + regionMinX;
-		regionZ = (parent.getMouseY() - py) / (double) largeMap.scrollHeight * dy + regionMinZ;
+		int topBlockX = Mth.floor((px / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
+		int topBlockZ = Mth.floor((py / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
+		int bottomBlockX = Mth.floor(((px + w) / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
+		int bottomBlockZ = Mth.floor(((py + h) / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
+		visibleArea = new Rect2i(topBlockX, topBlockZ, bottomBlockX - topBlockX + 1, bottomBlockZ - topBlockZ + 1);
+
+		regionX = (parent.getMouseX() + px) / (double) largeMap.scrollWidth * dx + regionMinX;
+		regionZ = (parent.getMouseY() + py) / (double) largeMap.scrollHeight * dy + regionMinZ;
 		blockX = Mth.floor(regionX * 512D);
 		blockZ = Mth.floor(regionZ * 512D);
 		blockIndex = (blockX & 511) + (blockZ & 511) * 512;
@@ -183,28 +180,6 @@ public class RegionMapPanel extends Panel {
 				blockY = data.height[blockIndex] & 0xFFFF;
 			}
 		}
-
-		/*
-		double x1 = ((pcx - startX) * 16D + MathUtils.mod(player.getPosX(), 16D));
-		double z1 = ((pcz - startZ) * 16D + MathUtils.mod(player.getPosZ(), 16D));
-
-		RenderSystem.pushMatrix();
-		RenderSystem.translated(sx + x1 * FTBChunks.TILE_SIZE / 16D, sy + z1 * FTBChunks.TILE_SIZE / 16D, 0D);
-		RenderSystem.rotatef(player.rotationYaw + 180F, 0F, 0F, 1F);
-		RenderSystem.color4f(1F, 1F, 1F, 1F);
-
-		Minecraft.getInstance().getTextureManager().bindTexture(FTBChunksClient.MAP_ICONS);
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		buffer.pos(-8.5, -8, 0).color(255, 255, 255, 100).tex(0F / 16F, 0F / 16F).endVertex();
-		buffer.pos(-8.5, 8, 0).color(255, 255, 255, 100).tex(0F / 16F, 1F / 16F).endVertex();
-		buffer.pos(7.5, 8, 0).color(255, 255, 255, 100).tex(1F / 16F, 1F / 16F).endVertex();
-		buffer.pos(7.5, -8, 0).color(255, 255, 255, 100).tex(1F / 16F, 0F / 16F).endVertex();
-		tessellator.draw();
-
-		// https://minotar.net/avatar/<short uuid>/16
-
-		RenderSystem.popMatrix();
-		*/
 	}
 
 	@Override
@@ -257,10 +232,5 @@ public class RegionMapPanel extends Panel {
 		}
 
 		return false;
-	}
-
-	@Override
-	public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		super.drawBackground(matrixStack, theme, x, y, w, h);
 	}
 }

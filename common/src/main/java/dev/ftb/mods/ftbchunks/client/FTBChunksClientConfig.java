@@ -30,6 +30,8 @@ public interface FTBChunksClientConfig {
 	BooleanValue OWN_CLAIMED_CHUNKS_ON_MAP = CONFIG.getBoolean("own_claimed_chunks_on_map", true).comment("Show your own claimed chunks on the map");
 	BooleanValue IN_WORLD_WAYPOINTS = CONFIG.getBoolean("in_world_waypoints", true).comment("Show waypoints in world");
 	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
+	BooleanValue ONLY_SURFACE_ENTITIES = CONFIG.getBoolean("only_surface_entities", true).comment("Only show entities that are on the surface");
+	DoubleValue WAYPOINT_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Distance at which waypoints start to fade");
 	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
 	IntValue WATER_HEIGHT_FACTOR = CONFIG.getInt("water_height_factor", 8, 0, 128).comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain");
 	EnumValue<BiomeBlendMode> BIOME_BLEND = CONFIG.getEnum("biome_blend", BiomeBlendMode.NAME_MAP).comment("Biome blend");
@@ -47,7 +49,7 @@ public interface FTBChunksClientConfig {
 	BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.getBoolean("large_entities", false).comment("Entities in minimap will be larger");
 	BooleanValue MINIMAP_XYZ = MINIMAP.getBoolean("xyz", true).comment("Show XYZ under minimap");
 	BooleanValue MINIMAP_BIOME = MINIMAP.getBoolean("biome", true).comment("Show biome under minimap");
-	BooleanValue MINIMAP_BLUR = MINIMAP.getBoolean("blur", false).comment("Blurs minimap");
+	EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.getEnum("blur_mode", MinimapBlurMode.NAME_MAP).comment("Blurs minimap");
 	BooleanValue MINIMAP_COMPASS = MINIMAP.getBoolean("compass", true).comment("Adds NWSE compass inside minimap");
 	IntValue MINIMAP_VISIBILITY = MINIMAP.getInt("visibility", 255, 0, 255).comment("Minimap visibility");
 	BooleanValue MINIMAP_ZONE = MINIMAP.getBoolean("zone", true).comment("Show zone (claimed chunk or wilderness) under minimap");
@@ -60,6 +62,7 @@ public interface FTBChunksClientConfig {
 	IntValue WATER_VISIBILITY = CONFIG.getInt("water_visibility", 220, 0, 255).excluded().comment("Advanced option. Water visibility");
 	IntValue GRASS_DARKNESS = CONFIG.getInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
 	IntValue FOLIAGE_DARKNESS = CONFIG.getInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
+	IntValue MINIMAP_ICON_UPDATE_TIMER = CONFIG.getInt("minimap_icon_update_timer", 500, 0, 10000).excluded().comment("Advanced option. Change how often the minimap will refresh icons");
 
 	static boolean hasOtherMinimapMod() {
 		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas");

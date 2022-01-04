@@ -11,6 +11,7 @@ import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.core.MouseHandlerFTBC;
+import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
@@ -116,7 +117,9 @@ public class LargeMapScreen extends BaseScreen {
 					w.y = Mth.floor(player.getY());
 					w.z = Mth.floor(player.getZ());
 					dimension.getWaypoints().add(w);
+					w.update();
 					dimension.saveData = true;
+					RefreshMinimapIconsEvent.trigger();
 					refreshWidgets();
 				}
 
@@ -124,9 +127,11 @@ public class LargeMapScreen extends BaseScreen {
 			}).openGui();
 		}));
 
-		add(syncButton = new SimpleButton(this, /*new TranslationTextComponent("ftbchunks.gui.sync")*/new TextComponent("Currently disabled due to a bug!"), Icons.REFRESH, (b, m) -> {
-			// dimension.sync();
+		/*
+		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), Icons.REFRESH, (b, m) -> {
+			dimension.sync();
 		}));
+		 */
 
 		add(dimensionButton = new SimpleButton(this, new TextComponent(dimension.dimension.location().getPath().replace('_', ' ')), Icons.GLOBE, (b, m) -> {
 			try {
@@ -152,7 +157,7 @@ public class LargeMapScreen extends BaseScreen {
 		//waypointsButton.setPosAndSize(1, 37, 16, 16);
 		//syncButton.setPosAndSize(1, 55, 16, 16);
 		waypointsButton.setPosAndSize(1, 19, 16, 16);
-		syncButton.setPosAndSize(1, 37, 16, 16);
+		//syncButton.setPosAndSize(1, 37, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 	}
@@ -187,7 +192,9 @@ public class LargeMapScreen extends BaseScreen {
 						w.y = regionPanel.blockY;
 						w.z = clickBlockZ;
 						dimension.getWaypoints().add(w);
+						w.update();
 						dimension.saveData = true;
+						RefreshMinimapIconsEvent.trigger();
 						refreshWidgets();
 					}
 
@@ -212,7 +219,7 @@ public class LargeMapScreen extends BaseScreen {
 		} else if (super.keyPressed(key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_T)) {
-			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY == 0 ? -1000 : (regionPanel.blockY + 1), regionPanel.blockZ, dimension.dimension).sendToServer();
+			new TeleportFromMapPacket(regionPanel.blockX, regionPanel.blockY + 1, regionPanel.blockZ, regionPanel.blockY == 0, dimension.dimension).sendToServer();
 			closeGui(false);
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_F3)) {

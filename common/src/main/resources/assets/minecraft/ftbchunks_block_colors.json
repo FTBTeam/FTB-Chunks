@@ -63,5 +63,6 @@
 	"redstone_wire": "#560000",
 	"iron_bars": "ignored",
 	"lily_pad": "#208030",
-	"dead_bush": "#A89061"
+	"dead_bush": "#A89061",
+	"glass": "#CCE5E4"
 }

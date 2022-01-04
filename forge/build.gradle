@@ -34,7 +34,8 @@ dependencies {
 	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
 	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}") { transitive = false }
 
-	modLocalRuntime modCompileOnly("curse.maven:waystones-245755:3309624")
+	// modLocalRuntime modCompileOnly("curse.maven:waystones-245755:3515707")
+	modImplementation("curse.maven:waystones-245755:3515707")
 
 	common(project(path: ":common", configuration: "namedElements")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }

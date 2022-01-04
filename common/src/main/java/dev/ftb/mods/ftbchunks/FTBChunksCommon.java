@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Collection;
 
@@ -50,5 +51,9 @@ public class FTBChunksCommon {
 	}
 
 	public void updateLoadedChunkView(ResourceKey<Level> dimension, Collection<ChunkPos> chunks) {
+	}
+
+	public boolean skipBlock(BlockState state) {
+		return false;
 	}
 }

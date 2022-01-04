@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.simple.BaseC2SMessage;
 import me.shedaniel.architectury.networking.simple.MessageType;
@@ -10,30 +11,31 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
  * @author LatvianModder
  */
 public class TeleportFromMapPacket extends BaseC2SMessage {
 	public final int x, y, z;
+	public final boolean unknownY;
 	public final ResourceKey<Level> dimension;
 
-	public TeleportFromMapPacket(int _x, int _y, int _z, ResourceKey<Level> d) {
+	public TeleportFromMapPacket(int _x, int _y, int _z, boolean uy, ResourceKey<Level> d) {
 		x = _x;
 		y = _y;
 		z = _z;
+		unknownY = uy;
 		dimension = d;
 	}
 
 	TeleportFromMapPacket(FriendlyByteBuf buf) {
-		x = buf.readVarInt();
-		y = buf.readVarInt();
-		z = buf.readVarInt();
+		x = buf.readInt();
+		y = buf.readInt();
+		z = buf.readInt();
+		unknownY = buf.readBoolean();
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 	}
 
@@ -44,53 +46,44 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeVarInt(x);
-		buf.writeVarInt(y);
-		buf.writeVarInt(z);
+		buf.writeInt(x);
+		buf.writeInt(y);
+		buf.writeInt(z);
+		buf.writeBoolean(unknownY);
 		buf.writeResourceLocation(dimension.location());
-	}
-
-	private int getHeight(@Nullable ChunkAccess chunk, int blockX, int blockZ, int topY) {
-		if (chunk == null) {
-			return 70;
-		}
-
-		BlockPos.MutableBlockPos currentBlockPos = new BlockPos.MutableBlockPos();
-
-		for (int by = topY; by > 0; by--) {
-			currentBlockPos.set(blockX, by, blockZ);
-			BlockState state = chunk.getBlockState(currentBlockPos);
-
-			if (by == topY || state.getBlock() == Blocks.BEDROCK) {
-				for (; by > 0; by--) {
-					currentBlockPos.set(blockX, by, blockZ);
-					state = chunk.getBlockState(currentBlockPos);
-
-					if (state.isAir()) {
-						break;
-					}
-				}
-			}
-
-			if (!state.isAir()) {
-				return by;
-			}
-		}
-
-		return 70;
 	}
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
 		ServerPlayer p = (ServerPlayer) context.getPlayer();
-		int topY = p.level.getHeight() + 1; //getActualHeight
+		ServerLevel level = p.getServer().getLevel(dimension);
 
-		int y1 = y == -1000 ? (getHeight(p.level.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true), x, z, topY) + 2) : y;
+		if (level != null && p.hasPermissions(2)) {
+			int y1 = y;
 
-		ServerLevel world = p.getServer().getLevel(dimension);
+			if (unknownY) {
+				ChunkAccess chunkAccess = level.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true);
 
-		if (world != null && p.hasPermissions(2)) {
-			p.teleportTo(world, x + 0.5D, y1 + 0.1D, z + 0.5D, p.yRot, p.xRot);
+				if (chunkAccess == null) {
+					return;
+				}
+
+				int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+
+				if (topY == 0) {
+					return;
+				}
+
+				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x, topY - 1, z);
+				int[] water = new int[]{HeightUtils.INVALID_HEIGHT};
+				y1 = HeightUtils.getHeight(level, chunkAccess, blockPos, water).getY();
+
+				if (water[0] != HeightUtils.INVALID_HEIGHT) {
+					y1 = Math.max(y1, water[0]);
+				}
+			}
+
+			p.teleportTo(level, x + 0.5D, y1 + 2.1D, z + 0.5D, p.yRot, p.xRot);
 		}
 	}
 }

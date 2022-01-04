@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
@@ -139,7 +140,7 @@ public class MapDimension implements MapTask {
 							w.hidden = o.get("hidden").getAsBoolean();
 							w.name = o.get("name").getAsString();
 							w.x = o.get("x").getAsInt();
-							w.y = o.has("y") ? o.get("y").getAsInt() : -1;
+							w.y = o.get("y").getAsInt();
 							w.z = o.get("z").getAsInt();
 							w.color = 0xFFFFFF;
 
@@ -151,16 +152,19 @@ public class MapDimension implements MapTask {
 							}
 
 							if (o.has("type")) {
-								w.type = WaypointType.valueOf(o.get("type").getAsString().toUpperCase());
+								w.type = WaypointType.TYPES.getOrDefault(o.get("type").getAsString(), WaypointType.DEFAULT);
 							}
 
 							waypoints.add(w);
+							w.update();
 						}
 					}
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 			}
+
+			RefreshMinimapIconsEvent.trigger();
 		}
 
 		return waypoints;
@@ -204,7 +208,7 @@ public class MapDimension implements MapTask {
 			o.addProperty("y", w.y);
 			o.addProperty("z", w.z);
 			o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
-			o.addProperty("type", w.type.name().toLowerCase());
+			o.addProperty("type", w.type.id);
 			waypointArray.add(o);
 		}
 

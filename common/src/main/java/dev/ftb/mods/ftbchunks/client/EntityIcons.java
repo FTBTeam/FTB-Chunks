@@ -1,14 +1,21 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import me.shedaniel.architectury.registry.Registries;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.monster.Enemy;
+import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,15 +23,14 @@ import java.util.Map;
 /**
  * @author LatvianModder
  */
-public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?>, ResourceLocation>> {
-	public static final ResourceLocation INVISIBLE = new ResourceLocation("ftbchunks:textures/faces/invisible.png");
-	public static final ResourceLocation NORMAL = new ResourceLocation("ftbchunks:textures/faces/normal.png");
-	public static final ResourceLocation HOSTILE = new ResourceLocation("ftbchunks:textures/faces/hostile.png");
-	public static final Map<EntityType<?>, ResourceLocation> ENTITY_ICONS = new HashMap<>();
+public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?>, Icon>> {
+	public static final Icon NORMAL = Icon.getIcon("ftbchunks:textures/faces/normal.png");
+	public static final Icon HOSTILE = Icon.getIcon("ftbchunks:textures/faces/hostile.png");
+	public static final Map<EntityType<?>, Icon> ENTITY_ICONS = new HashMap<>();
 
 	@Override
-	protected Map<EntityType<?>, ResourceLocation> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
-		Map<EntityType<?>, ResourceLocation> map = new HashMap<>();
+	protected Map<EntityType<?>, Icon> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+		Map<EntityType<?>, Icon> map = new HashMap<>();
 
 		for (Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : Registries.get("ftbchunks").get(Registry.ENTITY_TYPE_REGISTRY).entrySet()) {
 			ResourceLocation id = entry.getKey().location();
@@ -36,14 +42,14 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 			ResourceLocation invisible = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".invisible");
 
 			if (resourceManager.hasResource(invisible)) {
-				map.put(t, INVISIBLE);
+				map.put(t, Icon.EMPTY);
 				continue;
 			}
 
 			ResourceLocation texture = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".png");
 
 			if (resourceManager.hasResource(texture)) {
-				map.put(t, texture);
+				map.put(t, Icon.getIcon(texture));
 			}
 		}
 
@@ -51,8 +57,32 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 	}
 
 	@Override
-	protected void apply(Map<EntityType<?>, ResourceLocation> object, ResourceManager resourceManager, ProfilerFiller profiler) {
+	protected void apply(Map<EntityType<?>, Icon> object, ResourceManager resourceManager, ProfilerFiller profiler) {
 		ENTITY_ICONS.clear();
 		ENTITY_ICONS.putAll(object);
+
+		Minecraft.getInstance().submit(() -> {
+			for (Icon icon : object.values()) {
+				if (icon instanceof ImageIcon) {
+					((ImageIcon) icon).bindTexture();
+					RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+					RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				}
+			}
+		});
+	}
+
+	public static Icon get(Entity entity) {
+		Icon texture = EntityIcons.ENTITY_ICONS.get(entity.getType());
+
+		if (texture == null || !FTBChunksClientConfig.MINIMAP_ENTITY_HEADS.get()) {
+			if (entity instanceof Enemy) {
+				return EntityIcons.HOSTILE;
+			} else {
+				return EntityIcons.NORMAL;
+			}
+		}
+
+		return texture;
 	}
 }

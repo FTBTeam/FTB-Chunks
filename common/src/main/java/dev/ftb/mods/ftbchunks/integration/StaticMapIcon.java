@@ -20,7 +20,7 @@ public class StaticMapIcon extends MapIcon {
 	}
 
 	@Override
-	public Vec3 getPos() {
+	public Vec3 getPos(float delta) {
 		return pos;
 	}
 

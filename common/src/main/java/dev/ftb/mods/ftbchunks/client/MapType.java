@@ -1,16 +1,19 @@
 package dev.ftb.mods.ftbchunks.client;
 
 public enum MapType {
-	LARGE_MAP(false),
-	MINIMAP(true);
+	LARGE_MAP,
+	MINIMAP,
+	WORLD_ICON;
 
-	private final boolean minimap;
-
-	MapType(boolean m) {
-		minimap = m;
+	public boolean isLargeMap() {
+		return this == LARGE_MAP;
 	}
 
 	public boolean isMinimap() {
-		return minimap;
+		return this == MINIMAP;
+	}
+
+	public boolean isWorldIcon() {
+		return this == WORLD_ICON;
 	}
 }

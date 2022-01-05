@@ -17,7 +17,7 @@ public class WaystoneMapIcon extends StaticMapIcon {
 	}
 
 	@Override
-	public int getImportance() {
+	public int getPriority() {
 		return 50;
 	}
 

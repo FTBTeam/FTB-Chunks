@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
@@ -8,12 +9,15 @@ import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
@@ -36,7 +40,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 
 	@Override
 	public boolean isVisible(MapType mapType, double distanceToPlayer, boolean outsideVisibleArea) {
-		return !outsideVisibleArea || distanceToPlayer <= (mapType.isMinimap() ? waypoint.minimapDistance : waypoint.inWorldDistance);
+		return (!outsideVisibleArea || distanceToPlayer <= (mapType.isMinimap() ? waypoint.minimapDistance : waypoint.inWorldDistance)) && (!mapType.isWorldIcon() || distanceToPlayer >= 0.5F);
 	}
 
 	@Override
@@ -45,7 +49,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 	}
 
 	@Override
-	public int getImportance() {
+	public int getPriority() {
 		return 1000;
 	}
 
@@ -133,16 +137,28 @@ public class WaypointMapIcon extends StaticMapIcon {
 
 	public void checkIcon() {
 		if (icon == Icon.EMPTY || outsideIcon == Icon.EMPTY) {
-			Color4I tint = Color4I.rgb(waypoint.color);
-			Color4I col = waypoint.hidden ? Color4I.WHITE.withAlpha(130) : Color4I.WHITE;
-			icon = waypoint.type.icon.withTint(tint).withColor(col);
-			outsideIcon = waypoint.type.outsideIcon.withTint(tint).withColor(col);
+			Color4I tint = Color4I.rgb(waypoint.color).withAlpha(waypoint.hidden ? 130 : 255);
+			icon = waypoint.type.icon.withTint(tint);
+			outsideIcon = waypoint.type.outsideIcon.withTint(tint);
 		}
 	}
 
 	@Override
 	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
 		checkIcon();
-		(outsideVisibleArea ? outsideIcon : icon).draw(stack, x, y, w, h);
+		(outsideVisibleArea || mapType.isWorldIcon() ? outsideIcon : icon).draw(stack, x, y, w, h);
+
+		if (!outsideVisibleArea && mapType.isWorldIcon()) {
+			Minecraft mc = Minecraft.getInstance();
+			String ds = Mth.ceil(MathUtils.dist(pos.x, pos.y, pos.z, mc.player.getX(), mc.player.getY(), mc.player.getZ())) + " m";
+			int nw = mc.font.width(waypoint.name);
+			int dw = mc.font.width(ds);
+			Color4I.DARK_GRAY.withAlpha(200).draw(stack, x + (w - nw) / 2 - 2, y - 14, nw + 4, 12);
+			Color4I.DARK_GRAY.withAlpha(200).draw(stack, x + (w - dw) / 2 - 2, y + 18, dw + 4, 12);
+			mc.font.drawShadow(stack, waypoint.name, x + (w - nw) / 2F, y - 12F, 0xFFFFFFFF);
+			mc.font.drawShadow(stack, ds, x + (w - dw) / 2F, y + 20F, 0xFFFFFFFF);
+			RenderSystem.enableBlend();
+			RenderSystem.enableDepthTest();
+		}
 	}
 }

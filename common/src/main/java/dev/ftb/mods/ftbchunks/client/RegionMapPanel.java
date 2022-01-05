@@ -99,11 +99,11 @@ public class RegionMapPanel extends Panel {
 		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(mc, largeMap.dimension, mapIcons, MapType.LARGE_MAP));
 
 		if (mapIcons.size() >= 2) {
-			mapIcons.sort(new MapIconComparator(mc.player.position()));
+			mapIcons.sort(new MapIconComparator(mc.player.position(), 1F));
 		}
 
 		for (MapIcon icon : mapIcons) {
-			if (icon.isVisible(MapType.LARGE_MAP, MathUtils.dist(mc.player.getX(), mc.player.getZ(), icon.getPos().x, icon.getPos().z), false)) {
+			if (icon.isVisible(MapType.LARGE_MAP, MathUtils.dist(mc.player.getX(), mc.player.getZ(), icon.getPos(1F).x, icon.getPos(1F).z), false)) {
 				add(new MapIconWidget(this, icon));
 			}
 		}
@@ -141,7 +141,7 @@ public class RegionMapPanel extends Panel {
 					w.setSize(0, 0);
 				} else {
 					w.setSize(Mth.ceil(s), Mth.ceil(s));
-					((MapIconWidget) w).updatePosition();
+					((MapIconWidget) w).updatePosition(1F);
 				}
 			}
 		}

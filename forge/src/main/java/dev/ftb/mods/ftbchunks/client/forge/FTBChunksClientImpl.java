@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.forge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -11,6 +12,6 @@ public class FTBChunksClientImpl {
 	}
 
 	private static void renderWorldLastForge(RenderWorldLastEvent event) {
-		((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(event.getMatrixStack());
+		((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(event.getMatrixStack(), event.getProjectionMatrix(), Minecraft.getInstance().getEntityRenderDispatcher().camera, event.getPartialTicks());
 	}
 }

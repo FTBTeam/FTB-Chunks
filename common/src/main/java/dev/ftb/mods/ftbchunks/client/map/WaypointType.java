@@ -17,7 +17,7 @@ public class WaypointType {
 		return type;
 	}
 
-	public static final WaypointType DEFAULT = add("default").outsideIcon("ftbchunks:textures/waypoint_default_edge.png").canChangeColor();
+	public static final WaypointType DEFAULT = add("default").outsideIcon("ftbchunks:textures/waypoint_default_outside.png").canChangeColor();
 	public static final WaypointType DEATH = add("death");
 
 	public final String id;

@@ -24,13 +24,17 @@ public class EntityMapIcon extends MapIcon {
 	}
 
 	@Override
-	public Vec3 getPos() {
-		return entity.position();
+	public Vec3 getPos(float delta) {
+		if (delta >= 1F) {
+			return entity.position();
+		}
+
+		return entity.getPosition(delta);
 	}
 
 	@Override
 	public boolean isVisible(MapType mapType, double distanceToPlayer, boolean outsideVisibleArea) {
-		return entity instanceof AbstractClientPlayer || !outsideVisibleArea;
+		return !mapType.isWorldIcon() && (entity instanceof AbstractClientPlayer || !outsideVisibleArea);
 	}
 
 	@Override
@@ -44,7 +48,7 @@ public class EntityMapIcon extends MapIcon {
 	}
 
 	@Override
-	public int getImportance() {
+	public int getPriority() {
 		return entity instanceof LocalPlayer ? 150 : entity instanceof AbstractClientPlayer ? 100 : 0;
 	}
 

@@ -11,6 +11,6 @@ public class FTBChunksClientImpl {
 	}
 
 	private static void renderWorldLastFabric(WorldRenderContext context) {
-		((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(context.matrixStack());
+		((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(context.matrixStack(), context.projectionMatrix(), context.camera(), context.tickDelta());
 	}
 }

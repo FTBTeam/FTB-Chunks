@@ -7,14 +7,16 @@ import java.util.Comparator;
 
 public class MapIconComparator implements Comparator<MapIcon> {
 	public final Vec3 pos;
+	public final float delta;
 
-	public MapIconComparator(Vec3 p) {
+	public MapIconComparator(Vec3 p, float d) {
 		pos = p;
+		delta = d;
 	}
 
 	@Override
 	public int compare(MapIcon o1, MapIcon o2) {
-		int i = Integer.compare(o1.getImportance(), o2.getImportance());
-		return i == 0 ? Double.compare(o2.getPos().distanceToSqr(pos), o1.getPos().distanceToSqr(pos)) : i;
+		int i = Integer.compare(o1.getPriority(), o2.getPriority());
+		return i == 0 ? Double.compare(o2.getPos(delta).distanceToSqr(pos), o1.getPos(delta).distanceToSqr(pos)) : i;
 	}
 }

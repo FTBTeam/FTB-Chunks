@@ -12,6 +12,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
@@ -31,6 +32,7 @@ import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.core.BiomeManagerFTBC;
 import dev.ftb.mods.ftbchunks.core.ClientboundSectionBlocksUpdatePacketFTBC;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
+import dev.ftb.mods.ftbchunks.integration.InWorldMapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
@@ -47,6 +49,7 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.util.ClientUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
@@ -156,8 +159,12 @@ public class FTBChunksClient extends FTBChunksCommon {
 	private double prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get();
 	private long lastZoomTime = 0L;
 	private final List<MapIcon> mapIcons = new ArrayList<>();
+	private final List<InWorldMapIcon> inWorldMapIcons = new ArrayList<>();
 	private long lastMapIconUpdate = 0L;
 	private final List<WaypointMapIcon> visibleWaypoints = new ArrayList<>();
+
+	private static Matrix4f worldMatrix;
+	private static Vec3 cameraPos;
 
 	@Override
 	public void init() {
@@ -488,6 +495,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 		double playerY = Mth.lerp(tickDelta, prevPlayerY, currentPlayerY);
 		double playerZ = Mth.lerp(tickDelta, prevPlayerZ, currentPlayerZ);
 		double guiScale = mc.getWindow().getGuiScale();
+		int ww = mc.getWindow().getGuiScaledWidth();
+		int wh = mc.getWindow().getGuiScaledHeight();
 		MapDimension dim = MapDimension.getCurrent();
 
 		if (dim.dimension != mc.level.dimension()) {
@@ -555,8 +564,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 		int s = (int) (64D * scale);
 		double s2d = s / 2D;
 		float s2f = s / 2F;
-		int x = FTBChunksClientConfig.MINIMAP_POSITION.get().getX(mc.getWindow().getGuiScaledWidth(), s);
-		int y = FTBChunksClientConfig.MINIMAP_POSITION.get().getY(mc.getWindow().getGuiScaledHeight(), s);
+		int x = FTBChunksClientConfig.MINIMAP_POSITION.get().getX(ww, s);
+		int y = FTBChunksClientConfig.MINIMAP_POSITION.get().getY(wh, s);
 		int z = 0;
 
 		float border = 0F;
@@ -658,12 +667,12 @@ public class FTBChunksClient extends FTBChunksCommon {
 			MapIconEvent.MINIMAP.invoker().accept(new MapIconEvent(mc, dim, mapIcons, MapType.MINIMAP));
 
 			if (mapIcons.size() >= 2) {
-				mapIcons.sort(new MapIconComparator(mc.player.position()));
+				mapIcons.sort(new MapIconComparator(mc.player.position(), tickDelta));
 			}
 		}
 
 		for (MapIcon icon : mapIcons) {
-			Vec3 pos = icon.getPos();
+			Vec3 pos = icon.getPos(tickDelta);
 			double distance = MathUtils.dist(playerX, playerZ, pos.x, pos.z);
 			double d = distance * scale * zoom;
 
@@ -759,12 +768,68 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		RenderSystem.enableDepthTest();
+
+		if (worldMatrix != null) {
+			GuiHelper.setupDrawing();
+			float ww2 = ww / 2F;
+			float wh2 = wh / 2F;
+			InWorldMapIcon iconOver = null;
+
+			for (MapIcon icon : mapIcons) {
+				Vec3 pos = icon.getPos(tickDelta);
+				double playerDist = MathUtils.dist(pos.x, pos.z, playerX, playerZ);
+
+				if (icon.isVisible(MapType.WORLD_ICON, playerDist, false)) {
+					Vector4f v = new Vector4f((float) (pos.x - cameraPos.x), (float) (pos.y - cameraPos.y), (float) (pos.z - cameraPos.z), 1F);
+					v.transform(worldMatrix);
+					v.perspectiveDivide();
+
+					// need to remove v.z() < 1F check, because clipping plane is 1e3. Use other method to check if icon is behind camera
+					if (v.z() > 0F && v.z() < 1F) {
+						float ix = ww2 + v.x() * ww2;
+						float iy = wh2 - v.y() * wh2;
+						double mouseDist = MathUtils.dist(ix, iy, ww2, wh2);
+						InWorldMapIcon inWorldMapIcon = new InWorldMapIcon(icon, ix, iy, playerDist, mouseDist);
+
+						if (mouseDist <= 5D && (iconOver == null || iconOver.distanceToMouse > mouseDist)) {
+							iconOver = inWorldMapIcon;
+						}
+
+						inWorldMapIcons.add(inWorldMapIcon);
+					}
+				}
+			}
+
+			if (iconOver != null) {
+				iconOver.isMouseOver = true;
+			}
+
+			for (InWorldMapIcon icon : inWorldMapIcons) {
+				float iconScale = icon.isMouseOver ? 0.5F : 0.25F;
+
+				matrixStack.pushPose();
+				matrixStack.translate(icon.x, icon.y, icon.isMouseOver ? 50F : -100F);
+				matrixStack.scale(iconScale, iconScale, 1F);
+				icon.icon.draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, !icon.isMouseOver);
+				matrixStack.popPose();
+			}
+
+			inWorldMapIcons.clear();
+		}
 	}
 
-	public void renderWorldLast(PoseStack ms) {
+	public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Camera camera, float tickDelta) {
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.options.hideGui || !FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get() || MapManager.inst == null || mc.level == null || mc.player == null) {
+		if (mc.options.hideGui || MapManager.inst == null || mc.level == null || mc.player == null) {
+			return;
+		}
+
+		worldMatrix = projectionMatrix.copy();
+		worldMatrix.multiply(poseStack.last().pose());
+		cameraPos = camera.getPosition();
+
+		if (!FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
 			return;
 		}
 
@@ -807,13 +872,12 @@ public class FTBChunksClient extends FTBChunksCommon {
 		if (visibleWaypoints.isEmpty()) {
 			return;
 		} else if (visibleWaypoints.size() >= 2) {
-			visibleWaypoints.sort(new MapIconComparator(mc.player.position()));
+			visibleWaypoints.sort(new MapIconComparator(mc.player.position(), tickDelta));
 		}
 
-		Camera camera = Minecraft.getInstance().getEntityRenderDispatcher().camera;
 		Vec3 cameraPos = camera.getPosition();
-		ms.pushPose();
-		ms.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+		poseStack.pushPose();
+		poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
 		VertexConsumer depthBuffer = mc.renderBuffers().bufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 
@@ -827,13 +891,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 			int g = (waypoint.waypoint.color >> 8) & 0xFF;
 			int b = (waypoint.waypoint.color >> 0) & 0xFF;
 
-			ms.pushPose();
-			ms.translate(waypoint.pos.x, 0, waypoint.pos.z);
-			ms.mulPose(Vector3f.YP.rotationDegrees((float) (-angle - 135D)));
+			poseStack.pushPose();
+			poseStack.translate(waypoint.pos.x, 0, waypoint.pos.z);
+			poseStack.mulPose(Vector3f.YP.rotationDegrees((float) (-angle - 135D)));
 
 			float s = 0.6F;
 
-			Matrix4f m = ms.last().pose();
+			Matrix4f m = poseStack.last().pose();
 
 			depthBuffer.vertex(m, -s, 0, s).color(r, g, b, waypoint.alpha).uv(0F, 1F).endVertex();
 			depthBuffer.vertex(m, -s, h, s).color(r, g, b, waypoint.alpha).uv(0F, 0F).endVertex();
@@ -845,10 +909,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 			depthBuffer.vertex(m, s, h2, -s).color(r, g, b, 0).uv(1F, 0F).endVertex();
 			depthBuffer.vertex(m, s, h, -s).color(r, g, b, waypoint.alpha).uv(1F, 1F).endVertex();
 
-			ms.popPose();
+			poseStack.popPose();
 		}
 
-		ms.popPose();
+		poseStack.popPose();
 
 		mc.renderBuffers().bufferSource().endBatch(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
 		visibleWaypoints.clear();

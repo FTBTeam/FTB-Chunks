@@ -23,6 +23,7 @@ public class MapIconWidget extends Widget {
 	@Override
 	public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		if (width > 0 && height > 0) {
+			updatePosition(regionMapPanel.getPartialTicks());
 			mapIcon.draw(MapType.LARGE_MAP, matrixStack, x, y, w, h, false);
 		}
 	}
@@ -52,23 +53,14 @@ public class MapIconWidget extends Widget {
 		return super.keyPressed(key);
 	}
 
-	public void updatePosition() {
+	public void updatePosition(float delta) {
 		int z = regionMapPanel.largeMap.getRegionButtonSize();
-		Vec3 pos = mapIcon.getPos();
+		Vec3 pos = mapIcon.getPos(delta);
 		double qx = pos.x / 512D;
 		double qy = pos.z / 512D;
 
 		double x = (qx - regionMapPanel.regionMinX) * z - width / 2D;
 		double y = (qy - regionMapPanel.regionMinZ) * z - (mapIcon.isIconOnEdge(MapType.LARGE_MAP, false) ? height : (height / 2D));
 		setPos(Mth.floor(x), Mth.floor(y));
-	}
-
-	@Override
-	public void tick() {
-		super.tick();
-
-		if (width > 0 && height > 0) {
-			updatePosition();
-		}
 	}
 }

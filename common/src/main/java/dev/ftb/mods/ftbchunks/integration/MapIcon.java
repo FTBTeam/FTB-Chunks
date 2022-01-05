@@ -15,10 +15,10 @@ import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
 public abstract class MapIcon {
-	public abstract Vec3 getPos();
+	public abstract Vec3 getPos(float delta);
 
 	public boolean isVisible(MapType mapType, double distanceToPlayer, boolean outsideVisibleArea) {
-		return true;
+		return !mapType.isWorldIcon();
 	}
 
 	public double getIconScale(MapType mapType) {
@@ -33,12 +33,12 @@ public abstract class MapIcon {
 		return false;
 	}
 
-	public int getImportance() {
+	public int getPriority() {
 		return 0;
 	}
 
 	public void addTooltip(TooltipList list) {
-		list.styledString(String.format("%,d m", Mth.ceil(MathUtils.dist(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ(), getPos().x, getPos().z))), ChatFormatting.GRAY);
+		list.styledString(String.format("%,d m", Mth.ceil(MathUtils.dist(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ(), getPos(1F).x, getPos(1F).z))), ChatFormatting.GRAY);
 	}
 
 	public boolean mousePressed(LargeMapScreen screen, MouseButton button) {
@@ -47,7 +47,7 @@ public abstract class MapIcon {
 
 	public boolean keyPressed(LargeMapScreen screen, Key key) {
 		if (key.is(GLFW.GLFW_KEY_T)) {
-			Vec3 v = getPos();
+			Vec3 v = getPos(1F);
 			new TeleportFromMapPacket(Mth.floor(v.x), Mth.floor(v.y), Mth.floor(v.z), false, screen.dimension.dimension).sendToServer();
 			screen.closeGui(false);
 			return true;

@@ -24,21 +24,21 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.14,)"
+versionRange = "[1.18.1,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "architectury"
 mandatory = true
-versionRange = "[1.20.28,)"
+versionRange = "[3.4.9,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftblibrary"
 mandatory = true
-versionRange = "[1605.3.1-build.56,)"
+versionRange = "[1801.3.5-build.104,)"
 ordering = "AFTER"
 side = "BOTH"
 

@@ -596,9 +596,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		Matrix4f m = matrixStack.last().pose();
 
-		/*
-		// See AdvancementTabGui
+		// See AdvancementTab
 		RenderSystem.colorMask(false, false, false, false);
+		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 		RenderSystem.setShaderTexture(0, CIRCLE_MASK);
 		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2f + border, -s2f + border, 0F).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
@@ -611,7 +611,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 		matrixStack.mulPose(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
-		 */
 
 		float s2fb = s2f - border;
 		float offX = 0.5F + (float) ((MathUtils.mod(playerX, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
@@ -825,7 +824,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 				float iconScale = icon.isMouseOver ? 0.5F : 0.25F;
 
 				matrixStack.pushPose();
-				matrixStack.translate(icon.x, icon.y, icon.isMouseOver ? 50F : -100F);
+				matrixStack.translate(icon.x, icon.y, -200F);
 				matrixStack.scale(iconScale, iconScale, 1F);
 				icon.icon.draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, !icon.isMouseOver);
 				matrixStack.popPose();

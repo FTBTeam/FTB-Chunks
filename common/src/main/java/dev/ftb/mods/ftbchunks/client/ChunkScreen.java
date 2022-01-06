@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
@@ -33,7 +34,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -183,13 +184,9 @@ public class ChunkScreen extends BaseScreen {
 
 	@Override
 	public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder buffer = tessellator.getBuilder();
 		Player player = Minecraft.getInstance().player;
-		ChunkPos chunkPos = player.chunkPosition();
-		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
-		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
 
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
@@ -202,29 +199,29 @@ public class ChunkScreen extends BaseScreen {
 		RenderSystem.lineWidth(Math.max(2.5F, (float) Minecraft.getInstance().getWindow().getWidth() / 1920.0F * 2.5F));
 
 		RenderSystem.enableTexture();
-		RenderSystem.bindTexture(FTBChunksClient.minimapTextureId);
+		RenderSystem.bindTextureForSetup(FTBChunksClient.minimapTextureId);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+		RenderSystem.setShaderTexture(0, FTBChunksClient.minimapTextureId);
 		GuiHelper.drawTexturedRect(matrixStack, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			RenderSystem.disableTexture();
 
+			RenderSystem.setShader(GameRenderer::getPositionColorShader);
+			RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 			buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+			Matrix4f m = matrixStack.last().pose();
 
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				buffer.vertex(sx, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
-				buffer.vertex(sx + FTBChunks.MINIMAP_SIZE, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
+				buffer.vertex(m, sx, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
+				buffer.vertex(m, sx + FTBChunks.MINIMAP_SIZE, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
 			}
 
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				buffer.vertex(sx + gx * FTBChunks.TILE_SIZE, sy, 0).color(r, g, b, a).endVertex();
-				buffer.vertex(sx + gx * FTBChunks.TILE_SIZE, sy + FTBChunks.MINIMAP_SIZE, 0).color(r, g, b, a).endVertex();
+				buffer.vertex(m, sx + gx * FTBChunks.TILE_SIZE, sy, 0).color(r, g, b, a).endVertex();
+				buffer.vertex(m, sx + gx * FTBChunks.TILE_SIZE, sy + FTBChunks.MINIMAP_SIZE, 0).color(r, g, b, a).endVertex();
 			}
-
-			tessellator.end();
-
-			buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
 
 			for (ChunkButton button : chunkButtons) {
 				MapChunk chunk = button.chunk;
@@ -236,14 +233,14 @@ public class ChunkScreen extends BaseScreen {
 				int cx = button.getX();
 				int cy = button.getY();
 
-				buffer.vertex(cx, cy, 0).color(255, 0, 0, 100).endVertex();
-				buffer.vertex(cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
+				buffer.vertex(m, cx, cy, 0).color(255, 0, 0, 100).endVertex();
+				buffer.vertex(m, cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
 
-				buffer.vertex(cx + FTBChunks.TILE_SIZE / 2F, cy, 0).color(255, 0, 0, 100).endVertex();
-				buffer.vertex(cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
+				buffer.vertex(m, cx + FTBChunks.TILE_SIZE / 2F, cy, 0).color(255, 0, 0, 100).endVertex();
+				buffer.vertex(m, cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
 
-				buffer.vertex(cx, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
-				buffer.vertex(cx + FTBChunks.TILE_SIZE / 2F, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
+				buffer.vertex(m, cx, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
+				buffer.vertex(m, cx + FTBChunks.TILE_SIZE / 2F, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 100).endVertex();
 			}
 
 			tessellator.end();

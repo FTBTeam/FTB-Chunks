@@ -807,7 +807,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 						double mouseDist = MathUtils.dist(ix, iy, ww2, wh2);
 						InWorldMapIcon inWorldMapIcon = new InWorldMapIcon(icon, ix, iy, playerDist, mouseDist);
 
-						if (mouseDist <= 5D && (iconOver == null || iconOver.distanceToMouse > mouseDist)) {
+						if (mouseDist <= 5D && (iconOver == null || iconOver.distanceToMouse() > mouseDist)) {
 							iconOver = inWorldMapIcon;
 						}
 
@@ -816,17 +816,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 				}
 			}
 
-			if (iconOver != null) {
-				iconOver.isMouseOver = true;
-			}
-
 			for (InWorldMapIcon icon : inWorldMapIcons) {
-				float iconScale = icon.isMouseOver ? 0.5F : 0.25F;
+				float iconScale = icon == iconOver ? 0.5F : 0.25F;
 
 				matrixStack.pushPose();
-				matrixStack.translate(icon.x, icon.y, -200F);
+				matrixStack.translate(icon.x(), icon.y(), icon == iconOver ? 50F : -100F);
 				matrixStack.scale(iconScale, iconScale, 1F);
-				icon.icon.draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, !icon.isMouseOver);
+				icon.icon().draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, icon != iconOver);
 				matrixStack.popPose();
 			}
 

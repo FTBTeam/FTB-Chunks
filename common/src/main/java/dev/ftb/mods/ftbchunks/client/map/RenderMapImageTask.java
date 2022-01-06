@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
@@ -12,7 +13,6 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.TeamBase;
-import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;

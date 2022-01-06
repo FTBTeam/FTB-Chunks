@@ -1,17 +1,12 @@
 package dev.ftb.mods.ftbchunks.compat.waystones;
 
 import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
-import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.blay09.mods.waystones.api.IWaystone;
-import net.blay09.mods.waystones.api.KnownWaystonesEvent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,16 +23,18 @@ public class WaystonesCompat {
 		MapIconEvent.LARGE_MAP.register(WaystonesCompat::mapWidgets);
 	}
 
+	/*
 	@SubscribeEvent
 	public static void onWaystonesReceived(KnownWaystonesEvent event) {
 		WAYSTONES.clear();
 
 		for (IWaystone w : event.getWaystones()) {
-			WAYSTONES.computeIfAbsent(w.getDimension(), k -> new ArrayList<>()).add(new WaystoneMapIcon(w));
+			WAYSTONES.computeIfAbsent(w.getDimension(), k -> new ArrayList<>()).add(new WaystoneMapIcon(w.getPos(), w.getName(), w.isGlobal()));
 		}
 
 		RefreshMinimapIconsEvent.trigger();
 	}
+	 */
 
 	private static void mapWidgets(MapIconEvent event) {
 		List<WaystoneMapIcon> list = WAYSTONES.getOrDefault(event.getDimension(), Collections.emptyList());

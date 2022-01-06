@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.architectury.hooks.level.entity.PlayerHooks;
+import dev.architectury.utils.NbtType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
@@ -12,8 +14,6 @@ import dev.ftb.mods.ftbteams.data.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.property.PrivacyProperty;
-import me.shedaniel.architectury.hooks.PlayerHooks;
-import me.shedaniel.architectury.utils.NbtType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;

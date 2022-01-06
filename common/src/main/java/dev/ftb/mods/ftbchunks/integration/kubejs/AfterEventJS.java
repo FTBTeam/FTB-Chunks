@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.integration.kubejs;
 
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.latvian.kubejs.entity.EntityEventJS;
-import dev.latvian.kubejs.entity.EntityJS;
-import dev.latvian.kubejs.player.ServerPlayerJS;
-import dev.latvian.kubejs.world.WorldJS;
+import dev.latvian.mods.kubejs.entity.EntityEventJS;
+import dev.latvian.mods.kubejs.entity.EntityJS;
+import dev.latvian.mods.kubejs.player.ServerPlayerJS;
+import dev.latvian.mods.kubejs.world.WorldJS;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +19,8 @@ public class AfterEventJS extends EntityEventJS {
 	}
 
 	@Override
-	public WorldJS getWorld() {
-		return worldOf(source.getLevel());
+	public WorldJS getLevel() {
+		return levelOf(source.getLevel());
 	}
 
 	@Override

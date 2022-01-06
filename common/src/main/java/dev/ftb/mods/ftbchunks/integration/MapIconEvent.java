@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.integration;
 
+import dev.architectury.event.Event;
+import dev.architectury.event.EventFactory;
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import me.shedaniel.architectury.event.Event;
-import me.shedaniel.architectury.event.EventFactory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;

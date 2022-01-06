@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.architectury.registry.registries.Registries;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
-import me.shedaniel.architectury.registry.Registries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;

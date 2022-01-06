@@ -1,5 +1,5 @@
 plugins {
-	id "com.github.johnrengelman.shadow" version "7.1.2"
+	id "com.github.johnrengelman.shadow" version "7.0.0"
 	id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
@@ -16,28 +16,46 @@ configurations {
 	compileClasspath.extendsFrom common
 	runtimeClasspath.extendsFrom common
 	developmentForge.extendsFrom common
+	dev
 }
 
 loom {
 	forge {
-		mixinConfigs = ["ftbchunks-common.mixins.json"]
+		mixinConfigs = [
+				/*"ftblibrary-forge.mixins.json", */
+				"ftblibrary-common.mixins.json"
+		]
+	}
+}
+
+artifacts {
+	dev(jar)
+}
+
+repositories {
+	maven {
+		name "ModMaven (JEI)"
+		url "https://modmaven.dev/"
+		content {
+			includeGroup "mezz.jei"
+		}
 	}
 }
 
 dependencies {
 	forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
+	modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
-	modApi "me.shedaniel:architectury-forge:${rootProject.architectury_version}"
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}") { transitive = false }
 	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
 	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}") { transitive = false }
 
-	// modLocalRuntime modCompileOnly("curse.maven:waystones-245755:3515707")
-	modImplementation("curse.maven:waystones-245755:3515707")
+	// modImplementation("curse.maven:balm-531761:${balm_forge_version}")
+	// modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
 
-	common(project(path: ":common", configuration: "namedElements")) { transitive false }
+	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
 }
 
@@ -92,7 +110,7 @@ if (ENV.CURSEFORGE_KEY) {
 			id = project.curseforge_id_forge
 			releaseType = project.curseforge_type
 			addGameVersion "Forge"
-			addGameVersion "1.16.5"
+			addGameVersion "1.18.1"
 			mainArtifact(remapJar.archivePath)
 			relations {
 				requiredDependency 'architectury-forge'

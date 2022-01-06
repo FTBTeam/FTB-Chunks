@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.forge;
 
+import dev.architectury.platform.Platform;
+import dev.architectury.platform.forge.EventBuses;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.compat.waystones.WaystonesCompat;
-import me.shedaniel.architectury.platform.Platform;
-import me.shedaniel.architectury.platform.forge.EventBuses;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 

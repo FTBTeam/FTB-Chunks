@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.simple.BaseS2CMessage;
+import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.networking.simple.BaseS2CMessage;
-import me.shedaniel.architectury.networking.simple.MessageType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 

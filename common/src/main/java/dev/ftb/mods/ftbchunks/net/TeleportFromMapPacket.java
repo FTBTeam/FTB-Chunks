@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.simple.BaseC2SMessage;
+import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.data.HeightUtils;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.networking.simple.BaseC2SMessage;
-import me.shedaniel.architectury.networking.simple.MessageType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
@@ -87,7 +87,7 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 				}
 			}
 
-			p.teleportTo(level, x + 0.5D, y1 + 2.1D, z + 0.5D, p.yRot, p.xRot);
+			p.teleportTo(level, x + 0.5D, y1 + 2.1D, z + 0.5D, p.getYRot(), p.getXRot());
 		}
 	}
 }

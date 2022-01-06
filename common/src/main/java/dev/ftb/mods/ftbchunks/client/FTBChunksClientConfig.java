@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
@@ -11,7 +12,6 @@ import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
 import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
 import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
 import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 

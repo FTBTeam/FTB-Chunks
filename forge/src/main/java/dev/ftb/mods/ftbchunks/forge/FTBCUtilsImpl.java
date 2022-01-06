@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.forge;
 
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.extensions.IAbstractRailBlock;
+import net.minecraftforge.common.extensions.IForgeBaseRailBlock;
 
 public class FTBCUtilsImpl {
 	public static boolean isRail(Block block) {
-		return block instanceof IAbstractRailBlock;
+		return block instanceof IForgeBaseRailBlock;
 	}
 }

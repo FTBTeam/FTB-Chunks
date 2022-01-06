@@ -1,5 +1,8 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.architectury.hooks.LevelResourceHooks;
+import dev.architectury.hooks.level.entity.PlayerHooks;
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -7,9 +10,6 @@ import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
-import me.shedaniel.architectury.hooks.LevelResourceHooks;
-import me.shedaniel.architectury.hooks.PlayerHooks;
-import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.TextComponent;

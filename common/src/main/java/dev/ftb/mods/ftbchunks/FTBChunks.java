@@ -2,6 +2,21 @@ package dev.ftb.mods.ftbchunks;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import dev.architectury.event.CompoundEventResult;
+import dev.architectury.event.EventResult;
+import dev.architectury.event.events.common.BlockEvent;
+import dev.architectury.event.events.common.CommandRegistrationEvent;
+import dev.architectury.event.events.common.EntityEvent;
+import dev.architectury.event.events.common.ExplosionEvent;
+import dev.architectury.event.events.common.InteractionEvent;
+import dev.architectury.event.events.common.LifecycleEvent;
+import dev.architectury.event.events.common.PlayerEvent;
+import dev.architectury.hooks.level.entity.PlayerHooks;
+import dev.architectury.platform.Platform;
+import dev.architectury.registry.registries.Registrar;
+import dev.architectury.registry.registries.Registries;
+import dev.architectury.utils.EnvExecutor;
+import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.ExplosionFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
@@ -29,26 +44,12 @@ import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import dev.ftb.mods.ftbteams.event.TeamManagerEvent;
-import me.shedaniel.architectury.event.CompoundEventResult;
-import me.shedaniel.architectury.event.EventResult;
-import me.shedaniel.architectury.event.events.BlockEvent;
-import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
-import me.shedaniel.architectury.event.events.EntityEvent;
-import me.shedaniel.architectury.event.events.ExplosionEvent;
-import me.shedaniel.architectury.event.events.InteractionEvent;
-import me.shedaniel.architectury.event.events.LifecycleEvent;
-import me.shedaniel.architectury.event.events.PlayerEvent;
-import me.shedaniel.architectury.hooks.PlayerHooks;
-import me.shedaniel.architectury.platform.Platform;
-import me.shedaniel.architectury.registry.Registries;
-import me.shedaniel.architectury.registry.Registry;
-import me.shedaniel.architectury.utils.EnvExecutor;
-import me.shedaniel.architectury.utils.IntValue;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -57,8 +58,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -104,7 +103,7 @@ public class FTBChunks {
 	public static final int MINIMAP_SIZE = TILE_SIZE * TILES;
 	public static final XZ[] RELATIVE_SPIRAL_POSITIONS = new XZ[TILES * TILES];
 
-	public static final Registry<Block> BLOCK_REGISTRY = Registries.get(MOD_ID).get(net.minecraft.core.Registry.BLOCK_REGISTRY);
+	public static final Registrar<Block> BLOCK_REGISTRY = Registries.get(MOD_ID).get(Registry.BLOCK_REGISTRY);
 
 	public static boolean ranksMod = false;
 
@@ -134,7 +133,7 @@ public class FTBChunks {
 		BlockEvent.PLACE.register(this::blockPlace);
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		InteractionEvent.FARMLAND_TRAMPLE.register(this::farmlandTrample);
-		EntityEvent.ENTER_CHUNK.register(this::chunkChange);
+		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
@@ -260,44 +259,44 @@ public class FTBChunks {
 		}
 	}
 
-	public InteractionResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
+	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK)) {
-			return InteractionResult.FAIL;
+			return EventResult.interruptFalse();
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	public InteractionResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
+	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK)) {
-			return InteractionResult.FAIL;
+			return EventResult.interruptFalse();
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	public InteractionResultHolder<ItemStack> itemRightClick(Player player, InteractionHand hand) {
+	public CompoundEventResult<ItemStack> itemRightClick(Player player, InteractionHand hand) {
 		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM)) {
-			return InteractionResultHolder.fail(player.getItemInHand(hand));
+			return CompoundEventResult.interruptFalse(player.getItemInHand(hand));
 		}
 
-		return InteractionResultHolder.pass(player.getItemInHand(hand));
+		return CompoundEventResult.pass();
 	}
 
-	public InteractionResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
+	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
 		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
-			return InteractionResult.FAIL;
+			return EventResult.interruptFalse();
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	public InteractionResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
+	public EventResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
 		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
-			return InteractionResult.FAIL;
+			return EventResult.interruptFalse();
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
 	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
@@ -317,7 +316,11 @@ public class FTBChunks {
 	}
 
 	// This event is a nightmare, gets fired before login
-	public void chunkChange(Entity entity, int chunkX, int chunkZ, int prevX, int prevZ) {
+	public void enterSection(Entity entity, int chunkX, int chunkY, int chunkZ, int prevX, int prevY, int prevZ) {
+		if (chunkX == prevX && chunkZ == prevZ && chunkY != prevY) {
+			return;
+		}
+
 		if (!(entity instanceof ServerPlayer) || PlayerHooks.isFake((ServerPlayer) entity)) {
 			return;
 		}
@@ -403,7 +406,7 @@ public class FTBChunks {
 		}
 	}
 
-	public InteractionResult playerDeath(LivingEntity entity, DamageSource source) {
+	public EventResult playerDeath(LivingEntity entity, DamageSource source) {
 		if (entity instanceof ServerPlayer) {
 			ServerPlayer player = (ServerPlayer) entity;
 			ResourceKey<Level> dim = player.level.dimension();
@@ -414,7 +417,7 @@ public class FTBChunks {
 			new PlayerDeathPacket(dim, x, y, z, num).sendTo((ServerPlayer) entity);
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {

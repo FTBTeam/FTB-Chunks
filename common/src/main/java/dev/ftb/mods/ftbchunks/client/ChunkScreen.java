@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
@@ -37,6 +38,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -136,8 +138,9 @@ public class ChunkScreen extends BaseScreen {
 		int sx = getX() + (width - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = getY() + (height - FTBChunks.MINIMAP_SIZE) / 2;
 		Player player = Minecraft.getInstance().player;
-		int startX = player.xChunk - FTBChunks.TILE_OFFSET;
-		int startZ = player.zChunk - FTBChunks.TILE_OFFSET;
+		ChunkPos chunkPos = player.chunkPosition();
+		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
+		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
 
 		chunkButtons = new ArrayList<>();
 		selectedChunks = new LinkedHashSet<>();
@@ -152,7 +155,7 @@ public class ChunkScreen extends BaseScreen {
 		}
 
 		addAll(chunkButtons);
-		new RequestMapDataPacket(player.xChunk - FTBChunks.TILE_OFFSET, player.zChunk - FTBChunks.TILE_OFFSET, player.xChunk + FTBChunks.TILE_OFFSET, player.zChunk + FTBChunks.TILE_OFFSET).sendToServer();
+		new RequestMapDataPacket(chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET, chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET).sendToServer();
 		add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.large_map"), Icons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
 		// add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), Icons.FRIENDS, (simpleButton, mouseButton) -> {}).setPosAndSize(1, 19, 16, 16));
 	}
@@ -184,8 +187,9 @@ public class ChunkScreen extends BaseScreen {
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder buffer = tessellator.getBuilder();
 		Player player = Minecraft.getInstance().player;
-		int startX = player.xChunk - FTBChunks.TILE_OFFSET;
-		int startZ = player.zChunk - FTBChunks.TILE_OFFSET;
+		ChunkPos chunkPos = player.chunkPosition();
+		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
+		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
 
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
@@ -206,7 +210,7 @@ public class ChunkScreen extends BaseScreen {
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			RenderSystem.disableTexture();
 
-			buffer.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+			buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
 
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
 				buffer.vertex(sx, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
@@ -220,7 +224,7 @@ public class ChunkScreen extends BaseScreen {
 
 			tessellator.end();
 
-			buffer.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+			buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
 
 			for (ChunkButton button : chunkButtons) {
 				MapChunk chunk = button.chunk;

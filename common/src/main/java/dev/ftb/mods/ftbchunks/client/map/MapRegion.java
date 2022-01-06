@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -106,8 +106,7 @@ public class MapRegion implements MapTask {
 
 	public int getRenderedMapImageTextureId() {
 		if (renderedMapImageTextureId == -1) {
-			renderedMapImageTextureId = TextureUtil.generateTextureId();
-			TextureUtil.prepareImage(renderedMapImageTextureId, 512, 512);
+			renderedMapImageTextureId = FTBChunksClient.generateTextureId(512, 512);
 		}
 
 		getRenderedMapImage();
@@ -151,7 +150,7 @@ public class MapRegion implements MapTask {
 		}
 
 		if (renderedMapImageTextureId != -1) {
-			TextureUtil.releaseTextureId(renderedMapImageTextureId);
+			GlStateManager._deleteTexture(renderedMapImageTextureId);
 			renderedMapImageTextureId = -1;
 		}
 

@@ -9,7 +9,6 @@ import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Registry;
-import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -208,7 +207,7 @@ public class MapManager implements MapTask {
 		return i;
 	}
 
-	public int getBiomeColorIndex(WritableRegistry<Biome> biomes, Biome biome, Object b0) {
+	public int getBiomeColorIndex(Registry<Biome> biomes, Biome biome, Object b0) {
 		BiomeFTBC b = b0 instanceof BiomeFTBC ? (BiomeFTBC) b0 : null;
 
 		if (b == null) {

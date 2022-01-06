@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
+import dev.architectury.hooks.LevelResourceHooks;
 import dev.ftb.mods.ftbchunks.data.AllyMode;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
@@ -12,7 +13,6 @@ import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
 import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
 import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
 import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
-import me.shedaniel.architectury.hooks.LevelResourceHooks;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

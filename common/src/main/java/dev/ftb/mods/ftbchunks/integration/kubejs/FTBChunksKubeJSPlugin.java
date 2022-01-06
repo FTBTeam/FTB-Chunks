@@ -1,13 +1,13 @@
 package dev.ftb.mods.ftbchunks.integration.kubejs;
 
+import dev.architectury.event.CompoundEventResult;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimResults;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
-import dev.latvian.kubejs.KubeJSPlugin;
-import dev.latvian.kubejs.script.ScriptType;
+import dev.latvian.mods.kubejs.KubeJSPlugin;
+import dev.latvian.mods.kubejs.script.ScriptType;
 import dev.latvian.mods.rhino.util.wrap.TypeWrappers;
-import me.shedaniel.architectury.event.CompoundEventResult;
 import net.minecraft.commands.CommandSourceStack;
 
 public class FTBChunksKubeJSPlugin extends KubeJSPlugin {

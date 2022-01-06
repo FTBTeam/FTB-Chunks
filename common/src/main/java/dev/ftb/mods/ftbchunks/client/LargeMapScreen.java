@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
@@ -39,7 +40,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -280,7 +280,7 @@ public class LargeMapScreen extends BaseScreen {
 		int b = 70;
 		int a = 100;
 
-		buffer.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+		buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
 
 		int s = getRegionButtonSize();
 		double ox = -regionPanel.getScrollX() % s;

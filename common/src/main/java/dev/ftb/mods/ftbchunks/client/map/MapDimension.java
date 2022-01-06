@@ -80,7 +80,7 @@ public class MapDimension implements MapTask {
 		return this;
 	}
 
-	public Map<XZ, MapRegion> getRegions() {
+	public synchronized Map<XZ, MapRegion> getRegions() {
 		if (regions == null) {
 			regions = new HashMap<>();
 

@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.fabric;
 
-import me.shedaniel.architectury.platform.Platform;
+import dev.architectury.platform.Platform;
 import net.fabricmc.api.ClientModInitializer;
 
 public class FTBChunksFabricClient implements ClientModInitializer {

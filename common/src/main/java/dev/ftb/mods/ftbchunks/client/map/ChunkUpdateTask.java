@@ -7,7 +7,6 @@ import net.minecraft.Util;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
-import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -18,7 +17,6 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,18 +37,16 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	public final Level level;
 	public final ChunkAccess chunkAccess;
 	public final ChunkPos pos;
-	public ChunkBiomeContainer biomeContainer;
 	public final long biomeZoomSeed;
 	public final int[] blocksToUpdate;
 	private final long taskStartTime;
 	private final int[] currentWaterY;
 
-	public ChunkUpdateTask(@Nullable MapManager m, Level w, ChunkAccess ca, ChunkPos p, @Nullable ChunkBiomeContainer b, long zs, int[] s) {
+	public ChunkUpdateTask(@Nullable MapManager m, Level w, ChunkAccess ca, ChunkPos p, long zs, int[] s) {
 		manager = m;
 		level = w;
 		chunkAccess = ca;
 		pos = p;
-		biomeContainer = b;
 		biomeZoomSeed = zs;
 		blocksToUpdate = s;
 		taskStartTime = System.currentTimeMillis();
@@ -83,8 +79,9 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
 		MapRegionData data = mapChunk.region.getDataBlocking();
 
-		WritableRegistry<Biome> biomes = level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
+		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
 
+		/*
 		if (biomeContainer == null) {
 			biomeContainer = chunkAccess.getBiomes();
 		}
@@ -92,6 +89,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		if (biomeContainer == null) {
 			return;
 		}
+		 */
 
 		// BiomeManager biomeManager = new BiomeManager(this, biomeZoomSeed, level.dimensionType().getBiomeZoomer());
 
@@ -179,11 +177,9 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 	@Override
 	public Biome getNoiseBiome(int x, int y, int z) {
-		int cx = x >> 2;
-		int cz = z >> 2;
-
-		if (cx == pos.x && cz == pos.z) {
-			return biomeContainer.getNoiseBiome(x, y, z);
+		if ((x >> 2) == pos.x && (z >> 2) == pos.z) {
+			return chunkAccess.getNoiseBiome(x, y, z);
+			// return biomeContainer.getNoiseBiome(x, y, z);
 		}
 
 		return level.getNoiseBiome(x, y, z);

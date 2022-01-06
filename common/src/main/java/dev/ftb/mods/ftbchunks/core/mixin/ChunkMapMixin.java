@@ -23,12 +23,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class ChunkMapMixin implements ChunkMapFTBC {
 	@Shadow
 	@Final
-	private ServerLevel level;
+	ServerLevel level;
 
-	@Inject(method = "noPlayersCloseForSpawning", at = @At("RETURN"), cancellable = true)
-	private void noPlayersCloseForSpawningFTBC(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
+	@Inject(method = "anyPlayerCloseEnoughForSpawning", at = @At("RETURN"), cancellable = true)
+	private void anyPlayerCloseEnoughForSpawningFTBC(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
 		if (ci.getReturnValue() && FTBChunksAPI.isManagerLoaded() && FTBChunksWorldConfig.patchChunkLoading(level, pos)) {
-			ci.setReturnValue(false);
+			ci.setReturnValue(true);
 		}
 	}
 

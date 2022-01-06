@@ -8,4 +8,4 @@ pluginManagement {
 
 include "common", "fabric", "forge"
 
-rootProject.name = 'FTB-Chunks-1.16.5'
+rootProject.name = 'FTB-Chunks-1.18'

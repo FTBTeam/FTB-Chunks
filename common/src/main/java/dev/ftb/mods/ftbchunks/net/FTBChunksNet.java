@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.architectury.networking.simple.MessageType;
+import dev.architectury.networking.simple.SimpleNetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import me.shedaniel.architectury.networking.simple.MessageType;
-import me.shedaniel.architectury.networking.simple.SimpleNetworkManager;
 
 public interface FTBChunksNet {
 	SimpleNetworkManager MAIN = SimpleNetworkManager.create(FTBChunks.MOD_ID);

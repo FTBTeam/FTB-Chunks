@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -10,10 +10,22 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
+import dev.architectury.event.EventResult;
+import dev.architectury.event.events.client.ClientGuiEvent;
+import dev.architectury.event.events.client.ClientPlayerEvent;
+import dev.architectury.event.events.client.ClientRawInputEvent;
+import dev.architectury.event.events.client.ClientReloadShadersEvent;
+import dev.architectury.event.events.client.ClientScreenInputEvent;
+import dev.architectury.event.events.client.ClientTickEvent;
+import dev.architectury.hooks.client.screen.ScreenAccess;
 import dev.architectury.injectables.annotations.ExpectPlatform;
+import dev.architectury.platform.Platform;
+import dev.architectury.registry.ReloadListenerRegistry;
+import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
@@ -55,26 +67,17 @@ import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import me.shedaniel.architectury.event.events.GuiEvent;
-import me.shedaniel.architectury.event.events.client.ClientPlayerEvent;
-import me.shedaniel.architectury.event.events.client.ClientRawInputEvent;
-import me.shedaniel.architectury.event.events.client.ClientScreenInputEvent;
-import me.shedaniel.architectury.event.events.client.ClientTickEvent;
-import me.shedaniel.architectury.platform.Platform;
-import me.shedaniel.architectury.registry.KeyBindings;
-import me.shedaniel.architectury.registry.ReloadListeners;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
@@ -85,13 +88,13 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkPacket;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.ChunkPos;
@@ -99,7 +102,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -175,37 +177,34 @@ public class FTBChunksClient extends FTBChunksCommon {
 		FTBChunksClientConfig.init();
 		registerKeys();
 
-		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new EntityIcons());
-		ReloadListeners.registerReloadListener(PackType.CLIENT_RESOURCES, new ColorMapLoader());
+		ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new EntityIcons());
+		ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ColorMapLoader());
 		ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(this::loggedOut);
 		CustomClickEvent.EVENT.register(this::customClick);
 		ClientRawInputEvent.KEY_PRESSED.register(this::keyPressed);
 		ClientScreenInputEvent.KEY_PRESSED_PRE.register(this::keyPressed);
-		GuiEvent.RENDER_HUD.register(this::renderHud);
-		GuiEvent.INIT_PRE.register(this::screenOpened);
+		ClientGuiEvent.RENDER_HUD.register(this::renderHud);
+		ClientGuiEvent.INIT_PRE.register(this::screenOpened);
 		ClientTickEvent.CLIENT_PRE.register(this::clientTick);
 		TeamEvent.CLIENT_PROPERTIES_CHANGED.register(this::teamPropertiesChanged);
 		MapIconEvent.LARGE_MAP.register(this::mapIcons);
 		MapIconEvent.MINIMAP.register(this::mapIcons);
 		RefreshMinimapIconsEvent.EVENT.register(this::refreshMinimapIcons);
+		ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
 		registerPlatform();
-	}
-
-	public void refreshMinimapIcons() {
-		lastMapIconUpdate = 0L;
 	}
 
 	private static void registerKeys() {
 		// Keybinding to open Large map screen
 		openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
-		KeyBindings.registerKeyBinding(openMapKey);
+		KeyMappingRegistry.register(openMapKey);
 
 		// Keybindings to zoom in minimap
 		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "key.categories.ui");
-		KeyBindings.registerKeyBinding(zoomInKey);
+		KeyMappingRegistry.register(zoomInKey);
 
 		zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "key.categories.ui");
-		KeyBindings.registerKeyBinding(zoomOutKey);
+		KeyMappingRegistry.register(zoomOutKey);
 	}
 
 	@ExpectPlatform
@@ -373,7 +372,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 					if (mc.hitResult instanceof BlockHitResult) {
 						ResourceLocation id = Registry.BLOCK.getKey(mc.level.getBlockState(((BlockHitResult) mc.hitResult).getBlockPos()).getBlock());
 						Window window = mc.getWindow();
-						NativeImage image = Screenshot.takeScreenshot(window.getWidth(), window.getHeight(), mc.getMainRenderTarget());
+						NativeImage image = Screenshot.takeScreenshot(mc.getMainRenderTarget());
 						int col = image.getPixelRGBA(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
 						String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
 						mc.player.sendMessage(new TextComponent(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent("Click to copy")))), Util.NIL_UUID);
@@ -398,16 +397,16 @@ public class FTBChunksClient extends FTBChunksCommon {
 		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}
 
-	public InteractionResult customClick(CustomClickEvent event) {
-		if (event.getId().equals(BUTTON_ID)) {
+	public EventResult customClick(CustomClickEvent event) {
+		if (event.id().equals(BUTTON_ID)) {
 			openGui();
-			return InteractionResult.SUCCESS;
+			return EventResult.interruptTrue();
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	public InteractionResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
+	public EventResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
 		if (openMapKey.isDown()) {
 			if (Screen.hasControlDown()) {
 				SNBTCompoundTag tag = new SNBTCompoundTag();
@@ -424,7 +423,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 				FTBChunks.LOGGER.info("===");
 			} else {
 				openGui();
-				return InteractionResult.SUCCESS;
+				return EventResult.interruptTrue();
 			}
 		} else if (zoomInKey.isDown()) {
 			return changeZoom(true);
@@ -432,23 +431,23 @@ public class FTBChunksClient extends FTBChunksCommon {
 			return changeZoom(false);
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	public InteractionResult keyPressed(Minecraft client, Screen screen, int keyCode, int scanCode, int modifiers) {
+	public EventResult keyPressed(Minecraft client, Screen screen, int keyCode, int scanCode, int modifiers) {
 		if (openMapKey.isDown()) {
 			LargeMapScreen gui = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
 
 			if (gui != null) {
 				gui.closeGui(false);
-				return InteractionResult.SUCCESS;
+				return EventResult.interruptTrue();
 			}
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
-	private InteractionResult changeZoom(boolean zoomIn) {
+	private EventResult changeZoom(boolean zoomIn) {
 		prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get();
 		double zoom = prevZoom;
 		double zoomFactor = zoomIn ? 1D : -1D;
@@ -463,7 +462,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		lastZoomTime = System.currentTimeMillis();
 		FTBChunksClientConfig.MINIMAP_ZOOM.set(zoom);
-		return InteractionResult.SUCCESS;
+		return EventResult.interruptTrue();
 	}
 
 	public float getZoom() {
@@ -482,6 +481,19 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		return (float) z;
+	}
+
+	public static int generateTextureId(int w, int h) {
+		// int textureId = TextureUtil.generateTextureId();
+		// TextureUtil.prepareImage(textureId, w, h);
+		int textureId = GlStateManager._genTexture();
+		RenderSystem.bindTextureForSetup(textureId);
+		GlStateManager._texParameter(3553, 33085, 0);
+		GlStateManager._texParameter(3553, 33082, 0);
+		GlStateManager._texParameter(3553, 33083, 0);
+		GlStateManager._texParameter(3553, 34049, 0.0F);
+		GlStateManager._texImage2D(3553, 0, NativeImage.InternalGlFormat.RGBA.glFormat(), w, h, 0, 6408, 5121, null);
+		return textureId;
 	}
 
 	public void renderHud(PoseStack matrixStack, float tickDelta) {
@@ -512,19 +524,18 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		if (minimapTextureId == -1) {
-			minimapTextureId = TextureUtil.generateTextureId();
-			TextureUtil.prepareImage(minimapTextureId, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE);
+			minimapTextureId = generateTextureId(FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE);
 			updateMinimap = true;
 		}
-
-		RenderSystem.enableTexture();
-		RenderSystem.bindTexture(minimapTextureId);
 
 		float zoom0 = getZoom();
 		float zoom = zoom0 / 3.5F;
 		MinimapBlurMode blurMode = FTBChunksClientConfig.MINIMAP_BLUR_MODE.get();
 		boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (zoom0 < 1.5F) : blurMode == MinimapBlurMode.ON;
 		int filter = minimapBlur ? GL11.GL_LINEAR : GL11.GL_NEAREST;
+
+		RenderSystem.enableTexture();
+		RenderSystem.bindTextureForSetup(minimapTextureId);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
 		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
 
@@ -559,7 +570,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		float scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / guiScale);
-		float minimapRotation = (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() ? 180F : -mc.player.yRot) % 360F;
+		float minimapRotation = (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() ? 180F : -mc.player.getYRot()) % 360F;
 
 		int s = (int) (64D * scale);
 		double s2d = s / 2D;
@@ -579,17 +590,17 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.enableCull();
 		RenderSystem.enableTexture();
 		RenderSystem.enableDepthTest();
-		RenderSystem.enableAlphaTest();
 
 		matrixStack.pushPose();
 		matrixStack.translate(x + s2d, y + s2d, 490 + z);
 
 		Matrix4f m = matrixStack.last().pose();
 
+		/*
 		// See AdvancementTabGui
 		RenderSystem.colorMask(false, false, false, false);
-		mc.getTextureManager().bind(CIRCLE_MASK);
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		RenderSystem.setShaderTexture(0, CIRCLE_MASK);
+		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2f + border, -s2f + border, 0F).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
 		buffer.vertex(m, -s2f + border, s2f - border, 0F).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
 		buffer.vertex(m, s2f - border, s2f - border, 0F).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
@@ -600,14 +611,16 @@ public class FTBChunksClient extends FTBChunksCommon {
 		matrixStack.mulPose(Vector3f.ZP.rotationDegrees(minimapRotation + 180F));
 
 		RenderSystem.depthFunc(GL11.GL_GEQUAL);
-		RenderSystem.bindTexture(minimapTextureId);
+		 */
 
 		float s2fb = s2f - border;
 		float offX = 0.5F + (float) ((MathUtils.mod(playerX, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
 		float offZ = 0.5F + (float) ((MathUtils.mod(playerZ, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
 		float zws = 2F / (FTBChunks.TILES * zoom);
 
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+		RenderSystem.setShaderTexture(0, minimapTextureId);
+		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2fb, -s2fb, 0F).color(255, 255, 255, alpha).uv(offX - zws, offZ - zws).endVertex();
 		buffer.vertex(m, -s2fb, s2fb, 0F).color(255, 255, 255, alpha).uv(offX - zws, offZ + zws).endVertex();
 		buffer.vertex(m, s2fb, s2fb, 0F).color(255, 255, 255, alpha).uv(offX + zws, offZ + zws).endVertex();
@@ -618,8 +631,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 		RenderSystem.defaultBlendFunc();
 
-		mc.getTextureManager().bind(CIRCLE_BORDER);
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+		RenderSystem.setShaderTexture(0, CIRCLE_BORDER);
+		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2f, -s2f, 0F).color(255, 255, 255, alpha).uv(0F, 0F).endVertex();
 		buffer.vertex(m, -s2f, s2f, 0F).color(255, 255, 255, alpha).uv(0F, 1F).endVertex();
 		buffer.vertex(m, s2f, s2f, 0F).color(255, 255, 255, alpha).uv(1F, 1F).endVertex();
@@ -627,7 +641,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 		tessellator.end();
 
 		RenderSystem.disableTexture();
-		buffer.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
 		buffer.vertex(m, -s2f, 0, 0F).color(0, 0, 0, 30).endVertex();
 		buffer.vertex(m, s2f, 0, 0F).color(0, 0, 0, 30).endVertex();
 		buffer.vertex(m, 0, -s2f, 0F).color(0, 0, 0, 30).endVertex();
@@ -650,8 +665,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 				float wy = (float) (y + s2d + Math.sin(angle) * d);
 				float ws = s / 32F;
 
-				mc.getTextureManager().bind(COMPASS[face]);
-				buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+				RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+				RenderSystem.setShaderTexture(0, COMPASS[face]);
+				buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 				buffer.vertex(m, wx - ws, wy - ws, z).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
 				buffer.vertex(m, wx - ws, wy + ws, z).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
 				buffer.vertex(m, wx + ws, wy + ws, z).color(255, 255, 255, 255).uv(1F, 1F).endVertex();
@@ -699,14 +715,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		if (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get()) {
-			mc.getTextureManager().bind(PLAYER);
+			RenderSystem.setShaderTexture(0, PLAYER);
 			matrixStack.pushPose();
 			matrixStack.translate(x + s2d, y + s2d, z);
-			matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.yRot + 180F));
+			matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.getYRot() + 180F));
 			matrixStack.scale(s / 16F, s / 16F, 1F);
 			m = matrixStack.last().pose();
 
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+			RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+			buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 			buffer.vertex(m, -1, -1, 0).color(255, 255, 255, 200).uv(0F, 0F).endVertex();
 			buffer.vertex(m, -1, 1, 0).color(255, 255, 255, 200).uv(0F, 1F).endVertex();
 			buffer.vertex(m, 1, 1, 0).color(255, 255, 255, 200).uv(1F, 1F).endVertex();
@@ -918,13 +935,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 		visibleWaypoints.clear();
 	}
 
-	private InteractionResult screenOpened(Screen screen, List<AbstractWidget> widgets, List<GuiEventListener> children) {
+	private EventResult screenOpened(Screen screen, ScreenAccess access) {
 		if (screen instanceof PauseScreen) {
 			nextRegionSave = System.currentTimeMillis() + 60000L;
 			saveAllRegions();
 		}
 
-		return InteractionResult.PASS;
+		return EventResult.pass();
 	}
 
 	private void clientTick(Minecraft mc) {
@@ -949,7 +966,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 						ChunkAccess chunkAccess = level.getChunk(pos.getKey().x, pos.getKey().z, ChunkStatus.FULL, false);
 
 						if (chunkAccess != null) {
-							queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, pos.getKey(), chunkAccess.getBiomes(), biomeZoomSeed, pos.getValue().toIntArray()));
+							queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, pos.getKey(), biomeZoomSeed, pos.getValue().toIntArray()));
 						}
 					}
 
@@ -1050,6 +1067,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
+	public void refreshMinimapIcons() {
+		lastMapIconUpdate = 0L;
+	}
+
+	private void reloadShaders(ResourceManager resourceManager, ClientReloadShadersEvent.ShadersSink sink) {
+	}
+
 	public static void rerender(BlockPos pos) {
 		ChunkPos chunkPos = new ChunkPos(pos);
 		IntOpenHashSet set = rerenderCache.get(chunkPos);
@@ -1076,21 +1100,20 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void handlePacket(ClientboundLevelChunkPacket p) {
+	public static void handlePacket(ClientboundLevelChunkWithLightPacket p) {
 		MapManager manager = MapManager.inst;
 
 		Level level = Minecraft.getInstance().level;
 
-		if (level != null && p.isFullChunk()) {
+		if (level != null) {
 			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
 
 			if (chunkAccess != null) {
 				long biomeZoomSeed = ((BiomeManagerFTBC) level.getBiomeManager()).getBiomeZoomSeedFTBC();
-				ChunkBiomeContainer biomeContainer = p.getBiomes() == null ? null : new ChunkBiomeContainer(level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), p.getBiomes());
-				queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, new ChunkPos(p.getX(), p.getZ()), biomeContainer, biomeZoomSeed, ChunkUpdateTask.ALL_BLOCKS));
+				// ChunkBiomeContainer biomeContainer = p.getBiomes() == null ? null : new ChunkBiomeContainer(level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), p.getBiomes());
+				queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, new ChunkPos(p.getX(), p.getZ()), biomeZoomSeed, ChunkUpdateTask.ALL_BLOCKS));
 			}
 		}
-
 	}
 
 	public static void queueOrExecute(MapTask task) {

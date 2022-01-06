@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.architectury.hooks.tags.TagHooks;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import me.shedaniel.architectury.hooks.TagHooks;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,10 +17,10 @@ import net.minecraft.world.level.block.Block;
  * @author LatvianModder
  */
 public class FTBChunksAPI {
-	public static final Tag<Block> EDIT_WHITELIST_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "edit_whitelist"));
-	public static final Tag<Block> INTERACT_WHITELIST_TAG = TagHooks.getBlockOptional(new ResourceLocation(FTBChunks.MOD_ID, "interact_whitelist"));
-	public static final Tag<Item> RIGHT_CLICK_BLACKLIST_TAG = TagHooks.getItemOptional(new ResourceLocation(FTBChunks.MOD_ID, "right_click_blacklist"));
-	public static final Tag<Item> RIGHT_CLICK_WHITELIST_TAG = TagHooks.getItemOptional(new ResourceLocation(FTBChunks.MOD_ID, "right_click_whitelist"));
+	public static final Tag<Block> EDIT_WHITELIST_TAG = TagHooks.optionalBlock(new ResourceLocation(FTBChunks.MOD_ID, "edit_whitelist"));
+	public static final Tag<Block> INTERACT_WHITELIST_TAG = TagHooks.optionalBlock(new ResourceLocation(FTBChunks.MOD_ID, "interact_whitelist"));
+	public static final Tag<Item> RIGHT_CLICK_BLACKLIST_TAG = TagHooks.optionalItem(new ResourceLocation(FTBChunks.MOD_ID, "right_click_blacklist"));
+	public static final Tag<Item> RIGHT_CLICK_WHITELIST_TAG = TagHooks.optionalItem(new ResourceLocation(FTBChunks.MOD_ID, "right_click_whitelist"));
 
 	public static ClaimedChunkManager manager;
 

@@ -1,7 +1,6 @@
 dependencies {
-	// TODO: dependency cleanup (1.18)
 	modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-	modApi "me.shedaniel:architectury:${rootProject.architectury_version}"
+	modApi "dev.architectury:architectury:${rootProject.architectury_version}"
 
 	modImplementation("dev.ftb.mods:ftb-library:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams:${rootProject.ftb_teams_version}") { transitive = false }
@@ -14,6 +13,14 @@ def ENV = System.getenv()
 
 architectury {
 	common()
+}
+
+configurations {
+	dev
+}
+
+artifacts {
+	dev(jar)
 }
 
 publishing {

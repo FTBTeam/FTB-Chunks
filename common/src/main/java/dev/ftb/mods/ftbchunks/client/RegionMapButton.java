@@ -24,7 +24,7 @@ public class RegionMapButton extends Widget {
 		int id = region.getRenderedMapImageTextureId();
 
 		if (region.mapImageLoaded) {
-			RenderSystem.bindTexture(id);
+			RenderSystem.setShaderTexture(0, id);
 			GuiHelper.drawTexturedRect(matrixStack, x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
 		}
 	}

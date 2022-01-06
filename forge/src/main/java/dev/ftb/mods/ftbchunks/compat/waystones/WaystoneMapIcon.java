@@ -2,17 +2,17 @@ package dev.ftb.mods.ftbchunks.compat.waystones;
 
 import dev.ftb.mods.ftbchunks.integration.StaticMapIcon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.blay09.mods.waystones.api.IWaystone;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 
 public class WaystoneMapIcon extends StaticMapIcon {
 	public final String name;
 	public final boolean global;
 
-	public WaystoneMapIcon(IWaystone w) {
-		super(w.getPos());
-		name = w.getName();
-		global = w.isGlobal();
+	public WaystoneMapIcon(BlockPos pos, String n, boolean g) {
+		super(pos);
+		name = n;
+		global = g;
 		icon = global ? WaystonesCompat.ICON_GLOBAL : WaystonesCompat.ICON;
 	}
 

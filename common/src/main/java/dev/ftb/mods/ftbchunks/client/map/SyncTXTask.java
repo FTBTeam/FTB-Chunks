@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
-import me.shedaniel.architectury.networking.simple.BaseC2SMessage;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;

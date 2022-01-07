@@ -8,8 +8,10 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
@@ -69,7 +71,15 @@ public class EntityMapIcon extends MapIcon {
 	@Override
 	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
 		if (icon instanceof ImageIcon) {
-			((ImageIcon) icon).bindTexture();
+			var manager = Minecraft.getInstance().getTextureManager();
+			var tex = manager.getTexture(((ImageIcon) icon).texture);
+
+			if (tex == null) {
+				tex = new SimpleTexture(((ImageIcon) icon).texture);
+				manager.register(((ImageIcon) icon).texture, tex);
+			}
+
+			RenderSystem.bindTextureForSetup(tex.getId());
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, w > 4 ? GL11.GL_NEAREST : GL11.GL_LINEAR);
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, w > 4 ? GL11.GL_NEAREST : GL11.GL_LINEAR);
 		}

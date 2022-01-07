@@ -79,7 +79,7 @@ public class MapRegionData {
 
 				while ((ze = zis.getNextEntry()) != null) {
 					switch (ze.getName()) {
-						case "chunks.dat": {
+						case "chunks.dat" -> {
 							DataInputStream stream = new DataInputStream(zis);
 							stream.readByte();
 							version = stream.readByte();
@@ -94,28 +94,18 @@ public class MapRegionData {
 								MapChunk c = new MapChunk(region, XZ.of(x, z));
 								c.version = v;
 								c.modified = m;
-								chunks.put(c.pos, c);
-							}
 
-							break;
+								synchronized (region.dimension.manager.lock) {
+									chunks.put(c.pos, c);
+								}
+							}
 						}
-						case "data.png":
-							dataImage = ImageIO.read(zis);
-							break;
-						case "foliage.png":
-							foliageImage = ImageIO.read(zis);
-							break;
-						case "grass.png":
-							grassImage = ImageIO.read(zis);
-							break;
-						case "water.png":
-							waterImage = ImageIO.read(zis);
-							break;
-						case "blocks.png":
-							blocksImage = ImageIO.read(zis);
-							break;
-						default:
-							FTBChunks.LOGGER.warn("Unknown file " + ze.getName() + " in " + file.toAbsolutePath());
+						case "data.png" -> dataImage = ImageIO.read(zis);
+						case "foliage.png" -> foliageImage = ImageIO.read(zis);
+						case "grass.png" -> grassImage = ImageIO.read(zis);
+						case "water.png" -> waterImage = ImageIO.read(zis);
+						case "blocks.png" -> blocksImage = ImageIO.read(zis);
+						default -> FTBChunks.LOGGER.warn("Unknown file " + ze.getName() + " in " + file.toAbsolutePath());
 					}
 				}
 
@@ -145,7 +135,11 @@ public class MapRegionData {
 			return;
 		}
 
-		List<MapChunk> chunkList = chunks.values().stream().filter(c -> c.modified > 0L).collect(Collectors.toList());
+		List<MapChunk> chunkList;
+
+		synchronized (region.dimension.manager.lock) {
+			chunkList = chunks.values().stream().filter(c -> c.modified > 0L).collect(Collectors.toList());
+		}
 
 		if (chunkList.isEmpty()) {
 			return;
@@ -232,6 +226,8 @@ public class MapRegionData {
 			pos = XZ.of(pos.x & 31, pos.z & 31);
 		}
 
-		return chunks.computeIfAbsent(pos, p -> new MapChunk(region, p).created());
+		synchronized (region.dimension.manager.lock) {
+			return chunks.computeIfAbsent(pos, p -> new MapChunk(region, p).created());
+		}
 	}
 }

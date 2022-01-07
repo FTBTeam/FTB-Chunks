@@ -80,36 +80,38 @@ public class MapDimension implements MapTask {
 		return this;
 	}
 
-	public synchronized Map<XZ, MapRegion> getRegions() {
-		if (regions == null) {
-			regions = new HashMap<>();
+	public Map<XZ, MapRegion> getRegions() {
+		synchronized (manager.lock) {
+			if (regions == null) {
+				regions = new HashMap<>();
 
-			if (Files.notExists(directory)) {
-				try {
-					Files.createDirectories(directory);
-				} catch (Exception ex) {
-					throw new RuntimeException(ex);
+				if (Files.notExists(directory)) {
+					try {
+						Files.createDirectories(directory);
+					} catch (Exception ex) {
+						throw new RuntimeException(ex);
+					}
+				}
+
+				if (!MapIOUtils.read(directory.resolve("dimension.regions"), stream -> {
+					stream.readByte();
+					int version = stream.readByte();
+					int s = stream.readShort();
+
+					for (int i = 0; i < s; i++) {
+						int x = stream.readByte();
+						int z = stream.readByte();
+
+						MapRegion c = new MapRegion(this, XZ.of(x, z));
+						regions.put(c.pos, c);
+					}
+				})) {
+					saveData = true;
 				}
 			}
 
-			if (!MapIOUtils.read(directory.resolve("dimension.regions"), stream -> {
-				stream.readByte();
-				int version = stream.readByte();
-				int s = stream.readShort();
-
-				for (int i = 0; i < s; i++) {
-					int x = stream.readByte();
-					int z = stream.readByte();
-
-					MapRegion c = new MapRegion(this, XZ.of(x, z));
-					regions.put(c.pos, c);
-				}
-			})) {
-				saveData = true;
-			}
+			return regions;
 		}
-
-		return regions;
 	}
 
 	@Nullable
@@ -118,17 +120,19 @@ public class MapDimension implements MapTask {
 		return region == null ? null : colors.getColors(region.getDataBlocking());
 	}
 
-	public synchronized MapRegion getRegion(XZ pos) {
-		Map<XZ, MapRegion> map = getRegions();
-		MapRegion region = map.get(pos);
+	public MapRegion getRegion(XZ pos) {
+		synchronized (manager.lock) {
+			Map<XZ, MapRegion> map = getRegions();
+			MapRegion region = map.get(pos);
 
-		if (region == null) {
-			region = new MapRegion(this, pos);
-			region.created();
-			map.put(pos, region);
+			if (region == null) {
+				region = new MapRegion(this, pos);
+				region.created();
+				map.put(pos, region);
+			}
+
+			return region;
 		}
-
-		return region;
 	}
 
 	public List<Waypoint> getWaypoints() {

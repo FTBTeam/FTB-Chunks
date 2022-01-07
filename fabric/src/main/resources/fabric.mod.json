@@ -23,6 +23,7 @@
 	"mixins": [
 		"ftbchunks-common.mixins.json"
 	],
+	"accessWidener": "ftbchunks.accesswidener",
 	"depends": {
 		"fabric": "*",
 		"minecraft": "~1.18.1",

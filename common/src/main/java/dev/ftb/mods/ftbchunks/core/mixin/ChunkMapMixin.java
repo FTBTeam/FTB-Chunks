@@ -1,17 +1,13 @@
 package dev.ftb.mods.ftbchunks.core.mixin;
 
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.core.ChunkMapFTBC;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -20,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @author LatvianModder
  */
 @Mixin(ChunkMap.class)
-public abstract class ChunkMapMixin implements ChunkMapFTBC {
+public abstract class ChunkMapMixin {
 	@Shadow
 	@Final
 	ServerLevel level;
@@ -31,8 +27,4 @@ public abstract class ChunkMapMixin implements ChunkMapFTBC {
 			ci.setReturnValue(true);
 		}
 	}
-
-	@Override
-	@Accessor("visibleChunkMap")
-	public abstract Long2ObjectLinkedOpenHashMap<ChunkHolder> getChunksFTBC();
 }

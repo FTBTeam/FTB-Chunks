@@ -19,6 +19,10 @@ configurations {
 	dev
 }
 
+loom {
+	accessWidenerPath = file("src/main/resources/ftbchunks.accesswidener")
+}
+
 artifacts {
 	dev(jar)
 }

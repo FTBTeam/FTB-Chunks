@@ -7,7 +7,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
-import dev.ftb.mods.ftbchunks.core.ChunkMapFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
@@ -409,7 +408,7 @@ public class FTBChunksCommands {
 	private static int viewLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
 		Collection<ChunkPos> chunks = new ArrayList<>();
 
-		for (ChunkHolder holder : ((ChunkMapFTBC) level.getChunkSource().chunkMap).getChunksFTBC().values()) {
+		for (ChunkHolder holder : level.getChunkSource().chunkMap.visibleChunkMap.values()) {
 			chunks.add(holder.getPos());
 		}
 

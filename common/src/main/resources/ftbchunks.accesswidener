@@ -1,0 +1,8 @@
+accessWidener v2 named
+
+# Getters
+accessible field net/minecraft/client/MouseHandler mouseGrabbed Z
+accessible field net/minecraft/world/level/biome/BiomeManager biomeZoomSeed J
+accessible field net/minecraft/server/level/ChunkMap visibleChunkMap Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;
+accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
+accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket positions [S

@@ -1,19 +1,15 @@
 {
 	"required": true,
 	"package": "dev.ftb.mods.ftbchunks.core.mixin",
-	"compatibilityLevel": "JAVA_8",
+	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"BiomeManagerMixin",
 		"BiomeMixin",
 		"BlockStateMixin",
 		"ChunkMapMixin",
-		"ClientboundSectionBlocksUpdatePacketMixin",
-		"ExplosionMixin",
 		"UtilMixin"
 	],
 	"client": [
-		"ClientPacketListenerMixin",
-		"MouseHandlerMixin"
+		"ClientPacketListenerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

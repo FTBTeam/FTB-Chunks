@@ -11,7 +11,6 @@ import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
-import dev.ftb.mods.ftbchunks.core.MouseHandlerFTBC;
 import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -90,7 +89,7 @@ public class LargeMapScreen extends BaseScreen {
 			regionPanel.resetScroll();
 			regionPanel.scrollTo(sx, sy);
 
-			((MouseHandlerFTBC) Minecraft.getInstance().mouseHandler).setMouseGrabbedFTBC(true);
+			Minecraft.getInstance().mouseHandler.mouseGrabbed = true;
 			Minecraft.getInstance().mouseHandler.releaseMouse();
 		}
 	}

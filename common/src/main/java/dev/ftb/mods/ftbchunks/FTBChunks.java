@@ -18,7 +18,6 @@ import dev.architectury.registry.registries.Registries;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.core.ExplosionFTBC;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
@@ -379,11 +378,11 @@ public class FTBChunks {
 	}
 
 	private boolean ignoreExplosion(Level level, Explosion explosion) {
-		if (level.isClientSide() || explosion.getToBlow().isEmpty() || !(explosion instanceof ExplosionFTBC)) {
+		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
 			return true;
 		}
 
-		return ((ExplosionFTBC) explosion).getSourceFTBC() == null;
+		return explosion.source == null;
 	}
 
 	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {

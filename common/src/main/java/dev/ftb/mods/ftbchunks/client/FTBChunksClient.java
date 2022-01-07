@@ -41,8 +41,6 @@ import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
-import dev.ftb.mods.ftbchunks.core.BiomeManagerFTBC;
-import dev.ftb.mods.ftbchunks.core.ClientboundSectionBlocksUpdatePacketFTBC;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import dev.ftb.mods.ftbchunks.integration.InWorldMapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIcon;
@@ -89,6 +87,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
@@ -957,7 +956,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			if (taskQueueTicks % FTBChunksClientConfig.RERENDER_QUEUE_TICKS.get() == 0L) {
 				if (!rerenderCache.isEmpty()) {
 					Level level = mc.level;
-					long biomeZoomSeed = ((BiomeManagerFTBC) level.getBiomeManager()).getBiomeZoomSeedFTBC();
+					long biomeZoomSeed = level.getBiomeManager().biomeZoomSeed;
 
 					for (Map.Entry<ChunkPos, IntOpenHashSet> pos : rerenderCache.entrySet()) {
 						ChunkAccess chunkAccess = level.getChunk(pos.getKey().x, pos.getKey().z, ChunkStatus.FULL, false);
@@ -1087,10 +1086,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	public static void handlePacket(ClientboundSectionBlocksUpdatePacketFTBC p) {
-		SectionPos sectionPos = p.getSectionPosFTBC();
+	public static void handlePacket(ClientboundSectionBlocksUpdatePacket p) {
+		SectionPos sectionPos = p.sectionPos;
 
-		short[] positions = p.getPositionsFTBC();
+		short[] positions = p.positions;
 
 		for (short position : positions) {
 			rerender(sectionPos.relativeToBlockPos(position));
@@ -1106,7 +1105,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			ChunkAccess chunkAccess = level.getChunk(p.getX(), p.getZ(), ChunkStatus.FULL, false);
 
 			if (chunkAccess != null) {
-				long biomeZoomSeed = ((BiomeManagerFTBC) level.getBiomeManager()).getBiomeZoomSeedFTBC();
+				long biomeZoomSeed = level.getBiomeManager().biomeZoomSeed;
 				// ChunkBiomeContainer biomeContainer = p.getBiomes() == null ? null : new ChunkBiomeContainer(level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), p.getBiomes());
 				queueOrExecute(new ChunkUpdateTask(manager, level, chunkAccess, new ChunkPos(p.getX(), p.getZ()), biomeZoomSeed, ChunkUpdateTask.ALL_BLOCKS));
 			}

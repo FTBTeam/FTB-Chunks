@@ -599,6 +599,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		// See AdvancementTab
 		RenderSystem.colorMask(false, false, false, false);
 		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 		RenderSystem.setShaderTexture(0, CIRCLE_MASK);
 		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2f + border, -s2f + border, 0F).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
@@ -639,9 +640,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 		buffer.vertex(m, s2f, -s2f, 0F).color(255, 255, 255, alpha).uv(1F, 0F).endVertex();
 		tessellator.end();
 
-		RenderSystem.disableTexture();
 		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+		RenderSystem.disableTexture();
+
+		buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
 		buffer.vertex(m, -s2f, 0, 0F).color(0, 0, 0, 30).endVertex();
 		buffer.vertex(m, s2f, 0, 0F).color(0, 0, 0, 30).endVertex();
 		buffer.vertex(m, 0, -s2f, 0F).color(0, 0, 0, 30).endVertex();

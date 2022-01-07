@@ -44,9 +44,8 @@ public class MapRegion implements MapTask {
 		mapImageLoaded = false;
 	}
 
-	public MapRegion created() {
+	public void created() {
 		dimension.saveData = true;
-		return this;
 	}
 
 	public boolean isDataLoaded() {

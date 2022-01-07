@@ -118,8 +118,17 @@ public class MapDimension implements MapTask {
 		return region == null ? null : colors.getColors(region.getDataBlocking());
 	}
 
-	public MapRegion getRegion(XZ pos) {
-		return getRegions().computeIfAbsent(pos, p -> new MapRegion(this, p).created());
+	public synchronized MapRegion getRegion(XZ pos) {
+		Map<XZ, MapRegion> map = getRegions();
+		MapRegion region = map.get(pos);
+
+		if (region == null) {
+			region = new MapRegion(this, pos);
+			region.created();
+			map.put(pos, region);
+		}
+
+		return region;
 	}
 
 	public List<Waypoint> getWaypoints() {

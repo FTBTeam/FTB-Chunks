@@ -206,11 +206,10 @@ public class ChunkScreen extends BaseScreen {
 		GuiHelper.drawTexturedRect(matrixStack, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
-			RenderSystem.disableTexture();
-
 			RenderSystem.setShader(GameRenderer::getPositionColorShader);
 			RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-			buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+			RenderSystem.disableTexture();
+			buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
 			Matrix4f m = matrixStack.last().pose();
 
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {

@@ -31,6 +31,7 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -272,7 +273,6 @@ public class LargeMapScreen extends BaseScreen {
 			regionPanel.setScrollY((scrollHeight - regionPanel.height) / 2D);
 		}
 
-		RenderSystem.disableTexture();
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder buffer = tessellator.getBuilder();
 		int r = 70;
@@ -280,7 +280,10 @@ public class LargeMapScreen extends BaseScreen {
 		int b = 70;
 		int a = 100;
 
-		buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+		RenderSystem.disableTexture();
+		buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
 
 		int s = getRegionButtonSize();
 		double ox = -regionPanel.getScrollX() % s;

@@ -24,8 +24,8 @@ loom {
 	forge {
 		convertAccessWideners = true
 		mixinConfigs = [
-				/*"ftblibrary-forge.mixins.json", */
-				"ftblibrary-common.mixins.json"
+				/*"ftbchunks-forge.mixins.json", */
+				"ftbchunks-common.mixins.json"
 		]
 	}
 }

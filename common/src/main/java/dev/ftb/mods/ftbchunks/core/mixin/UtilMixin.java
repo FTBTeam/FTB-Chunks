@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class UtilMixin {
 	@Inject(method = "shutdownExecutors", at = @At("RETURN"))
 	private static void shutdownExecutorsFTBC(CallbackInfo ci) {
+		FTBChunks.LOGGER.info("Shutting down map thread");
 		FTBChunks.EXECUTOR.shutdown();
 
 		boolean b;

@@ -25,15 +25,17 @@ public class HeightUtils {
 		return state.isAir() || FTBChunks.PROXY.skipBlock(state);
 	}
 
-	public static BlockPos.MutableBlockPos getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos, int[] currentWaterY) {
+	public static int getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos) {
 		if (chunkAccess == null) {
-			return pos;
+			return UNKNOWN;
 		}
 
 		int bottomY = 0;
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();
+		int currentWaterY = UNKNOWN;
 
+		outer:
 		for (int by = topY; by >= bottomY; by--) {
 			pos.setY(by);
 			BlockState state = chunkAccess.getBlockState(pos);
@@ -43,25 +45,24 @@ public class HeightUtils {
 					pos.setY(by);
 					state = chunkAccess.getBlockState(pos);
 
-					if (state.isAir()) {
-						break;
+					if (skipBlock(state)) {
+						continue outer;
 					}
 				}
 			}
 
 			boolean water = isWater(state);
 
-			if (water && currentWaterY[0] == UNKNOWN) {
-				currentWaterY[0] = by;
+			if (water && currentWaterY == UNKNOWN) {
+				currentWaterY = by;
 			}
 
 			if (!water && !skipBlock(state)) {
-				pos.setY(by);
-				return pos;
+				return currentWaterY;
 			}
 		}
 
 		pos.setY(UNKNOWN);
-		return pos;
+		return UNKNOWN;
 	}
 }

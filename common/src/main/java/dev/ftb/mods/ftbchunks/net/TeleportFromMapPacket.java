@@ -74,20 +74,19 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 					return;
 				}
 
-				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x, topY, z);
-				int[] water = new int[]{HeightUtils.UNKNOWN};
-				y1 = HeightUtils.getHeight(level, chunkAccess, blockPos, water).getY();
+				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x, topY + 2, z);
+				int water = HeightUtils.getHeight(level, chunkAccess, blockPos);
 
-				if (y1 == HeightUtils.UNKNOWN) {
-					y1 = 70;
+				if (blockPos.getY() == HeightUtils.UNKNOWN) {
+					blockPos.setY(70);
+				} else if (water != HeightUtils.UNKNOWN) {
+					blockPos.setY(Math.max(blockPos.getY(), water));
 				}
 
-				if (water[0] != HeightUtils.UNKNOWN) {
-					y1 = Math.max(y1, water[0]);
-				}
+				y1 = blockPos.getY() + 1;
 			}
 
-			p.teleportTo(level, x + 0.5D, y1 + 2.1D, z + 0.5D, p.yRot, p.xRot);
+			p.teleportTo(level, x + 0.5D, y1 + 0.1D, z + 0.5D, p.yRot, p.xRot);
 		}
 	}
 }

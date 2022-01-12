@@ -43,7 +43,6 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	public final long biomeZoomSeed;
 	public final int[] blocksToUpdate;
 	private final long taskStartTime;
-	private final int[] currentWaterY;
 
 	public ChunkUpdateTask(@Nullable MapManager m, Level w, ChunkAccess ca, ChunkPos p, @Nullable ChunkBiomeContainer b, long zs, int[] s) {
 		manager = m;
@@ -54,7 +53,6 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		biomeZoomSeed = zs;
 		blocksToUpdate = s;
 		taskStartTime = System.currentTimeMillis();
-		currentWaterY = new int[]{HeightUtils.UNKNOWN};
 	}
 
 	@Override
@@ -110,9 +108,9 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		for (int wi : blocksToUpdate) {
 			int wx = wi % 16;
 			int wz = wi / 16;
-			blockPos.set(blockX + wx, chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING, blockX + wx, blockZ + wz), blockZ + wz);
-			int height = Mth.clamp(HeightUtils.getHeight(level, chunkAccess, blockPos, currentWaterY).getY(), Short.MIN_VALUE, Short.MAX_VALUE);
-			blockPos.setY(height);
+			blockPos.set(blockX + wx, chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING, blockX + wx, blockZ + wz) + 2, blockZ + wz);
+			int waterY = Mth.clamp(HeightUtils.getHeight(level, chunkAccess, blockPos), Short.MIN_VALUE, Short.MAX_VALUE);
+			int height = blockPos.getY();
 			BlockState state = chunkAccess.getBlockState(blockPos);
 
 			int ax = mapChunk.pos.x * 16 + wx;
@@ -123,10 +121,10 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			int blockIndex0 = data.getBlockIndex(index);
 			int height0 = data.height[index]; // Get old height
 
-			blockPos.setY(currentWaterY[0] == HeightUtils.UNKNOWN ? height : currentWaterY[0]);
+			blockPos.setY(waterY == HeightUtils.UNKNOWN ? height : waterY);
 
 			int waterLightAndBiome = (waterLightAndBiome0 & 0b111_11111111); // Clear water and light bits
-			waterLightAndBiome |= (currentWaterY[0] != HeightUtils.UNKNOWN) ? (1 << 15) : 0; // Water
+			waterLightAndBiome |= (waterY != HeightUtils.UNKNOWN) ? (1 << 15) : 0; // Water
 			waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos) & 15) << 11; // Light
 
 			ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
@@ -160,8 +158,6 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 				data.setBlockIndex(index, blockIndex);
 				changed = true;
 			}
-
-			currentWaterY[0] = HeightUtils.UNKNOWN;
 		}
 
 		if (changed) {

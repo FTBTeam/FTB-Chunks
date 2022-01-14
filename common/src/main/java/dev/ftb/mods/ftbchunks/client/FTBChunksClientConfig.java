@@ -65,7 +65,7 @@ public interface FTBChunksClientConfig {
 	IntValue MINIMAP_ICON_UPDATE_TIMER = CONFIG.getInt("minimap_icon_update_timer", 500, 0, 10000).excluded().comment("Advanced option. Change how often the minimap will refresh icons");
 
 	static boolean hasOtherMinimapMod() {
-		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas");
+		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
 	}
 
 	static void init() {

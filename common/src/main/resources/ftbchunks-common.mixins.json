@@ -6,7 +6,6 @@
 		"BiomeMixin",
 		"BlockStateMixin",
 		"ChunkMapMixin",
-		"ServerLevelMixin",
 		"UtilMixin"
 	],
 	"client": [

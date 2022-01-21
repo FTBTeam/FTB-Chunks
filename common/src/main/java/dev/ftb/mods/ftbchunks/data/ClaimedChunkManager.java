@@ -4,7 +4,6 @@ import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.core.ChunkLoadingHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -79,7 +78,7 @@ public class ClaimedChunkManager {
 
 		for (var pos : set) {
 			ChunkPos chunkPos = new ChunkPos(pos);
-			level.getChunkSource().addRegionTicket(ChunkLoadingHelper.FTBCHUNKS_FORCE_LOADED, chunkPos, 2, chunkPos);
+			level.getChunkSource().addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
 		}
 
 		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(forceLoaded, level.dimension().location()));
@@ -203,7 +202,7 @@ public class ClaimedChunkManager {
 		return forceLoadedChunks;
 	}
 
-	public boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z, int type) {
+	public boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z) {
 		LongOpenHashSet set = getForceLoadedChunks().get(dimension);
 		return set != null && set.contains(ChunkPos.asLong(x, z));
 	}

@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.core.ChunkLoadingHelper;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -82,9 +81,9 @@ public class ClaimedChunk implements ClaimResult {
 
 			if (cache != null) {
 				if (forceLoaded > 0L) {
-					cache.addRegionTicket(ChunkLoadingHelper.FTBCHUNKS_FORCE_LOADED, chunkPos, 2, chunkPos);
+					cache.addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
 				} else {
-					cache.removeRegionTicket(ChunkLoadingHelper.FTBCHUNKS_FORCE_LOADED, chunkPos, 2, chunkPos);
+					cache.removeRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
 				}
 			} else {
 				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x + ", " + pos.z + " @ " + pos.dimension.location() + "!");

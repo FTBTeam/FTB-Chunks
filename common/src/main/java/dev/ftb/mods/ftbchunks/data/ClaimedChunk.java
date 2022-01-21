@@ -1,12 +1,15 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 
 /**
  * @author LatvianModder
@@ -14,14 +17,14 @@ import net.minecraft.world.entity.Entity;
 public class ClaimedChunk implements ClaimResult {
 	public FTBChunksTeamData teamData;
 	public final ChunkDimPos pos;
-	public long forceLoaded;
 	public long time;
+	public long forceLoaded;
 
 	public ClaimedChunk(FTBChunksTeamData p, ChunkDimPos cp) {
 		teamData = p;
 		pos = cp;
-		forceLoaded = 0L;
 		time = System.currentTimeMillis();
+		forceLoaded = 0L;
 	}
 
 	public FTBChunksTeamData getTeamData() {
@@ -44,6 +47,7 @@ public class ClaimedChunk implements ClaimResult {
 	@Override
 	public void setClaimedTime(long t) {
 		time = t;
+		teamData.manager.updateForceLoadedChunks();
 		sendUpdateToAll();
 	}
 
@@ -55,9 +59,36 @@ public class ClaimedChunk implements ClaimResult {
 		return forceLoaded > 0L;
 	}
 
+	public boolean isActuallyForceLoaded() {
+		return isForceLoaded() && teamData.canForceLoadChunks();
+	}
+
 	@Override
 	public void setForceLoadedTime(long time) {
 		forceLoaded = time;
+		teamData.manager.updateForceLoadedChunks();
+		sendUpdateToAll();
+
+		ServerLevel level = teamData.manager.getMinecraftServer().getLevel(pos.dimension);
+
+		if (level != null) {
+			if (forceLoaded > 0L) {
+				level.getChunk(pos.x, pos.z);
+			}
+
+			ServerChunkCache cache = level.getChunkSource();
+			ChunkPos chunkPos = pos.getChunkPos();
+
+			if (cache != null) {
+				if (forceLoaded > 0L) {
+					cache.addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
+				} else {
+					cache.removeRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
+				}
+			} else {
+				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x + ", " + pos.z + " @ " + pos.dimension.location() + "!");
+			}
+		}
 	}
 
 	public boolean canEntitySpawn(Entity entity) {
@@ -66,16 +97,6 @@ public class ClaimedChunk implements ClaimResult {
 
 	public boolean allowExplosions() {
 		return false;
-	}
-
-	public void postSetForceLoaded(boolean load) {
-		ServerLevel world = getTeamData().getManager().getMinecraftServer().getLevel(getPos().dimension);
-
-		if (world != null) {
-			if (world.setChunkForced(getPos().x, getPos().z, load)) {
-				sendUpdateToAll();
-			}
-		}
 	}
 
 	public void sendUpdateToAll() {
@@ -89,7 +110,6 @@ public class ClaimedChunk implements ClaimResult {
 	public void unload(CommandSourceStack source) {
 		if (isForceLoaded()) {
 			setForceLoadedTime(0L);
-			postSetForceLoaded(false);
 			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, this);
 			teamData.save();
 		}

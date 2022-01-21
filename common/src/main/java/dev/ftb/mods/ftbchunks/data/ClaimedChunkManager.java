@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import dev.architectury.hooks.LevelResourceHooks;
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
@@ -10,19 +9,25 @@ import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +36,7 @@ import java.util.UUID;
  * @author LatvianModder
  */
 public class ClaimedChunkManager {
-	public static final LevelResource DATA_DIR = LevelResourceHooks.create("ftbchunks");
+	public static final LevelResource DATA_DIR = new LevelResource("ftbchunks");
 
 	public final TeamManager teamManager;
 
@@ -39,6 +44,7 @@ public class ClaimedChunkManager {
 	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
 	public Path dataDirectory;
 	public Path localDirectory;
+	private Map<ResourceKey<Level>, LongOpenHashSet> forceLoadedChunks;
 
 	public ClaimedChunkManager(TeamManager m) {
 		teamManager = m;
@@ -61,19 +67,21 @@ public class ClaimedChunkManager {
 		}
 	}
 
-	public void init() {
-		long nanos = System.nanoTime();
-
+	public void initForceLoadedChunks(ServerLevel level) {
 		int forceLoaded = 0;
 
-		for (ClaimedChunk chunk : claimedChunks.values()) {
-			if (chunk.isForceLoaded() && chunk.getTeamData().getChunkLoadOffline()) {
-				forceLoaded++;
-				chunk.postSetForceLoaded(true);
-			}
+		var set = getForceLoadedChunks().get(level.dimension());
+
+		if (set == null || level.getChunkSource() == null) {
+			return;
 		}
 
-		FTBChunks.LOGGER.info("Server " + teamManager.getId() + ": Loaded " + claimedChunks.size() + " chunks (" + forceLoaded + " force loaded) from " + teamData.size() + " teams in " + ((System.nanoTime() - nanos) / 1000000D) + "ms");
+		for (var pos : set) {
+			ChunkPos chunkPos = new ChunkPos(pos);
+			level.getChunkSource().addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
+		}
+
+		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(forceLoaded, level.dimension().location()));
 	}
 
 	private FTBChunksTeamData loadTeamData(Team team) {
@@ -84,13 +92,6 @@ public class ClaimedChunkManager {
 		if (dataFile != null) {
 			data.deserializeNBT(dataFile);
 			teamData.put(team.getId(), data);
-
-			for (ClaimedChunk chunk : data.getClaimedChunks()) {
-				if (chunk.isForceLoaded() && chunk.getTeamData().getChunkLoadOffline()) {
-					chunk.postSetForceLoaded(true);
-				}
-			}
-
 			return data;
 		}
 
@@ -179,5 +180,30 @@ public class ClaimedChunkManager {
 		}
 
 		return false;
+	}
+
+	public void updateForceLoadedChunks() {
+		forceLoadedChunks = null;
+	}
+
+	public Map<ResourceKey<Level>, LongOpenHashSet> getForceLoadedChunks() {
+		if (forceLoadedChunks == null) {
+			forceLoadedChunks = new HashMap<>();
+
+			for (ClaimedChunk chunk : claimedChunks.values()) {
+				if (chunk.isActuallyForceLoaded()) {
+					forceLoadedChunks.computeIfAbsent(chunk.pos.dimension, k -> new LongOpenHashSet()).add(ChunkPos.asLong(chunk.pos.x, chunk.pos.z));
+				}
+			}
+
+			forceLoadedChunks = forceLoadedChunks.isEmpty() ? Collections.emptyMap() : forceLoadedChunks;
+		}
+
+		return forceLoadedChunks;
+	}
+
+	public boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z) {
+		LongOpenHashSet set = getForceLoadedChunks().get(dimension);
+		return set != null && set.contains(ChunkPos.asLong(x, z));
 	}
 }

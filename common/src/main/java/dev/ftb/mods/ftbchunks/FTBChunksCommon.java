@@ -7,13 +7,11 @@ import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-
-import java.util.Collection;
 
 /**
  * @author LatvianModder
@@ -50,7 +48,7 @@ public class FTBChunksCommon {
 		return 0;
 	}
 
-	public void updateLoadedChunkView(ResourceKey<Level> dimension, Collection<ChunkPos> chunks) {
+	public void updateLoadedChunkView(ResourceKey<Level> dimension, Long2IntMap chunks) {
 	}
 
 	public boolean skipBlock(BlockState state) {

@@ -65,6 +65,7 @@ import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
@@ -112,7 +113,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -384,7 +384,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	@Override
-	public void updateLoadedChunkView(ResourceKey<Level> dimension, Collection<ChunkPos> chunks) {
+	public void updateLoadedChunkView(ResourceKey<Level> dimension, Long2IntMap chunks) {
 		MapDimension dim = MapManager.inst.getDimension(dimension);
 		dim.loadedChunkView = chunks;
 		MapManager.inst.updateAllRegions(false);
@@ -794,7 +794,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 			for (MapIcon icon : mapIcons) {
 				Vec3 pos = icon.getPos(tickDelta);
-				double playerDist = MathUtils.dist(pos.x, pos.z, playerX, playerZ);
+				double playerDist = MathUtils.dist(pos.x, pos.y, pos.z, playerX, playerY, playerZ);
 
 				if (icon.isVisible(MapType.WORLD_ICON, playerDist, false)) {
 					Vector4f v = new Vector4f((float) (pos.x - cameraPos.x), (float) (pos.y - cameraPos.y), (float) (pos.z - cameraPos.z), 1F);

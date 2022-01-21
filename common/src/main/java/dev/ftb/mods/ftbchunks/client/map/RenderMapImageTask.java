@@ -230,26 +230,30 @@ public class RenderMapImageTask implements MapTask {
 		boolean reducedColorPalette = FTBChunksClientConfig.REDUCED_COLOR_PALETTE.get();
 
 		boolean chunkGrid = FTBChunksClientConfig.CHUNK_GRID.get();
-		Color4I loadedViewTint = Color4I.RED.withAlpha(70);
+		Color4I weakLoadedTint = Color4I.rgba(255, 180, 0, 20);
+		Color4I weakLoadedTint2 = Color4I.rgba(255, 180, 0, 100);
+		Color4I strongLoadedTint = Color4I.RED.withAlpha(60);
+		Color4I strongLoadedTint2 = Color4I.RED.withAlpha(140);
 
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
-				boolean loadedView = region.dimension.loadedChunkView.contains(new ChunkPos((region.pos.x << 5) + cx, (region.pos.z << 5) + cz));
+				int loadedView = region.dimension.loadedChunkView.get(ChunkPos.asLong((region.pos.x << 5) + cx, (region.pos.z << 5) + cz));
 				MapChunk c = data.chunks.get(XZ.of(cx, cz));
 				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.pos.toLong()));
-				Color4I claimColor, fullClaimColor;
+				Color4I claimColor;
+				int fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
 
 				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownTeam.equals(c.getTeam()) ? ownClaimedChunksOnMap : claimedChunksOnMap))) {
 					claimColor = c.getTeam().getProperty(TeamBase.COLOR).withAlpha(100);
-					fullClaimColor = claimColor.withAlpha(255);
+					fullClaimColor = ColorUtils.convertToNative(0xFF000000 | claimColor.rgb());
 					claimBarUp = !c.connects(c.offsetBlocking(0, -1));
 					claimBarDown = !c.connects(c.offsetBlocking(0, 1));
 					claimBarLeft = !c.connects(c.offsetBlocking(-1, 0));
 					claimBarRight = !c.connects(c.offsetBlocking(1, 0));
 				} else {
 					claimColor = Icon.EMPTY;
-					fullClaimColor = Icon.EMPTY;
+					fullClaimColor = 0;
 					claimBarUp = false;
 					claimBarDown = false;
 					claimBarLeft = false;
@@ -261,10 +265,13 @@ public class RenderMapImageTask implements MapTask {
 						int ax = cx * 16 + x;
 						int az = cz * 16 + z;
 						int index = ax + az * 512;
+						boolean tint2 = ax % 4 == (az % 2 == 0 ? 0 : 2);
 
 						if (c == null) {
-							if (loadedView) {
-								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(loadedViewTint).rgb()));
+							if (loadedView == 1) {
+								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? weakLoadedTint2 : weakLoadedTint).rgb()));
+							} else if (loadedView == 2) {
+								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint).rgb()));
 							} else {
 								region.setRenderedMapImageRGBA(ax, az, 0);
 							}
@@ -281,6 +288,9 @@ public class RenderMapImageTask implements MapTask {
 								col = Color4I.rgb(data.getBlockIndex(index));
 							} else if (mapMode == MapMode.LIGHT_SOURCES) {
 								col = ColorUtils.getLightMapPalette()[15][(data.waterLightAndBiome[index] >> 11) & 15];
+							} else if ((claimBarUp && z == 0) || (claimBarDown && z == 15) || (claimBarLeft && x == 0) || (claimBarRight && x == 15)) {
+								region.setRenderedMapImageRGBA(ax, az, fullClaimColor);
+								continue;
 							} else {
 								if (blockColor instanceof CustomBlockColor) {
 									col = ((CustomBlockColor) blockColor).color;
@@ -351,16 +361,14 @@ public class RenderMapImageTask implements MapTask {
 								col = col.withTint(MapRegion.GRID_COLOR);
 							}
 
-							if (!claimColor.isEmpty()) {
+							if (loadedView == 0 && !claimColor.isEmpty()) {
 								col = col.withTint(claimColor);
 							}
 
-							if ((claimBarUp && z == 0) || (claimBarDown && z == 15) || (claimBarLeft && x == 0) || (claimBarRight && x == 15)) {
-								col = fullClaimColor;
-							}
-
-							if (loadedView) {
-								col = col.withTint(loadedViewTint);
+							if (loadedView == 1) {
+								col = col.withTint(tint2 ? weakLoadedTint2 : weakLoadedTint);
+							} else if (loadedView == 2) {
+								col = col.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint);
 							}
 
 							region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | col.rgb()));

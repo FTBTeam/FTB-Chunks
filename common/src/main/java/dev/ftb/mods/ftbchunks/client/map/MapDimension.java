@@ -7,9 +7,10 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,7 +56,7 @@ public class MapDimension implements MapTask {
 	private Map<XZ, MapRegion> regions;
 	private List<Waypoint> waypoints;
 	public boolean saveData;
-	public Collection<ChunkPos> loadedChunkView;
+	public Long2IntMap loadedChunkView;
 
 	public MapDimension(MapManager m, ResourceKey<Level> id) {
 		manager = m;
@@ -63,7 +64,7 @@ public class MapDimension implements MapTask {
 		safeDimensionId = dimension.location().toString().replace(':', '_');
 		directory = manager.directory.resolve(safeDimensionId);
 		saveData = false;
-		loadedChunkView = Collections.emptySet();
+		loadedChunkView = new Long2IntOpenHashMap();
 	}
 
 	@Override

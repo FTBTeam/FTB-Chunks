@@ -20,6 +20,8 @@ import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamArgument;
 import dev.ftb.mods.ftbteams.data.TeamArgumentProvider;
+import it.unimi.dsi.fastutil.longs.Long2IntMaps;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
@@ -35,13 +37,10 @@ import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.ToIntBiFunction;
@@ -406,10 +405,26 @@ public class FTBChunksCommands {
 	}
 
 	private static int viewLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
-		Collection<ChunkPos> chunks = new ArrayList<>();
+		var chunks = new Long2IntOpenHashMap();
 
-		for (ChunkHolder holder : level.getChunkSource().chunkMap.visibleChunkMap.values()) {
-			chunks.add(holder.getPos());
+		for (ChunkHolder holder : level.getChunkSource().chunkMap.updatingChunkMap.values()) {
+			chunks.put(holder.getPos().toLong(), 1);
+		}
+
+		var set = FTBChunksAPI.getManager().getForceLoadedChunks().get(level.dimension());
+
+		if (set != null) {
+			for (long pos : set) {
+				if (chunks.get(pos) == 1) {
+					chunks.put(pos, 2);
+				}
+			}
+		}
+
+		for (long pos : level.getForcedChunks()) {
+			if (chunks.get(pos) == 1) {
+				chunks.put(pos, 2);
+			}
 		}
 
 		source.sendSuccess(new TextComponent(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
@@ -418,7 +433,7 @@ public class FTBChunksCommands {
 	}
 
 	private static int resetLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
-		new LoadedChunkViewPacket(level.dimension(), Collections.emptyList()).sendTo(source.getPlayerOrException());
+		new LoadedChunkViewPacket(level.dimension(), Long2IntMaps.EMPTY_MAP).sendTo(source.getPlayerOrException());
 		return 1;
 	}
 

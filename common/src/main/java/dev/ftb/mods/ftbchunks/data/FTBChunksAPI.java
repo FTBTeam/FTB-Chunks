@@ -43,4 +43,12 @@ public class FTBChunksAPI {
 	public static void syncPlayer(ServerPlayer player) {
 		SendGeneralDataPacket.send(getManager().getData(player), player);
 	}
+
+	public static boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z, int type) {
+		return isManagerLoaded() && getManager().isChunkForceLoaded(dimension, x, z, type);
+	}
+
+	public static boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z) {
+		return isChunkForceLoaded(dimension, x, z, 0);
+	}
 }

@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.architectury.hooks.level.entity.PlayerHooks;
-import dev.architectury.utils.NbtType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
@@ -14,10 +13,13 @@ import dev.ftb.mods.ftbteams.data.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.property.PrivacyProperty;
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -27,7 +29,9 @@ import net.minecraft.world.level.Level;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -48,8 +52,8 @@ public class FTBChunksTeamData {
 	public int maxForceLoadChunks;
 	public int extraClaimChunks;
 	public int extraForceLoadChunks;
-	public boolean chunkLoadOffline;
-	public boolean hasMembersOnline;
+	public final Set<UUID> forceLoadMembers;
+	private Boolean canForceLoadChunks;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -63,8 +67,7 @@ public class FTBChunksTeamData {
 		maxForceLoadChunks = -1;
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
-		chunkLoadOffline = true;
-		hasMembersOnline = false;
+		forceLoadMembers = new HashSet<>();
 	}
 
 	@Override
@@ -204,9 +207,9 @@ public class FTBChunksTeamData {
 		}
 
 		chunk.setForceLoadedTime(System.currentTimeMillis());
-		chunk.postSetForceLoaded(true);
 		ClaimedChunkEvent.AFTER_LOAD.invoker().after(source, chunk);
 		chunk.teamData.save();
+		chunk.sendUpdateToAll();
 		return chunk;
 	}
 
@@ -284,13 +287,20 @@ public class FTBChunksTeamData {
 		tag.putInt("max_force_load_chunks", maxForceLoadChunks);
 		tag.putInt("extra_claim_chunks", extraClaimChunks);
 		tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
-		tag.putBoolean("chunk_load_offline", chunkLoadOffline);
+
+		ListTag forceLoadMembersTag = new ListTag();
+
+		for (UUID id : forceLoadMembers) {
+			forceLoadMembersTag.add(StringTag.valueOf(id.toString()));
+		}
+
+		tag.put("force_load_members", forceLoadMembersTag);
 
 		CompoundTag chunksTag = new CompoundTag();
 
 		for (ClaimedChunk chunk : getClaimedChunks()) {
 			String key = chunk.getPos().dimension.location().toString();
-			ListTag chunksListTag = chunksTag.getList(key, NbtType.COMPOUND);
+			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 
 			if (chunksListTag.isEmpty()) {
 				chunksTag.put(key, chunksListTag);
@@ -319,13 +329,26 @@ public class FTBChunksTeamData {
 		maxForceLoadChunks = tag.getInt("max_force_load_chunks");
 		extraClaimChunks = tag.getInt("extra_claim_chunks");
 		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
-		chunkLoadOffline = tag.getBoolean("chunk_load_offline");
+		forceLoadMembers.clear();
+
+		ListTag forgeLoadMembersTag = tag.getList("force_load_members", Tag.TAG_STRING);
+
+		if (tag.getBoolean("chunk_load_offline")) {
+			forceLoadMembers.add(team.getOwner());
+		} else {
+			for (int i = 0; i < forgeLoadMembersTag.size(); i++) {
+				forceLoadMembers.add(UUID.fromString(forgeLoadMembersTag.getString(i)));
+			}
+		}
+
+		forceLoadMembers.remove(Util.NIL_UUID);
+		canForceLoadChunks = null;
 
 		CompoundTag chunksTag = tag.getCompound("chunks");
 
 		for (String key : chunksTag.getAllKeys()) {
 			ResourceKey<Level> dimKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(key));
-			ListTag chunksListTag = chunksTag.getList(key, NbtType.COMPOUND);
+			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 
 			for (int i = 0; i < chunksListTag.size(); i++) {
 				CompoundTag o = chunksListTag.getCompound(i);
@@ -345,13 +368,12 @@ public class FTBChunksTeamData {
 		return extraForceLoadChunks;
 	}
 
-	public boolean getChunkLoadOffline() {
-		return chunkLoadOffline;
-	}
-
-	public void setChunkLoadOffline(boolean val) {
-		chunkLoadOffline = val;
-		save();
+	public void setForceLoadMember(UUID id, boolean val) {
+		if (val ? forceLoadMembers.add(id) : forceLoadMembers.remove(id)) {
+			save();
+			canForceLoadChunks = null;
+			manager.updateForceLoadedChunks();
+		}
 	}
 
 	public void saveNow() {
@@ -362,8 +384,30 @@ public class FTBChunksTeamData {
 		}
 	}
 
+	public boolean canForceLoadChunks() {
+		if (canForceLoadChunks == null) {
+			canForceLoadChunks = switch (FTBChunksWorldConfig.FORCE_LOAD_MODE.get()) {
+				case ALWAYS -> true;
+				case NEVER -> false;
+				default -> hasForceLoadMembers();
+			};
+		}
+
+		return canForceLoadChunks;
+	}
+
+	public boolean hasForceLoadMembers() {
+		for (UUID uuid : team.getMembers()) {
+			if (forceLoadMembers.contains(uuid)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static ServerPlayer playerOrNull(CommandSourceStack source) {
 		Entity entity = source.getEntity();
-		return entity instanceof ServerPlayer ? (ServerPlayer) entity : null;
+		return entity instanceof ServerPlayer player ? player : null;
 	}
 }

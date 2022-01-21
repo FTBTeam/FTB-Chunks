@@ -53,6 +53,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
@@ -117,6 +118,7 @@ public class FTBChunks {
 		}
 
 		LifecycleEvent.SERVER_BEFORE_START.register(this::serverBeforeStart);
+		LifecycleEvent.SERVER_LEVEL_LOAD.register(this::serverLevelLoad);
 		TeamManagerEvent.CREATED.register(this::teamManagerCreated);
 		TeamManagerEvent.DESTROYED.register(this::teamManagerDestroyed);
 		TeamEvent.PLAYER_LOGGED_IN.register(this::loggedIn);
@@ -154,6 +156,14 @@ public class FTBChunks {
 		}
 	}
 
+	private void serverLevelLoad(ServerLevel level) {
+		if (FTBChunksAPI.manager != null) {
+			FTBChunksAPI.manager.initForceLoadedChunks(level);
+		} else {
+			FTBChunks.LOGGER.warn("Level " + level.dimension().location() + " loaded before FTB Chunks manager was initialized! Unable to force-load chunks");
+		}
+	}
+
 	private void teamManagerCreated(TeamManagerEvent event) {
 		FTBChunksAPI.manager = new ClaimedChunkManager(event.getManager());
 	}
@@ -188,19 +198,7 @@ public class FTBChunks {
 			packet.sendTo(player);
 		}
 
-		for (ClaimedChunk c : data.getClaimedChunks()) {
-			if (c.isForceLoaded()) {
-				ClaimedChunk chunk = FTBChunksAPI.getManager().claimedChunks.get(c.getPos());
-
-				if (chunk != null) {
-					chunk.postSetForceLoaded(true);
-				}
-			}
-		}
-
-		if (data.getTeam().getOwner().equals(player.getUUID())) {
-			data.setChunkLoadOffline(FTBChunksWorldConfig.getChunkLoadOffline(data, player));
-		}
+		data.setForceLoadMember(player.getUUID(), true);
 	}
 
 	private void teamCreated(TeamCreatedEvent teamEvent) {
@@ -242,20 +240,8 @@ public class FTBChunks {
 		}
 
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		boolean canChunkLoadOffline = FTBChunksWorldConfig.getChunkLoadOffline(data, player);
-		data.setChunkLoadOffline(canChunkLoadOffline);
-
-		if (!canChunkLoadOffline) {
-			for (ClaimedChunk chunk : data.getClaimedChunks()) {
-				ClaimedChunk c = FTBChunksAPI.getManager().claimedChunks.get(chunk.getPos());
-
-				if (c == null) {
-					return;
-				}
-
-				c.postSetForceLoaded(false);
-			}
-		}
+		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.getChunkLoadOffline(player));
+		FTBChunksAPI.getManager().updateForceLoadedChunks();
 	}
 
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
@@ -320,7 +306,7 @@ public class FTBChunks {
 			return;
 		}
 
-		if (!(entity instanceof ServerPlayer) || PlayerHooks.isFake((ServerPlayer) entity)) {
+		if (!(entity instanceof ServerPlayer player) || PlayerHooks.isFake((ServerPlayer) entity)) {
 			return;
 		}
 
@@ -328,7 +314,6 @@ public class FTBChunks {
 			return;
 		}
 
-		ServerPlayer player = (ServerPlayer) entity;
 		Team team = FTBTeamsAPI.getPlayerTeam(player.getUUID());
 
 		if (team == null) {
@@ -359,12 +344,7 @@ public class FTBChunks {
 	public EventResult checkSpawn(LivingEntity entity, LevelAccessor level, double x, double y, double z, MobSpawnType type, @Nullable BaseSpawner spawner) {
 		if (!level.isClientSide() && !(entity instanceof Player) && level instanceof Level) {
 			switch (type) {
-				case NATURAL:
-				case CHUNK_GENERATION:
-				case SPAWNER:
-				case STRUCTURE:
-				case JOCKEY:
-				case PATROL: {
+				case NATURAL, CHUNK_GENERATION, SPAWNER, STRUCTURE, JOCKEY, PATROL -> {
 					ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos((Level) level, new BlockPos(x, y, z)));
 
 					if (chunk != null && !chunk.canEntitySpawn(entity)) {

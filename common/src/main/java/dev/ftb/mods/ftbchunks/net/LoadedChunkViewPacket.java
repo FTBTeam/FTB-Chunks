@@ -4,23 +4,21 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * @author LatvianModder
  */
 public class LoadedChunkViewPacket extends BaseS2CMessage {
 	public final ResourceKey<Level> dimension;
-	public final Collection<ChunkPos> chunks;
+	public final Long2IntMap chunks;
 
-	public LoadedChunkViewPacket(ResourceKey<Level> d, Collection<ChunkPos> c) {
+	public LoadedChunkViewPacket(ResourceKey<Level> d, Long2IntMap c) {
 		dimension = d;
 		chunks = c;
 	}
@@ -29,10 +27,10 @@ public class LoadedChunkViewPacket extends BaseS2CMessage {
 		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
 		int s = buf.readVarInt();
 
-		chunks = new ArrayList<>(s);
+		chunks = new Long2IntOpenHashMap(s);
 
 		for (int i = 0; i < s; i++) {
-			chunks.add(new ChunkPos(buf.readVarInt(), buf.readVarInt()));
+			chunks.put(buf.readLong(), buf.readVarInt());
 		}
 	}
 
@@ -47,9 +45,9 @@ public class LoadedChunkViewPacket extends BaseS2CMessage {
 
 		buf.writeVarInt(chunks.size());
 
-		for (ChunkPos pos : chunks) {
-			buf.writeVarInt(pos.x);
-			buf.writeVarInt(pos.z);
+		for (var entry : chunks.long2IntEntrySet()) {
+			buf.writeLong(entry.getLongKey());
+			buf.writeVarInt(entry.getIntValue());
 		}
 	}
 

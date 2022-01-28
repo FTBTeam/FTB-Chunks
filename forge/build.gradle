@@ -23,6 +23,7 @@ loom {
 	accessWidenerPath = project(":common").file("src/main/resources/ftbchunks.accesswidener")
 	forge {
 		convertAccessWideners = true
+		extraAccessWideners.add("ftbchunks.accesswidener")
 		mixinConfigs = [
 				/*"ftbchunks-forge.mixins.json", */
 				"ftbchunks-common.mixins.json"

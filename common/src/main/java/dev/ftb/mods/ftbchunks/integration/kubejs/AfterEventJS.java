@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.integration.kubejs;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.latvian.mods.kubejs.entity.EntityEventJS;
 import dev.latvian.mods.kubejs.entity.EntityJS;
-import dev.latvian.mods.kubejs.level.world.LevelJS;
+import dev.latvian.mods.kubejs.level.LevelJS;
 import dev.latvian.mods.kubejs.player.ServerPlayerJS;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;

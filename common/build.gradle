@@ -57,3 +57,11 @@ publishing {
 		}
 	}
 }
+
+afterEvaluate {
+	tasks {
+		remapJar {
+			remapAccessWidener = false
+		}
+	}
+}

@@ -30,5 +30,8 @@
 		"architectury": ">=3.4.9",
 		"ftblibrary": ">=1801.3.5-build.104",
 		"ftbteams": ">=1.0.0"
+	},
+	"breaks": {
+		"kubejs": "<1801.4.2-"
 	}
 }

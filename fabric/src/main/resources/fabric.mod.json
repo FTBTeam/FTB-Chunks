@@ -9,7 +9,7 @@
 	],
 	"contact": {
 		"sources": "https://github.com/FTBTeam/FTB-Chunks",
-		"issues": "https://github.com/FTBTeam/FTB-Chunks/issues"
+		"issues": "https://github.com/FTBTeam/FTB-Mods-Issues/issues"
 	},
 	"license": "All Rights Reserved",
 	"entrypoints": {

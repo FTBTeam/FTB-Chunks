@@ -5,14 +5,15 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 @FunctionalInterface
 public interface Protection {
 	Protection EDIT_BLOCK = (player, pos, hand, chunk) -> {
-		Block block = player.level.getBlockState(pos).getBlock();
+		BlockState blockState = player.level.getBlockState(pos);
 
-		if (FTBChunksAPI.EDIT_WHITELIST_TAG.contains(block)) {
+		if (blockState.is(FTBChunksAPI.EDIT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
 
@@ -24,9 +25,9 @@ public interface Protection {
 	};
 
 	Protection INTERACT_BLOCK = (player, pos, hand, chunk) -> {
-		Block block = player.level.getBlockState(pos).getBlock();
+		BlockState blockState = player.level.getBlockState(pos);
 
-		if (FTBChunksAPI.INTERACT_WHITELIST_TAG.contains(block)) {
+		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
 
@@ -40,11 +41,13 @@ public interface Protection {
 	Protection RIGHT_CLICK_ITEM = (player, pos, hand, chunk) -> {
 		ItemStack stack = player.getItemInHand(hand);
 
-		if (stack.isEdible() || FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG.contains(stack.getItem())) {
+		//FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG.contains(stack.getItem())
+		if (stack.isEdible() || stack.is(FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		} else if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
 			return ProtectionOverride.ALLOW;
-		} else if (chunk != null && FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())) {
+			//FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG.contains(stack.getItem())
+		} else if (chunk != null && stack.is(FTBChunksAPI.RIGHT_CLICK_BLACKLIST_TAG)) {
 			return ProtectionOverride.CHECK;
 		}
 

@@ -6,6 +6,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -129,7 +130,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
 
 			// Biome biome = biomeManager.getBiome(blockPos);
-			Biome biome = getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2);
+			Biome biome = getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2).value();
 			waterLightAndBiome &= 0b11111000_00000000; // Clear biome bits
 			waterLightAndBiome |= (manager.getBiomeColorIndex(biomes, biome, biome) & 0b111_11111111); // Biome
 
@@ -172,7 +173,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	}
 
 	@Override
-	public Biome getNoiseBiome(int x, int y, int z) {
+	public Holder<Biome> getNoiseBiome(int x, int y, int z) {
 		if ((x >> 2) == pos.x && (z >> 2) == pos.z) {
 			return chunkAccess.getNoiseBiome(x, y, z);
 			// return biomeContainer.getNoiseBiome(x, y, z);

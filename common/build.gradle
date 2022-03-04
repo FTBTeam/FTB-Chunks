@@ -58,10 +58,11 @@ publishing {
 	}
 }
 
-afterEvaluate {
-	tasks {
-		remapJar {
-			remapAccessWidener = false
-		}
-	}
-}
+// TODO: ask @maxneedssnacks
+//afterEvaluate {
+//	tasks {
+//		remapJar {
+//			remapAccessWidener = false
+//		}
+//	}
+//}

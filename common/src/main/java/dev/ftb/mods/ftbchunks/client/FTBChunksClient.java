@@ -78,6 +78,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.chat.ClickEvent;
@@ -752,11 +753,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		if (FTBChunksClientConfig.MINIMAP_BIOME.get()) {
-			ResourceKey<Biome> biome = mc.level.getBiomeName(mc.player.blockPosition()).orElse(null);
+			Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
 
-			if (biome != null) {
-				MINIMAP_TEXT_LIST.add(new TranslatableComponent("biome." + biome.location().getNamespace() + "." + biome.location().getPath()));
-			}
+			biome.unwrapKey().ifPresent(e -> {
+				MINIMAP_TEXT_LIST.add(new TranslatableComponent("biome." + e.location().getNamespace() + "." + e.location().getPath()));
+			});
 		}
 
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {

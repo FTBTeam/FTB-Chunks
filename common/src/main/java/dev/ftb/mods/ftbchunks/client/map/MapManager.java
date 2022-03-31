@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -127,7 +128,7 @@ public class MapManager implements MapTask {
 		}
 	}
 
-	public MapDimension getDimension(ResourceKey<Level> dim) {
+	public synchronized MapDimension getDimension(ResourceKey<Level> dim) {
 		return getDimensions().computeIfAbsent(dim, d -> new MapDimension(this, d).created());
 	}
 

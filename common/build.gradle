@@ -58,10 +58,10 @@ publishing {
 	}
 }
 
-afterEvaluate {
-	tasks {
-		remapJar {
-			remapAccessWidener = false
-		}
-	}
-}
+//afterEvaluate {
+//	tasks {
+//		remapJar {
+//			remapAccessWidener = false
+//		}
+//	}
+//}

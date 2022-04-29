@@ -85,6 +85,8 @@ public class ClaimedChunk implements ClaimResult {
 				} else {
 					cache.removeRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
 				}
+
+				cache.save(false);
 			} else {
 				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x + ", " + pos.z + " @ " + pos.dimension.location() + "!");
 			}

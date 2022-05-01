@@ -12,6 +12,8 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
@@ -35,10 +37,16 @@ import java.util.zip.DeflaterOutputStream;
  * @author LatvianModder
  */
 public class MapDimension implements MapTask {
+	private static final Logger LOGGER = LogManager.getLogger();
 	private static MapDimension current;
 
+	@Nullable
 	public static MapDimension getCurrent() {
 		if (current == null) {
+			if (MapManager.inst == null) {
+				LOGGER.warn("Attempted to access MapManger before it's setup");
+				return null;
+			}
 			current = MapManager.inst.getDimension(Minecraft.getInstance().level.dimension());
 		}
 

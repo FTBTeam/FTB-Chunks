@@ -113,6 +113,11 @@ public class ChunkScreen extends BaseScreen {
 	public ChunkScreen() {
 		FTBChunksClient.alwaysRenderChunksOnMap = true;
 
+		if (dimension == null) {
+			FTBChunks.LOGGER.warn("Closed chunk screen map screen to prevent map dimension manager crash");
+			this.closeGui();
+		}
+
 		if (MapManager.inst != null) {
 			MapManager.inst.updateAllRegions(false);
 		}

@@ -510,6 +510,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 		int ww = mc.getWindow().getGuiScaledWidth();
 		int wh = mc.getWindow().getGuiScaledHeight();
 		MapDimension dim = MapDimension.getCurrent();
+		if (dim == null) {
+			return;
+		}
 
 		if (dim.dimension != mc.level.dimension()) {
 			MapDimension.updateCurrent();
@@ -849,7 +852,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		MapDimension dim = MapDimension.getCurrent();
 
-		if (dim.getWaypoints().isEmpty()) {
+		if (dim == null || dim.getWaypoints().isEmpty()) {
 			return;
 		}
 

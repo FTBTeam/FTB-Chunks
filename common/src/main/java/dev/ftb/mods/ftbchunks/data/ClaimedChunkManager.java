@@ -81,6 +81,8 @@ public class ClaimedChunkManager {
 			level.getChunkSource().addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
 		}
 
+		level.getChunkSource().save(false);
+
 		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(forceLoaded, level.dimension().location()));
 	}
 

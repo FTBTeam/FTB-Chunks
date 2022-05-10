@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
@@ -78,7 +79,7 @@ public class ClaimedChunkManager {
 
 		for (var pos : set) {
 			ChunkPos chunkPos = new ChunkPos(pos);
-			level.getChunkSource().addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
+			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, BlockPos.ZERO, chunkPos.x, chunkPos.z, true);
 		}
 
 		level.getChunkSource().save(false);

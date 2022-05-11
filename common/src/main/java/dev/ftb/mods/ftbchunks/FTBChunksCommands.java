@@ -414,7 +414,7 @@ public class FTBChunksCommands {
 		var set = FTBChunksAPI.getManager().getForceLoadedChunks().get(level.dimension());
 
 		if (set != null) {
-			for (long pos : set) {
+			for (long pos : set.right()) {
 				if (chunks.get(pos) == 1) {
 					chunks.put(pos, 2);
 				}

@@ -3,12 +3,14 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -44,7 +46,7 @@ public class ClaimedChunkManager {
 	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
 	public Path dataDirectory;
 	public Path localDirectory;
-	private Map<ResourceKey<Level>, LongOpenHashSet> forceLoadedChunks;
+	private Map<ResourceKey<Level>, Pair<UUID, LongOpenHashSet>> forceLoadedChunks;
 
 	public ClaimedChunkManager(TeamManager m) {
 		teamManager = m;
@@ -76,9 +78,9 @@ public class ClaimedChunkManager {
 			return;
 		}
 
-		for (var pos : set) {
+		for (var pos : set.right()) {
 			ChunkPos chunkPos = new ChunkPos(pos);
-			level.getChunkSource().addRegionTicket(FTBChunksAPI.FORCE_LOADED_TICKET, chunkPos, 2, chunkPos);
+			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, set.left(), chunkPos.x, chunkPos.z, true);
 		}
 
 		level.getChunkSource().save(false);
@@ -188,13 +190,14 @@ public class ClaimedChunkManager {
 		forceLoadedChunks = null;
 	}
 
-	public Map<ResourceKey<Level>, LongOpenHashSet> getForceLoadedChunks() {
+	public Map<ResourceKey<Level>, Pair<UUID, LongOpenHashSet>> getForceLoadedChunks() {
 		if (forceLoadedChunks == null) {
 			forceLoadedChunks = new HashMap<>();
 
 			for (ClaimedChunk chunk : claimedChunks.values()) {
 				if (chunk.isActuallyForceLoaded()) {
-					forceLoadedChunks.computeIfAbsent(chunk.pos.dimension, k -> new LongOpenHashSet()).add(ChunkPos.asLong(chunk.pos.x, chunk.pos.z));
+					Pair<UUID, LongOpenHashSet> chunkPosSet = forceLoadedChunks.computeIfAbsent(chunk.pos.dimension, k -> Pair.of(chunk.teamData.getTeamId(), new LongOpenHashSet()));
+					chunkPosSet.right().add(ChunkPos.asLong(chunk.pos.x, chunk.pos.z));
 				}
 			}
 
@@ -205,7 +208,7 @@ public class ClaimedChunkManager {
 	}
 
 	public boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z) {
-		LongOpenHashSet set = getForceLoadedChunks().get(dimension);
-		return set != null && set.contains(ChunkPos.asLong(x, z));
+		var set = getForceLoadedChunks().get(dimension);
+		return set != null && set.right().contains(ChunkPos.asLong(x, z));
 	}
 }

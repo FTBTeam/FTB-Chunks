@@ -85,7 +85,7 @@ public class ClaimedChunk implements ClaimResult {
 			ChunkPos chunkPos = pos.getChunkPos();
 
 			if (cache != null) {
-				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, BlockPos.ZERO, chunkPos.x, chunkPos.z, forceLoaded > 0L);
+				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
 				cache.save(false);
 			} else {
 				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x + ", " + pos.z + " @ " + pos.dimension.location() + "!");

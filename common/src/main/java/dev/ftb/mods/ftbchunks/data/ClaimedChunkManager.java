@@ -79,7 +79,7 @@ public class ClaimedChunkManager {
 
 		for (var pos : set) {
 			ChunkPos chunkPos = new ChunkPos(pos);
-			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, BlockPos.ZERO, chunkPos.x, chunkPos.z, true);
+			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, BlockPos.of(pos), chunkPos.x, chunkPos.z, true);
 		}
 
 		level.getChunkSource().save(false);

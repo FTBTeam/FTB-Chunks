@@ -15,13 +15,12 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,11 +64,11 @@ public class WaypointMapIcon extends StaticMapIcon {
 			return true;
 		} else if (button.isRight()) {
 			List<ContextMenuItem> contextMenu = new ArrayList<>();
-			contextMenu.add(new ContextMenuItem(new TextComponent(waypoint.name), icon, () -> {
+			contextMenu.add(new ContextMenuItem(Component.literal(waypoint.name), icon, () -> {
 			}));
 			contextMenu.add(ContextMenuItem.SEPARATOR);
 
-			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.rename"), Icons.CHAT, () -> {
+			contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, () -> {
 				StringConfig config = new StringConfig();
 				config.defaultValue = "";
 				config.value = waypoint.name;
@@ -84,7 +83,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 			}));
 
 			if (waypoint.type.canChangeColor) {
-				contextMenu.add(new ContextMenuItem(new TextComponent("Change Color"), Icons.COLOR_RGB, () -> {
+				contextMenu.add(new ContextMenuItem(Component.literal("Change Color"), Icons.COLOR_RGB, () -> {
 					int r = (waypoint.color >> 16) & 0xFF;
 					int g = (waypoint.color >> 8) & 0xFF;
 					int b = (waypoint.color >> 0) & 0xFF;
@@ -99,14 +98,14 @@ public class WaypointMapIcon extends StaticMapIcon {
 				}).setCloseMenu(false));
 			}
 
-			contextMenu.add(new ContextMenuItem(new TextComponent(waypoint.hidden ? "Show" : "Hide"), Icons.BEACON, () -> {
+			contextMenu.add(new ContextMenuItem(Component.literal(waypoint.hidden ? "Show" : "Hide"), Icons.BEACON, () -> {
 				waypoint.hidden = !waypoint.hidden;
 				waypoint.dimension.saveData = true;
-				contextMenu.get(0).title = new TextComponent(waypoint.hidden ? "Show" : "Hide");
+				contextMenu.get(0).title = Component.literal(waypoint.hidden ? "Show" : "Hide");
 				screen.refreshWidgets();
 			}));
 
-			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), Icons.REMOVE, () -> {
+			contextMenu.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, () -> {
 				waypoint.dimension.getWaypoints().remove(waypoint);
 				waypoint.dimension.saveData = true;
 				RefreshMinimapIconsEvent.trigger();

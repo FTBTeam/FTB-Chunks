@@ -52,8 +52,8 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}") { transitive = false }
+//	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
+//	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}") { transitive = false }
 
 	// modImplementation("curse.maven:balm-531761:${balm_forge_version}")
 	// modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
@@ -113,7 +113,7 @@ if (ENV.CURSEFORGE_KEY) {
 			id = project.curseforge_id_forge
 			releaseType = project.curseforge_type
 			addGameVersion "Forge"
-			addGameVersion "1.18.2"
+			addGameVersion "1.19"
 			mainArtifact(remapJar.archivePath)
 			relations {
 				requiredDependency 'architectury-api'

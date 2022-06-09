@@ -5,22 +5,12 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientGuiEvent;
-import dev.architectury.event.events.client.ClientPlayerEvent;
-import dev.architectury.event.events.client.ClientRawInputEvent;
-import dev.architectury.event.events.client.ClientReloadShadersEvent;
-import dev.architectury.event.events.client.ClientScreenInputEvent;
-import dev.architectury.event.events.client.ClientTickEvent;
+import dev.architectury.event.events.client.*;
 import dev.architectury.hooks.client.screen.ScreenAccess;
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.platform.Platform;
@@ -30,29 +20,14 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.client.map.ChunkUpdateTask;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.map.MapTask;
-import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
-import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
-import dev.ftb.mods.ftbchunks.client.map.Waypoint;
-import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import dev.ftb.mods.ftbchunks.integration.InWorldMapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
-import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
-import dev.ftb.mods.ftbchunks.net.PartialPackets;
-import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
+import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -67,7 +42,6 @@ import dev.ftb.mods.ftbteams.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -85,8 +59,6 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
@@ -112,12 +84,7 @@ import org.lwjgl.opengl.GL11;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author LatvianModder
@@ -375,7 +342,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 						NativeImage image = Screenshot.takeScreenshot(mc.getMainRenderTarget());
 						int col = image.getPixelRGBA(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
 						String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
-						mc.player.sendMessage(new TextComponent(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent("Click to copy")))), Util.NIL_UUID);
+						mc.player.displayClientMessage(Component.literal(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to copy")))), false);
 					}
 				});
 			}, "Color getter").start();
@@ -752,25 +719,25 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		if (FTBChunksClientConfig.MINIMAP_XYZ.get()) {
-			MINIMAP_TEXT_LIST.add(new TextComponent(Mth.floor(playerX) + " " + Mth.floor(playerY) + " " + Mth.floor(playerZ)));
+			MINIMAP_TEXT_LIST.add(Component.literal(Mth.floor(playerX) + " " + Mth.floor(playerY) + " " + Mth.floor(playerZ)));
 		}
 
 		if (FTBChunksClientConfig.MINIMAP_BIOME.get()) {
 			Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
 
 			biome.unwrapKey().ifPresent(e -> {
-				MINIMAP_TEXT_LIST.add(new TranslatableComponent("biome." + e.location().getNamespace() + "." + e.location().getPath()));
+				MINIMAP_TEXT_LIST.add(Component.translatable("biome." + e.location().getNamespace() + "." + e.location().getPath()));
 			});
 		}
 
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
 			XZ r = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
-			MINIMAP_TEXT_LIST.add(new TextComponent("Queued tasks: " + taskQueue.size()));
-			MINIMAP_TEXT_LIST.add(new TextComponent(r.toRegionString()));
-			MINIMAP_TEXT_LIST.add(new TextComponent("Total updates: " + renderedDebugCount));
+			MINIMAP_TEXT_LIST.add(Component.literal("Queued tasks: " + taskQueue.size()));
+			MINIMAP_TEXT_LIST.add(Component.literal(r.toRegionString()));
+			MINIMAP_TEXT_LIST.add(Component.literal("Total updates: " + renderedDebugCount));
 
 			if (ChunkUpdateTask.debugLastTime > 0L) {
-				MINIMAP_TEXT_LIST.add(new TextComponent(String.format("LU: %,d ns", ChunkUpdateTask.debugLastTime)));
+				MINIMAP_TEXT_LIST.add(Component.literal(String.format("LU: %,d ns", ChunkUpdateTask.debugLastTime)));
 			}
 		}
 

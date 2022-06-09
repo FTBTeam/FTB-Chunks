@@ -41,14 +41,14 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 
 			ResourceLocation invisible = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".invisible");
 
-			if (resourceManager.hasResource(invisible)) {
+			if (resourceManager.getResource(invisible).isPresent()) {
 				map.put(t, Icon.EMPTY);
 				continue;
 			}
 
 			ResourceLocation texture = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".png");
 
-			if (resourceManager.hasResource(texture)) {
+			if (resourceManager.getResource(texture).isPresent()) {
 				map.put(t, Icon.getIcon(texture));
 			}
 		}

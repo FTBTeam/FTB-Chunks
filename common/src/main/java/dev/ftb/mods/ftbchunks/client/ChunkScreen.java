@@ -2,11 +2,7 @@ package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
@@ -21,12 +17,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
@@ -36,18 +27,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author LatvianModder
@@ -58,7 +43,7 @@ public class ChunkScreen extends BaseScreen {
 		public MapChunk chunk;
 
 		public ChunkButton(Panel panel, XZ xz) {
-			super(panel, TextComponent.EMPTY, Icon.EMPTY);
+			super(panel, Component.empty(), Icon.EMPTY);
 			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
 			chunkPos = xz;
 		}
@@ -88,18 +73,18 @@ public class ChunkScreen extends BaseScreen {
 				Date date = new Date();
 
 				if (Screen.hasAltDown()) {
-					list.add(new TextComponent(chunk.claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
+					list.add(Component.literal(chunk.claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 				} else {
-					list.add(new TextComponent(TimeUtils.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+					list.add(Component.literal(TimeUtils.prettyTimeString((date.getTime() - chunk.claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 				}
 
 				if (chunk.forceLoadedDate != null) {
-					list.add(new TranslatableComponent("ftbchunks.gui.force_loaded").withStyle(ChatFormatting.RED));
+					list.add(Component.translatable("ftbchunks.gui.force_loaded").withStyle(ChatFormatting.RED));
 
 					if (Screen.hasAltDown()) {
-						list.add(new TextComponent(chunk.forceLoadedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
+						list.add(Component.literal(chunk.forceLoadedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 					} else {
-						list.add(new TextComponent(TimeUtils.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+						list.add(Component.literal(TimeUtils.prettyTimeString((date.getTime() - chunk.forceLoadedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 					}
 				}
 			}
@@ -162,8 +147,8 @@ public class ChunkScreen extends BaseScreen {
 
 		addAll(chunkButtons);
 		new RequestMapDataPacket(chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET, chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET).sendToServer();
-		add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.large_map"), Icons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
-		// add(new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), Icons.FRIENDS, (simpleButton, mouseButton) -> {}).setPosAndSize(1, 19, 16, 16));
+		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
+		// add(new SimpleButton(this, Component.translatable("ftbchunks.gui.allies"), Icons.FRIENDS, (simpleButton, mouseButton) -> {}).setPosAndSize(1, 19, 16, 16));
 	}
 
 	@Override
@@ -261,10 +246,10 @@ public class ChunkScreen extends BaseScreen {
 
 		if (d != null) {
 			List<Component> list = new ArrayList<>(4);
-			list.add(new TranslatableComponent("ftbchunks.gui.claimed"));
-			list.add(new TextComponent(d.claimed + " / " + d.maxClaimChunks).withStyle(d.claimed > d.maxClaimChunks ? ChatFormatting.RED : d.claimed == d.maxClaimChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
-			list.add(new TranslatableComponent("ftbchunks.gui.force_loaded"));
-			list.add(new TextComponent(d.loaded + " / " + d.maxForceLoadChunks).withStyle(d.loaded > d.maxForceLoadChunks ? ChatFormatting.RED : d.loaded == d.maxForceLoadChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+			list.add(Component.translatable("ftbchunks.gui.claimed"));
+			list.add(Component.literal(d.claimed + " / " + d.maxClaimChunks).withStyle(d.claimed > d.maxClaimChunks ? ChatFormatting.RED : d.claimed == d.maxClaimChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+			list.add(Component.translatable("ftbchunks.gui.force_loaded"));
+			list.add(Component.literal(d.loaded + " / " + d.maxForceLoadChunks).withStyle(d.loaded > d.maxForceLoadChunks ? ChatFormatting.RED : d.loaded == d.maxForceLoadChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
 
 			for (int i = 0; i < list.size(); i++) {
 				theme.drawString(matrixStack, list.get(i), 3, getScreen().getGuiScaledHeight() - 10 * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);

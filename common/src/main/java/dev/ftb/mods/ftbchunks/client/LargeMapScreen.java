@@ -67,7 +67,7 @@ public class LargeMapScreen extends BaseScreen {
 		var dim = MapDimension.getCurrent();
 		if (dim == null) {
 			FTBChunks.LOGGER.warn("Closed large map screen to prevent map dimension manager crash");
-			this.closeGui();
+			this.closeGui(false);
 		}
 
 		dimension = dim;

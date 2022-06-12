@@ -65,7 +65,7 @@
 	"ftbchunks.gui.large_map": "Grande Carte",
 	"ftbchunks.gui.claimed_chunks": "Chunks revendiqués",
 	"ftbchunks.gui.waypoints": "Balises",
-	"ftbchunks.gui.add_waypoint": "Ajouter balise",
+	"ftbchunks.gui.add_waypoint": "Ajouter une balise",
 	"ftbchunks.gui.settings": "Réglages",
 	"ftbchunks.gui.sync": "Partager carte avec vos alliés",
 	"ftbteamsconfig.ftbchunks.allow_fake_players": "Autoriser les faux joueurs",

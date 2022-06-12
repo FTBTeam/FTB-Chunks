@@ -61,7 +61,7 @@
 	"ftbchunks.gui.force_loaded": "Chargé en permanence",
 	"ftbchunks.gui.allies": "Alliés",
 	"ftbchunks.gui.ally_whitelist": "Whitelist alliés",
-	"ftbchunks.gui.ally_blacklist": "Blacklist alliés",
+	"ftbchunks.gui.ally_blacklist": "Liste noire alliés",
 	"ftbchunks.gui.large_map": "Grande Carte",
 	"ftbchunks.gui.claimed_chunks": "Chunks revendiqués",
 	"ftbchunks.gui.waypoints": "Balises",

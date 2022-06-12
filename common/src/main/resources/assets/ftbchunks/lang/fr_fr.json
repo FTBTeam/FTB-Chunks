@@ -5,7 +5,7 @@
 	"ftbchunks.chunk_grid": "Quadrillage",
 	"ftbchunks.reduced_color_palette": "Palette de couleurs réduite",
 	"ftbchunks.saturation": "Saturation",
-	"ftbchunks.debug_info": "Infos de débug",
+	"ftbchunks.debug_info": "Informations de débogage",
 	"ftbchunks.claimed_chunks_on_map": "Montrer les chunks revendiqués sur la carte",
 	"ftbchunks.own_claimed_chunks_on_map": "Montrer vos chunks revendiqué sur la carte",
 	"ftbchunks.in_world_waypoints": "Montrer les balises",

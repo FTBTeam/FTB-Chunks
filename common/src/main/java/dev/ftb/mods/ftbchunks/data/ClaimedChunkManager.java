@@ -14,7 +14,7 @@ import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -28,11 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author LatvianModder
@@ -179,7 +175,7 @@ public class ClaimedChunkManager {
 				return false;
 			}
 
-			player.displayClientMessage(new TextComponent("You need to claim this chunk to interact with blocks here!"), true);
+			player.displayClientMessage(Component.literal("You need to claim this chunk to interact with blocks here!"), true);
 			return true;
 		}
 

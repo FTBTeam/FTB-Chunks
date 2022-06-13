@@ -103,7 +103,7 @@ if (ENV.CURSEFORGE_KEY) {
 			id = project.curseforge_id_fabric
 			releaseType = project.curseforge_type
 			addGameVersion "Fabric"
-			addGameVersion "1.18.2"
+			addGameVersion "1.19"
 			mainArtifact(remapJar.archivePath)
 			relations {
 				requiredDependency 'architectury-api'

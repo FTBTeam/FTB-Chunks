@@ -4,13 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.architectury.event.CompoundEventResult;
 import dev.architectury.event.EventResult;
-import dev.architectury.event.events.common.BlockEvent;
-import dev.architectury.event.events.common.CommandRegistrationEvent;
-import dev.architectury.event.events.common.EntityEvent;
-import dev.architectury.event.events.common.ExplosionEvent;
-import dev.architectury.event.events.common.InteractionEvent;
-import dev.architectury.event.events.common.LifecycleEvent;
-import dev.architectury.event.events.common.PlayerEvent;
+import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.registries.Registrar;
@@ -18,38 +12,22 @@ import dev.architectury.registry.registries.Registries;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbchunks.data.Protection;
-import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
-import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
-import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
+import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
-import dev.ftb.mods.ftbteams.event.PlayerJoinedPartyTeamEvent;
-import dev.ftb.mods.ftbteams.event.PlayerLoggedInAfterTeamEvent;
-import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
-import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
-import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
-import dev.ftb.mods.ftbteams.event.TeamEvent;
-import dev.ftb.mods.ftbteams.event.TeamManagerEvent;
+import dev.ftb.mods.ftbteams.event.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -77,11 +55,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -332,7 +306,7 @@ public class FTBChunks {
 				if (chunk != null) {
 					player.displayClientMessage(chunk.getTeamData().getTeam().getColoredName(), true);
 				} else {
-					player.displayClientMessage(new TranslatableComponent("wilderness").withStyle(ChatFormatting.DARK_GREEN), true);
+					player.displayClientMessage(Component.translatable("wilderness").withStyle(ChatFormatting.DARK_GREEN), true);
 				}
 			}
 

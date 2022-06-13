@@ -42,7 +42,7 @@ public class ColorUtils {
 		if (reducedColorPalette == null) {
 			reducedColorPalette = new Color4I[0];
 
-			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/reduced_color_palette.png")).getInputStream()) {
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/reduced_color_palette.png")).orElseThrow().open()) {
 				NativeImage image = NativeImage.read(stream);
 				int w = image.getWidth();
 				int h = image.getHeight();
@@ -92,7 +92,7 @@ public class ColorUtils {
 		if (topographyPalette == null) {
 			topographyPalette = new Color4I[0];
 
-			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/topography_palette.png")).getInputStream()) {
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/topography_palette.png")).orElseThrow().open()) {
 				NativeImage image = NativeImage.read(stream);
 				int w = image.getWidth();
 				int h = image.getHeight();
@@ -118,7 +118,7 @@ public class ColorUtils {
 		if (lightMapPalette == null) {
 			lightMapPalette = new Color4I[0][0];
 
-			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/lightmap_palette.png")).getInputStream()) {
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/lightmap_palette.png")).orElseThrow().open()) {
 				NativeImage image = NativeImage.read(stream);
 				int w = image.getWidth();
 				int h = image.getHeight();

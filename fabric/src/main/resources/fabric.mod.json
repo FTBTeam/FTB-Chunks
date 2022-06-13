@@ -26,7 +26,7 @@
 	"accessWidener": "ftbchunks.accesswidener",
 	"depends": {
 		"fabric": "*",
-		"minecraft": "~1.18.2",
+		"minecraft": "~1.19",
 		"architectury": ">=3.4.9",
 		"ftblibrary": ">=1801.3.5-build.104",
 		"ftbteams": ">=1.0.0"

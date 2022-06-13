@@ -45,8 +45,8 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 
 		for (String namespace : resourceManager.getNamespaces()) {
 			try {
-				for (Resource resource : resourceManager.getResources(new ResourceLocation(namespace, "ftbchunks_block_colors.json"))) {
-					try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+				for (Resource resource : resourceManager.getResourceStack(new ResourceLocation(namespace, "ftbchunks_block_colors.json"))) {
+					try (Reader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
 						for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet()) {
 							if (entry.getKey().startsWith("#")) {
 								object.add("#" + namespace + ":" + entry.getKey().substring(1), entry.getValue());

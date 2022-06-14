@@ -165,13 +165,13 @@ public class ClaimedChunkManager {
 				return override.getProtect();
 			}
 
-			return isFake || !getBypassProtection(player.getUUID());
+			return !player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
 			ProtectionOverride override = protection.override(player, pos, hand, null);
 
 			if (override.isOverride()) {
 				return override.getProtect();
-			} else if (!isFake && getBypassProtection(player.getUUID())) {
+			} else if (!isFake && (getBypassProtection(player.getUUID()) || player.isSpectator())) {
 				return false;
 			}
 

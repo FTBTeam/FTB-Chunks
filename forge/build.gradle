@@ -63,10 +63,20 @@ dependencies {
 }
 
 processResources {
+	exclude '.cache'
+
 	inputs.property "version", project.version
 
 	filesMatching("META-INF/mods.toml") {
-		expand "version": project.version
+		expand "version": project.version,
+				"archversion": project.architectury_version,
+				"forgeversion": project.forge_version,
+				"forgeshortversion": project.forge_version.split("\\.")[0],
+				"mcversion": project.minecraft_version,
+				"libraryversion": project.ftb_library_version,
+				"teamsversion": project.ftb_teams_version,
+				"ranksversion": project.ftb_ranks_version,
+				"kubejsversion": project.kubejs_version
 	}
 }
 

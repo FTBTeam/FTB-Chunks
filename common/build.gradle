@@ -12,7 +12,7 @@ dependencies {
 def ENV = System.getenv()
 
 architectury {
-	common()
+	common("forge", "fabric")
 }
 
 configurations {

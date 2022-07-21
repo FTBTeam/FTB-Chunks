@@ -139,7 +139,7 @@ public class FTBChunks {
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
-		TeamEvent.COLLECT_PROPERTIES.register(this::teamConfig);
+		TeamEvent.COLLECT_PROPERTIES.register(FTBChunksExpected::getTeamConfigsForPlatform);
 		TeamEvent.PLAYER_JOINED_PARTY.register(this::playerJoinedParty);
 		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
 
@@ -252,8 +252,11 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
+	/*
+	 * Architectury fabric uses UseBlockCallback for both place and interact.
+	 */
 	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK)) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockInteractProtectionForPlatform())) {
 			return EventResult.interruptFalse();
 		}
 
@@ -269,15 +272,19 @@ public class FTBChunks {
 	}
 
 	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
-		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
+		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtectionForPlatform())) {
 			return EventResult.interruptFalse();
 		}
 
 		return EventResult.pass();
 	}
 
+	/*
+	 * This is only called on Forge implementations, since architectury fabric does not have an onBlockPlaced event to override;
+	 * architectury fabric uses UseBlockCallback for both place and interact.
+	 */
 	public EventResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
-		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
+		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockPlaceProtectionForPlatform())) {
 			return EventResult.interruptFalse();
 		}
 
@@ -397,14 +404,6 @@ public class FTBChunks {
 		}
 
 		return EventResult.pass();
-	}
-
-	private void teamConfig(TeamCollectPropertiesEvent event) {
-		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
-		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
-		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
-		// event.add(FTBChunksTeamData.MINIMAP_MODE);
-		// event.add(FTBChunksTeamData.LOCATION_MODE);
 	}
 
 	private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {

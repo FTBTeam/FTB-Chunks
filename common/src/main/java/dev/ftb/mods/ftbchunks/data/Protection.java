@@ -4,12 +4,26 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 @FunctionalInterface
 public interface Protection {
+
+	Protection EDIT_AND_INTERACT_BLOCK = (player, pos, hand, chunk) -> {
+		BlockState blockState = player.level.getBlockState(pos);
+
+		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
+			return ProtectionOverride.ALLOW;
+		}
+
+		if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_EDIT_AND_INTERACT_MODE)) {
+			return ProtectionOverride.ALLOW;
+		}
+
+		return ProtectionOverride.CHECK;
+	};
+
 	Protection EDIT_BLOCK = (player, pos, hand, chunk) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 

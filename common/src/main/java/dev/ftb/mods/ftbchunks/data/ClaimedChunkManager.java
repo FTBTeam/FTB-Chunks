@@ -167,9 +167,12 @@ public class ClaimedChunkManager {
 
 			if (override.isOverride()) {
 				return override.getProtect();
+			} else if (!isFake && getBypassProtection(player.getUUID())) {
+				return false;
 			}
 
-			return isFake || !getBypassProtection(player.getUUID());
+			player.displayClientMessage(new TextComponent("You do not have permission to interact with blocks here!"), true);
+			return true;
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
 			ProtectionOverride override = protection.override(player, pos, hand, null);
 

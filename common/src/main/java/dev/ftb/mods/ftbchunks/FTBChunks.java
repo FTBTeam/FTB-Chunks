@@ -107,10 +107,13 @@ public class FTBChunks {
 
 	public static boolean ranksMod = false;
 
+	public static boolean luckpermsMod = false;
+
 	public FTBChunks() {
 		PROXY = EnvExecutor.getEnvSpecific(() -> FTBChunksClient::new, () -> FTBChunksCommon::new);
 		// FTBChunksWorldConfig.init();
 		ranksMod = Platform.isModLoaded("ftbranks");
+		luckpermsMod = Platform.isModLoaded("luckperms");
 		FTBChunksNet.init();
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {

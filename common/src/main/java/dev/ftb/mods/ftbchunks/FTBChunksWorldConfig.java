@@ -42,6 +42,8 @@ public interface FTBChunksWorldConfig {
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
+		} else if (FTBChunks.luckpermsMod && player != null){
+			return LuckPermsIntegration.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
 		}
 
 		return MAX_CLAIMED_CHUNKS.get() + playerData.getExtraClaimChunks();
@@ -50,6 +52,8 @@ public interface FTBChunksWorldConfig {
 	static int getMaxForceLoadedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
+		} else if (FTBChunks.luckpermsMod && player != null){
+			return LuckPermsIntegration.getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
 		}
 
 		return MAX_FORCE_LOADED_CHUNKS.get() + playerData.getExtraForceLoadChunks();
@@ -58,6 +62,8 @@ public interface FTBChunksWorldConfig {
 	static boolean getChunkLoadOffline(ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get());
+		} else if (FTBChunks.luckpermsMod && player != null) {
+			return LuckPermsIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get());
 		}
 
 		return CHUNK_LOAD_OFFLINE.get();
@@ -66,6 +72,8 @@ public interface FTBChunksWorldConfig {
 	static boolean noWilderness(ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
 			return FTBRanksIntegration.getNoWilderness(player, NO_WILDERNESS.get());
+		} else if (FTBChunks.luckpermsMod && player != null){
+			return LuckPermsIntegration.getNoWilderness(player, NO_WILDERNESS.get());
 		}
 
 		return NO_WILDERNESS.get();

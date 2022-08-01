@@ -55,3 +55,10 @@ mandatory = false
 versionRange = "[1801.4.2-,)"
 ordering = "BEFORE"
 side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "luckperms"
+mandatory = false
+versionRange = "[5.4.30,)"
+ordering = "AFTER"
+side = "SERVER"

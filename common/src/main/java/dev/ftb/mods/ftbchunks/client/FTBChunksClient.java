@@ -545,9 +545,23 @@ public class FTBChunksClient extends FTBChunksCommon {
 		int s = (int) (64D * scale);
 		double s2d = s / 2D;
 		float s2f = s / 2F;
-		int x = FTBChunksClientConfig.MINIMAP_POSITION.get().getX(ww, s);
-		int y = FTBChunksClientConfig.MINIMAP_POSITION.get().getY(wh, s);
+
+		var minimapPosition = FTBChunksClientConfig.MINIMAP_POSITION.get();
+
+		int x = minimapPosition.getX(ww, s);
+		int y = minimapPosition.getY(wh, s);
 		int z = 0;
+
+		int offsetX = FTBChunksClientConfig.MINIMAP_OFFSET_X.get();
+		int offsetY = FTBChunksClientConfig.MINIMAP_OFFSET_Y.get();
+
+		var offsetConditional = FTBChunksClientConfig.MINIMAP_POSITION_OFFSET_CONDITION.get();
+
+		// Apply the offset adjusting for the maps position to ensure all positive numbers offset into the screen
+		if (offsetConditional.isNone() || offsetConditional.getPosition() == minimapPosition) {
+			x += minimapPosition.posX == 0 ? offsetX : -offsetX;
+			y -= minimapPosition.posY > 1 ? offsetY : -offsetY;
+		}
 
 		float border = 0F;
 		int alpha = FTBChunksClientConfig.MINIMAP_VISIBILITY.get();
@@ -560,6 +574,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.enableCull();
 		RenderSystem.enableTexture();
 		RenderSystem.enableDepthTest();
+
+//		matrixStack.pushPose();
+//		matrixStack.translate(-50, 50, 0);
 
 		matrixStack.pushPose();
 		matrixStack.translate(x + s2d, y + s2d, 490 + z);
@@ -800,6 +817,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 			inWorldMapIcons.clear();
 		}
+
+//		matrixStack.popPose();
 	}
 
 	public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Camera camera, float tickDelta) {

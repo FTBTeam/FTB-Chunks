@@ -2,6 +2,8 @@ package dev.ftb.mods.ftbchunks.client;
 
 import dev.ftb.mods.ftblibrary.config.NameMap;
 
+import javax.annotation.Nullable;
+
 /**
  * @author LatvianModder
  */
@@ -39,5 +41,37 @@ public enum MinimapPosition {
 		}
 
 		return h - s - 20;
+	}
+
+	/**
+	 * Used for applying a conditional check for the minimap offset. When set to none
+	 * the offset will apply in all positions. When set, it will only apply to that position.
+	 */
+	public enum MinimapOffsetConditional {
+		BOTTOM_LEFT(MinimapPosition.BOTTOM_LEFT),
+		LEFT(MinimapPosition.LEFT),
+		TOP_LEFT(MinimapPosition.TOP_LEFT),
+		TOP_RIGHT(MinimapPosition.TOP_RIGHT),
+		RIGHT(MinimapPosition.RIGHT),
+		BOTTOM_RIGHT(MinimapPosition.BOTTOM_RIGHT),
+		NONE(null);
+
+		public static final NameMap<MinimapOffsetConditional> NAME_MAP = NameMap.of(NONE, values()).baseNameKey("ftbchunks.minimap.position").create();
+
+		@Nullable
+		private MinimapPosition position;
+
+		MinimapOffsetConditional(@Nullable MinimapPosition position) {
+			this.position = position;
+		}
+
+		public boolean isNone() {
+			return this == NONE;
+		}
+
+		@Nullable
+		public MinimapPosition getPosition() {
+			return position;
+		}
 	}
 }

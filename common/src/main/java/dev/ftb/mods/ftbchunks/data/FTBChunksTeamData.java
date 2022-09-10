@@ -43,6 +43,7 @@ public class FTBChunksTeamData {
 	public static final PrivacyProperty BLOCK_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_interact_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty LOCATION_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.ALLIES);
+	public static final BooleanProperty ALLOW_EXPLOSIONS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_explosions"), false);
 
 	public final ClaimedChunkManager manager;
 	private final Team team;
@@ -409,5 +410,9 @@ public class FTBChunksTeamData {
 	public static ServerPlayer playerOrNull(CommandSourceStack source) {
 		Entity entity = source.getEntity();
 		return entity instanceof ServerPlayer player ? player : null;
+	}
+
+	public boolean allowExplosions() {
+		return team.getProperty(ALLOW_EXPLOSIONS);
 	}
 }

@@ -127,7 +127,7 @@ if (ENV.CURSEFORGE_KEY) {
 			id = project.curseforge_id_forge
 			releaseType = project.curseforge_type
 			addGameVersion "Forge"
-			addGameVersion "1.19"
+			addGameVersion rootProject.minecraft_version
 			mainArtifact(remapJar.archivePath)
 			relations {
 				requiredDependency 'architectury-api'

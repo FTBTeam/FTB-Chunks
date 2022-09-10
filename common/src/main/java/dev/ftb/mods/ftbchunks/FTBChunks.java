@@ -421,6 +421,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
 		// event.add(FTBChunksTeamData.LOCATION_MODE);
 	}

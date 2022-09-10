@@ -7,14 +7,10 @@ import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.commands.ForceLoadCommand;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.ForcedChunksSavedData;
-import net.minecraft.world.level.Level;
 
 /**
  * @author LatvianModder
@@ -98,7 +94,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean allowExplosions() {
-		return false;
+		return teamData.allowExplosions();
 	}
 
 	public void sendUpdateToAll() {

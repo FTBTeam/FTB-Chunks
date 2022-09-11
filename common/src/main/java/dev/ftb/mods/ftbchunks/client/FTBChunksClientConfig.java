@@ -15,6 +15,9 @@ import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
+import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
+import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.loadDefaulted;
+
 /**
  * @author LatvianModder
  */
@@ -72,7 +75,7 @@ public interface FTBChunksClientConfig {
 	}
 
 	static void init() {
-		CONFIG.load(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
+		loadDefaulted(CONFIG, LOCAL_DIR.resolve("ftbchunks"), FTBChunks.MOD_ID, "client-config.snbt");
 	}
 
 	static void openSettings(Screen screen) {

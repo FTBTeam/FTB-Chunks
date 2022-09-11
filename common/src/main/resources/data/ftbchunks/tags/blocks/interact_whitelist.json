@@ -18,6 +18,74 @@
 		{
 			"id": "waystones:sandy_waystone",
 			"required": false
+		},
+		{
+			"id": "waystones:sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:white_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:orange_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:magenta_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:light_blue_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:yellow_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:lime_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:pink_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:gray_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:light_gray_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:cyan_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:purple_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:blue_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:brown_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:green_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:red_sharestone",
+			"required": false
+		},
+		{
+			"id": "waystones:black_sharestone",
+			"required": false
 		}
 	]
 }

@@ -6,7 +6,6 @@ import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.LevelResource;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -16,7 +15,6 @@ import java.util.Set;
  * @author LatvianModder
  */
 public interface FTBChunksWorldConfig {
-	LevelResource CONFIG_FILE_PATH = new LevelResource("serverconfig/ftbchunks.snbt");
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
 
 	EnumValue<ProtectionOverride> FAKE_PLAYERS = CONFIG.getEnum("fake_players", NameMap.of(ProtectionOverride.CHECK, ProtectionOverride.values()).create()).comment("Override to disable/enable fake players like miners and auto-clickers globally.","Default will check this setting for each team");

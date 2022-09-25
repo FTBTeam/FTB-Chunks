@@ -32,12 +32,17 @@ public class LuckPermsIntegration {
     private static Optional<String> getMetaData(UUID uuid, String meta){
         LuckPerms luckperms = LuckPermsProvider.get();
         Optional<String> metaValue = Optional.empty();
-        User user = luckperms.getUserManager().getUser(uuid);
-        if(user != null){
-            Optional<QueryOptions> context = luckperms.getContextManager().getQueryOptions(user);
-            if(context.isPresent()){
-                metaValue = Optional.ofNullable(user.getCachedData().getMetaData(context.get()).getMetaValue(meta));
+        try {
+            User user = luckperms.getUserManager().getUser(uuid);
+            if(user != null){
+                Optional<QueryOptions> context = luckperms.getContextManager().getQueryOptions(user);
+                if(context.isPresent()){
+                    metaValue = Optional.ofNullable(user.getCachedData().getMetaData(context.get()).getMetaValue(meta));
+                }
             }
+        } catch (IllegalStateException e){
+            System.err.println("Error on fetching user with luckperms");
+            System.err.println(e.getMessage());
         }
         return metaValue;
     }

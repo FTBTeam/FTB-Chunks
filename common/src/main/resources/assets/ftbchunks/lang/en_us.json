@@ -21,7 +21,7 @@
 	"ftbchunks.biome_blend.blend_11x11": "Blend 11x11",
 	"ftbchunks.biome_blend.blend_13x13": "Blend 13x13",
 	"ftbchunks.biome_blend.blend_15x15": "Blend 15x15 (Slowest)",
-	"ftbchunks.water_height_factor": "Water weight factor",
+	"ftbchunks.water_height_factor": "Water height factor",
 	"ftbchunks.only_surface_entities": "Only surface entities",
 	"ftbchunks.experimental_performance_improvement": "Experimental performance improvement",
 	"ftbchunks.minimap": "Minimap",

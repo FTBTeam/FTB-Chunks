@@ -370,6 +370,7 @@ public class FTBChunksTeamData {
 	}
 
 	public void setForceLoadMember(UUID id, boolean val) {
+		FTBChunks.LOGGER.info(String.format("chunks: set force load member %s = %s", id, val));
 		if (val ? forceLoadMembers.add(id) : forceLoadMembers.remove(id)) {
 			save();
 			canForceLoadChunks = null;
@@ -393,7 +394,7 @@ public class FTBChunksTeamData {
 				default -> hasForceLoadMembers();
 			};
 		}
-
+		FTBChunks.LOGGER.info(String.format("chunks: can forceload? = %s", canForceLoadChunks));
 		return canForceLoadChunks;
 	}
 

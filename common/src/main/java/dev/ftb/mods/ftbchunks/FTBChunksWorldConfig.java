@@ -1,9 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
-import dev.ftb.mods.ftbchunks.data.AllyMode;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbchunks.data.ForceLoadMode;
-import dev.ftb.mods.ftbchunks.data.ProtectionOverride;
+import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
 import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
@@ -55,9 +52,11 @@ public interface FTBChunksWorldConfig {
 
 	static boolean getChunkLoadOffline(ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
+			FTBChunks.LOGGER.info(String.format("chunks: from ranks: offline = %s", FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get())));
 			return FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get());
 		}
 
+		FTBChunks.LOGGER.info(String.format("chunks: from config: offline = %s", CHUNK_LOAD_OFFLINE.get()));
 		return CHUNK_LOAD_OFFLINE.get();
 	}
 

@@ -34,6 +34,7 @@ import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
+import dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.event.PlayerJoinedPartyTeamEvent;
@@ -147,7 +148,8 @@ public class FTBChunks {
 	}
 
 	private void serverBeforeStart(MinecraftServer server) {
-		FTBChunksWorldConfig.CONFIG.load(server.getWorldPath(FTBChunksWorldConfig.CONFIG_FILE_PATH));
+		var configPath = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR);
+		ConfigUtil.loadDefaulted(FTBChunksWorldConfig.CONFIG, configPath, FTBChunks.MOD_ID);
 
 		FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.clear();
 
@@ -403,6 +405,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
 		// event.add(FTBChunksTeamData.LOCATION_MODE);
 	}

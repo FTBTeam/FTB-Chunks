@@ -9,6 +9,6 @@ import java.util.UUID;
 public class FTBChunksExpectedImpl {
     public static void addChunkToForceLoaded(ServerLevel level, String modId, UUID owner, int chunkX, int chunkY, boolean add) {
         ForgeChunkManager.forceChunk(level, modId, owner, chunkX, chunkY, add, false);
-        FTBChunks.LOGGER.info(String.format("force chunk: mod=%s owner=%s, c=[%d,%d], load=%s", modId, owner, chunkX, chunkY, add));
+        FTBChunks.LOGGER.debug(String.format("force chunk (forge): mod=%s owner=%s, c=[%d,%d], load=%s", modId, owner, chunkX, chunkY, add));
     }
 }

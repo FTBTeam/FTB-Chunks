@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.data;
 
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
@@ -22,6 +23,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -370,12 +372,32 @@ public class FTBChunksTeamData {
 	}
 
 	public void setForceLoadMember(UUID id, boolean val) {
-		FTBChunks.LOGGER.info(String.format("chunks: set force load member %s = %s", id, val));
+		FTBChunks.LOGGER.debug(String.format("chunks: set force load member %s = %s", id, val));
+		boolean wasEmpty = forceLoadMembers.isEmpty();
 		if (val ? forceLoadMembers.add(id) : forceLoadMembers.remove(id)) {
 			save();
 			canForceLoadChunks = null;
 			manager.updateForceLoadedChunks();
 		}
+
+		if (!wasEmpty && forceLoadMembers.isEmpty()) {
+			// last player who could force-load chunks has gone offline
+			updateChunkTickets(false);
+		} else if (wasEmpty && !forceLoadMembers.isEmpty()) {
+			// first player who can force-load chunks has come online
+			updateChunkTickets(true);
+		}
+	}
+
+	private void updateChunkTickets(boolean load) {
+		getClaimedChunks().forEach(chunk -> {
+			if (chunk.isForceLoaded()) {
+				ServerLevel level = manager.getMinecraftServer().getLevel(chunk.pos.dimension);
+				if (level != null) {
+					FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, getTeamId(), chunk.pos.x, chunk.pos.z, load);
+				}
+			}
+		});
 	}
 
 	public void saveNow() {
@@ -394,7 +416,6 @@ public class FTBChunksTeamData {
 				default -> hasForceLoadMembers();
 			};
 		}
-		FTBChunks.LOGGER.info(String.format("chunks: can forceload? = %s", canForceLoadChunks));
 		return canForceLoadChunks;
 	}
 

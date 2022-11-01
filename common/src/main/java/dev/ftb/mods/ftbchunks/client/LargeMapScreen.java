@@ -218,8 +218,8 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode)) {
-			closeGui(true);
+		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode) || key.escOrInventory()) {
+			closeGui(false);
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_SPACE)) {
 			movedToPlayer = false;

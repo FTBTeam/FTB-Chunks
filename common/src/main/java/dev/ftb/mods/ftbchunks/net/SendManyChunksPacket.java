@@ -17,11 +17,14 @@ import java.util.UUID;
  * @author LatvianModder
  */
 public class SendManyChunksPacket extends BaseS2CMessage {
-	public ResourceKey<Level> dimension;
-	public UUID teamId;
-	public List<SendChunkPacket.SingleChunk> chunks;
+	public final ResourceKey<Level> dimension;
+	public final UUID teamId;
+	public final List<SendChunkPacket.SingleChunk> chunks;
 
-	public SendManyChunksPacket() {
+	public SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, List<SendChunkPacket.SingleChunk> chunks) {
+		this.dimension = dimension;
+		this.teamId = teamId;
+		this.chunks = chunks;
 	}
 
 	@Override

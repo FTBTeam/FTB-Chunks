@@ -34,9 +34,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -110,7 +108,8 @@ public class FTBChunks {
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
-		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
+//		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
+		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 		TeamEvent.COLLECT_PROPERTIES.register(this::teamConfig);
 		TeamEvent.PLAYER_JOINED_PARTY.register(this::playerJoinedParty);
@@ -336,18 +335,17 @@ public class FTBChunks {
 		}
 	}
 
-	public EventResult playerDeath(LivingEntity entity, DamageSource source) {
-		if (entity instanceof ServerPlayer) {
-			ServerPlayer player = (ServerPlayer) entity;
-			ResourceKey<Level> dim = player.level.dimension();
-			int x = Mth.floor(player.getX());
-			int y = Mth.floor(player.getY());
-			int z = Mth.floor(player.getZ());
-			int num = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS)) + 1;
-			new PlayerDeathPacket(dim, x, y, z, num).sendTo((ServerPlayer) entity);
+	private void playerCloned(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean wonGame) {
+		// this is better than checking for living death event, because player cloning isn't cancellable
+		// the player death event is cancellable, and we can't detect cancelled events with Architectury
+		if (!wonGame) {
+			ResourceKey<Level> dim = oldPlayer.level.dimension();
+			int x = oldPlayer.getBlockX();
+			int y = oldPlayer.getBlockY();
+			int z = oldPlayer.getBlockZ();
+			int num = newPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+			new PlayerDeathPacket(dim, x, y, z, num).sendTo(newPlayer);
 		}
-
-		return EventResult.pass();
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {

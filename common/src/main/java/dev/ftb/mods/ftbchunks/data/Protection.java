@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.ftb.mods.ftbchunks.FTBCUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,7 +42,7 @@ public interface Protection {
 		ItemStack stack = player.getItemInHand(hand);
 
 		//FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG.contains(stack.getItem())
-		if (stack.isEdible() || stack.is(FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG)) {
+		if (stack.isEdible() || FTBCUtils.isBeneficialPotion(stack) || stack.is(FTBChunksAPI.RIGHT_CLICK_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		} else if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_INTERACT_MODE)) {
 			return ProtectionOverride.ALLOW;

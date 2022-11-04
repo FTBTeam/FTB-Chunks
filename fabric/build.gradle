@@ -52,8 +52,8 @@ dependencies {
 //	modImplementation("curse.maven:auth-me-356643:3725468")
 //	modImplementation("curse.maven:cloth-config-319057:3641132")
 
-	// modImplementation("curse.maven:balm-fabric-500525:${balm_fabric_version}")
-	// modImplementation("curse.maven:waystones-fabric-500087:${waystones_fabric_version}")
+	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")
+	modCompileOnly("curse.maven:waystones-fabric-500087:${waystones_fabric_version}")
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }

@@ -20,12 +20,14 @@ public class ClaimedChunk implements ClaimResult {
 	public final ChunkDimPos pos;
 	public long time;
 	public long forceLoaded;
+	long expiryTime;
 
 	public ClaimedChunk(FTBChunksTeamData p, ChunkDimPos cp) {
 		teamData = p;
 		pos = cp;
 		time = System.currentTimeMillis();
 		forceLoaded = 0L;
+		expiryTime = 0L;
 	}
 
 	public FTBChunksTeamData getTeamData() {
@@ -48,7 +50,7 @@ public class ClaimedChunk implements ClaimResult {
 	@Override
 	public void setClaimedTime(long t) {
 		time = t;
-		teamData.manager.updateForceLoadedChunks();
+		teamData.manager.clearForceLoadedCache();
 		sendUpdateToAll();
 	}
 
@@ -67,7 +69,7 @@ public class ClaimedChunk implements ClaimResult {
 	@Override
 	public void setForceLoadedTime(long time) {
 		forceLoaded = time;
-		teamData.manager.updateForceLoadedChunks();
+		teamData.manager.clearForceLoadedCache();
 		sendUpdateToAll();
 
 		ServerLevel level = teamData.manager.getMinecraftServer().getLevel(pos.dimension);
@@ -116,7 +118,7 @@ public class ClaimedChunk implements ClaimResult {
 	public void unclaim(CommandSourceStack source, boolean sync) {
 		unload(source);
 
-		teamData.manager.claimedChunks.remove(pos);
+		teamData.manager.unregisterClaim(pos);
 		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, this);
 		teamData.save();
 
@@ -127,5 +129,18 @@ public class ClaimedChunk implements ClaimResult {
 			packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null);
 			packet.sendToAll(source.getServer());
 		}
+	}
+
+	public boolean hasExpired(long now) {
+		return expiryTime > 0L && expiryTime < now;
+	}
+
+	public long getExpiryTime() {
+		return expiryTime;
+	}
+
+	@Override
+	public String toString() {
+		return "[ " + pos.toString() + " - " + teamData + " ]";
 	}
 }

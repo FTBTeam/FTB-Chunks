@@ -10,8 +10,9 @@ import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
-import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,13 +39,14 @@ import java.util.*;
 public class ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = new LevelResource("ftbchunks");
 
-	public final TeamManager teamManager;
+	private static final Long2ObjectMap<UUID> EMPTY_CHUNKS = Long2ObjectMaps.emptyMap();
 
-	public final Map<UUID, FTBChunksTeamData> teamData;
-	public final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
-	public Path dataDirectory;
-	public Path localDirectory;
-	private Map<ResourceKey<Level>, Pair<UUID, LongOpenHashSet>> forceLoadedChunks;
+	private final TeamManager teamManager;
+
+	private final Map<UUID, FTBChunksTeamData> teamData;
+	private final Map<ChunkDimPos, ClaimedChunk> claimedChunks;
+	private final Path dataDirectory;
+	private Map<ResourceKey<Level>, Long2ObjectMap<UUID>> forceLoadedChunkCache;
 
 	public ClaimedChunkManager(TeamManager m) {
 		teamManager = m;
@@ -51,7 +54,7 @@ public class ClaimedChunkManager {
 		claimedChunks = new HashMap<>();
 
 		dataDirectory = getMinecraftServer().getWorldPath(DATA_DIR);
-		localDirectory = Platform.getGameFolder().resolve("local/ftbchunks");
+		Path localDirectory = Platform.getGameFolder().resolve("local/ftbchunks");
 
 		try {
 			if (Files.notExists(dataDirectory)) {
@@ -69,16 +72,16 @@ public class ClaimedChunkManager {
 	public void initForceLoadedChunks(ServerLevel level) {
 		int forceLoaded = 0;
 
-		var set = getForceLoadedChunks().get(level.dimension());
+		var map = getForceLoadedChunks(level.dimension());
 
-		if (set == null || level.getChunkSource() == null) {
+		if (map.isEmpty() || level.getChunkSource() == null) {
 			return;
 		}
 
-		for (var pos : set.right()) {
+		map.forEach((pos, id) -> {
 			ChunkPos chunkPos = new ChunkPos(pos);
-			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, set.left(), chunkPos.x, chunkPos.z, true);
-		}
+			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, id, chunkPos.x, chunkPos.z, true);
+		});
 
 		level.getChunkSource().save(false);
 
@@ -161,11 +164,10 @@ public class ClaimedChunkManager {
 	}
 
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {
-		if (!(entity instanceof ServerPlayer) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
+		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
 			return false;
 		}
 
-		ServerPlayer player = (ServerPlayer) entity;
 		boolean isFake = PlayerHooks.isFake(player);
 
 		if (isFake && FTBChunksWorldConfig.FAKE_PLAYERS.get().isOverride()) {
@@ -198,30 +200,41 @@ public class ClaimedChunkManager {
 		return false;
 	}
 
-	public void updateForceLoadedChunks() {
-		forceLoadedChunks = null;
+	public void clearForceLoadedCache() {
+		forceLoadedChunkCache = null;
 	}
 
-	public Map<ResourceKey<Level>, Pair<UUID, LongOpenHashSet>> getForceLoadedChunks() {
-		if (forceLoadedChunks == null) {
-			forceLoadedChunks = new HashMap<>();
+	public Map<ResourceKey<Level>,Long2ObjectMap<UUID>> getForceLoadedChunks() {
+		if (forceLoadedChunkCache == null) {
+			forceLoadedChunkCache = new HashMap<>();
 
-			for (ClaimedChunk chunk : claimedChunks.values()) {
+			for (ClaimedChunk chunk : getAllClaimedChunks()) {
 				if (chunk.isActuallyForceLoaded()) {
-					Pair<UUID, LongOpenHashSet> chunkPosSet = forceLoadedChunks.computeIfAbsent(chunk.pos.dimension, k -> Pair.of(chunk.teamData.getTeamId(), new LongOpenHashSet()));
-					chunkPosSet.right().add(ChunkPos.asLong(chunk.pos.x, chunk.pos.z));
+					Long2ObjectMap<UUID> pos2idMap = forceLoadedChunkCache.computeIfAbsent(chunk.pos.dimension, k -> new Long2ObjectOpenHashMap<>());
+					pos2idMap.put(ChunkPos.asLong(chunk.pos.x, chunk.pos.z), chunk.teamData.getTeamId());
 				}
 			}
 
-			forceLoadedChunks = forceLoadedChunks.isEmpty() ? Collections.emptyMap() : forceLoadedChunks;
+			forceLoadedChunkCache = forceLoadedChunkCache.isEmpty() ? Collections.emptyMap() : forceLoadedChunkCache;
 		}
 
-		return forceLoadedChunks;
+		return forceLoadedChunkCache;
+	}
+
+	@Nonnull
+	public Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension) {
+		return getForceLoadedChunks().getOrDefault(dimension, EMPTY_CHUNKS);
 	}
 
 	public boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z) {
-		var set = getForceLoadedChunks().get(dimension);
-		return set != null && set.right().contains(ChunkPos.asLong(x, z));
+		return getForceLoadedChunks(dimension).containsKey(ChunkPos.asLong(x, z));
 	}
 
+	public void registerClaim(ChunkDimPos pos, ClaimedChunk chunk) {
+		claimedChunks.put(pos, chunk);
+	}
+
+	public void unregisterClaim(ChunkDimPos pos) {
+		claimedChunks.remove(pos);
+	}
 }

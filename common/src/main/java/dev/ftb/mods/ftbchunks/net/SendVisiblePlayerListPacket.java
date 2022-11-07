@@ -50,7 +50,7 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 	public static void sendAll() {
 		List<VisiblePlayerListItem> playerList = new ArrayList<>();
 
-		for (ServerPlayer player : FTBChunksAPI.getManager().teamManager.server.getPlayerList().getPlayers()) {
+		for (ServerPlayer player : FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers()) {
 			VisiblePlayerListItem item = new VisiblePlayerListItem();
 			item.player = player;
 			item.data = FTBChunksAPI.getManager().getData(player);

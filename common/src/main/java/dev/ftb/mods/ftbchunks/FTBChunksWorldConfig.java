@@ -2,11 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftblibrary.config.NameMap;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
+import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -33,6 +29,7 @@ public interface FTBChunksWorldConfig {
 	StringListValue CLAIM_DIMENSION_BLACKLIST = CONFIG.getStringList("claim_dimension_blacklist", Collections.emptyList()).comment("Blacklist for dimensions where chunks can't be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End");
 	BooleanValue NO_WILDERNESS = CONFIG.getBoolean("no_wilderness", false).comment("Requires you to claim chunks in order to edit and interact with blocks");
 	BooleanValue FORCE_DISABLE_MINIMAP = CONFIG.getBoolean("force_disable_minimap", false).comment("Minimap for clients connecting to this server will be disabled");
+	LongValue MAX_IDLE_DAYS_BEFORE_UNCLAIM = CONFIG.getLong("max_idle_days_before_unclaim", 0L, 0L, Long.MAX_VALUE).comment("Maximum time (in real-world days) where if no player in a team logs in, the team automatically loses their claims. Prevents chunks being claimed indefinitely by teams who no longer play. Default of 0 means no automatic loss of claims.");
 
 	Set<ResourceKey<Level>> CLAIM_DIMENSION_BLACKLIST_SET = new HashSet<>();
 
@@ -54,11 +51,9 @@ public interface FTBChunksWorldConfig {
 
 	static boolean getChunkLoadOffline(ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
-			FTBChunks.LOGGER.info(String.format("chunks: from ranks: offline = %s", FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get())));
 			return FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get());
 		}
 
-		FTBChunks.LOGGER.info(String.format("chunks: from config: offline = %s", CHUNK_LOAD_OFFLINE.get()));
 		return CHUNK_LOAD_OFFLINE.get();
 	}
 

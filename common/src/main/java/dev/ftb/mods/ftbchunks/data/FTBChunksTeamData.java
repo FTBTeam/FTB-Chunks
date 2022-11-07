@@ -58,6 +58,7 @@ public class FTBChunksTeamData {
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
+	private long lastLoginTime;
 
 	public FTBChunksTeamData(ClaimedChunkManager m, Path f, Team t) {
 		manager = m;
@@ -70,6 +71,7 @@ public class FTBChunksTeamData {
 		extraForceLoadChunks = 0;
 		forceLoadMembers = new HashSet<>();
 		originalClaims = new HashMap<>();
+		lastLoginTime = 0L;
 	}
 
 	@Override
@@ -92,7 +94,7 @@ public class FTBChunksTeamData {
 	public Collection<ClaimedChunk> getClaimedChunks() {
 		List<ClaimedChunk> list = new ArrayList<>();
 
-		for (ClaimedChunk chunk : manager.claimedChunks.values()) {
+		for (ClaimedChunk chunk : manager.getAllClaimedChunks()) {
 			if (chunk.teamData == this) {
 				list.add(chunk);
 			}
@@ -104,7 +106,7 @@ public class FTBChunksTeamData {
 	public Collection<ClaimedChunk> getForceLoadedChunks() {
 		List<ClaimedChunk> list = new ArrayList<>();
 
-		for (ClaimedChunk chunk : manager.claimedChunks.values()) {
+		for (ClaimedChunk chunk : manager.getAllClaimedChunks()) {
 			if (chunk.teamData == this && chunk.isForceLoaded()) {
 				list.add(chunk);
 			}
@@ -154,7 +156,7 @@ public class FTBChunksTeamData {
 	}
 
 	public ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.getChunk(pos);
 
 		if (chunk != null) {
 			return ClaimResults.ALREADY_CLAIMED;
@@ -176,14 +178,15 @@ public class FTBChunksTeamData {
 			return r;
 		}
 
-		manager.claimedChunks.put(pos, chunk);
+		chunk.setClaimedTime(System.currentTimeMillis());
+		manager.registerClaim(pos, chunk);
 		ClaimedChunkEvent.AFTER_CLAIM.invoker().after(source, chunk);
 		save();
 		return chunk;
 	}
 
 	public ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
@@ -206,7 +209,7 @@ public class FTBChunksTeamData {
 	}
 
 	public ClaimResult load(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
@@ -236,7 +239,7 @@ public class FTBChunksTeamData {
 	}
 
 	public ClaimResult unload(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.claimedChunks.get(pos);
+		ClaimedChunk chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
@@ -309,6 +312,7 @@ public class FTBChunksTeamData {
 		tag.putInt("max_force_load_chunks", maxForceLoadChunks);
 		tag.putInt("extra_claim_chunks", extraClaimChunks);
 		tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
+		tag.putLong("last_login_time", lastLoginTime);
 
 		ListTag forceLoadMembersTag = new ListTag();
 
@@ -317,6 +321,7 @@ public class FTBChunksTeamData {
 		}
 
 		tag.put("force_load_members", forceLoadMembersTag);
+
 
 		CompoundTag chunksTag = new CompoundTag();
 
@@ -333,9 +338,11 @@ public class FTBChunksTeamData {
 			o.putInt("x", chunk.getPos().x);
 			o.putInt("z", chunk.getPos().z);
 			o.putLong("time", chunk.getTimeClaimed());
-
 			if (chunk.isForceLoaded()) {
 				o.putLong("force_loaded", chunk.getForceLoadedTime());
+			}
+			if (chunk.getExpiryTime() > 0L) {
+				o.putLong("expiry_time", chunk.getExpiryTime());
 			}
 
 			chunksListTag.add(o);
@@ -368,6 +375,7 @@ public class FTBChunksTeamData {
 		maxForceLoadChunks = tag.getInt("max_force_load_chunks");
 		extraClaimChunks = tag.getInt("extra_claim_chunks");
 		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
+		lastLoginTime = tag.getLong("last_login_time");
 		forceLoadMembers.clear();
 
 		ListTag forgeLoadMembersTag = tag.getList("force_load_members", Tag.TAG_STRING);
@@ -394,7 +402,8 @@ public class FTBChunksTeamData {
 				ClaimedChunk chunk = new ClaimedChunk(this, new ChunkDimPos(dimKey, o.getInt("x"), o.getInt("z")));
 				chunk.time = o.getLong("time");
 				chunk.forceLoaded = o.getLong("force_loaded");
-				manager.claimedChunks.put(chunk.pos, chunk);
+				chunk.expiryTime = o.getLong("expiry_time");
+				manager.registerClaim(chunk.pos, chunk);
 			}
 		}
 
@@ -434,7 +443,7 @@ public class FTBChunksTeamData {
 		if (val ? forceLoadMembers.add(id) : forceLoadMembers.remove(id)) {
 			save();
 			canForceLoadChunks = null;
-			manager.updateForceLoadedChunks();
+			manager.clearForceLoadedCache();
 		}
 
 		if (!wasEmpty && forceLoadMembers.isEmpty()) {
@@ -495,4 +504,15 @@ public class FTBChunksTeamData {
 		return team.getProperty(ALLOW_EXPLOSIONS);
 	}
 
+	public void setLastLoginTime(long when) {
+		this.lastLoginTime = when;
+		save();
+	}
+
+	public long getLastLoginTime() {
+		if (lastLoginTime == 0L) {
+			setLastLoginTime(System.currentTimeMillis());
+		}
+		return lastLoginTime;
+	}
 }

@@ -107,9 +107,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 			}));
 
 			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), Icons.REMOVE, () -> {
-				waypoint.dimension.getWaypoints().remove(waypoint);
-				waypoint.dimension.saveData = true;
-				RefreshMinimapIconsEvent.trigger();
+				waypoint.dimension.getWaypointManager().remove(waypoint);
 				screen.regionPanel.refreshWidgets();
 			}));
 
@@ -125,9 +123,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 		if (super.keyPressed(screen, key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_DELETE)) {
-			waypoint.dimension.getWaypoints().remove(waypoint);
-			waypoint.dimension.saveData = true;
-			RefreshMinimapIconsEvent.trigger();
+			waypoint.dimension.getWaypointManager().remove(waypoint);
 			screen.regionPanel.refreshWidgets();
 			return true;
 		}

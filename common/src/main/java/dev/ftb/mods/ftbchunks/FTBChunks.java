@@ -117,8 +117,15 @@ public class FTBChunks {
 		TeamEvent.PLAYER_LEFT_PARTY.register(this::playerLeftParty);
 		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
 		TickEvent.SERVER_POST.register(this::serverTickPost);
+		TickEvent.PLAYER_POST.register(this::playerTickPost);
 
 		PROXY.init();
+	}
+
+	private void playerTickPost(Player player) {
+		if (player.level.isClientSide && player.level.getGameTime() % 20 == 0) {
+			FTBChunks.PROXY.maybeClearDeathpoint(player);
+		}
 	}
 
 	private void serverBeforeStart(MinecraftServer server) {
@@ -356,6 +363,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
 		// event.add(FTBChunksTeamData.LOCATION_MODE);

@@ -30,6 +30,7 @@ public interface FTBChunksClientConfig {
 	BooleanValue OWN_CLAIMED_CHUNKS_ON_MAP = CONFIG.getBoolean("own_claimed_chunks_on_map", true).comment("Show your own claimed chunks on the map");
 	BooleanValue IN_WORLD_WAYPOINTS = CONFIG.getBoolean("in_world_waypoints", true).comment("Show waypoints in world");
 	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
+	IntValue DEATH_WAYPOINT_AUTOREMOVE_DISTANCE = CONFIG.getInt("death_waypoint_autoremove_distance", 0, 0, Integer.MAX_VALUE).comment("Automatically remove death waypoints if closer than this many blocks away (distance of 0 disables removal)");
 	BooleanValue ONLY_SURFACE_ENTITIES = CONFIG.getBoolean("only_surface_entities", true).comment("Only show entities that are on the surface");
 	DoubleValue WAYPOINT_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Distance at which waypoints start to fade");
 	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");

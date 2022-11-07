@@ -1,8 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
@@ -20,17 +18,9 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.DeflaterOutputStream;
 
 /**
@@ -62,7 +52,7 @@ public class MapDimension implements MapTask {
 	public final String safeDimensionId;
 	public final Path directory;
 	private Map<XZ, MapRegion> regions;
-	private List<Waypoint> waypoints;
+	private WaypointManager waypointManager;
 	public boolean saveData;
 	public Long2IntMap loadedChunkView;
 
@@ -123,7 +113,6 @@ public class MapDimension implements MapTask {
 		}
 	}
 
-	@Nullable
 	public int[] getColors(int x, int z, ColorsFromRegion colors) {
 		MapRegion region = getRegions().get(XZ.of(x, z));
 		return region == null ? null : colors.getColors(region.getDataBlocking());
@@ -144,52 +133,12 @@ public class MapDimension implements MapTask {
 		}
 	}
 
-	public List<Waypoint> getWaypoints() {
-		if (waypoints == null) {
-			waypoints = new ArrayList<>();
-
-			Path file = directory.resolve("waypoints.json");
-
-			if (Files.exists(file)) {
-				try (Reader reader = Files.newBufferedReader(file)) {
-					JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
-
-					if (json.has("waypoints")) {
-						for (JsonElement e : json.get("waypoints").getAsJsonArray()) {
-							JsonObject o = e.getAsJsonObject();
-
-							Waypoint w = new Waypoint(this);
-							w.hidden = o.get("hidden").getAsBoolean();
-							w.name = o.get("name").getAsString();
-							w.x = o.get("x").getAsInt();
-							w.y = o.get("y").getAsInt();
-							w.z = o.get("z").getAsInt();
-							w.color = 0xFFFFFF;
-
-							if (o.has("color")) {
-								try {
-									w.color = Integer.decode(o.get("color").getAsString());
-								} catch (Exception ex) {
-								}
-							}
-
-							if (o.has("type")) {
-								w.type = WaypointType.TYPES.getOrDefault(o.get("type").getAsString(), WaypointType.DEFAULT);
-							}
-
-							waypoints.add(w);
-							w.update();
-						}
-					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-
+	public WaypointManager getWaypointManager() {
+		if (waypointManager == null) {
+			waypointManager = WaypointManager.fromJson(this);
 			RefreshMinimapIconsEvent.trigger();
 		}
-
-		return waypoints;
+		return waypointManager;
 	}
 
 	public void release() {
@@ -198,13 +147,13 @@ public class MapDimension implements MapTask {
 		}
 
 		regions = null;
-		waypoints = null;
+		waypointManager = null;
 	}
 
 	@Override
 	public void runMapTask() throws Exception {
-		List<Waypoint> waypoints = new ArrayList<>(getWaypoints());
-		List<MapRegion> regionList = new ArrayList<>(getRegions().values());
+		List<Waypoint> waypoints = ImmutableList.copyOf(getWaypointManager());
+		List<MapRegion> regionList = ImmutableList.copyOf(getRegions().values());
 
 		if (!waypoints.isEmpty() || !regionList.isEmpty()) {
 			FTBChunks.EXECUTOR.execute(() -> {
@@ -219,26 +168,7 @@ public class MapDimension implements MapTask {
 	}
 
 	private void writeData(List<Waypoint> waypoints, List<MapRegion> regionList) throws IOException {
-		JsonObject json = new JsonObject();
-		JsonArray waypointArray = new JsonArray();
-
-		for (Waypoint w : waypoints) {
-			JsonObject o = new JsonObject();
-			o.addProperty("hidden", w.hidden);
-			o.addProperty("name", w.name);
-			o.addProperty("x", w.x);
-			o.addProperty("y", w.y);
-			o.addProperty("z", w.z);
-			o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
-			o.addProperty("type", w.type.id);
-			waypointArray.add(o);
-		}
-
-		json.add("waypoints", waypointArray);
-
-		try (Writer writer = Files.newBufferedWriter(directory.resolve("waypoints.json"))) {
-			FTBChunks.GSON.toJson(json, writer);
-		}
+		WaypointManager.writeJson(this, waypoints);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

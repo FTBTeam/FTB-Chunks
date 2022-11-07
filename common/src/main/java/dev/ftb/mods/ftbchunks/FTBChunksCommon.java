@@ -10,6 +10,7 @@ import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -53,5 +54,8 @@ public class FTBChunksCommon {
 
 	public boolean skipBlock(BlockState state) {
 		return false;
+	}
+
+	public void maybeClearDeathpoint(Player player) {
 	}
 }

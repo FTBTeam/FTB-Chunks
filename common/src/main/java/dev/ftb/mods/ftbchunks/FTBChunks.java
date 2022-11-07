@@ -116,6 +116,7 @@ public class FTBChunks {
 		TeamEvent.PLAYER_JOINED_PARTY.register(this::playerJoinedParty);
 		TeamEvent.PLAYER_LEFT_PARTY.register(this::playerLeftParty);
 		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
+		TickEvent.SERVER_POST.register(this::serverTickPost);
 
 		PROXY.init();
 	}
@@ -161,7 +162,7 @@ public class FTBChunks {
 		long now = System.currentTimeMillis();
 		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 
-		for (ClaimedChunk chunk : FTBChunksAPI.getManager().claimedChunks.values()) {
+		for (ClaimedChunk chunk : FTBChunksAPI.getManager().getAllClaimedChunks()) {
 			chunksToSend.computeIfAbsent(Pair.of(chunk.pos.dimension, chunk.teamData.getTeamId()), s -> new ArrayList<>())
 					.add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
 		}
@@ -170,6 +171,8 @@ public class FTBChunks {
 			SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
 			packet.sendTo(player);
 		});
+
+		data.setLastLoginTime(now);
 
 		data.setForceLoadMember(player.getUUID(), true);
 	}
@@ -193,7 +196,7 @@ public class FTBChunks {
 
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.getChunkLoadOffline(player));
-		FTBChunksAPI.getManager().updateForceLoadedChunks();
+		FTBChunksAPI.getManager().clearForceLoadedCache();
 	}
 
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
@@ -327,8 +330,7 @@ public class FTBChunks {
 		Map<ChunkDimPos, Boolean> map = new HashMap<>();
 
 		for (BlockPos pos : list) {
-			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos ->
-			{
+			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
 				ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(cpos);
 				return chunk == null || chunk.allowExplosions();
 			})) {
@@ -446,4 +448,9 @@ public class FTBChunks {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(event.getTeam());
 		data.updateLimits(event.getTo());
 	}
+
+	private void serverTickPost(MinecraftServer minecraftServer) {
+		ClaimExpirationManager.INSTANCE.tick();
+	}
+
 }

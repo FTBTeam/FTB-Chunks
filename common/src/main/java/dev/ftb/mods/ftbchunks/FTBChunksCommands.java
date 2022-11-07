@@ -7,11 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
-import dev.ftb.mods.ftbchunks.data.ClaimResult;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -225,13 +221,9 @@ public class FTBChunksCommands {
 
 	private static int claim(CommandSourceStack source, Team team, int r, ColumnPos anchor, Level level) throws CommandSyntaxException {
 		int[] success = new int[1];
-		long now = System.currentTimeMillis();
 
 		forEachChunk(team, level, anchor, r, (data, pos) -> {
-			ClaimResult result = data.claim(source, pos, false);
-
-			if (result.isSuccess()) {
-				result.setClaimedTime(now);
+			if (data.claim(source, pos, false).isSuccess()) {
 				success[0]++;
 			}
 		});
@@ -267,13 +259,10 @@ public class FTBChunksCommands {
 
 	private static int load(CommandSourceStack source, int r) throws CommandSyntaxException {
 		int[] success = new int[1];
-		long now = System.currentTimeMillis();
 
 		forEachChunk(source, r, (data, pos) -> {
 			ClaimResult result = data.load(source, pos, false);
-
 			if (result.isSuccess()) {
-				result.setForceLoadedTime(now);
 				success[0]++;
 			}
 		});
@@ -411,13 +400,10 @@ public class FTBChunksCommands {
 			chunks.put(holder.getPos().toLong(), 1);
 		}
 
-		var set = FTBChunksAPI.getManager().getForceLoadedChunks().get(level.dimension());
-
-		if (set != null) {
-			for (long pos : set.right()) {
-				if (chunks.get(pos) == 1) {
-					chunks.put(pos, 2);
-				}
+		var map = FTBChunksAPI.getManager().getForceLoadedChunks(level.dimension());
+		for (long pos : map.keySet()) {
+			if (chunks.get(pos) == 1) {
+				chunks.put(pos, 2);
 			}
 		}
 

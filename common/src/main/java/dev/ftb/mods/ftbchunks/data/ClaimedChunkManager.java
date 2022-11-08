@@ -163,7 +163,17 @@ public class ClaimedChunkManager {
 		teamManager.getInternalPlayerTeam(player).save();
 	}
 
-	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {
+	/**
+	 * Check if the intended interaction should be prevented from occurring.
+	 *
+	 * @param entity the entity performing the interaction
+	 * @param hand the actor's hand
+	 * @param pos the block position at which the action will be performed
+	 * @param protection the type of protection being checked for
+	 * @param targetEntity the entity being acted upon, if any (e.g. a painting, armor stand etc.)
+	 * @return true to prevent the interaction, false to permit it
+	 */
+	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
 		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
 			return false;
 		}
@@ -177,7 +187,7 @@ public class ClaimedChunkManager {
 		ClaimedChunk chunk = getChunk(new ChunkDimPos(player.level, pos));
 
 		if (chunk != null) {
-			ProtectionOverride override = protection.override(player, pos, hand, chunk);
+			ProtectionOverride override = protection.override(player, pos, hand, chunk, targetEntity);
 
 			if (override.isOverride()) {
 				return override.getProtect();
@@ -185,7 +195,7 @@ public class ClaimedChunkManager {
 
 			return isFake || !getBypassProtection(player.getUUID());
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
-			ProtectionOverride override = protection.override(player, pos, hand, null);
+			ProtectionOverride override = protection.override(player, pos, hand, null, targetEntity);
 
 			if (override.isOverride()) {
 				return override.getProtect();

@@ -67,11 +67,14 @@ public class SendChunkPacket extends BaseS2CMessage {
 		}
 	}
 
-	public ResourceKey<Level> dimension;
-	public UUID teamId;
-	public SingleChunk chunk;
+	public final ResourceKey<Level> dimension;
+	public final UUID teamId;
+	public final SingleChunk chunk;
 
-	public SendChunkPacket() {
+	public SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, SingleChunk chunk) {
+		this.dimension = dimension;
+		this.teamId = teamId;
+		this.chunk = chunk;
 	}
 
 	@Override

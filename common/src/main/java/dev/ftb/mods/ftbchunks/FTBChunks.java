@@ -109,7 +109,6 @@ public class FTBChunks {
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
-//		EntityEvent.LIVING_DEATH.register(this::playerDeath); // LOWEST
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 		TeamEvent.COLLECT_PROPERTIES.register(this::teamConfig);
@@ -174,8 +173,12 @@ public class FTBChunks {
 		}
 
 		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
-			SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
-			packet.sendTo(player);
+			Team team = FTBTeamsAPI.getManager().getTeamByID(dimensionAndId.getRight());
+			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(team);
+			if (!teamData.shouldHideClaims() || teamData.isAlly(player.getUUID())) {
+				SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
+				packet.sendTo(player);
+			}
 		});
 
 		data.setLastLoginTime(now);
@@ -373,7 +376,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
-		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
+		event.add(FTBChunksTeamData.HIDE_CLAIMS);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
 		// event.add(FTBChunksTeamData.LOCATION_MODE);
 	}
@@ -447,7 +450,7 @@ public class FTBChunks {
 		if (chunks > 0) {
 			chunksToSend.forEach((dimension, chunkPackets) -> {
 				if (!chunkPackets.isEmpty()) {
-					new SendManyChunksPacket(dimension, transferTo.getTeamId(), chunkPackets).sendToAll(sourceStack.getServer());
+					ChunkSendingUtils.sendManyChunksPacketToAll(sourceStack.getServer(), transferTo, new SendManyChunksPacket(dimension, transferTo.getTeamId(), chunkPackets));
 				}
 			});
 

@@ -43,6 +43,7 @@ public class FTBChunksTeamData {
 	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty LOCATION_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.ALLIES);
 	public static final BooleanProperty ALLOW_EXPLOSIONS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_explosions"), false);
+	public static final BooleanProperty HIDE_CLAIMS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "hide_claims"), false);
 
 	public final ClaimedChunkManager manager;
 	private final Team team;
@@ -503,6 +504,10 @@ public class FTBChunksTeamData {
 
 	public boolean allowExplosions() {
 		return team.getProperty(ALLOW_EXPLOSIONS);
+	}
+
+	public boolean shouldHideClaims() {
+		return team.getProperty(HIDE_CLAIMS);
 	}
 
 	public void setLastLoginTime(long when) {

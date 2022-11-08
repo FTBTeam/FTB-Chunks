@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
+import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.Util;
@@ -100,11 +101,8 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public void sendUpdateToAll() {
-		SendChunkPacket packet = new SendChunkPacket();
-		packet.dimension = pos.dimension;
-		packet.teamId = teamData.getTeamId();
-		packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this);
-		packet.sendToAll(teamData.manager.getMinecraftServer());
+		SendChunkPacket packet = new SendChunkPacket(pos.dimension, teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this));
+		ChunkSendingUtils.sendChunkPacketToAll(teamData.manager.getMinecraftServer(), teamData, packet);
 	}
 
 	public void unload(CommandSourceStack source) {
@@ -123,10 +121,7 @@ public class ClaimedChunk implements ClaimResult {
 		teamData.save();
 
 		if (sync) {
-			SendChunkPacket packet = new SendChunkPacket();
-			packet.dimension = pos.dimension;
-			packet.teamId = Util.NIL_UUID;
-			packet.chunk = new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null);
+			SendChunkPacket packet = new SendChunkPacket(pos.dimension, Util.NIL_UUID, new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null));
 			packet.sendToAll(source.getServer());
 		}
 	}

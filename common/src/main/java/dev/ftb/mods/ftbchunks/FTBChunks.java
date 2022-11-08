@@ -101,6 +101,7 @@ public class FTBChunks {
 		InteractionEvent.LEFT_CLICK_BLOCK.register(this::blockLeftClick);
 		InteractionEvent.RIGHT_CLICK_BLOCK.register(this::blockRightClick);
 		InteractionEvent.RIGHT_CLICK_ITEM.register(this::itemRightClick);
+		InteractionEvent.INTERACT_ENTITY.register(this::interactEntity);
 		BlockEvent.BREAK.register(this::blockBreak);
 		BlockEvent.PLACE.register(this::blockPlace);
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
@@ -205,7 +206,7 @@ public class FTBChunks {
 	}
 
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK)) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK, null)) {
 			return EventResult.interruptFalse();
 		}
 
@@ -213,7 +214,7 @@ public class FTBChunks {
 	}
 
 	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK)) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK, null)) {
 			return EventResult.interruptFalse();
 		}
 
@@ -221,15 +222,24 @@ public class FTBChunks {
 	}
 
 	public CompoundEventResult<ItemStack> itemRightClick(Player player, InteractionHand hand) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM)) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM, null)) {
 			return CompoundEventResult.interruptFalse(player.getItemInHand(hand));
 		}
 
 		return CompoundEventResult.pass();
 	}
 
+
+	private EventResult interactEntity(Player player, Entity entity, InteractionHand hand) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, entity.blockPosition(), Protection.INTERACT_ENTITY, entity)) {
+			return EventResult.interruptFalse();
+		}
+
+		return EventResult.pass();
+	}
+
 	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
-		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
+		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
 			return EventResult.interruptFalse();
 		}
 
@@ -237,7 +247,7 @@ public class FTBChunks {
 	}
 
 	public EventResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
-		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
+		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
 			return EventResult.interruptFalse();
 		}
 
@@ -245,7 +255,7 @@ public class FTBChunks {
 	}
 
 	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
-		if (player instanceof ServerPlayer && target instanceof BlockHitResult && FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, ((BlockHitResult) target).getBlockPos(), Protection.EDIT_FLUID)) {
+		if (player instanceof ServerPlayer && target instanceof BlockHitResult && FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, ((BlockHitResult) target).getBlockPos(), Protection.EDIT_FLUID, null)) {
 			return CompoundEventResult.interrupt(false, null);
 		}
 
@@ -253,7 +263,7 @@ public class FTBChunks {
 	}
 
 	public EventResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, float distance, Entity entity) {
-		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK)) {
+		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
 			return EventResult.interrupt(false);
 		}
 
@@ -361,6 +371,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);

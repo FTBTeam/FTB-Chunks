@@ -3,6 +3,7 @@
 	"package": "dev.ftb.mods.ftbchunks.core.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
+		"ArmorStandMixin",
 		"BiomeMixin",
 		"BlockStateMixin",
 		"ChunkMapMixin",

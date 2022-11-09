@@ -29,8 +29,9 @@ public class WaypointManager implements Iterable<Waypoint> {
     public static WaypointManager fromJson(MapDimension mapDimension) {
         Path file = mapDimension.directory.resolve(WAYPOINTS_FILE);
 
+        WaypointManager manager = new WaypointManager(mapDimension);
+
         if (Files.exists(file)) {
-            WaypointManager manager = new WaypointManager(mapDimension);
             try (Reader reader = Files.newBufferedReader(file)) {
                 JsonObject json = FTBChunks.GSON.fromJson(reader, JsonObject.class);
 
@@ -59,13 +60,12 @@ public class WaypointManager implements Iterable<Waypoint> {
 
                     }
                 }
-                return manager;
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
 
-        return null;
+        return manager;
     }
 
     public static void writeJson(MapDimension mapDimension, List<Waypoint> waypoints) throws IOException {

@@ -33,9 +33,6 @@ public class FTBChunksCommon {
 	public void updateAllChunks(SendManyChunksPacket packet) {
 	}
 
-	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet) {
-	}
-
 	public void importWorldMap(ServerLevel world) {
 	}
 

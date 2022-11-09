@@ -45,7 +45,7 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "ftbteams"
 mandatory = true
-versionRange = "[1.0.0,)"
+versionRange = "[1802.2.7-build.73,)"
 ordering = "AFTER"
 side = "BOTH"
 

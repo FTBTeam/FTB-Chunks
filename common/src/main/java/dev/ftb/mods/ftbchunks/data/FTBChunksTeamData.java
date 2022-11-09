@@ -5,7 +5,10 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
+import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
@@ -24,6 +27,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -31,6 +35,7 @@ import net.minecraft.world.level.Level;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -40,10 +45,10 @@ public class FTBChunksTeamData {
 	public static final PrivacyProperty BLOCK_EDIT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_edit_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty BLOCK_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_interact_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty ENTITY_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "entity_interact_mode"), PrivacyMode.ALLIES);
-	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
-	public static final PrivacyProperty LOCATION_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.ALLIES);
+	//	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
+	public static final PrivacyProperty LOCATION_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.PUBLIC);
 	public static final BooleanProperty ALLOW_EXPLOSIONS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_explosions"), false);
-	public static final BooleanProperty HIDE_CLAIMS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "hide_claims"), false);
+	public static final PrivacyProperty CLAIM_VISIBILITY = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "claim_visibility"), PrivacyMode.PUBLIC);
 
 	public final ClaimedChunkManager manager;
 	private final Team team;
@@ -506,10 +511,6 @@ public class FTBChunksTeamData {
 		return team.getProperty(ALLOW_EXPLOSIONS);
 	}
 
-	public boolean shouldHideClaims() {
-		return team.getProperty(HIDE_CLAIMS);
-	}
-
 	public void setLastLoginTime(long when) {
 		this.lastLoginTime = when;
 		save();
@@ -520,5 +521,33 @@ public class FTBChunksTeamData {
 			setLastLoginTime(System.currentTimeMillis());
 		}
 		return lastLoginTime;
+	}
+
+	public boolean shouldHideClaims() {
+		return getTeam().getProperty(CLAIM_VISIBILITY) != PrivacyMode.PUBLIC;
+	}
+
+	public void syncChunksToPlayer(ServerPlayer recipient) {
+		chunksByDimension().forEach((dimension, chunkPackets) -> {
+			if (!chunkPackets.isEmpty()) {
+				ChunkSendingUtils.sendManyChunksToPlayer(recipient, this, new SendManyChunksPacket(dimension, getTeamId(), chunkPackets));
+			}
+		});
+	}
+
+	public void syncChunksToAll(MinecraftServer server) {
+		chunksByDimension().forEach((dimension, chunkPackets) -> {
+			if (!chunkPackets.isEmpty()) {
+				ChunkSendingUtils.sendManyChunksToAll(server, this, new SendManyChunksPacket(dimension, getTeamId(), chunkPackets));
+			}
+		});
+	}
+
+	private Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksByDimension() {
+		long now = System.currentTimeMillis();
+		return getClaimedChunks().stream()
+				.collect(Collectors.groupingBy(
+						c -> c.pos.dimension, Collectors.mapping(c -> new SendChunkPacket.SingleChunk(now, c.pos.x, c.pos.z, c), Collectors.toList())
+				));
 	}
 }

@@ -82,5 +82,5 @@
 	"ftbteamsconfig.ftbchunks.entity_interact_mode": "Entity Interact Mode",
 	"ftbteamsconfig.ftbchunks.minimap_mode": "Minimap Mode",
 	"ftbteamsconfig.ftbchunks.location_mode": "Location Mode",
-	"ftbteamsconfig.ftbchunks.hide_claims": "Hide Claims from Unallied Players"
+	"ftbteamsconfig.ftbchunks.claim_visibility": "Claim Visibility"
 }

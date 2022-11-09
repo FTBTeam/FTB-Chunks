@@ -102,7 +102,7 @@ public class ClaimedChunk implements ClaimResult {
 
 	public void sendUpdateToAll() {
 		SendChunkPacket packet = new SendChunkPacket(pos.dimension, teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this));
-		ChunkSendingUtils.sendChunkPacketToAll(teamData.manager.getMinecraftServer(), teamData, packet);
+		ChunkSendingUtils.sendChunkToAll(teamData.manager.getMinecraftServer(), teamData, packet);
 	}
 
 	public void unload(CommandSourceStack source) {

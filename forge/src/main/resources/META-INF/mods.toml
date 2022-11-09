@@ -17,7 +17,7 @@ license = "All Rights Reserved"
 [[dependencies.ftbchunks]]
 modId = "forge"
 mandatory = true
-versionRange = "[28,)"
+versionRange = "[40.1.67,)"
 ordering = "NONE"
 side = "BOTH"
 

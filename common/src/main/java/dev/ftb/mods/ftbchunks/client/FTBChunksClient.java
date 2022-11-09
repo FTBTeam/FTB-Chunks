@@ -22,7 +22,6 @@ import dev.ftb.mods.ftbchunks.FTBChunksCommon;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
-import dev.ftb.mods.ftbchunks.data.PlayerLocation;
 import dev.ftb.mods.ftbchunks.integration.InWorldMapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIcon;
 import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
@@ -33,7 +32,6 @@ import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -296,13 +294,6 @@ public class FTBChunksClient extends FTBChunksCommon {
 		for (SendChunkPacket.SingleChunk c : packet.chunks) {
 			queue(new UpdateChunkFromServerTask(dimension, c, packet.teamId, now));
 		}
-	}
-
-	@Override
-	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet) {
-		PlayerLocation.CLIENT_LIST.clear();
-		PlayerLocation.currentDimension = packet.dim;
-		PlayerLocation.CLIENT_LIST.addAll(packet.players);
 	}
 
 	@Override
@@ -1031,6 +1022,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 	private void mapIcons(MapIconEvent event) {
 		Minecraft mc = event.mc;
 
+		if (mc.level == null || mc.player == null) return;
+
 		if (FTBChunksClientConfig.MINIMAP_WAYPOINTS.get()) {
 			for (Waypoint w : event.mapDimension.getWaypointManager()) {
 				if (!w.hidden || !event.mapType.isMinimap()) {
@@ -1071,7 +1064,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		if (FTBChunksClientConfig.MINIMAP_PLAYER_HEADS.get() && mc.level.players().size() > 1) {
 			for (AbstractClientPlayer player : mc.level.players()) {
-				if (player == mc.player || player.isInvisibleTo(mc.player)) {
+				if (player == mc.player || player.isInvisibleTo(mc.player) || !VisibleClientPlayers.isPlayerVisible(player)) {
 					continue;
 				}
 

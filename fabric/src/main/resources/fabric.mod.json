@@ -29,7 +29,7 @@
 		"minecraft": "~1.19",
 		"architectury": ">=3.4.9",
 		"ftblibrary": ">=1801.3.5-build.104",
-		"ftbteams": ">=1.0.0"
+		"ftbteams": ">=1802.2.7-build.73"
 	},
 	"breaks": {
 		"kubejs": "<1801.4.2-"

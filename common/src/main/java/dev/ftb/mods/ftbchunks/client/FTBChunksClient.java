@@ -119,6 +119,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 	private static final ResourceLocation BUTTON_ID = new ResourceLocation("ftbchunks:open_gui");
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
+	public static final ResourceLocation SQUARE_MASK = new ResourceLocation("ftbchunks:textures/square_mask.png");
+	public static final ResourceLocation SQUARE_BORDER = new ResourceLocation("ftbchunks:textures/square_border.png");
 	public static final ResourceLocation PLAYER = new ResourceLocation("ftbchunks:textures/player.png");
 	public static final ResourceLocation[] COMPASS = {
 			new ResourceLocation("ftbchunks:textures/compass_e.png"),
@@ -190,18 +192,18 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	private static void registerKeys() {
 		// Keybinding to open Large map screen
-		openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ui");
+		openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(openMapKey);
 
 		// Keybindings to zoom in minimap
-		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "key.categories.ui");
+		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(zoomInKey);
 
-		zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "key.categories.ui");
+		zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(zoomOutKey);
 
 		// Keybinding to quick-add waypoint at current position
-		addWaypointKey = new KeyMapping("key.ftbchunks.add_waypoint", InputConstants.Type.KEYSYM, -1, "key.categories.ui");
+		addWaypointKey = new KeyMapping("key.ftbchunks.add_waypoint", InputConstants.Type.KEYSYM, -1, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(addWaypointKey);
 	}
 
@@ -580,7 +582,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		float scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / guiScale);
-		float minimapRotation = (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() ? 180F : -mc.player.getYRot()) % 360F;
+		boolean rotationLocked = FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() || FTBChunksClientConfig.SQUARE_MINIMAP.get();
+		float minimapRotation = (rotationLocked ? 180F : -mc.player.getYRot()) % 360F;
 
 		int s = (int) (64D * scale);
 		double s2d = s / 2D;
@@ -627,7 +630,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.colorMask(false, false, false, false);
 		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-		RenderSystem.setShaderTexture(0, CIRCLE_MASK);
+		RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_MASK : CIRCLE_MASK);
 		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2f + border, -s2f + border, 0F).color(255, 255, 255, 255).uv(0F, 0F).endVertex();
 		buffer.vertex(m, -s2f + border, s2f - border, 0F).color(255, 255, 255, 255).uv(0F, 1F).endVertex();
@@ -659,7 +662,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.defaultBlendFunc();
 
 		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
-		RenderSystem.setShaderTexture(0, CIRCLE_BORDER);
+		RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER);
 		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		buffer.vertex(m, -s2f, -s2f, 0F).color(255, 255, 255, alpha).uv(0F, 0F).endVertex();
 		buffer.vertex(m, -s2f, s2f, 0F).color(255, 255, 255, alpha).uv(0F, 1F).endVertex();
@@ -742,7 +745,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			matrixStack.popPose();
 		}
 
-		if (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get()) {
+		if (rotationLocked) {
 			RenderSystem.setShaderTexture(0, PLAYER);
 			matrixStack.pushPose();
 			matrixStack.translate(x + s2d, y + s2d, z);

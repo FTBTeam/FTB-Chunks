@@ -8,6 +8,7 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -155,12 +156,16 @@ public class ClaimedChunkManager {
 	}
 
 	public boolean getBypassProtection(UUID player) {
-		return teamManager.getInternalPlayerTeam(player).getExtraData().getBoolean("BypassFTBChunksProtection");
+		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
+		return team != null && team.getExtraData().getBoolean("BypassFTBChunksProtection");
 	}
 
 	public void setBypassProtection(UUID player, boolean bypass) {
-		teamManager.getInternalPlayerTeam(player).getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
-		teamManager.getInternalPlayerTeam(player).save();
+		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
+		if (team != null) {
+			team.getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
+			team.save();
+		}
 	}
 
 	/**

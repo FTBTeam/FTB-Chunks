@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import me.shedaniel.architectury.hooks.LevelResourceHooks;
@@ -150,12 +151,16 @@ public class ClaimedChunkManager {
 	}
 
 	public boolean getBypassProtection(UUID player) {
-		return teamManager.getInternalPlayerTeam(player).getExtraData().getBoolean("BypassFTBChunksProtection");
+		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
+		return team != null && team.getExtraData().getBoolean("BypassFTBChunksProtection");
 	}
 
 	public void setBypassProtection(UUID player, boolean bypass) {
-		teamManager.getInternalPlayerTeam(player).getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
-		teamManager.getInternalPlayerTeam(player).save();
+		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
+		if (team != null) {
+			team.getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
+			team.save();
+		}
 	}
 
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {

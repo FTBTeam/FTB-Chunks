@@ -84,6 +84,6 @@
 	"ftbteamsconfig.ftbchunks.block_interact_mode": "Block Interact Mode",
 	"ftbteamsconfig.ftbchunks.entity_interact_mode": "Entity Interact Mode",
 	"ftbteamsconfig.ftbchunks.minimap_mode": "Minimap Mode",
-	"ftbteamsconfig.ftbchunks.location_mode": "Location Mode",
+	"ftbteamsconfig.ftbchunks.location_mode": "Location Visibility",
 	"ftbteamsconfig.ftbchunks.claim_visibility": "Claim Visibility"
 }

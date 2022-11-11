@@ -8,6 +8,7 @@ import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -21,23 +22,23 @@ public enum ClaimExpirationManager {
     private static final int RUN_INTERVAL = 600_000; // in milliseconds - every 10 minutes
     private long lastRun = 0L;
 
-    public void tick() {
+    public void tick(MinecraftServer server) {
         long now = System.currentTimeMillis();
         if (now - lastRun > RUN_INTERVAL) {
-            checkForIdleTeams(now);
-            checkForTemporaryClaims(now);
+            checkForIdleTeams(server, now);
+            checkForTemporaryClaims(server, now);
             lastRun = now;
         }
     }
 
-    private void checkForIdleTeams(final long now) {
+    private void checkForIdleTeams(MinecraftServer server, final long now) {
         final long max = FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNCLAIM.get() * 86_400_000L; // days -> milliseconds
 
         if (max == 0L) return;
 
         Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
         ClaimedChunkManager manager = FTBChunksAPI.getManager();
-        CommandSourceStack sourceStack = FTBTeamsAPI.getManager().server.createCommandSourceStack();
+        CommandSourceStack sourceStack = server.createCommandSourceStack();
 
         FTBTeamsAPI.getManager().getTeams().forEach(team -> {
             FTBChunksTeamData data = manager.getData(team);
@@ -56,10 +57,10 @@ public enum ClaimExpirationManager {
         syncUnclaimed(toSync, sourceStack);
     }
 
-    private void checkForTemporaryClaims(final long now) {
+    private void checkForTemporaryClaims(MinecraftServer server, final long now) {
         Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
         ClaimedChunkManager manager = FTBChunksAPI.getManager();
-        CommandSourceStack sourceStack = FTBTeamsAPI.getManager().server.createCommandSourceStack();
+        CommandSourceStack sourceStack = server.createCommandSourceStack();
 
         manager.getAllClaimedChunks().forEach(c -> {
             if (c.hasExpired(now)) {

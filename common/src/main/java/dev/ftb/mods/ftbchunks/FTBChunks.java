@@ -218,6 +218,7 @@ public class FTBChunks {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.getChunkLoadOffline(player));
 		FTBChunksAPI.getManager().clearForceLoadedCache();
+		LongRangePlayerTracker.INSTANCE.stopTracking(player);
 	}
 
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
@@ -530,6 +531,7 @@ public class FTBChunks {
 	}
 
 	private void serverTickPost(MinecraftServer minecraftServer) {
-		ClaimExpirationManager.INSTANCE.tick();
+		ClaimExpirationManager.INSTANCE.tick(minecraftServer);
+		LongRangePlayerTracker.INSTANCE.tick(minecraftServer);
 	}
 }

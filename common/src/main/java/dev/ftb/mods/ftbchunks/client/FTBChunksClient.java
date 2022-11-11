@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -22,16 +23,8 @@ import dev.ftb.mods.ftbchunks.FTBChunksCommon;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
-import dev.ftb.mods.ftbchunks.integration.InWorldMapIcon;
-import dev.ftb.mods.ftbchunks.integration.MapIcon;
-import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
-import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
-import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
-import dev.ftb.mods.ftbchunks.net.PartialPackets;
-import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
+import dev.ftb.mods.ftbchunks.integration.*;
+import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -112,6 +105,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 	};
 
 	private static final List<Component> MINIMAP_TEXT_LIST = new ArrayList<>(3);
+
+	private static final Map<UUID, TrackedPlayerMapIcon> longRangePlayerTracker = new HashMap<>();
 
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	public static long taskQueueTicks = 0L;
@@ -1065,14 +1060,22 @@ public class FTBChunksClient extends FTBChunksCommon {
 			}
 		}
 
-		if (FTBChunksClientConfig.MINIMAP_PLAYER_HEADS.get() && mc.level.players().size() > 1) {
-			for (AbstractClientPlayer player : mc.level.players()) {
-				if (player == mc.player || player.isInvisibleTo(mc.player) || !VisibleClientPlayers.isPlayerVisible(player)) {
-					continue;
-				}
+		if (FTBChunksClientConfig.MINIMAP_PLAYER_HEADS.get()) {
+			if (mc.level.players().size() > 1) {
+				for (AbstractClientPlayer player : mc.level.players()) {
+					if (player == mc.player || player.isInvisibleTo(mc.player) || !VisibleClientPlayers.isPlayerVisible(player)) {
+						continue;
+					}
 
-				event.add(new EntityMapIcon(player, FaceIcon.getFace(player.getGameProfile())));
+					// this player is tracked by vanilla, so we don't need to track it on long-range tracking
+					if (longRangePlayerTracker.remove(player.getUUID()) != null) {
+						LargeMapScreen.refreshIconsIfOpen();
+					}
+
+					event.add(new EntityMapIcon(player, FaceIcon.getFace(player.getGameProfile())));
+				}
 			}
+			longRangePlayerTracker.forEach((id, icon) -> event.add(icon));
 		}
 
 		if (!event.mapType.isMinimap()) {
@@ -1150,6 +1153,28 @@ public class FTBChunksClient extends FTBChunksCommon {
 					player.displayClientMessage(Component.translatable("ftbchunks.deathpoint_removed", wp.name).withStyle(ChatFormatting.YELLOW), true);
 				}
 			});
+		}
+	}
+
+	@Override
+	public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos, boolean valid) {
+		// called periodically when a player (outside of vanilla entity tracking range) that this client is tracking moves
+		boolean changed = false;
+		if (!valid) {
+			// invalid block pos indicates player should no longer be tracked on this client
+			// - player is either no longer in this world, or is now within the vanilla tracking range
+			changed = longRangePlayerTracker.remove(profile.getId()) != null;
+		} else {
+			TrackedPlayerMapIcon icon = longRangePlayerTracker.get(profile.getId());
+			if (icon == null) {
+				longRangePlayerTracker.put(profile.getId(), new TrackedPlayerMapIcon(profile, Vec3.atCenterOf(pos), FaceIcon.getFace(profile)));
+				changed = true;
+			} else {
+				icon.setPos(Vec3.atCenterOf(pos));
+			}
+		}
+		if (changed) {
+			LargeMapScreen.refreshIconsIfOpen();
 		}
 	}
 }

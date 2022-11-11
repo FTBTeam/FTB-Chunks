@@ -49,6 +49,7 @@ public class LargeMapScreen extends BaseScreen {
 	public int grabbed = 0;
 	public boolean movedToPlayer = false;
 	public Button claimChunksButton, dimensionButton, waypointsButton, settingsButton, alliesButton, syncButton;
+	private boolean needIconRefresh;
 
 	public LargeMapScreen() {
 		regionPanel = new RegionMapPanel(this);
@@ -221,6 +222,16 @@ public class LargeMapScreen extends BaseScreen {
 	}
 
 	@Override
+	public void tick() {
+		super.tick();
+
+		if (needIconRefresh) {
+			regionPanel.refreshWidgets();
+			needIconRefresh = false;
+		}
+	}
+
+	@Override
 	public boolean drawDefaultBackground(PoseStack matrixStack) {
 		if (!movedToPlayer) {
 			Player p = Minecraft.getInstance().player;
@@ -340,6 +351,12 @@ public class LargeMapScreen extends BaseScreen {
 			matrixStack.scale(0.5F, 0.5F, 1F);
 			theme.drawString(matrixStack, memoryUsage, 0, 0, Theme.SHADOW);
 			matrixStack.popPose();
+		}
+	}
+
+	public static void refreshIconsIfOpen() {
+		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof LargeMapScreen lms) {
+			lms.needIconRefresh = true;
 		}
 	}
 }

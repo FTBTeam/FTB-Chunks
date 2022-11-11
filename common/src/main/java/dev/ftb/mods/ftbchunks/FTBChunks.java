@@ -356,7 +356,7 @@ public class FTBChunks {
 			return true;
 		}
 
-		return explosion.source == null;
+		return explosion.source == null && !FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS.get();
 	}
 
 	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {

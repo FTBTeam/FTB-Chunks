@@ -31,6 +31,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue FORCE_DISABLE_MINIMAP = CONFIG.getBoolean("force_disable_minimap", false).comment("Minimap for clients connecting to this server will be disabled");
 	LongValue MAX_IDLE_DAYS_BEFORE_UNCLAIM = CONFIG.getLong("max_idle_days_before_unclaim", 0L, 0L, Long.MAX_VALUE).comment("Maximum time (in real-world days) where if no player in a team logs in, the team automatically loses their claims. Prevents chunks being claimed indefinitely by teams who no longer play. Default of 0 means no automatic loss of claims.");
 	IntValue LONG_RANGE_TRACKER_INTERVAL = CONFIG.getInt("long_range_tracker_interval", 20, 0, Integer.MAX_VALUE).comment("Interval in ticks to send updates to clients with long-range player tracking data. Setting this to 0 disables long-range tracking. Lower values mean more frequent updates but more server load and network traffic; be careful with this, especially on busy servers.");
+	BooleanValue PROTECT_UNKNOWN_EXPLOSIONS = CONFIG.getBoolean("protect_unknown_explosions", true).comment("When true, standard FTB Chunk explosion protection is applied in protected chunks when the source of the explosion cannot be determined (Ghast fireballs are a common case - vanilla supplies a null entity source)");
 
 	Set<ResourceKey<Level>> CLAIM_DIMENSION_BLACKLIST_SET = new HashSet<>();
 

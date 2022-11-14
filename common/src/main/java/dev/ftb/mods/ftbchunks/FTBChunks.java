@@ -4,40 +4,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.ExplosionFTBC;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbchunks.data.Protection;
-import dev.ftb.mods.ftbchunks.net.FTBChunksNet;
-import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
-import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
+import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
-import dev.ftb.mods.ftbteams.event.PlayerJoinedPartyTeamEvent;
-import dev.ftb.mods.ftbteams.event.PlayerLoggedInAfterTeamEvent;
-import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
-import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
-import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
-import dev.ftb.mods.ftbteams.event.TeamEvent;
-import dev.ftb.mods.ftbteams.event.TeamManagerEvent;
+import dev.ftb.mods.ftbteams.event.*;
 import me.shedaniel.architectury.event.CompoundEventResult;
 import me.shedaniel.architectury.event.EventResult;
-import me.shedaniel.architectury.event.events.BlockEvent;
-import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
-import me.shedaniel.architectury.event.events.EntityEvent;
-import me.shedaniel.architectury.event.events.ExplosionEvent;
-import me.shedaniel.architectury.event.events.InteractionEvent;
-import me.shedaniel.architectury.event.events.LifecycleEvent;
-import me.shedaniel.architectury.event.events.PlayerEvent;
+import me.shedaniel.architectury.event.events.*;
 import me.shedaniel.architectury.hooks.PlayerHooks;
 import me.shedaniel.architectury.platform.Platform;
 import me.shedaniel.architectury.registry.Registries;
@@ -78,11 +56,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -125,7 +99,6 @@ public class FTBChunks {
 		TeamEvent.CREATED.register(this::teamCreated);
 		TeamEvent.LOADED.register(this::teamLoaded);
 		TeamEvent.SAVED.register(this::teamSaved);
-		TeamEvent.DELETED.register(this::teamDeleted);
 		PlayerEvent.PLAYER_QUIT.register(this::loggedOut);
 		InteractionEvent.LEFT_CLICK_BLOCK.register(this::blockLeftClick);
 		InteractionEvent.RIGHT_CLICK_BLOCK.register(this::blockRightClick);
@@ -141,6 +114,7 @@ public class FTBChunks {
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 		TeamEvent.COLLECT_PROPERTIES.register(this::teamConfig);
 		TeamEvent.PLAYER_JOINED_PARTY.register(this::playerJoinedParty);
+		TeamEvent.PLAYER_LEFT_PARTY.register(this::playerLeftParty);
 		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
 
 		PROXY.init();
@@ -215,27 +189,6 @@ public class FTBChunks {
 
 	private void teamSaved(TeamEvent teamEvent) {
 		FTBChunksAPI.manager.getData(teamEvent.getTeam()).saveNow();
-	}
-
-	private void teamDeleted(TeamEvent teamEvent) {
-		if (!teamEvent.getTeam().getType().isPlayer()) {
-			CommandSourceStack sourceStack = teamEvent.getTeam().manager.server.createCommandSourceStack();
-			Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
-			long now = System.currentTimeMillis();
-
-			for (ClaimedChunk chunk : FTBChunksAPI.manager.getData(teamEvent.getTeam()).getClaimedChunks()) {
-				chunk.unclaim(sourceStack, false);
-				chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
-			}
-
-			for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
-				SendManyChunksPacket packet = new SendManyChunksPacket();
-				packet.dimension = entry.getKey();
-				packet.teamId = Util.NIL_UUID;
-				packet.chunks = entry.getValue();
-				packet.sendToAll(sourceStack.getServer());
-			}
-		}
 	}
 
 	public void loggedOut(ServerPlayer player) {
@@ -427,10 +380,27 @@ public class FTBChunks {
 	}
 
 	private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
-		CommandSourceStack sourceStack = event.getTeam().manager.server.createCommandSourceStack();
 		FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
 		FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
 		newData.updateLimits(event.getPlayer());
+
+		transferClaims(oldData, newData);
+	}
+
+	private void playerLeftParty(PlayerLeftPartyTeamEvent event) {
+		if (event.getTeamDeleted()) {
+			// last player leaving the party; transfer any claims the party had back to that player, if possible
+			FTBChunksTeamData ownerData = FTBChunksAPI.getManager().getData(event.getPlayer());
+			FTBChunksTeamData deletedData = FTBChunksAPI.getManager().getData(event.getTeam());
+
+			transferClaims(deletedData, ownerData);
+
+			FTBChunksAPI.getManager().deleteTeam(event.getTeam());
+		}
+	}
+
+	private void transferClaims(FTBChunksTeamData transferFrom, FTBChunksTeamData transferTo) {
+		CommandSourceStack sourceStack = FTBTeamsAPI.getManager().server.createCommandSourceStack();
 
 		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
@@ -438,12 +408,12 @@ public class FTBChunks {
 		long now = System.currentTimeMillis();
 		int total = 0;
 
-		for (ClaimedChunk chunk : oldData.getClaimedChunks()) {
-			if (total >= newData.maxClaimChunks) {
+		for (ClaimedChunk chunk : transferFrom.getClaimedChunks()) {
+			if (total >= transferTo.maxClaimChunks) {
 				chunk.unclaim(sourceStack, false);
 				chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
 			} else {
-				chunk.teamData = newData;
+				chunk.teamData = transferTo;
 				chunksToSend.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
 				chunks++;
 			}
@@ -451,27 +421,28 @@ public class FTBChunks {
 			total++;
 		}
 
-		if (chunks == 0) {
-			return;
-		}
+		if (chunks > 0) {
+			transferFrom.save();
+			transferTo.save();
 
-		for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
-			SendManyChunksPacket packet = new SendManyChunksPacket();
-			packet.dimension = entry.getKey();
-			packet.teamId = newData.getTeamId();
-			packet.chunks = entry.getValue();
-			packet.sendToAll(sourceStack.getServer());
-		}
+			for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
+				SendManyChunksPacket packet = new SendManyChunksPacket();
+				packet.dimension = entry.getKey();
+				packet.teamId = transferTo.getTeamId();
+				packet.chunks = entry.getValue();
+				packet.sendToAll(sourceStack.getServer());
+			}
 
-		for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
-			SendManyChunksPacket packet = new SendManyChunksPacket();
-			packet.dimension = entry.getKey();
-			packet.teamId = Util.NIL_UUID;
-			packet.chunks = entry.getValue();
-			packet.sendToAll(sourceStack.getServer());
-		}
+			for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
+				SendManyChunksPacket packet = new SendManyChunksPacket();
+				packet.dimension = entry.getKey();
+				packet.teamId = Util.NIL_UUID;
+				packet.chunks = entry.getValue();
+				packet.sendToAll(sourceStack.getServer());
+			}
 
-		FTBChunks.LOGGER.info("Transferred " + chunks + "/" + total + " chunks from " + oldData + " to " + newData);
+			FTBChunks.LOGGER.info("Transferred " + chunks + "/" + total + " chunks from " + transferFrom + " to " + transferTo);
+		}
 	}
 
 	private void teamOwnershipTransferred(PlayerTransferredTeamOwnershipEvent event) {

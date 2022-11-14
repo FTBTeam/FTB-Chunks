@@ -20,6 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -123,6 +124,20 @@ public class ClaimedChunkManager {
 	public boolean hasData(ServerPlayer player) {
 		Team team = FTBTeamsAPI.getManager().getPlayerTeam(player.getUUID());
 		return team != null && teamData.containsKey(team.getId());
+	}
+
+	public void deleteTeam(Team toDelete) {
+		FTBChunksTeamData data = teamData.get(toDelete.getId());
+
+		if (data != null && toDelete.getMembers().isEmpty()) {
+			FTBChunks.LOGGER.debug("dropping references to empty team " + toDelete.getId());
+			teamData.remove(toDelete.getId());
+			try {
+				Files.deleteIfExists(data.file);
+			} catch (IOException e) {
+				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.file, e.getMessage()));
+			}
+		}
 	}
 
 	@Nullable

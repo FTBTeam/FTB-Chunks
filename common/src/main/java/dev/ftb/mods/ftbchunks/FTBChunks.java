@@ -157,10 +157,7 @@ public class FTBChunks {
 		}
 
 		for (Map.Entry<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
-			SendManyChunksPacket packet = new SendManyChunksPacket();
-			packet.dimension = entry.getKey().getLeft();
-			packet.teamId = entry.getKey().getRight();
-			packet.chunks = entry.getValue();
+			SendManyChunksPacket packet = new SendManyChunksPacket(entry.getKey().getLeft(), entry.getKey().getRight(), entry.getValue());
 			packet.sendTo(player);
 		}
 
@@ -380,35 +377,42 @@ public class FTBChunks {
 	}
 
 	private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
-		FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
-		FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
-		newData.updateLimits(event.getPlayer());
+		FTBChunksTeamData playerData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
+		FTBChunksTeamData partyData = FTBChunksAPI.getManager().getData(event.getTeam());
+		partyData.updateLimits(event.getPlayer());
 
-		transferClaims(oldData, newData);
+		// keep a note of the claims the player had - if/when they leave the party, they get those claims back
+		// prevents malicious party stealing a player's claims by inviting and then kicking the player
+		partyData.noteOriginalClaims(playerData);
+		transferClaims(playerData, partyData, playerData.getClaimedChunks());
 	}
 
 	private void playerLeftParty(PlayerLeftPartyTeamEvent event) {
+		FTBChunksTeamData partyData  = FTBChunksAPI.getManager().getData(event.getTeam());
+		FTBChunksTeamData playerData = FTBChunksAPI.getManager().getData(event.getPlayer());
+
 		if (event.getTeamDeleted()) {
-			// last player leaving the party; transfer any claims the party had back to that player, if possible
-			FTBChunksTeamData ownerData = FTBChunksAPI.getManager().getData(event.getPlayer());
-			FTBChunksTeamData deletedData = FTBChunksAPI.getManager().getData(event.getTeam());
-
-			transferClaims(deletedData, ownerData);
-
+			// last player leaving the party; transfer any remaining claims the party had back to that player, if possible
+			transferClaims(partyData, playerData, partyData.getClaimedChunks());
+			// and purge party team data from manager & disk
 			FTBChunksAPI.getManager().deleteTeam(event.getTeam());
+		} else {
+			// return the departing player's original claims to them, if possible
+			transferClaims(partyData, playerData, partyData.getOriginalClaims(event.getPlayerId()));
+			partyData.originalClaims.remove(playerData.getTeamId());
 		}
 	}
 
-	private void transferClaims(FTBChunksTeamData transferFrom, FTBChunksTeamData transferTo) {
-		CommandSourceStack sourceStack = FTBTeamsAPI.getManager().server.createCommandSourceStack();
+	private void transferClaims(FTBChunksTeamData transferFrom, FTBChunksTeamData transferTo, Collection<ClaimedChunk> chunksToTransfer) {
+		CommandSourceStack sourceStack = FTBChunksAPI.getManager().getMinecraftServer().createCommandSourceStack();
 
 		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
 		int chunks = 0;
 		long now = System.currentTimeMillis();
-		int total = 0;
+		int total = transferTo.getClaimedChunks().size();
 
-		for (ClaimedChunk chunk : transferFrom.getClaimedChunks()) {
+		for (ClaimedChunk chunk : chunksToTransfer) {
 			if (total >= transferTo.maxClaimChunks) {
 				chunk.unclaim(sourceStack, false);
 				chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
@@ -426,18 +430,12 @@ public class FTBChunks {
 			transferTo.save();
 
 			for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
-				SendManyChunksPacket packet = new SendManyChunksPacket();
-				packet.dimension = entry.getKey();
-				packet.teamId = transferTo.getTeamId();
-				packet.chunks = entry.getValue();
+				SendManyChunksPacket packet = new SendManyChunksPacket(entry.getKey(), transferTo.getTeamId(), entry.getValue());
 				packet.sendToAll(sourceStack.getServer());
 			}
 
 			for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
-				SendManyChunksPacket packet = new SendManyChunksPacket();
-				packet.dimension = entry.getKey();
-				packet.teamId = Util.NIL_UUID;
-				packet.chunks = entry.getValue();
+				SendManyChunksPacket packet = new SendManyChunksPacket(entry.getKey(), Util.NIL_UUID, entry.getValue());
 				packet.sendToAll(sourceStack.getServer());
 			}
 

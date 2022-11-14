@@ -10,6 +10,7 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.data.TeamType;
 import dev.ftb.mods.ftbteams.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.property.PrivacyProperty;
 import me.shedaniel.architectury.hooks.PlayerHooks;
@@ -25,10 +26,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -51,6 +50,8 @@ public class FTBChunksTeamData {
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
 	public boolean hasMembersOnline;
+	// claims owned by team members before they joined the team - to be returned when player leaves a party
+	public final Map<UUID, Set<ChunkDimPos>> originalClaims;
 
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
@@ -66,6 +67,7 @@ public class FTBChunksTeamData {
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
 		hasMembersOnline = false;
+		originalClaims = new HashMap<>();
 	}
 
 	@Override
@@ -109,6 +111,26 @@ public class FTBChunksTeamData {
 		return list;
 	}
 
+	public Collection<ClaimedChunk> getOriginalClaims(UUID playerID) {
+		if (!originalClaims.containsKey(playerID)) return Collections.emptyList();
+
+		List<ClaimedChunk> res = new ArrayList<>();
+		for (ChunkDimPos cdp : originalClaims.get(playerID)) {
+			ClaimedChunk cc = manager.getChunk(cdp);
+			// original claim must still be claimed, and by the current team
+			if (cc != null && cc.teamData == this) {
+				res.add(manager.getChunk(cdp));
+			}
+		}
+
+		return res;
+	}
+
+	public void noteOriginalClaims(FTBChunksTeamData originalTeam) {
+		List<ChunkDimPos> claimedChunks = originalTeam.getClaimedChunks().stream().map(cc -> cc.pos).collect(Collectors.toList());
+		originalClaims.computeIfAbsent(originalTeam.getTeamId(), k -> new HashSet<>()).addAll(claimedChunks);
+	}
+	
 	public void updateLimits(ServerPlayer ownerPlayer) {
 		if (maxClaimChunks != -1 && team.getType().isParty() && !ownerPlayer.getUUID().equals(team.getOwner())) {
 			return;
@@ -312,6 +334,24 @@ public class FTBChunksTeamData {
 
 		tag.put("chunks", chunksTag);
 
+		if (team.getType() == TeamType.PARTY && !originalClaims.isEmpty()) {
+			CompoundTag originalClaimsTag = new CompoundTag();
+			originalClaims.forEach((id, posList) -> {
+				CompoundTag playerTag = new CompoundTag();
+				Map<String,ListTag> perDimensionTags = new HashMap<>();
+				posList.forEach(c -> {
+					ListTag l = perDimensionTags.computeIfAbsent(c.dimension.location().toString(), k -> new ListTag());
+					CompoundTag cdpTag = new CompoundTag();
+					cdpTag.putInt("x", c.x);
+					cdpTag.putInt("z", c.z);
+					l.add(cdpTag);
+				});
+				perDimensionTags.forEach(playerTag::put);
+				originalClaimsTag.put(id.toString(), playerTag);
+			});
+			tag.put("original_claims", originalClaimsTag);
+		}
+		
 		return tag;
 	}
 
@@ -334,6 +374,27 @@ public class FTBChunksTeamData {
 				chunk.time = o.getLong("time");
 				chunk.forceLoaded = o.getLong("force_loaded");
 				manager.claimedChunks.put(chunk.pos, chunk);
+			}
+		}
+
+		CompoundTag originalClaimsTag = tag.getCompound("original_claims");
+		originalClaims.clear();
+		for (String idStr : originalClaimsTag.getAllKeys()) {
+			try {
+				UUID id = UUID.fromString(idStr);
+				CompoundTag playerTag = originalClaimsTag.getCompound(idStr);
+				for (String dimStr : playerTag.getAllKeys()) {
+					ResourceKey<Level> dimKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(dimStr));
+					Set<ChunkDimPos> cdpSet = new HashSet<>();
+					playerTag.getList(dimStr, NbtType.COMPOUND).forEach(el -> {
+						if (el instanceof CompoundTag) {
+							CompoundTag c = (CompoundTag) el;
+							cdpSet.add(new ChunkDimPos(dimKey, c.getInt("x"), c.getInt("z")));
+						}
+					});
+					originalClaims.put(id, cdpSet);
+				}
+			} catch (IllegalArgumentException ignored) {
 			}
 		}
 	}

@@ -4,10 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.map.Waypoint;
+import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
@@ -48,7 +45,9 @@ public class LargeMapScreen extends BaseScreen {
 	public int prevMouseX, prevMouseY;
 	public int grabbed = 0;
 	public boolean movedToPlayer = false;
-	public Button claimChunksButton, dimensionButton, waypointsButton, settingsButton, alliesButton, syncButton;
+	public Button
+			claimChunksButton, dimensionButton, waypointsButton,
+			settingsButton, clearDeathpointsButton;
 	private boolean needIconRefresh;
 
 	public LargeMapScreen() {
@@ -120,6 +119,23 @@ public class LargeMapScreen extends BaseScreen {
 			}).openGui();
 		}));
 
+		add(clearDeathpointsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CLOSE, (b, m) -> {
+			WaypointManager wpm = MapManager.inst.getDimension(dimension.dimension).getWaypointManager();
+			if (wpm.removeIf(wp -> wp.type == WaypointType.DEATH)) {
+				refreshWidgets();
+			}
+		}) {
+			@Override
+			public boolean shouldDraw() {
+				return super.shouldDraw() && MapManager.inst.getDimension(dimension.dimension).getWaypointManager().hasDeathpoint();
+			}
+
+			@Override
+			public boolean isEnabled() {
+				return shouldDraw();
+			}
+		});
+
 		/*
 		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), Icons.REFRESH, (b, m) -> {
 			dimension.sync();
@@ -136,11 +152,12 @@ public class LargeMapScreen extends BaseScreen {
 					refreshWidgets();
 					movedToPlayer = false;
 				}
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}));
 
 		add(settingsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this))));
+
 	}
 
 	@Override
@@ -150,6 +167,7 @@ public class LargeMapScreen extends BaseScreen {
 		//waypointsButton.setPosAndSize(1, 37, 16, 16);
 		//syncButton.setPosAndSize(1, 55, 16, 16);
 		waypointsButton.setPosAndSize(1, 19, 16, 16);
+		clearDeathpointsButton.setPosAndSize(1, 37, 16, 16);
 		//syncButton.setPosAndSize(1, 37, 16, 16);
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);

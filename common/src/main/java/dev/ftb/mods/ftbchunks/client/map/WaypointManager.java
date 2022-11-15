@@ -14,6 +14,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class WaypointManager implements Iterable<Waypoint> {
     private static final String WAYPOINTS_FILE = "waypoints.json";
@@ -110,6 +111,17 @@ public class WaypointManager implements Iterable<Waypoint> {
         RefreshMinimapIconsEvent.trigger();
     }
 
+    public boolean removeIf(Predicate<Waypoint> predicate) {
+        if (waypoints.removeIf(predicate)) {
+            deathpoints.clear();
+            deathpoints.addAll(waypoints.stream().filter(w -> w.type == WaypointType.DEATH).toList());
+            mapDimension.saveData = true;
+            RefreshMinimapIconsEvent.trigger();
+            return true;
+        }
+        return false;
+    }
+
     public boolean isEmpty() {
         return waypoints.isEmpty();
     }
@@ -124,5 +136,9 @@ public class WaypointManager implements Iterable<Waypoint> {
     @Override
     public Iterator<Waypoint> iterator() {
         return waypoints.iterator();
+    }
+
+    public boolean hasDeathpoint() {
+        return !deathpoints.isEmpty();
     }
 }

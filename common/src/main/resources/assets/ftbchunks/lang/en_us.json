@@ -78,6 +78,7 @@
 	"ftbchunks.gui.add_waypoint": "Add Waypoint",
 	"ftbchunks.gui.settings": "Settings",
 	"ftbchunks.gui.sync": "Share Map with Allies",
+	"ftbchunks.gui.clear_deathpoints": "Clear all Death Waypoints",
 	"ftbteamsconfig.ftbchunks.allow_fake_players": "Allow Fake Players",
 	"ftbteamsconfig.ftbchunks.allow_explosions": "Allow Explosions",
 	"ftbteamsconfig.ftbchunks.block_edit_mode": "Block Edit Mode",

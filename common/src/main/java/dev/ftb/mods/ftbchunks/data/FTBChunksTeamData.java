@@ -15,10 +15,12 @@ import dev.ftb.mods.ftbteams.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.property.PrivacyProperty;
 import me.shedaniel.architectury.hooks.PlayerHooks;
 import me.shedaniel.architectury.utils.NbtType;
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -50,6 +52,8 @@ public class FTBChunksTeamData {
 	public int extraForceLoadChunks;
 	public boolean chunkLoadOffline;
 	public boolean hasMembersOnline;
+	// players who can forceload chunks while offline (regardless of global offline forceloading setting)
+	private final Set<UUID> offlineForceLoaders;
 	// claims owned by team members before they joined the team - to be returned when player leaves a party
 	public final Map<UUID, Set<ChunkDimPos>> originalClaims;
 
@@ -67,6 +71,7 @@ public class FTBChunksTeamData {
 		extraForceLoadChunks = 0;
 		chunkLoadOffline = true;
 		hasMembersOnline = false;
+		offlineForceLoaders = new HashSet<>();
 		originalClaims = new HashMap<>();
 	}
 
@@ -307,7 +312,14 @@ public class FTBChunksTeamData {
 		tag.putInt("max_force_load_chunks", maxForceLoadChunks);
 		tag.putInt("extra_claim_chunks", extraClaimChunks);
 		tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
-		tag.putBoolean("chunk_load_offline", chunkLoadOffline);
+
+		ListTag forceLoadMembersTag = new ListTag();
+
+		for (UUID id : offlineForceLoaders) {
+			forceLoadMembersTag.add(StringTag.valueOf(id.toString()));
+		}
+
+		tag.put("offline_forceloaders", forceLoadMembersTag);
 
 		CompoundTag chunksTag = new CompoundTag();
 
@@ -362,6 +374,16 @@ public class FTBChunksTeamData {
 		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
 		chunkLoadOffline = tag.getBoolean("chunk_load_offline");
 
+		ListTag forceLoadMembersTag = tag.getList("offline_forceloaders", NbtType.STRING);
+
+		if (tag.getBoolean("chunk_load_offline") && !team.getOwner().equals(Util.NIL_UUID)) {
+			offlineForceLoaders.add(team.getOwner());
+		} else {
+			for (int i = 0; i < forceLoadMembersTag.size(); i++) {
+				offlineForceLoaders.add(UUID.fromString(forceLoadMembersTag.getString(i)));
+			}
+		}
+
 		CompoundTag chunksTag = tag.getCompound("chunks");
 
 		for (String key : chunksTag.getAllKeys()) {
@@ -407,13 +429,23 @@ public class FTBChunksTeamData {
 		return extraForceLoadChunks;
 	}
 
-	public boolean getChunkLoadOffline() {
-		return chunkLoadOffline;
-	}
+	public void updateMemberForceloading(ServerPlayer player, boolean loggingIn) {
+		boolean canForceLoad = FTBChunksWorldConfig.canPlayerOfflineForceload(player);
 
-	public void setChunkLoadOffline(boolean val) {
-		chunkLoadOffline = val;
-		save();
+		UUID id = player.getUUID();
+		FTBChunks.LOGGER.debug("chunks: can player {} do offline force-loading? {}", id, canForceLoad);
+		if (canForceLoad ? offlineForceLoaders.add(id) : offlineForceLoaders.remove(id)) {
+			save();
+		}
+
+		FTBChunks.LOGGER.debug("update {}: logging in = {}, online players = {}", player.getName().getString(), loggingIn, team.getOnlineMembers().size());
+
+		// If offline chunk loading is globally enabled, then chunks will already have been forced when the level was loaded,
+		//   and we don't need to do anything here.
+		// Otherwise, chunks should be forced when the first player on the team logs in, or unforced when the last player logs out.
+		if (!FTBChunksWorldConfig.CHUNK_LOAD_OFFLINE.get() && team.getOnlineMembers().size() == 1) {
+			getForceLoadedChunks().forEach(chunk -> chunk.postSetForceLoaded(loggingIn || hasAnyOfflineForceloaders()));
+		}
 	}
 
 	public void saveNow() {
@@ -431,5 +463,9 @@ public class FTBChunksTeamData {
 
 	public boolean allowExplosions() {
 		return team.getProperty(ALLOW_EXPLOSIONS);
+	}
+
+	public boolean hasAnyOfflineForceloaders() {
+		return !offlineForceLoaders.isEmpty();
 	}
 }

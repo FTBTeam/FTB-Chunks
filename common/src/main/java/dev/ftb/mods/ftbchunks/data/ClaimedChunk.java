@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -7,7 +8,6 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.ChunkPos;
 
 /**
  * @author LatvianModder
@@ -73,9 +73,9 @@ public class ClaimedChunk implements ClaimResult {
 		ServerLevel world = getTeamData().getManager().getMinecraftServer().getLevel(getPos().dimension);
 
 		if (world != null) {
-			if (world.setChunkForced(getPos().x, getPos().z, load)) {
-				sendUpdateToAll();
-			}
+			boolean changed = world.setChunkForced(getPos().x, getPos().z, load);
+			FTBChunks.LOGGER.debug("set chunk {},{} forced={} change_made={}", getPos().x, getPos().z, load, changed);
+			if (changed) sendUpdateToAll();
 		}
 	}
 

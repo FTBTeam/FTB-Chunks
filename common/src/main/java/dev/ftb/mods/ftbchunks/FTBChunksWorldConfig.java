@@ -1,18 +1,9 @@
 package dev.ftb.mods.ftbchunks;
 
-import dev.ftb.mods.ftbchunks.data.AllyMode;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbchunks.data.ProtectionOverride;
+import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
-import me.shedaniel.architectury.hooks.LevelResourceHooks;
+import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,7 +19,7 @@ import java.util.Set;
  * @author LatvianModder
  */
 public interface FTBChunksWorldConfig {
-	LevelResource CONFIG_FILE_PATH = LevelResourceHooks.create("serverconfig/ftbchunks.snbt");
+	LevelResource CONFIG_FILE_PATH = new LevelResource("serverconfig/ftbchunks.snbt");
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
 
 	EnumValue<ProtectionOverride> FAKE_PLAYERS = CONFIG.getEnum("fake_players", NameMap.of(ProtectionOverride.CHECK, ProtectionOverride.values()).create()).comment("Override to disable/enable fake players like miners and auto-clickers globally. Default will check this setting for each team");
@@ -60,12 +51,8 @@ public interface FTBChunksWorldConfig {
 		return MAX_FORCE_LOADED_CHUNKS.get() + playerData.getExtraForceLoadChunks();
 	}
 
-	static boolean getChunkLoadOffline(FTBChunksTeamData playerData, ServerPlayer player) {
-		if (FTBChunks.ranksMod && player != null) {
-			return FTBRanksIntegration.getChunkLoadOffline(player, CHUNK_LOAD_OFFLINE.get());
-		}
-
-		return CHUNK_LOAD_OFFLINE.get();
+	static boolean canPlayerOfflineForceload(ServerPlayer player) {
+		return FTBChunks.ranksMod && player != null && FTBRanksIntegration.getChunkLoadOffline(player, false);
 	}
 
 	static boolean patchChunkLoading(ServerLevel world, ChunkPos pos) {

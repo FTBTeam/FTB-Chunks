@@ -13,6 +13,7 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.event.*;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import me.shedaniel.architectury.event.CompoundEventResult;
 import me.shedaniel.architectury.event.EventResult;
 import me.shedaniel.architectury.event.events.*;
@@ -31,6 +32,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
@@ -116,8 +118,24 @@ public class FTBChunks {
 		TeamEvent.PLAYER_JOINED_PARTY.register(this::playerJoinedParty);
 		TeamEvent.PLAYER_LEFT_PARTY.register(this::playerLeftParty);
 		TeamEvent.OWNERSHIP_TRANSFERRED.register(this::teamOwnershipTransferred);
+		LifecycleEvent.SERVER_WORLD_LOAD.register(this::onWorldLoaded);
 
 		PROXY.init();
+	}
+
+	private void onWorldLoaded(ServerLevel serverLevel) {
+		boolean globalOfflineForceloading = FTBChunksWorldConfig.CHUNK_LOAD_OFFLINE.get();
+		LongSet forcedChunks = serverLevel.getForcedChunks();
+
+		FTBChunksAPI.getManager().getAllClaimedChunks().forEach(cc -> {
+			if (cc.pos.dimension.equals(serverLevel.dimension()) && cc.isForceLoaded()) {
+				boolean shouldForce = globalOfflineForceloading || cc.teamData.hasAnyOfflineForceloaders();
+				boolean alreadyForced = forcedChunks.contains(cc.pos.getChunkPos().toLong());
+				if (shouldForce != alreadyForced) {
+					cc.postSetForceLoaded(shouldForce);
+				}
+			}
+		});
 	}
 
 	private void serverBeforeStart(MinecraftServer server) {
@@ -142,6 +160,7 @@ public class FTBChunks {
 		ServerPlayer player = event.getPlayer();
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.updateLimits(player);
+		data.updateMemberForceloading(player, true);
 
 		SNBTCompoundTag config = new SNBTCompoundTag();
 		FTBChunksWorldConfig.CONFIG.write(config);
@@ -161,19 +180,14 @@ public class FTBChunks {
 			packet.sendTo(player);
 		}
 
-		for (ClaimedChunk c : data.getClaimedChunks()) {
-			if (c.isForceLoaded()) {
-				ClaimedChunk chunk = FTBChunksAPI.getManager().claimedChunks.get(c.getPos());
+	}
 
-				if (chunk != null) {
-					chunk.postSetForceLoaded(true);
-				}
-			}
+	public void loggedOut(ServerPlayer player) {
+		if (!FTBTeamsAPI.isManagerLoaded() || !FTBChunksAPI.isManagerLoaded() || !FTBChunksAPI.getManager().hasData(player)) {
+			return;
 		}
 
-		if (data.getTeam().getOwner().equals(player.getUUID())) {
-			data.setChunkLoadOffline(FTBChunksWorldConfig.getChunkLoadOffline(data, player));
-		}
+		FTBChunksAPI.getManager().getData(player).updateMemberForceloading(player, false);
 	}
 
 	private void teamCreated(TeamCreatedEvent teamEvent) {
@@ -186,28 +200,6 @@ public class FTBChunks {
 
 	private void teamSaved(TeamEvent teamEvent) {
 		FTBChunksAPI.manager.getData(teamEvent.getTeam()).saveNow();
-	}
-
-	public void loggedOut(ServerPlayer player) {
-		if (!FTBTeamsAPI.isManagerLoaded() || !FTBChunksAPI.isManagerLoaded() || !FTBChunksAPI.getManager().hasData(player)) {
-			return;
-		}
-
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		boolean canChunkLoadOffline = FTBChunksWorldConfig.getChunkLoadOffline(data, player);
-		data.setChunkLoadOffline(canChunkLoadOffline);
-
-		if (!canChunkLoadOffline) {
-			for (ClaimedChunk chunk : data.getClaimedChunks()) {
-				ClaimedChunk c = FTBChunksAPI.getManager().claimedChunks.get(chunk.getPos());
-
-				if (c == null) {
-					return;
-				}
-
-				c.postSetForceLoaded(false);
-			}
-		}
 	}
 
 	public InteractionResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
@@ -385,6 +377,9 @@ public class FTBChunks {
 		// prevents malicious party stealing a player's claims by inviting and then kicking the player
 		partyData.noteOriginalClaims(playerData);
 		transferClaims(playerData, partyData, playerData.getClaimedChunks());
+
+		// not technically logging in, but we do want to update the team data with this player's offline forceloading...
+		partyData.updateMemberForceloading(event.getPlayer(), true);
 	}
 
 	private void playerLeftParty(PlayerLeftPartyTeamEvent event) {

@@ -8,7 +8,6 @@ import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
-import me.shedaniel.architectury.hooks.LevelResourceHooks;
 import me.shedaniel.architectury.hooks.PlayerHooks;
 import me.shedaniel.architectury.platform.Platform;
 import net.minecraft.core.BlockPos;
@@ -33,7 +32,7 @@ import java.util.UUID;
  * @author LatvianModder
  */
 public class ClaimedChunkManager {
-	public static final LevelResource DATA_DIR = LevelResourceHooks.create("ftbchunks");
+	public static final LevelResource DATA_DIR = new LevelResource("ftbchunks");
 
 	public final TeamManager teamManager;
 
@@ -63,21 +62,6 @@ public class ClaimedChunkManager {
 		}
 	}
 
-	public void init() {
-		long nanos = System.nanoTime();
-
-		int forceLoaded = 0;
-
-		for (ClaimedChunk chunk : claimedChunks.values()) {
-			if (chunk.isForceLoaded() && chunk.getTeamData().getChunkLoadOffline()) {
-				forceLoaded++;
-				chunk.postSetForceLoaded(true);
-			}
-		}
-
-		FTBChunks.LOGGER.info("Server " + teamManager.getId() + ": Loaded " + claimedChunks.size() + " chunks (" + forceLoaded + " force loaded) from " + teamData.size() + " teams in " + ((System.nanoTime() - nanos) / 1000000D) + "ms");
-	}
-
 	private FTBChunksTeamData loadTeamData(Team team) {
 		Path path = dataDirectory.resolve(team.getId() + ".snbt");
 		FTBChunksTeamData data = new FTBChunksTeamData(this, path, team);
@@ -86,13 +70,6 @@ public class ClaimedChunkManager {
 		if (dataFile != null) {
 			data.deserializeNBT(dataFile);
 			teamData.put(team.getId(), data);
-
-			for (ClaimedChunk chunk : data.getClaimedChunks()) {
-				if (chunk.isForceLoaded() && chunk.getTeamData().getChunkLoadOffline()) {
-					chunk.postSetForceLoaded(true);
-				}
-			}
-
 			return data;
 		}
 

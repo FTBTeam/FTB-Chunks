@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class WaypointManager implements Iterable<Waypoint> {
     private static final String WAYPOINTS_FILE = "waypoints.json";
@@ -140,5 +141,9 @@ public class WaypointManager implements Iterable<Waypoint> {
 
     public boolean hasDeathpoint() {
         return !deathpoints.isEmpty();
+    }
+
+    public Stream<Waypoint> stream() {
+        return waypoints.stream();
     }
 }

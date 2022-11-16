@@ -120,6 +120,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	public static KeyMapping zoomInKey;
 	public static KeyMapping zoomOutKey;
 	public static KeyMapping addWaypointKey;
+	public static KeyMapping waypointManagerKey;
 
 	public static int minimapTextureId = -1;
 	private int currentPlayerChunkX, currentPlayerChunkZ;
@@ -182,6 +183,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 		// Keybinding to quick-add waypoint at current position
 		addWaypointKey = new KeyMapping("key.ftbchunks.add_waypoint", InputConstants.Type.KEYSYM, -1, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(addWaypointKey);
+
+		// Keybinding to open the waypoint manager screen
+		waypointManagerKey = new KeyMapping("key.ftbchunks.waypoint_manager", InputConstants.Type.KEYSYM, -1, "key.categories.ftbchunks");
+		KeyMappingRegistry.register(waypointManagerKey);
 	}
 
 	@ExpectPlatform
@@ -396,6 +401,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 			return changeZoom(false);
 		} else if (addWaypointKey.isDown()) {
 			return addQuickWaypoint();
+		} else if (waypointManagerKey.isDown()) {
+			new WaypointEditorScreen().openGui();
 		}
 
 		return EventResult.pass();

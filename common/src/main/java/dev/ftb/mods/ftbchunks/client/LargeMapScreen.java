@@ -20,6 +20,7 @@ import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
@@ -46,9 +47,11 @@ public class LargeMapScreen extends BaseScreen {
 	public int prevMouseX, prevMouseY;
 	public int grabbed = 0;
 	public boolean movedToPlayer = false;
-	public Button
-			claimChunksButton, dimensionButton, waypointsButton,
-			settingsButton, clearDeathpointsButton;
+	public Button claimChunksButton;
+	public Button dimensionButton;
+	public Button waypointManagerButton;
+	public Button settingsButton;
+	public Button clearDeathpointsButton;
 	private boolean needIconRefresh;
 
 	public LargeMapScreen() {
@@ -97,28 +100,10 @@ public class LargeMapScreen extends BaseScreen {
 		add(regionPanel);
 
 		add(claimChunksButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.claimed_chunks"), Icons.MAP, (b, m) -> new ChunkScreen().openGui()));
-		/*
-		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.waypoints"), GuiIcons.BEACON, (b, m) -> {
-			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
-		}));
-		 */
+
+		add(waypointManagerButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.waypoints"), Icons.COMPASS, (b, m) -> new WaypointEditorScreen().openGui()));
 
 		// add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
-		add(waypointsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.add_waypoint"), Icons.ADD, (b, m) -> {
-			StringConfig name = new StringConfig();
-			new EditConfigFromStringScreen<>(name, set -> {
-				if (set) {
-					Player player = Minecraft.getInstance().player;
-					Waypoint w = new Waypoint(dimension, player.getBlockX(), player.getBlockY(), player.getBlockZ());
-					w.name = name.value;
-					w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
-					dimension.getWaypointManager().add(w);
-					refreshWidgets();
-				}
-
-				openGui();
-			}).openGui();
-		}));
 
 		add(clearDeathpointsButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.clear_deathpoints"), Icons.CLOSE, (b, m) -> {
 			WaypointManager wpm = MapManager.inst.getDimension(dimension.dimension).getWaypointManager();
@@ -163,13 +148,13 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public void alignWidgets() {
-		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		// alliesButton.setPosAndSize(1, 19, 16, 16);
-		//waypointsButton.setPosAndSize(1, 37, 16, 16);
-		//syncButton.setPosAndSize(1, 55, 16, 16);
-		waypointsButton.setPosAndSize(1, 19, 16, 16);
+		// syncButton.setPosAndSize(1, 55, 16, 16);
+
+		claimChunksButton.setPosAndSize(1, 1, 16, 16);
+		waypointManagerButton.setPosAndSize(1, 19, 16, 16);
 		clearDeathpointsButton.setPosAndSize(1, 37, 16, 16);
-		//syncButton.setPosAndSize(1, 37, 16, 16);
+
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 	}
@@ -190,12 +175,13 @@ public class LargeMapScreen extends BaseScreen {
 			prevMouseY = getMouseY();
 			return true;
 		} else if (button.isRight()) {
+			final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
 			List<ContextMenuItem> list = new ArrayList<>();
 			list.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.add_waypoint"), Icons.ADD, () -> {
 				StringConfig name = new StringConfig();
 				new EditConfigFromStringScreen<>(name, set -> {
 					if (set) {
-						Waypoint w = new Waypoint(dimension, regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
+						Waypoint w = new Waypoint(dimension, pos.getX(), pos.getY(), pos.getZ());
 						w.name = name.value;
 						w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
 						dimension.getWaypointManager().add(w);

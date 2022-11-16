@@ -427,7 +427,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		if (player == null || MapManager.inst == null) return EventResult.pass();
 
 		new EditConfigFromStringScreen<>(name, set -> {
-			if (set) {
+			if (set && !name.value.isEmpty()) {
 				MapDimension mapDimension = MapManager.inst.getDimension(player.level.dimension());
 				Waypoint w = new Waypoint(mapDimension, player.getBlockX(), player.getBlockY(), player.getBlockZ());
 				w.name = name.value;

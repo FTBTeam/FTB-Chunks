@@ -19,22 +19,26 @@ import java.util.UUID;
  */
 public class SendChunkPacket extends BaseS2CMessage {
 	public static class SingleChunk {
-		public int x, z;
-		public long relativeTimeClaimed;
-		public long relativeTimeForceLoaded;
-		public boolean forceLoaded;
+		public final int x, z;
+		public final long relativeTimeClaimed;
+		public final boolean forceLoaded;
+		public final long relativeTimeForceLoaded;
+		public final boolean expires;
+		public final long relativeForceLoadExpiryTime;
 
-		public SingleChunk(long now, int _x, int _z, @Nullable ClaimedChunk claimedChunk) {
-			x = _x;
-			z = _z;
+		public SingleChunk(long now, int x, int z, @Nullable ClaimedChunk claimedChunk) {
+			this.x = x;
+			this.z = z;
 
 			if (claimedChunk != null) {
 				relativeTimeClaimed = now - claimedChunk.getTimeClaimed();
 				forceLoaded = claimedChunk.isForceLoaded();
-
-				if (forceLoaded) {
-					relativeTimeForceLoaded = now - claimedChunk.getForceLoadedTime();
-				}
+				expires = claimedChunk.getForceLoadExpiryTime() > 0L;
+				relativeTimeForceLoaded = forceLoaded ? now - claimedChunk.getForceLoadedTime() : 0L;
+				relativeForceLoadExpiryTime = expires ? claimedChunk.getForceLoadExpiryTime() - now : 0L;
+			} else {
+				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0L;
+				forceLoaded = expires = false;
 			}
 		}
 
@@ -45,10 +49,12 @@ public class SendChunkPacket extends BaseS2CMessage {
 			if (!teamId.equals(Util.NIL_UUID)) {
 				relativeTimeClaimed = buf.readVarLong();
 				forceLoaded = buf.readBoolean();
-
-				if (forceLoaded) {
-					relativeTimeForceLoaded = buf.readVarLong();
-				}
+				expires = buf.readBoolean();
+				relativeTimeForceLoaded = forceLoaded ? buf.readVarLong() : 0L;
+				relativeForceLoadExpiryTime = expires ? buf.readVarLong() : 0L;
+			} else {
+				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0L;
+				forceLoaded = expires = false;
 			}
 		}
 
@@ -59,10 +65,9 @@ public class SendChunkPacket extends BaseS2CMessage {
 			if (!teamId.equals(Util.NIL_UUID)) {
 				buf.writeVarLong(relativeTimeClaimed);
 				buf.writeBoolean(forceLoaded);
-
-				if (forceLoaded) {
-					buf.writeVarLong(relativeTimeForceLoaded);
-				}
+				buf.writeBoolean(expires);
+				if (forceLoaded) buf.writeVarLong(relativeTimeForceLoaded);
+				if (expires) buf.writeVarLong(relativeForceLoadExpiryTime);
 			}
 		}
 	}

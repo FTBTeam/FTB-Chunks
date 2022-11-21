@@ -11,7 +11,6 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -26,14 +25,14 @@ public class ClaimedChunk implements ClaimResult {
 	public final ChunkDimPos pos;
 	public long time;
 	public long forceLoaded;
-	long expiryTime;
+	private long forceLoadExpiryTime;
 
 	public ClaimedChunk(FTBChunksTeamData p, ChunkDimPos cp) {
 		teamData = p;
 		pos = cp;
 		time = System.currentTimeMillis();
 		forceLoaded = 0L;
-		expiryTime = 0L;
+		forceLoadExpiryTime = 0L;
 	}
 
 	public FTBChunksTeamData getTeamData() {
@@ -115,6 +114,7 @@ public class ClaimedChunk implements ClaimResult {
 			setForceLoadedTime(0L);
 			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, this);
 			teamData.save();
+			forceLoadExpiryTime = 0L;
 		}
 	}
 
@@ -131,12 +131,17 @@ public class ClaimedChunk implements ClaimResult {
 		}
 	}
 
-	public boolean hasExpired(long now) {
-		return expiryTime > 0L && expiryTime < now;
+	public long getForceLoadExpiryTime() {
+		return forceLoadExpiryTime;
 	}
 
-	public long getExpiryTime() {
-		return expiryTime;
+	public void setForceLoadExpiryTime(long forceLoadExpiryTime) {
+		this.forceLoadExpiryTime = forceLoadExpiryTime;
+		teamData.save();
+	}
+
+	public boolean hasExpired(long now) {
+		return forceLoadExpiryTime > 0L && forceLoadExpiryTime < now;
 	}
 
 	@Override
@@ -153,8 +158,8 @@ public class ClaimedChunk implements ClaimResult {
 		if (isForceLoaded()) {
 			o.putLong("force_loaded", getForceLoadedTime());
 		}
-		if (getExpiryTime() > 0L) {
-			o.putLong("expiry_time", getExpiryTime());
+		if (getForceLoadExpiryTime() > 0L) {
+			o.putLong("expiry_time", getForceLoadExpiryTime());
 		}
 		return o;
 	}
@@ -163,7 +168,7 @@ public class ClaimedChunk implements ClaimResult {
 		ClaimedChunk chunk = new ClaimedChunk(data, new ChunkDimPos(dimKey, tag.getInt("x"), tag.getInt("z")));
 		chunk.time = tag.getLong("time");
 		chunk.forceLoaded = tag.getLong("force_loaded");
-		chunk.expiryTime = tag.getLong("expiry_time");
+		chunk.forceLoadExpiryTime = tag.getLong("expiry_time");
 		return chunk;
 	}
 }

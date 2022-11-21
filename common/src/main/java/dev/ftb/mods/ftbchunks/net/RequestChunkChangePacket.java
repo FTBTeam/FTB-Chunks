@@ -21,6 +21,10 @@ import java.util.function.Function;
  */
 public class RequestChunkChangePacket extends BaseC2SMessage {
 	private static final String[] ACTION_NAMES = {"claim", "unclaim", "load", "unload"};
+	public static final int CLAIM = 0;
+	public static final int UNCLAIM = 1;
+	public static final int LOAD = 2;
+	public static final int UNLOAD = 3;
 
 	private final int action;
 	private final Set<XZ> chunks;
@@ -66,10 +70,10 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 		Function<XZ, ClaimResult> consumer;
 
 		switch (action) {
-			case 0 -> consumer = pos -> data.claim(source, pos.dim(player.level), false);
-			case 1 -> consumer = pos -> data.unclaim(source, pos.dim(player.level), false);
-			case 2 -> consumer = pos -> data.load(source, pos.dim(player.level), false);
-			case 3 -> consumer = pos -> data.unload(source, pos.dim(player.level), false);
+			case CLAIM -> consumer = pos -> data.claim(source, pos.dim(player.level), false);
+			case UNCLAIM -> consumer = pos -> data.unclaim(source, pos.dim(player.level), false);
+			case LOAD -> consumer = pos -> data.load(source, pos.dim(player.level), false);
+			case UNLOAD -> consumer = pos -> data.unload(source, pos.dim(player.level), false);
 			default -> {
 				FTBChunks.LOGGER.warn("Unknown chunk action ID: " + action);
 				return;

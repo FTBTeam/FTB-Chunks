@@ -221,6 +221,9 @@ public class LargeMapScreen extends BaseScreen {
 			FTBChunksClientConfig.saveConfig();
 			dimension.manager.updateAllRegions(false);
 			return true;
+		} else if (key.is(GLFW.GLFW_KEY_C)) {
+			new ChunkScreen().openGui();
+			return true;
 		}
 
 		return false;

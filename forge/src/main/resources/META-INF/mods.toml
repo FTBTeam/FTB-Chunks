@@ -50,8 +50,16 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
+modId = "ftbranks"
+mandatory = false
+versionRange = "[1802.1.9-build.47,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
 modId = "kubejs"
 mandatory = false
 versionRange = "[1801.4.2-,)"
 ordering = "BEFORE"
 side = "BOTH"
+

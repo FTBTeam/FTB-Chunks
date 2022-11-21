@@ -6,12 +6,17 @@ import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 
 /**
  * @author LatvianModder
@@ -137,5 +142,28 @@ public class ClaimedChunk implements ClaimResult {
 	@Override
 	public String toString() {
 		return "[ " + pos.toString() + " - " + teamData + " ]";
+	}
+
+	public CompoundTag serializeNBT() {
+		SNBTCompoundTag o = new SNBTCompoundTag();
+		o.singleLine();
+		o.putInt("x", getPos().x);
+		o.putInt("z", getPos().z);
+		o.putLong("time", getTimeClaimed());
+		if (isForceLoaded()) {
+			o.putLong("force_loaded", getForceLoadedTime());
+		}
+		if (getExpiryTime() > 0L) {
+			o.putLong("expiry_time", getExpiryTime());
+		}
+		return o;
+	}
+
+	public static ClaimedChunk deserializeNBT(FTBChunksTeamData data, ResourceKey<Level> dimKey, CompoundTag tag) {
+		ClaimedChunk chunk = new ClaimedChunk(data, new ChunkDimPos(dimKey, tag.getInt("x"), tag.getInt("z")));
+		chunk.time = tag.getLong("time");
+		chunk.forceLoaded = tag.getLong("force_loaded");
+		chunk.expiryTime = tag.getLong("expiry_time");
+		return chunk;
 	}
 }

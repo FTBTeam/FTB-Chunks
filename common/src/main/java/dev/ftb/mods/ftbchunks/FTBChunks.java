@@ -132,6 +132,10 @@ public class FTBChunks {
 		TickEvent.SERVER_POST.register(this::serverTickPost);
 		TickEvent.PLAYER_POST.register(this::playerTickPost);
 
+		if (ranksMod) {
+			FTBRanksIntegration.registerEvents();
+		}
+
 		PROXY.init();
 	}
 
@@ -171,7 +175,7 @@ public class FTBChunks {
 	private void loggedIn(PlayerLoggedInAfterTeamEvent event) {
 		ServerPlayer player = event.getPlayer();
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.updateLimits(player);
+		data.updateLimits();
 
 		SNBTCompoundTag config = new SNBTCompoundTag();
 		FTBChunksWorldConfig.CONFIG.write(config);
@@ -197,7 +201,28 @@ public class FTBChunks {
 
 		data.setLastLoginTime(now);
 
-		data.setForceLoadMember(player.getUUID(), true);
+		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.canPlayerOfflineForceload(player));
+
+		if (data.getTeam().getOnlineMembers().size() == 1 && !data.canForceLoadChunks()) {
+			// first player on the team to log in; force chunks if the team can't do offline chunk-loading
+			data.updateChunkTickets(true);
+		}
+	}
+
+	public void loggedOut(ServerPlayer player) {
+		if (!FTBTeamsAPI.isManagerLoaded() || !FTBChunksAPI.isManagerLoaded() || !FTBChunksAPI.getManager().hasData(player)) {
+			return;
+		}
+
+		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
+		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.canPlayerOfflineForceload(player));
+		FTBChunksAPI.getManager().clearForceLoadedCache();
+		LongRangePlayerTracker.INSTANCE.stopTracking(player);
+
+		if (data.getTeam().getOnlineMembers().size() == 1 && !data.canForceLoadChunks()) {
+			// last player on the team to log out; unforce chunks if the team can't do offline chunk-loading
+			data.updateChunkTickets(false);
+		}
 	}
 
 	private void teamCreated(TeamCreatedEvent teamEvent) {
@@ -210,17 +235,6 @@ public class FTBChunks {
 
 	private void teamSaved(TeamEvent teamEvent) {
 		FTBChunksAPI.manager.getData(teamEvent.getTeam()).saveNow();
-	}
-
-	public void loggedOut(ServerPlayer player) {
-		if (!FTBTeamsAPI.isManagerLoaded() || !FTBChunksAPI.isManagerLoaded() || !FTBChunksAPI.getManager().hasData(player)) {
-			return;
-		}
-
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.getChunkLoadOffline(player));
-		FTBChunksAPI.getManager().clearForceLoadedCache();
-		LongRangePlayerTracker.INSTANCE.stopTracking(player);
 	}
 
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
@@ -407,14 +421,15 @@ public class FTBChunks {
 	private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
 		FTBChunksTeamData playerData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
 		FTBChunksTeamData partyData  = FTBChunksAPI.getManager().getData(event.getTeam());
-		partyData.updateLimits(event.getPlayer());
+
+		partyData.addMemberData(event.getPlayer(), playerData);
+		partyData.updateLimits();
 
 		// keep a note of the claims the player had - if/when they leave the party, they get those claims back
 		// prevents malicious party stealing a player's claims by inviting and then kicking the player
-		partyData.noteOriginalClaims(playerData);
 		transferClaims(playerData, partyData, playerData.getClaimedChunks());
-		// since they're online, they must be able to force load chunks
-		partyData.setForceLoadMember(event.getPlayer().getUUID(), true);
+
+		partyData.setForceLoadMember(event.getPlayer().getUUID(), FTBChunksWorldConfig.canPlayerOfflineForceload(event.getPlayer()));
 
 		SendVisiblePlayerListPacket.syncToLevel(event.getPlayer().level);
 		partyData.syncChunksToPlayer(event.getPlayer());
@@ -422,19 +437,24 @@ public class FTBChunks {
 
 	private void playerLeftParty(PlayerLeftPartyTeamEvent event) {
 		FTBChunksTeamData partyData  = FTBChunksAPI.getManager().getData(event.getTeam());
-		FTBChunksTeamData playerData = FTBChunksAPI.getManager().getData(event.getPlayer());
-		partyData.forceLoadMembers.remove(event.getPlayerId());
+		Team personalTeam = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getPlayerId());
 
-		if (event.getTeamDeleted()) {
-			// last player leaving the party; transfer any remaining claims the party had back to that player, if possible
-			transferClaims(partyData, playerData, partyData.getClaimedChunks());
-			// and purge party team data from manager & disk
-			FTBChunksAPI.getManager().deleteTeam(event.getTeam());
-		} else {
-			// return the departing player's original claims to them, if possible
-			transferClaims(partyData, playerData, partyData.getOriginalClaims(event.getPlayerId()));
-			partyData.originalClaims.remove(playerData.getTeamId());
+		if (personalTeam != null) {
+			FTBChunksTeamData playerData = FTBChunksAPI.getManager().getData(personalTeam);
+			if (event.getTeamDeleted()) {
+				// last player leaving the party; transfer any remaining claims the party had back to that player, if possible
+				transferClaims(partyData, playerData, partyData.getClaimedChunks());
+				// and purge party team data from manager & disk
+				FTBChunksAPI.getManager().deleteTeam(event.getTeam());
+			} else {
+				// return the departing player's original claims to them, if possible
+				transferClaims(partyData, playerData, partyData.getOriginalClaims(event.getPlayerId()));
+			}
 		}
+
+		partyData.deleteMemberData(event.getPlayerId());
+
+		partyData.updateLimits();
 
 		if (event.getPlayer() != null) {
 			SendVisiblePlayerListPacket.syncToLevel(event.getPlayer().level);
@@ -452,7 +472,7 @@ public class FTBChunks {
 		int total = transferTo.getClaimedChunks().size();
 
 		for (ClaimedChunk chunk : chunksToTransfer) {
-			if (total >= transferTo.maxClaimChunks) {
+			if (total >= transferTo.getMaxClaimChunks()) {
 				chunk.unclaim(sourceStack, false);
 				chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
 			} else {
@@ -497,7 +517,7 @@ public class FTBChunks {
 
 	private void teamOwnershipTransferred(PlayerTransferredTeamOwnershipEvent event) {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(event.getTeam());
-		data.updateLimits(event.getTo());
+		data.updateLimits();
 	}
 
 	private void teamPropertiesChanged(TeamPropertiesChangedEvent event) {

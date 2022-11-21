@@ -95,12 +95,12 @@ public class FTBChunksCommands {
 										)
 										.then(Commands.literal("set")
 												.then(Commands.argument("number", IntegerArgumentType.integer(0))
-														.executes(context -> setExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number")))
+														.executes(context -> setExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number"), false))
 												)
 										)
 										.then(Commands.literal("add")
 												.then(Commands.argument("number", IntegerArgumentType.integer())
-														.executes(context -> addExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number")))
+														.executes(context -> setExtraClaimChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number"), true))
 												)
 										)
 								)
@@ -112,12 +112,12 @@ public class FTBChunksCommands {
 										)
 										.then(Commands.literal("set")
 												.then(Commands.argument("number", IntegerArgumentType.integer(0))
-														.executes(context -> setExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number")))
+														.executes(context -> setExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number"), false))
 												)
 										)
 										.then(Commands.literal("add")
 												.then(Commands.argument("number", IntegerArgumentType.integer())
-														.executes(context -> addExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number")))
+														.executes(context -> setExtraForceLoadChunks(context.getSource(), EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "number"), true))
 												)
 										)
 								)
@@ -329,50 +329,62 @@ public class FTBChunksCommands {
 	}
 
 	private static int getExtraClaimChunks(CommandSourceStack source, ServerPlayer player) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		source.sendSuccess(Component.literal("").append(player.getDisplayName()).append(" == " + data.extraClaimChunks), false);
+		FTBChunksTeamData personalData = FTBChunksAPI.getManager().getPersonalData(player);
+		if (personalData == null) {
+			source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+			return 1;
+		}
+
+		source.sendSuccess(player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.extraClaimChunks), false);
 		return 1;
 	}
 
-	private static int setExtraClaimChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.extraClaimChunks = Math.max(0, i);
-		data.save();
-		SendGeneralDataPacket.send(data, player);
-		source.sendSuccess(Component.literal("").append(player.getDisplayName()).append(" == " + data.extraClaimChunks), false);
-		return 1;
-	}
+	private static int setExtraClaimChunks(CommandSourceStack source, ServerPlayer player, int extra, boolean adding) {
+		// limit is added to player's *personal* data, even if they're in a party
+		FTBChunksTeamData personalData = FTBChunksAPI.getManager().getPersonalData(player);
+		if (personalData == null) {
+			source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+			return 1;
+		}
+		personalData.extraClaimChunks = Math.max(0, extra + (adding ? personalData.extraClaimChunks : 0));
+		personalData.save();
 
-	private static int addExtraClaimChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.extraClaimChunks = Math.max(0, data.extraClaimChunks + i);
-		data.save();
-		SendGeneralDataPacket.send(data, player);
-		source.sendSuccess(Component.literal("").append(player.getDisplayName()).append(" == " + data.extraClaimChunks), false);
+		// player's new personal limit will affect the team limit
+		FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(player);
+		teamData.updateLimits();
+		SendGeneralDataPacket.send(teamData, player);
+
+		source.sendSuccess(player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.extraClaimChunks), false);
 		return 1;
 	}
 
 	private static int getExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		source.sendSuccess(Component.literal("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
+		FTBChunksTeamData personalData = FTBChunksAPI.getManager().getPersonalData(player);
+		if (personalData == null) {
+			source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+			return 1;
+		}
+
+		source.sendSuccess(player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.extraForceLoadChunks), false);
 		return 1;
 	}
 
-	private static int setExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.extraForceLoadChunks = Math.max(0, i);
-		data.save();
-		SendGeneralDataPacket.send(data, player);
-		source.sendSuccess(Component.literal("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
-		return 1;
-	}
+	private static int setExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player, int extra, boolean adding) {
+		// limit is added to player's *personal* data, even if they're in a party
+		FTBChunksTeamData personalData = FTBChunksAPI.getManager().getPersonalData(player);
+		if (personalData == null) {
+			source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+			return 1;
+		}
+		personalData.extraForceLoadChunks = Math.max(0, extra + (adding ? personalData.extraForceLoadChunks : 0));
+		personalData.save();
 
-	private static int addExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player, int i) {
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-		data.extraForceLoadChunks = Math.max(0, data.extraForceLoadChunks + i);
-		data.save();
-		SendGeneralDataPacket.send(data, player);
-		source.sendSuccess(Component.literal("").append(player.getDisplayName()).append(" == " + data.extraForceLoadChunks), false);
+		// player's new personal limit will affect the team limit
+		FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(player);
+		teamData.updateLimits();
+		SendGeneralDataPacket.send(teamData, player);
+
+		source.sendSuccess(player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.extraForceLoadChunks), false);
 		return 1;
 	}
 

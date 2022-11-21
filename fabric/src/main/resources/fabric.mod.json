@@ -32,6 +32,7 @@
 		"ftbteams": ">=1802.2.7-build.73"
 	},
 	"breaks": {
-		"kubejs": "<1801.4.2-"
+		"kubejs": "<1801.4.2-",
+		"ftbranks": "<1802.1.9"
 	}
 }

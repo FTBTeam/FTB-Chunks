@@ -4,7 +4,6 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import net.minecraft.network.FriendlyByteBuf;
@@ -14,15 +13,13 @@ import net.minecraft.server.level.ServerPlayer;
  * @author LatvianModder
  */
 public class SendGeneralDataPacket extends BaseS2CMessage {
-	public static void send(FTBChunksTeamData playerData, ServerPlayer player) {
+	public static void send(FTBChunksTeamData teamData, ServerPlayer player) {
 		SendGeneralDataPacket data = new SendGeneralDataPacket();
 
-		data.maxClaimChunks = FTBChunksWorldConfig.getMaxClaimedChunks(playerData, player);
-		data.maxForceLoadChunks = FTBChunksWorldConfig.getMaxForceLoadedChunks(playerData, player);
-
-		for (ClaimedChunk chunk : playerData.getClaimedChunks()) {
+		data.maxClaimChunks = teamData.getMaxClaimChunks();
+		data.maxForceLoadChunks = teamData.getMaxForceLoadChunks();
+		for (ClaimedChunk chunk : teamData.getClaimedChunks()) {
 			data.claimed++;
-
 			if (chunk.isForceLoaded()) {
 				data.loaded++;
 			}

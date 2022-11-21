@@ -71,8 +71,6 @@ public class ClaimedChunkManager {
 	}
 
 	public void initForceLoadedChunks(ServerLevel level) {
-		int forceLoaded = 0;
-
 		var map = getForceLoadedChunks(level.dimension());
 
 		if (map.isEmpty() || level.getChunkSource() == null) {
@@ -86,7 +84,7 @@ public class ClaimedChunkManager {
 
 		level.getChunkSource().save(false);
 
-		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(forceLoaded, level.dimension().location()));
+		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().location()));
 	}
 
 	private FTBChunksTeamData loadTeamData(Team team) {
@@ -120,6 +118,15 @@ public class ClaimedChunkManager {
 		}
 
 		return data;
+	}
+
+	public FTBChunksTeamData getPersonalData(UUID id) {
+		Team team = FTBTeamsAPI.getManager().getInternalPlayerTeam(id);
+		return team == null ? null : getData(team);
+	}
+
+	public FTBChunksTeamData getPersonalData(ServerPlayer player) {
+		return getPersonalData(player.getUUID());
 	}
 
 	public FTBChunksTeamData getData(ServerPlayer player) {

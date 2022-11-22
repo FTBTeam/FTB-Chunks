@@ -12,10 +12,7 @@ import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.FaceIcon;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.*;
@@ -30,6 +27,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
@@ -62,6 +60,9 @@ public class ChunkScreen extends BaseScreen {
 
 		@Override
 		public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+			if (chunk.forceLoadedDate != null && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
+				FORCE_LOAD_ICON.withColor(Color4I.rgb(192,0, 0)).draw(matrixStack, x, y, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
+			}
 			if (isMouseOver() || selectedChunks.contains(chunkPos)) {
 				Color4I.WHITE.withAlpha(100).draw(matrixStack, x, y, w, h);
 
@@ -154,6 +155,8 @@ public class ChunkScreen extends BaseScreen {
 		}
 	}
 
+	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(new ResourceLocation(FTBChunks.MOD_ID, "textures/force_loaded.png"));
+
 	public MapDimension dimension = MapDimension.getCurrent();
 	public List<ChunkButton> chunkButtons;
 	public Set<XZ> selectedChunks;
@@ -237,8 +240,6 @@ public class ChunkScreen extends BaseScreen {
 
 	@Override
 	public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder buffer = tessellator.getBuilder();
 		Player player = Minecraft.getInstance().player;
 
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
@@ -259,6 +260,9 @@ public class ChunkScreen extends BaseScreen {
 		GuiHelper.drawTexturedRect(matrixStack, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
+			Tesselator tessellator = Tesselator.getInstance();
+			BufferBuilder buffer = tessellator.getBuilder();
+
 			RenderSystem.setShader(GameRenderer::getPositionColorShader);
 			RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 			RenderSystem.disableTexture();
@@ -273,26 +277,6 @@ public class ChunkScreen extends BaseScreen {
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
 				buffer.vertex(m, sx + gx * FTBChunks.TILE_SIZE, sy, 0).color(r, g, b, a).endVertex();
 				buffer.vertex(m, sx + gx * FTBChunks.TILE_SIZE, sy + FTBChunks.MINIMAP_SIZE, 0).color(r, g, b, a).endVertex();
-			}
-
-			for (ChunkButton button : chunkButtons) {
-				MapChunk chunk = button.chunk;
-
-				if (chunk.forceLoadedDate == null) {
-					continue;
-				}
-
-				int cx = button.getX();
-				int cy = button.getY();
-
-				buffer.vertex(m, cx, cy, 0).color(255, 0, 0, 100).endVertex();
-				buffer.vertex(m, cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 255).endVertex();
-
-				buffer.vertex(m, cx + FTBChunks.TILE_SIZE / 2F, cy, 0).color(255, 0, 0, 100).endVertex();
-				buffer.vertex(m, cx + FTBChunks.TILE_SIZE, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 255).endVertex();
-
-				buffer.vertex(m, cx, cy + FTBChunks.TILE_SIZE / 2F, 0).color(255, 0, 0, 100).endVertex();
-				buffer.vertex(m, cx + FTBChunks.TILE_SIZE / 2F, cy + FTBChunks.TILE_SIZE, 0).color(255, 0, 0, 255).endVertex();
 			}
 
 			tessellator.end();

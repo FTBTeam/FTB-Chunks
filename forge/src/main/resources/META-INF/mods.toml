@@ -52,7 +52,7 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "ftbranks"
 mandatory = false
-versionRange = "[1802.1.9-build.47,)"
+versionRange = "[1802.1.9-build.49,)"
 ordering = "AFTER"
 side = "BOTH"
 

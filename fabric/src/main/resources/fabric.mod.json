@@ -33,6 +33,6 @@
 	},
 	"breaks": {
 		"kubejs": "<1801.4.2-",
-		"ftbranks": "<1802.1.9"
+		"ftbranks": "<1802.1.9-build.49"
 	}
 }

@@ -56,8 +56,8 @@ dependencies {
 //	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}") { transitive = false }
 
 	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:8.3.563")
-	modCompileOnly("curse.maven:balm-531761:${balm_forge_version}")
-	modCompileOnly("curse.maven:waystones-245755:${waystones_forge_version}")
+	modImplementation("curse.maven:balm-531761:${balm_forge_version}")
+	modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }

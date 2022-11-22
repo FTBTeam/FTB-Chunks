@@ -24,7 +24,7 @@ public class FTBChunksForge {
 		ForgeChunkManager.setForcedChunkLoadingCallback(FTBChunks.MOD_ID, this::validateLoadedChunks);
 
 		if (Platform.isModLoaded("waystones")) {
-			initWaystonesCompat();
+			WaystonesCompat.init();
 		}
 	}
 
@@ -52,9 +52,5 @@ public class FTBChunksForge {
 			FTBChunks.LOGGER.info(String.format("cleaning up %d non-ticking and %d ticking tickets for %s", chunks.getFirst().size(), chunks.getSecond().size(), id));
 			ticketHelper.removeAllTickets(id);
 		});
-	}
-
-	private void initWaystonesCompat() {
-		WaystonesCompat.init();
 	}
 }

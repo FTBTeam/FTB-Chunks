@@ -50,10 +50,11 @@ dependencies {
 //	modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}") { transitive = false }
 
 //	modImplementation("curse.maven:auth-me-356643:3725468")
-//	modImplementation("curse.maven:cloth-config-319057:3641132")
+	modImplementation("curse.maven:cloth-config-319057:3641132")
 
-	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")
-	modCompileOnly("curse.maven:waystones-fabric-500087:${waystones_fabric_version}")
+	// compile-only because for some reason loom isn't deobfuscating these...
+	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")  { transitive = false }
+	modCompileOnly("curse.maven:waystones-fabric-500087:${waystones_fabric_version}")  { transitive = false }
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }

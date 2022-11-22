@@ -1,11 +1,15 @@
-package dev.ftb.mods.ftbchunks.compat.waystones;
+package dev.ftb.mods.ftbchunks.integration.waystones;
 
 import dev.ftb.mods.ftbchunks.integration.StaticMapIcon;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 
 public class WaystoneMapIcon extends StaticMapIcon {
+	public static final Icon ICON = Icon.getIcon("ftbchunks:textures/waystone.png");
+	public static final Icon ICON_GLOBAL = ICON.withTint(Color4I.rgb(0xEB78E5));
 	public final String name;
 	public final boolean global;
 
@@ -13,7 +17,7 @@ public class WaystoneMapIcon extends StaticMapIcon {
 		super(pos);
 		name = n;
 		global = g;
-		icon = global ? WaystonesCompat.ICON_GLOBAL : WaystonesCompat.ICON;
+		icon = global ? ICON_GLOBAL : ICON;
 	}
 
 	@Override

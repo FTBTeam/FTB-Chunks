@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.compat.waystones;
 
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.integration.waystones.WaystoneData;
 import dev.ftb.mods.ftbchunks.integration.waystones.WaystoneMapIcon;
 import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesCommon;

@@ -85,6 +85,7 @@
 	"ftbchunks.gui.change_color": "Change Color",
 	"ftbchunks.gui.hold_alt_for_dates": "Hold Alt: show absolute times",
 	"ftbchunks.gui.mouse_wheel_expiry": "Mouse Wheel: adjust force-load expiry",
+	"ftbteamsconfig.ftbchunks": "FTB Chunks Properties",
 	"ftbteamsconfig.ftbchunks.allow_fake_players": "Allow Fake Players",
 	"ftbteamsconfig.ftbchunks.allow_explosions": "Allow Explosions",
 	"ftbteamsconfig.ftbchunks.block_edit_mode": "Block Edit Mode",

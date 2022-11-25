@@ -7,7 +7,6 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.phys.Vec3;
 
 public class TrackedPlayerMapIcon extends MapIcon {
@@ -18,7 +17,7 @@ public class TrackedPlayerMapIcon extends MapIcon {
     public TrackedPlayerMapIcon(GameProfile profile, Vec3 pos, FaceIcon faceIcon) {
         this.pos = pos;
         this.faceIcon = faceIcon;
-        this.name = new TextComponent(profile.getName());
+        this.name = Component.literal(profile.getName());
     }
 
     @Override

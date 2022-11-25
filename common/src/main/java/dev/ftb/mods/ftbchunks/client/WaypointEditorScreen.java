@@ -19,8 +19,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 
 import java.awt.*;
@@ -43,7 +41,7 @@ public class WaypointEditorScreen extends BaseScreen {
         }
     };
 
-    private static final Component TITLE = new TranslatableComponent("ftbchunks.gui.waypoints").withStyle(ChatFormatting.BOLD);
+    private static final Component TITLE = Component.translatable("ftbchunks.gui.waypoints").withStyle(ChatFormatting.BOLD);
 
     private final Panel waypointPanel;
     private final PanelScrollBar scrollbar;
@@ -70,7 +68,7 @@ public class WaypointEditorScreen extends BaseScreen {
             rows.add(new VerticalSpaceWidget(waypointPanel,4));
 
             boolean thisDimension = Minecraft.getInstance().level.dimension().location().equals(entry.levelKey);
-            GroupButton groupButton = new GroupButton(waypointPanel, new TextComponent(entry.levelKey.toString()).withStyle(ChatFormatting.YELLOW), !thisDimension);
+            GroupButton groupButton = new GroupButton(waypointPanel, Component.literal(entry.levelKey.toString()).withStyle(ChatFormatting.YELLOW), !thisDimension);
             rows.add(groupButton);
 
             for (Waypoint wp : entry.waypoints) {
@@ -198,7 +196,7 @@ public class WaypointEditorScreen extends BaseScreen {
 
         void setCollapsed(boolean collapsed) {
             this.collapsed = collapsed;
-            setTitle(new TextComponent(collapsed ? "[>] " : "[v] ").withStyle(collapsed ? ChatFormatting.RED : ChatFormatting.GREEN).append(titleText));
+            setTitle(Component.literal(collapsed ? "[>] " : "[v] ").withStyle(collapsed ? ChatFormatting.RED : ChatFormatting.GREEN).append(titleText));
         }
 
         @Override
@@ -233,7 +231,7 @@ public class WaypointEditorScreen extends BaseScreen {
 
         @Override
         public void addWidgets() {
-            add(new SimpleButton(this, TextComponent.EMPTY, wp.hidden ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
+            add(new SimpleButton(this, Component.empty(), wp.hidden ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
                 wp.hidden = !wp.hidden;
                 wp.dimension.saveData = true;
                 w.setIcon(wp.hidden ? Icons.REMOVE_GRAY : Icons.ACCEPT);
@@ -272,9 +270,9 @@ public class WaypointEditorScreen extends BaseScreen {
         public boolean mousePressed(MouseButton button) {
             if (isMouseOver() && button.isRight()) {
                 List<ContextMenuItem> list = new ArrayList<>();
-                list.add(new ContextMenuItem(new TextComponent(wp.name), wp.type.icon.withTint(Color4I.rgb(wp.color)), null));
+                list.add(new ContextMenuItem(Component.literal(wp.name), wp.type.icon.withTint(Color4I.rgb(wp.color)), null));
                 list.add(ContextMenuItem.SEPARATOR);
-                list.add(new ContextMenuItem(new TranslatableComponent("gui.rename"), Icons.CHAT, () -> {
+                list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, () -> {
                     StringConfig config = new StringConfig();
                     config.defaultValue = "";
                     config.value = wp.name;
@@ -287,7 +285,7 @@ public class WaypointEditorScreen extends BaseScreen {
                     });
                 }));
                 if (wp.type.canChangeColor) {
-                    list.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
+                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
                         int r = (wp.color >> 16) & 0xFF;
                         int g = (wp.color >> 8) & 0xFF;
                         int b = (wp.color >> 0) & 0xFF;
@@ -301,8 +299,8 @@ public class WaypointEditorScreen extends BaseScreen {
                         list.get(0).icon = wp.type.icon.withColor(Color4I.rgb(wp.color));
                     }).setCloseMenu(false));
                 }
-                list.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), Icons.REMOVE, () -> {
-                            getGui().openYesNo(new TranslatableComponent("ftbchunks.gui.delete_waypoint", new TextComponent(wp.name).withStyle(Style.EMPTY.withColor(wp.color))), TextComponent.EMPTY, () -> {
+                list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, () -> {
+                            getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.name).withStyle(Style.EMPTY.withColor(wp.color))), Component.empty(), () -> {
                                 MapManager.inst.getDimension(wp.dimension.dimension).getWaypointManager().remove(wp);
                                 wp.dimension.saveData = true;
                                 deleted = true;
@@ -320,7 +318,7 @@ public class WaypointEditorScreen extends BaseScreen {
 
     private class ExpanderButton extends SimpleButton {
         public ExpanderButton(Panel panel, boolean expand) {
-            super(panel, new TranslatableComponent(expand ? "gui.expand_all" : "gui.collapse_all"), expand ? Icons.DOWN : Icons.UP, (btn, mb) -> {
+            super(panel, Component.translatable(expand ? "gui.expand_all" : "gui.collapse_all"), expand ? Icons.DOWN : Icons.UP, (btn, mb) -> {
                 rows.stream().filter(w -> w instanceof GroupButton).map(w -> (GroupButton) w).forEach(g -> g.setCollapsed(!expand));
                 scrollbar.setValue(0);
                 btn.getGui().refreshWidgets();

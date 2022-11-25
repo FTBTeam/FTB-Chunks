@@ -37,7 +37,7 @@ public class FTBChunksForge {
 	 * @param event the event
 	 */
 	private void entityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
-		if (!event.getPlayer().level.isClientSide && FTBChunksAPI.getManager().protect(event.getPlayer(), event.getHand(), event.getEntity().blockPosition(), Protection.INTERACT_ENTITY, event.getTarget())) {
+		if (!event.getEntity().level.isClientSide && FTBChunksAPI.getManager().protect(event.getEntity(), event.getHand(), event.getEntity().blockPosition(), Protection.INTERACT_ENTITY, event.getTarget())) {
 			event.setCancellationResult(InteractionResult.FAIL);
 			event.setCanceled(true);
 		}

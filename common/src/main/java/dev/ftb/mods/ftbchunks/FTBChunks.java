@@ -410,11 +410,11 @@ public class FTBChunks {
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {
+		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
-		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		event.add(FTBChunksTeamData.CLAIM_VISIBILITY);
 		event.add(FTBChunksTeamData.LOCATION_MODE);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);

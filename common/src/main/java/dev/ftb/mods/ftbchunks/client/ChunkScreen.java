@@ -20,6 +20,7 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -59,7 +60,10 @@ public class ChunkScreen extends BaseScreen {
 		@Override
 		public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			if (chunk.forceLoadedDate != null && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
-				FORCE_LOAD_ICON.withColor(Color4I.rgb(192,0, 0)).draw(matrixStack, x, y, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
+				Color4I teamColor = chunk.team.properties.get(Team.COLOR);
+				float[] hsb = Color4I.RGBtoHSB(teamColor.redi(), teamColor.greeni(), teamColor.bluei(), null);
+				hsb[0] = (hsb[0] + 0.5f) % 1f;
+				FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])).draw(matrixStack, x, y, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
 			}
 			if (isMouseOver() || selectedChunks.contains(chunkPos)) {
 				Color4I.WHITE.withAlpha(100).draw(matrixStack, x, y, w, h);

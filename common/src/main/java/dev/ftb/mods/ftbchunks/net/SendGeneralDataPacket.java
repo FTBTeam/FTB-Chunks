@@ -6,34 +6,43 @@ import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author LatvianModder
  */
 public class SendGeneralDataPacket extends BaseS2CMessage {
+	public final int claimed;
+	public final int loaded;
+	public final int maxClaimChunks;
+	public final int maxForceLoadChunks;
+
 	public static void send(FTBChunksTeamData teamData, ServerPlayer player) {
-		SendGeneralDataPacket data = new SendGeneralDataPacket();
-
-		data.maxClaimChunks = teamData.getMaxClaimChunks();
-		data.maxForceLoadChunks = teamData.getMaxForceLoadChunks();
-		for (ClaimedChunk chunk : teamData.getClaimedChunks()) {
-			data.claimed++;
-			if (chunk.isForceLoaded()) {
-				data.loaded++;
-			}
-		}
-
-		data.sendTo(player);
+		send(teamData, List.of(player));
 	}
 
-	public int claimed;
-	public int loaded;
-	public int maxClaimChunks;
-	public int maxForceLoadChunks;
+	public static void send(FTBChunksTeamData teamData, Collection<ServerPlayer> players) {
+		Collection<ClaimedChunk> cc = teamData.getClaimedChunks();
+		int loaded = (int) cc.stream().filter(ClaimedChunk::isForceLoaded).count();
+		SendGeneralDataPacket data = new SendGeneralDataPacket(cc.size(), loaded, teamData.getMaxClaimChunks(), teamData.getMaxForceLoadChunks());
 
-	public SendGeneralDataPacket() {
+		players.forEach(player -> {
+			if (FTBTeamsAPI.getPlayerTeam(player).getId().equals(teamData.getTeamId())) {
+				data.sendTo(player);
+			}
+		});
+	}
+
+	private SendGeneralDataPacket(int claimed, int loaded, int maxClaimChunks, int maxForceLoadChunks) {
+		this.claimed = claimed;
+		this.loaded = loaded;
+		this.maxClaimChunks = maxClaimChunks;
+		this.maxForceLoadChunks = maxForceLoadChunks;
 	}
 
 	@Override

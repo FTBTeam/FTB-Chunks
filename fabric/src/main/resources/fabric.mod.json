@@ -28,11 +28,11 @@
 		"fabric": "*",
 		"minecraft": "~1.19",
 		"architectury": ">=3.4.9",
-		"ftblibrary": ">=1801.3.5-build.104",
-		"ftbteams": ">=1802.2.7-build.73"
+		"ftblibrary": ">=1902.3.10-build.159",
+		"ftbteams": ">=1902.2.10-build.76"
 	},
 	"breaks": {
-		"kubejs": "<1801.4.2-",
-		"ftbranks": "<1802.1.9"
+		"kubejs": "<1902.6.0-",
+		"ftbranks": "<1902.1.12"
 	}
 }

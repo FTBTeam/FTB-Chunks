@@ -914,6 +914,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 		float h = (float) (cameraPos.y + 30D);
 		float h2 = h + 70F;
 
+		int yMin = mc.level.getMinBuildHeight();
+
 		for (WaypointMapIcon waypoint : visibleWaypoints) {
 			double angle = Math.atan2(cameraPos.z - waypoint.pos.z, cameraPos.x - waypoint.pos.x) * 180D / Math.PI;
 
@@ -929,10 +931,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 			Matrix4f m = poseStack.last().pose();
 
-			depthBuffer.vertex(m, -s, 0, s).color(r, g, b, waypoint.alpha).uv(0F, 1F).endVertex();
+			depthBuffer.vertex(m, -s, yMin, s).color(r, g, b, waypoint.alpha).uv(0F, 1F).endVertex();
 			depthBuffer.vertex(m, -s, h, s).color(r, g, b, waypoint.alpha).uv(0F, 0F).endVertex();
 			depthBuffer.vertex(m, s, h, -s).color(r, g, b, waypoint.alpha).uv(1F, 0F).endVertex();
-			depthBuffer.vertex(m, s, 0, -s).color(r, g, b, waypoint.alpha).uv(1F, 1F).endVertex();
+			depthBuffer.vertex(m, s, yMin, -s).color(r, g, b, waypoint.alpha).uv(1F, 1F).endVertex();
 
 			depthBuffer.vertex(m, -s, h, s).color(r, g, b, waypoint.alpha).uv(0F, 1F).endVertex();
 			depthBuffer.vertex(m, -s, h2, s).color(r, g, b, 0).uv(0F, 0F).endVertex();

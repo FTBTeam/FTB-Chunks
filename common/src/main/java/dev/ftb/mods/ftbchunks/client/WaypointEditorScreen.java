@@ -4,9 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
+import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
@@ -30,6 +33,7 @@ import java.util.List;
 
 public class WaypointEditorScreen extends BaseScreen {
     public static final Color4I COLOR_BACKGROUND = Color4I.rgba(0x99333333);
+    private static final Icon PEARL_ICON = ImageIcon.getIcon(new ResourceLocation("minecraft", "textures/item/ender_pearl.png"));
 
     public static Theme THEME = new Theme() {
         @Override
@@ -300,6 +304,12 @@ public class WaypointEditorScreen extends BaseScreen {
                         if (widgets.get(1) instanceof TextField tf) tf.setColor(Color4I.rgb(wp.color));
                         list.get(0).icon = wp.type.icon.withColor(Color4I.rgb(wp.color));
                     }).setCloseMenu(false));
+                }
+                if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
+                    list.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.teleport"), PEARL_ICON, () -> {
+                        new TeleportFromMapPacket(wp.x, wp.y + 1, wp.z, false, wp.dimension.dimension).sendToServer();
+                        closeGui(false);
+                    }));
                 }
                 list.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), Icons.REMOVE, () -> {
                             getGui().openYesNo(new TranslatableComponent("ftbchunks.gui.delete_waypoint", new TextComponent(wp.name).withStyle(Style.EMPTY.withColor(wp.color))), TextComponent.EMPTY, () -> {

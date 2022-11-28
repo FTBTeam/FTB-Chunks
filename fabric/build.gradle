@@ -50,7 +50,7 @@ dependencies {
 //	modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}") { transitive = false }
 
 //	modImplementation("curse.maven:auth-me-356643:3725468")
-	modImplementation("curse.maven:cloth-config-319057:3641132")
+	modImplementation("curse.maven:cloth-config-348521:3972420")
 
 	// compile-only because for some reason loom isn't deobfuscating these...
 	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")  { transitive = false }

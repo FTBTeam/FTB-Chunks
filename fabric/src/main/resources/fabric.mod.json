@@ -28,8 +28,8 @@
 		"fabric": "*",
 		"minecraft": "~1.18.2",
 		"architectury": ">=3.4.9",
-		"ftblibrary": ">=1801.3.5-build.104",
-		"ftbteams": ">=1802.2.7-build.73"
+		"ftblibrary": ">=1802.3.8-build.161",
+		"ftbteams": ">=1802.2.7-build.74"
 	},
 	"breaks": {
 		"kubejs": "<1801.4.2-",

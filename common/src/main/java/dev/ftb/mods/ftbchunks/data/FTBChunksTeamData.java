@@ -7,6 +7,7 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
@@ -527,6 +528,8 @@ public class FTBChunksTeamData {
 		if (FTBChunksWorldConfig.HARD_TEAM_FORCE_LIMIT.get() > 0) {
 			maxForceLoadChunks = Math.min(maxForceLoadChunks, FTBChunksWorldConfig.HARD_TEAM_FORCE_LIMIT.get());
 		}
+
+		SendGeneralDataPacket.send(this, getTeam().getOnlineMembers());
 
 		save();
 	}

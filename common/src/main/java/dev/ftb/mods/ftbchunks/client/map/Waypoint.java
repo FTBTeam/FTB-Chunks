@@ -2,28 +2,46 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.client.WaypointMapIcon;
 
+import java.util.Objects;
+
 /**
  * @author LatvianModder
  */
 public class Waypoint {
 	public final MapDimension dimension;
+	public final int x;
+	public final int y;
+	public final int z;
 	public boolean hidden = false;
 	public double minimapDistance = 50000;
 	public double inWorldDistance = 4000;
 	public String name = "";
-	public int x = 0;
-	public int y = 0;
-	public int z = 0;
 	public int color = 0xFFFFFF;
 	public WaypointType type = WaypointType.DEFAULT;
 
 	public WaypointMapIcon mapIcon;
 
-	public Waypoint(MapDimension d) {
+	public Waypoint(MapDimension d, int x, int y, int z) {
 		dimension = d;
+		this.x = x;
+		this.y = y;
+		this.z = z;
 	}
 
 	public void update() {
 		mapIcon = new WaypointMapIcon(this);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Waypoint waypoint = (Waypoint) o;
+		return x == waypoint.x && y == waypoint.y && z == waypoint.z && dimension.dimension.equals(waypoint.dimension.dimension);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(dimension.dimension, x, y, z);
 	}
 }

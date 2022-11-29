@@ -55,8 +55,9 @@ dependencies {
 //	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
 //	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}") { transitive = false }
 
-	// modImplementation("curse.maven:balm-531761:${balm_forge_version}")
-	// modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
+	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:9.1.574")
+	modImplementation("curse.maven:balm-531761:${balm_forge_version}")
+	modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }

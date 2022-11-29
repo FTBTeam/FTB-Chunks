@@ -21,6 +21,10 @@ import java.util.function.Function;
  */
 public class RequestChunkChangePacket extends BaseC2SMessage {
 	private static final String[] ACTION_NAMES = {"claim", "unclaim", "load", "unload"};
+	public static final int CLAIM = 0;
+	public static final int UNCLAIM = 1;
+	public static final int LOAD = 2;
+	public static final int UNLOAD = 3;
 
 	private final int action;
 	private final Set<XZ> chunks;
@@ -64,40 +68,16 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 		CommandSourceStack source = player.createCommandSourceStack();
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		Function<XZ, ClaimResult> consumer;
-		long now = System.currentTimeMillis();
 
 		switch (action) {
-			case 0:
-				consumer = pos -> {
-					ClaimResult result = data.claim(source, pos.dim(player.level), false);
-
-					if (result.isSuccess()) {
-						result.setClaimedTime(now);
-					}
-
-					return result;
-				};
-				break;
-			case 1:
-				consumer = pos -> data.unclaim(source, pos.dim(player.level), false);
-				break;
-			case 2:
-				consumer = pos -> {
-					ClaimResult result = data.load(source, pos.dim(player.level), false);
-
-					if (result.isSuccess()) {
-						result.setForceLoadedTime(now);
-					}
-
-					return result;
-				};
-				break;
-			case 3:
-				consumer = pos -> data.unload(source, pos.dim(player.level), false);
-				break;
-			default:
+			case CLAIM -> consumer = pos -> data.claim(source, pos.dim(player.level), false);
+			case UNCLAIM -> consumer = pos -> data.unclaim(source, pos.dim(player.level), false);
+			case LOAD -> consumer = pos -> data.load(source, pos.dim(player.level), false);
+			case UNLOAD -> consumer = pos -> data.unload(source, pos.dim(player.level), false);
+			default -> {
 				FTBChunks.LOGGER.warn("Unknown chunk action ID: " + action);
 				return;
+			}
 		}
 
 		for (XZ pos : chunks) {

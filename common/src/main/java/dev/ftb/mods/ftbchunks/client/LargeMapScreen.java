@@ -2,18 +2,10 @@ package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.map.Waypoint;
+import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.data.HeightUtils;
-import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
@@ -21,18 +13,14 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
@@ -58,7 +46,12 @@ public class LargeMapScreen extends BaseScreen {
 	public int prevMouseX, prevMouseY;
 	public int grabbed = 0;
 	public boolean movedToPlayer = false;
-	public Button claimChunksButton, dimensionButton, waypointsButton, settingsButton, alliesButton, syncButton;
+	public Button claimChunksButton;
+	public Button dimensionButton;
+	public Button waypointManagerButton;
+	public Button settingsButton;
+	public Button clearDeathpointsButton;
+	private boolean needIconRefresh;
 
 	public LargeMapScreen() {
 		regionPanel = new RegionMapPanel(this);
@@ -106,34 +99,27 @@ public class LargeMapScreen extends BaseScreen {
 		add(regionPanel);
 
 		add(claimChunksButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.claimed_chunks"), Icons.MAP, (b, m) -> new ChunkScreen().openGui()));
-		/*
-		add(waypointsButton = new SimpleButton(this, I18n.format("ftbchunks.gui.waypoints"), GuiIcons.BEACON, (b, m) -> {
-			Minecraft.getInstance().getToastGui().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, new StringTextComponent("WIP!"), null));
-		}));
-		 */
 
-		// add(alliesButton = new SimpleButton(this, Component.translatable()("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
-		add(waypointsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, (b, m) -> {
-			StringConfig name = new StringConfig();
-			new EditConfigFromStringScreen<>(name, set -> {
-				if (set) {
-					Player player = Minecraft.getInstance().player;
-					Waypoint w = new Waypoint(dimension);
-					w.name = name.value;
-					w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
-					w.x = Mth.floor(player.getX());
-					w.y = Mth.floor(player.getY());
-					w.z = Mth.floor(player.getZ());
-					dimension.getWaypoints().add(w);
-					w.update();
-					dimension.saveData = true;
-					RefreshMinimapIconsEvent.trigger();
-					refreshWidgets();
-				}
+		add(waypointManagerButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS, (b, m) -> new WaypointEditorScreen().openGui()));
 
-				openGui();
-			}).openGui();
-		}));
+		// add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
+
+		add(clearDeathpointsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CLOSE, (b, m) -> {
+			WaypointManager wpm = MapManager.inst.getDimension(dimension.dimension).getWaypointManager();
+			if (wpm.removeIf(wp -> wp.type == WaypointType.DEATH)) {
+				refreshWidgets();
+			}
+		}) {
+			@Override
+			public boolean shouldDraw() {
+				return super.shouldDraw() && MapManager.inst.getDimension(dimension.dimension).getWaypointManager().hasDeathpoint();
+			}
+
+			@Override
+			public boolean isEnabled() {
+				return shouldDraw();
+			}
+		});
 
 		/*
 		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), Icons.REFRESH, (b, m) -> {
@@ -151,21 +137,23 @@ public class LargeMapScreen extends BaseScreen {
 					refreshWidgets();
 					movedToPlayer = false;
 				}
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}));
 
 		add(settingsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this))));
+
 	}
 
 	@Override
 	public void alignWidgets() {
-		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		// alliesButton.setPosAndSize(1, 19, 16, 16);
-		//waypointsButton.setPosAndSize(1, 37, 16, 16);
-		//syncButton.setPosAndSize(1, 55, 16, 16);
-		waypointsButton.setPosAndSize(1, 19, 16, 16);
-		//syncButton.setPosAndSize(1, 37, 16, 16);
+		// syncButton.setPosAndSize(1, 55, 16, 16);
+
+		claimChunksButton.setPosAndSize(1, 1, 16, 16);
+		waypointManagerButton.setPosAndSize(1, 19, 16, 16);
+		clearDeathpointsButton.setPosAndSize(1, 37, 16, 16);
+
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
 	}
@@ -186,23 +174,16 @@ public class LargeMapScreen extends BaseScreen {
 			prevMouseY = getMouseY();
 			return true;
 		} else if (button.isRight()) {
-			int clickBlockX = regionPanel.blockX;
-			int clickBlockZ = regionPanel.blockZ;
+			final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
 			List<ContextMenuItem> list = new ArrayList<>();
 			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, () -> {
 				StringConfig name = new StringConfig();
 				new EditConfigFromStringScreen<>(name, set -> {
 					if (set) {
-						Waypoint w = new Waypoint(dimension);
+						Waypoint w = new Waypoint(dimension, pos.getX(), pos.getY(), pos.getZ());
 						w.name = name.value;
 						w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
-						w.x = clickBlockX;
-						w.y = regionPanel.blockY;
-						w.z = clickBlockZ;
-						dimension.getWaypoints().add(w);
-						w.update();
-						dimension.saveData = true;
-						RefreshMinimapIconsEvent.trigger();
+						dimension.getWaypointManager().add(w);
 						refreshWidgets();
 					}
 
@@ -218,8 +199,12 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode)) {
-			closeGui(true);
+		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode) || key.escOrInventory()) {
+			if (key.esc() && contextMenu != null) {
+				closeContextMenu();
+			} else {
+				closeGui(false);
+			}
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_SPACE)) {
 			movedToPlayer = false;
@@ -235,9 +220,22 @@ public class LargeMapScreen extends BaseScreen {
 			FTBChunksClientConfig.saveConfig();
 			dimension.manager.updateAllRegions(false);
 			return true;
+		} else if (key.is(GLFW.GLFW_KEY_C)) {
+			new ChunkScreen().openGui();
+			return true;
 		}
 
 		return false;
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+
+		if (needIconRefresh) {
+			regionPanel.refreshWidgets();
+			needIconRefresh = false;
+		}
 	}
 
 	@Override
@@ -360,6 +358,12 @@ public class LargeMapScreen extends BaseScreen {
 			matrixStack.scale(0.5F, 0.5F, 1F);
 			theme.drawString(matrixStack, memoryUsage, 0, 0, Theme.SHADOW);
 			matrixStack.popPose();
+		}
+	}
+
+	public static void refreshIconsIfOpen() {
+		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof LargeMapScreen lms) {
+			lms.needIconRefresh = true;
 		}
 	}
 }

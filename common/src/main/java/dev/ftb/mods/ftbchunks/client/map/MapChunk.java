@@ -24,6 +24,7 @@ public class MapChunk {
 	public ClientTeam team;
 	public Date claimedDate;
 	public Date forceLoadedDate;
+	public Date expiryDate;
 
 	public MapChunk(MapRegion r, XZ p) {
 		region = r;
@@ -67,6 +68,7 @@ public class MapChunk {
 		team = ClientTeamManager.INSTANCE.teamMap.get(t);
 		claimedDate = team == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
 		forceLoadedDate = packet.forceLoaded && claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
+		expiryDate = packet.forceLoaded && packet.expires && claimedDate != null ? new Date(now.getTime() + packet.relativeForceLoadExpiryTime) : null;
 		region.update(false);
 	}
 }

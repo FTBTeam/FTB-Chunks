@@ -124,7 +124,7 @@ public class FTBChunks {
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
-		EntityEvent.ADD.register(this::entityAddedToWorld);
+//		EntityEvent.ADD.register(this::entityAddedToWorld);
 
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
@@ -211,6 +211,8 @@ public class FTBChunks {
 			// first player on the team to log in; force chunks if the team can't do offline chunk-loading
 			data.updateChunkTickets(true);
 		}
+
+		SendVisiblePlayerListPacket.syncToLevel(player.level);
 	}
 
 	public void loggedOut(ServerPlayer player) {
@@ -364,12 +366,12 @@ public class FTBChunks {
 	}
 
 
-	private EventResult entityAddedToWorld(Entity entity, Level level) {
-		if (entity instanceof ServerPlayer) {
-			SendVisiblePlayerListPacket.syncToLevel(level);
-		}
-		return EventResult.pass();
-	}
+//	private EventResult entityAddedToWorld(Entity entity, Level level) {
+//		if (entity instanceof ServerPlayer) {
+//			SendVisiblePlayerListPacket.syncToLevel(level);
+//		}
+//		return EventResult.pass();
+//	}
 
 	private boolean ignoreExplosion(Level level, Explosion explosion) {
 		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {

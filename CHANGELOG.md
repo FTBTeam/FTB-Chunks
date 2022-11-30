@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+* Fixed NPE sometimes occurring on player login (getting player's team too early)
+
+## [1902.3.10]
+
 ### Added
 
 * Square minimap option (see "Square Minimap" in client options, default false)

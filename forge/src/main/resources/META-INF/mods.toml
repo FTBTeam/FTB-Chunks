@@ -38,14 +38,14 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "ftblibrary"
 mandatory = true
-versionRange = "[1801.3.5-build.104,)"
+versionRange = "[1802.3.8-build.161,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftbteams"
 mandatory = true
-versionRange = "[1802.2.7-build.73,)"
+versionRange = "[1802.2.8-build.75,)"
 ordering = "AFTER"
 side = "BOTH"
 

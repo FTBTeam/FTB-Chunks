@@ -95,7 +95,7 @@ if (ENV.CURSEFORGE_KEY) {
 			addGameVersion "1.16.5"
 			mainArtifact(remapJar.archivePath)
 			relations {
-				requiredDependency 'architectury-forge'
+				requiredDependency 'architectury-api'
 				requiredDependency 'ftb-library-forge'
 				requiredDependency 'ftb-teams-forge'
 				optionalDependency 'ftb-ranks-forge'

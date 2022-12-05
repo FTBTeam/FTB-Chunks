@@ -1,48 +1,17 @@
 package dev.ftb.mods.ftbchunks.compat.waystones;
 
-import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import dev.ftb.mods.ftbchunks.integration.waystones.WaystoneData;
+import dev.ftb.mods.ftbchunks.integration.waystones.WaystoneMapIcon;
+import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesCommon;
+import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.waystones.api.KnownWaystonesEvent;
 
 public class WaystonesCompat {
-	private static final Map<ResourceKey<Level>, List<WaystoneMapIcon>> WAYSTONES = new HashMap<>();
-	public static final Icon ICON = Icon.getIcon("ftbchunks:textures/waystone.png");
-	public static final Icon ICON_GLOBAL = ICON.withTint(Color4I.rgb(0xEB78E5));
-
 	public static void init() {
-		MinecraftForge.EVENT_BUS.register(WaystonesCompat.class);
-		MapIconEvent.MINIMAP.register(WaystonesCompat::mapWidgets);
-		MapIconEvent.LARGE_MAP.register(WaystonesCompat::mapWidgets);
+		Balm.getEvents().onEvent(KnownWaystonesEvent.class, WaystonesCompat::onKnownWaystones);
 	}
 
-	/*
-	@SubscribeEvent
-	public static void onWaystonesReceived(KnownWaystonesEvent event) {
-		WAYSTONES.clear();
-
-		for (IWaystone w : event.getWaystones()) {
-			WAYSTONES.computeIfAbsent(w.getDimension(), k -> new ArrayList<>()).add(new WaystoneMapIcon(w.getPos(), w.getName(), w.isGlobal()));
-		}
-
-		RefreshMinimapIconsEvent.trigger();
-	}
-	 */
-
-	private static void mapWidgets(MapIconEvent event) {
-		List<WaystoneMapIcon> list = WAYSTONES.getOrDefault(event.getDimension(), Collections.emptyList());
-
-		if (!list.isEmpty()) {
-			for (WaystoneMapIcon icon : list) {
-				event.add(icon);
-			}
-		}
+	public static void onKnownWaystones(KnownWaystonesEvent event) {
+		WaystonesCommon.updateWaystones(event.getWaystones().stream().map(w -> new WaystoneData(w.getDimension(), new WaystoneMapIcon(w.getPos(), w.getName(), w.isGlobal()))).toList());
 	}
 }

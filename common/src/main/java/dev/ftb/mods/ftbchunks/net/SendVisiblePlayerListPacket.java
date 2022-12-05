@@ -3,72 +3,33 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbchunks.data.PlayerLocation;
-import net.minecraft.core.Registry;
+import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
  */
 public class SendVisiblePlayerListPacket extends BaseS2CMessage {
-	public final List<PlayerLocation> players;
-	public final ResourceKey<Level> dim;
+	public final List<UUID> uuids;
 
-	public SendVisiblePlayerListPacket(List<PlayerLocation> p, ResourceKey<Level> d) {
-		players = p;
-		dim = d;
+	private SendVisiblePlayerListPacket(List<UUID> uuids) {
+		this.uuids = uuids;
 	}
 
 	SendVisiblePlayerListPacket(FriendlyByteBuf buf) {
-		int s = buf.readVarInt();
-		players = new ArrayList<>(s);
-
-		for (int i = 0; i < s; i++) {
-			PlayerLocation p = new PlayerLocation();
-			long most = buf.readLong();
-			long least = buf.readLong();
-			p.uuid = new UUID(most, least);
-			p.name = buf.readUtf(Short.MAX_VALUE);
-			p.x = buf.readVarInt();
-			p.z = buf.readVarInt();
-			players.add(p);
-		}
-
-		dim = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
-	}
-
-	public static void sendAll() {
-		List<VisiblePlayerListItem> playerList = new ArrayList<>();
-
-		for (ServerPlayer player : FTBChunksAPI.getManager().teamManager.server.getPlayerList().getPlayers()) {
-			VisiblePlayerListItem item = new VisiblePlayerListItem();
-			item.player = player;
-			item.data = FTBChunksAPI.getManager().getData(player);
-			item.location = new PlayerLocation(player);
-			playerList.add(item);
-		}
-
-		for (VisiblePlayerListItem self : playerList) {
-			ResourceKey<Level> dim = self.player.level.dimension();
-			List<PlayerLocation> players = new ArrayList<>();
-
-			for (VisiblePlayerListItem other : playerList) {
-				if (other.player.level == self.player.level && self.data.canUse(other.player, FTBChunksTeamData.LOCATION_MODE)) {
-					players.add(other.location);
-				}
-			}
-
-			new SendVisiblePlayerListPacket(players, dim).sendTo(self.player);
+		uuids = new ArrayList<>();
+		int size = buf.readVarInt();
+		for (int i = 0; i < size; i++) {
+			uuids.add(buf.readUUID());
 		}
 	}
 
@@ -79,21 +40,46 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeVarInt(players.size());
-
-		for (PlayerLocation p : players) {
-			buf.writeLong(p.uuid.getMostSignificantBits());
-			buf.writeLong(p.uuid.getLeastSignificantBits());
-			buf.writeUtf(p.name, Short.MAX_VALUE);
-			buf.writeVarInt(p.x);
-			buf.writeVarInt(p.z);
-		}
-
-		buf.writeResourceLocation(dim.location());
+		buf.writeVarInt(uuids.size());
+		uuids.forEach(buf::writeUUID);
 	}
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.updateVisiblePlayerList(this);
+		VisibleClientPlayers.updatePlayerList(uuids);
+	}
+
+	public static void syncToLevel(Level level) {
+		syncToPlayers(FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers().stream().filter(p -> p.level == level).toList());
+	}
+
+	public static void syncToAll() {
+		syncToPlayers(FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers());
+	}
+
+	public static void syncToPlayers(List<ServerPlayer> players) {
+		List<VisiblePlayerItem> playerList;
+
+		if (players == null) {
+			players = FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers();
+		}
+		playerList = players.stream()
+				.map(player -> new VisiblePlayerItem(player, FTBChunksAPI.getManager().getData(player)))
+				.collect(Collectors.toList());
+
+		for (VisiblePlayerItem recipient : playerList) {
+			List<UUID> playerIds = new ArrayList<>();
+
+			for (VisiblePlayerItem other : playerList) {
+				if (recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksTeamData.LOCATION_MODE)) {
+					playerIds.add(other.player.getUUID());
+				}
+			}
+
+			new SendVisiblePlayerListPacket(playerIds).sendTo(recipient.player);
+		}
+	}
+
+	private record VisiblePlayerItem(ServerPlayer player, FTBChunksTeamData data) {
 	}
 }

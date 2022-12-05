@@ -19,7 +19,9 @@ public interface FTBChunksNet {
 	MessageType SYNC_TX = MAIN.registerC2S("sync_tx", SyncTXPacket::new);
 	MessageType SYNC_RX = MAIN.registerS2C("sync_rx", SyncRXPacket::new);
 	MessageType LOADED_CHUNK_VIEW = MAIN.registerS2C("loaded_chunk_view", LoadedChunkViewPacket::new);
+	MessageType SEND_PLAYER_POSITION = MAIN.registerS2C("send_player_position", SendPlayerPositionPacket::new);
+	MessageType UPDATE_FORCE_LOAD_EXPIRY = MAIN.registerC2S("update_force_load_expiry", UpdateForceLoadExpiryPacket::new);
 
-	static void init() {
+    static void init() {
 	}
 }

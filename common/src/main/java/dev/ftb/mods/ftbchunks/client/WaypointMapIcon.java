@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.client;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
-import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.integration.StaticMapIcon;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -11,6 +10,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -21,7 +21,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,12 +84,13 @@ public class WaypointMapIcon extends StaticMapIcon {
 			}));
 
 			if (waypoint.type.canChangeColor) {
-				contextMenu.add(new ContextMenuItem(new TextComponent("Change Color"), Icons.COLOR_RGB, () -> {
+				contextMenu.add(new ContextMenuItem(new TranslatableComponent("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
 					int r = (waypoint.color >> 16) & 0xFF;
 					int g = (waypoint.color >> 8) & 0xFF;
 					int b = (waypoint.color >> 0) & 0xFF;
 					float[] hsb = Color.RGBtoHSB(r, g, b, new float[3]);
-					Color4I col = Color4I.hsb(hsb[0] + 1F / 12F, hsb[1], hsb[2]);
+					float add = Widget.isShiftKeyDown() ? -1F/12F : 1F/12F;
+					Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
 					waypoint.color = col.rgba();
 					waypoint.dimension.saveData = true;
 					icon = Icon.EMPTY;
@@ -107,9 +108,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 			}));
 
 			contextMenu.add(new ContextMenuItem(new TranslatableComponent("gui.remove"), Icons.REMOVE, () -> {
-				waypoint.dimension.getWaypoints().remove(waypoint);
-				waypoint.dimension.saveData = true;
-				RefreshMinimapIconsEvent.trigger();
+				waypoint.dimension.getWaypointManager().remove(waypoint);
 				screen.regionPanel.refreshWidgets();
 			}));
 
@@ -125,9 +124,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 		if (super.keyPressed(screen, key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_DELETE)) {
-			waypoint.dimension.getWaypoints().remove(waypoint);
-			waypoint.dimension.saveData = true;
-			RefreshMinimapIconsEvent.trigger();
+			waypoint.dimension.getWaypointManager().remove(waypoint);
 			screen.regionPanel.refreshWidgets();
 			return true;
 		}

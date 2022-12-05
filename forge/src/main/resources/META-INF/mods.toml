@@ -17,7 +17,7 @@ license = "All Rights Reserved"
 [[dependencies.ftbchunks]]
 modId = "forge"
 mandatory = true
-versionRange = "[28,)"
+versionRange = "[40.1.67,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -38,14 +38,21 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "ftblibrary"
 mandatory = true
-versionRange = "[1801.3.5-build.104,)"
+versionRange = "[1802.3.8-build.161,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftbteams"
 mandatory = true
-versionRange = "[1.0.0,)"
+versionRange = "[1802.2.8-build.77,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "ftbranks"
+mandatory = false
+versionRange = "[1802.1.9-build.49,)"
 ordering = "AFTER"
 side = "BOTH"
 
@@ -55,3 +62,4 @@ mandatory = false
 versionRange = "[1801.4.2-,)"
 ordering = "BEFORE"
 side = "BOTH"
+

@@ -1,15 +1,17 @@
 package dev.ftb.mods.ftbchunks;
 
+import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
 import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbchunks.net.SendVisiblePlayerListPacket;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -32,9 +34,6 @@ public class FTBChunksCommon {
 	public void updateAllChunks(SendManyChunksPacket packet) {
 	}
 
-	public void updateVisiblePlayerList(SendVisiblePlayerListPacket packet) {
-	}
-
 	public void importWorldMap(ServerLevel world) {
 	}
 
@@ -53,5 +52,11 @@ public class FTBChunksCommon {
 
 	public boolean skipBlock(BlockState state) {
 		return false;
+	}
+
+	public void maybeClearDeathpoint(Player player) {
+	}
+
+	public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos, boolean valid) {
 	}
 }

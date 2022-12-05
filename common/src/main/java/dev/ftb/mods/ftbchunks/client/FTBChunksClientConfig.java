@@ -33,6 +33,7 @@ public interface FTBChunksClientConfig {
 	BooleanValue OWN_CLAIMED_CHUNKS_ON_MAP = CONFIG.getBoolean("own_claimed_chunks_on_map", true).comment("Show your own claimed chunks on the map");
 	BooleanValue IN_WORLD_WAYPOINTS = CONFIG.getBoolean("in_world_waypoints", true).comment("Show waypoints in world");
 	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
+	IntValue DEATH_WAYPOINT_AUTOREMOVE_DISTANCE = CONFIG.getInt("death_waypoint_autoremove_distance", 0, 0, Integer.MAX_VALUE).comment("Automatically remove death waypoints if closer than this many blocks away (distance of 0 disables removal)");
 	BooleanValue ONLY_SURFACE_ENTITIES = CONFIG.getBoolean("only_surface_entities", true).comment("Only show entities that are on the surface");
 	DoubleValue WAYPOINT_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Distance at which waypoints start to fade");
 	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
@@ -60,6 +61,7 @@ public interface FTBChunksClientConfig {
 	IntValue MINIMAP_OFFSET_X = MINIMAP.getInt("position_offset_x", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
 	IntValue MINIMAP_OFFSET_Y = MINIMAP.getInt("position_offset_y", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
 	EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.getEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
+	BooleanValue SQUARE_MINIMAP = MINIMAP.getBoolean("square", false).comment("Draw a square minimap instead of a circular one");
 
 	BooleanValue DEBUG_INFO = CONFIG.getBoolean("debug_info", false).comment("Enables debug info");
 	IntValue TASK_QUEUE_TICKS = CONFIG.getInt("task_queue_ticks", 4, 1, 300).excluded().comment("Advanced option. How often queued tasks will run");

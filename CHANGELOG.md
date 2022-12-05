@@ -58,3 +58,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed Ghast fireballs being able to grief protected chunks
   * A more fundamental problem here is that not all explosions sources can be determined, and Ghast fireballs fall into this category. Previously such explosions were not protected against but are now.
   * Added a server-side config item `protect_unknown_explosions` (default true) to control this behaviour
+* Waypoint beacons now render correctly below Y level 0 (down to the world's min height, e.g. -64 for overworld)

@@ -7,6 +7,7 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 
 /**
  * @author LatvianModder
@@ -65,7 +66,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean allowExplosions() {
-		return false;
+		return teamData.allowExplosions();
 	}
 
 	public void postSetForceLoaded(boolean load) {

@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import me.shedaniel.architectury.hooks.LevelResourceHooks;
@@ -20,6 +21,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -125,6 +127,20 @@ public class ClaimedChunkManager {
 		return team != null && teamData.containsKey(team.getId());
 	}
 
+	public void deleteTeam(Team toDelete) {
+		FTBChunksTeamData data = teamData.get(toDelete.getId());
+
+		if (data != null && toDelete.getMembers().isEmpty()) {
+			FTBChunks.LOGGER.debug("dropping references to empty team " + toDelete.getId());
+			teamData.remove(toDelete.getId());
+			try {
+				Files.deleteIfExists(data.file);
+			} catch (IOException e) {
+				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.file, e.getMessage()));
+			}
+		}
+	}
+
 	@Nullable
 	public ClaimedChunk getChunk(ChunkDimPos pos) {
 		return claimedChunks.get(pos);
@@ -135,12 +151,16 @@ public class ClaimedChunkManager {
 	}
 
 	public boolean getBypassProtection(UUID player) {
-		return teamManager.getInternalPlayerTeam(player).getExtraData().getBoolean("BypassFTBChunksProtection");
+		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
+		return team != null && team.getExtraData().getBoolean("BypassFTBChunksProtection");
 	}
 
 	public void setBypassProtection(UUID player, boolean bypass) {
-		teamManager.getInternalPlayerTeam(player).getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
-		teamManager.getInternalPlayerTeam(player).save();
+		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
+		if (team != null) {
+			team.getExtraData().putBoolean("BypassFTBChunksProtection", bypass);
+			team.save();
+		}
 	}
 
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection) {

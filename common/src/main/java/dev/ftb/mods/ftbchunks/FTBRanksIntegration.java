@@ -68,11 +68,13 @@ public class FTBRanksIntegration {
 	}
 
 	private static void updateAll(RankManager manager) {
-		manager.getServer().getPlayerList().getPlayers().forEach(player -> {
-			FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-			data.setForceLoadMember(player.getUUID(), getChunkLoadOffline(player, false));
-		});
-		FTBTeamsAPI.getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
+		if (FTBChunksAPI.isManagerLoaded()) {
+			manager.getServer().getPlayerList().getPlayers().forEach(player -> {
+				FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
+				data.setForceLoadMember(player.getUUID(), getChunkLoadOffline(player, false));
+			});
+			FTBTeamsAPI.getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
+		}
 	}
 
 	private static void updateForPlayer(RankManager manager, GameProfile profile) {

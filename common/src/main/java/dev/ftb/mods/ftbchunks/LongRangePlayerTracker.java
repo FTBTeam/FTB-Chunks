@@ -9,8 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Tracks which players can see which players on the long-range display (i.e. outside of standard vanilla entity
@@ -58,14 +57,19 @@ public enum LongRangePlayerTracker {
 
         if (player.getServer() == null) return;
 
-        trackingMap.rowMap().forEach((id, tracked) -> {
-            if (tracked.containsKey(player.getUUID())) {
-                ServerPlayer p1 = player.getServer().getPlayerList().getPlayer(id);
-                if (p1 != null) {
-                    new SendPlayerPositionPacket(player, null).sendTo(p1);
-                }
-                tracked.remove(player.getUUID());
+        Map<UUID,UUID> toRemove = new HashMap<>();
+        for (UUID trackingId : trackingMap.rowKeySet()) {
+            if (trackingMap.contains(trackingId, player.getUUID())) {
+                toRemove.put(trackingId, player.getUUID());
             }
+        }
+
+        toRemove.forEach((trackingId, disconnectedId) -> {
+            ServerPlayer trackingPlayer = player.getServer().getPlayerList().getPlayer(trackingId);
+            if (trackingPlayer != null) {
+                new SendPlayerPositionPacket(player, null).sendTo(trackingPlayer);
+            }
+            trackingMap.remove(trackingId, disconnectedId);
         });
     }
 

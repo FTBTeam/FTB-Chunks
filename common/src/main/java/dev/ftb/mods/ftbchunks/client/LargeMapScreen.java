@@ -50,6 +50,7 @@ public class LargeMapScreen extends BaseScreen {
 	public Button dimensionButton;
 	public Button waypointManagerButton;
 	public Button settingsButton;
+	public Button serverSettingsButton;
 	public Button clearDeathpointsButton;
 	private boolean needIconRefresh;
 
@@ -143,6 +144,9 @@ public class LargeMapScreen extends BaseScreen {
 
 		add(settingsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this))));
 
+		if (Minecraft.getInstance().player.hasPermissions(2)) {
+			add(serverSettingsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.settings.server"), Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)), (b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this))));
+		}
 	}
 
 	@Override
@@ -156,6 +160,9 @@ public class LargeMapScreen extends BaseScreen {
 
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
+		if (serverSettingsButton != null) {
+			serverSettingsButton.setPosAndSize(width - 18, height - 18, 16, 16);
+		}
 	}
 
 	@Override

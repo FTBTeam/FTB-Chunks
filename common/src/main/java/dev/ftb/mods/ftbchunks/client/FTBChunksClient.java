@@ -377,7 +377,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public EventResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
-		if (openMapKey.isDown()) {
+		if (action != GLFW.GLFW_PRESS) {
+			return EventResult.pass();
+		}
+		if (openMapKey.matches(keyCode, scanCode)) {
 			if (Screen.hasControlDown()) {
 				SNBTCompoundTag tag = new SNBTCompoundTag();
 				tag.putBoolean(FTBChunksClientConfig.MINIMAP_ENABLED.key, !FTBChunksClientConfig.MINIMAP_ENABLED.get());
@@ -395,13 +398,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 				openGui();
 				return EventResult.interruptTrue();
 			}
-		} else if (zoomInKey.isDown()) {
+		} else if (zoomInKey.matches(keyCode, scanCode)) {
 			return changeZoom(true);
-		} else if (zoomOutKey.isDown()) {
+		} else if (zoomOutKey.matches(keyCode, scanCode)) {
 			return changeZoom(false);
-		} else if (addWaypointKey.isDown()) {
+		} else if (addWaypointKey.matches(keyCode, scanCode)) {
 			return addQuickWaypoint();
-		} else if (waypointManagerKey.isDown()) {
+		} else if (waypointManagerKey.matches(keyCode, scanCode)) {
 			new WaypointEditorScreen().openGui();
 		}
 
@@ -409,7 +412,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public EventResult keyPressed(Minecraft client, Screen screen, int keyCode, int scanCode, int modifiers) {
-		if (openMapKey.isDown()) {
+		if (openMapKey.matches(keyCode, scanCode)) {
 			LargeMapScreen gui = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
 
 			if (gui != null) {

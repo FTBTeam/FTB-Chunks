@@ -1,10 +1,12 @@
 package dev.ftb.mods.ftbchunks;
 
 import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import java.util.Collections;
@@ -33,6 +35,7 @@ public interface FTBChunksWorldConfig {
 	IntValue HARD_TEAM_CLAIM_LIMIT = CONFIG.getInt("hard_team_claim_limit", 0, 0, Integer.MAX_VALUE).comment("Hard limit for the number of chunks a team can claim, regardless of how many members. Default of 0 means no hard limit.");
 	IntValue HARD_TEAM_FORCE_LIMIT = CONFIG.getInt("hard_team_force_limit", 0, 0, Integer.MAX_VALUE).comment("Hard limit for the number of chunks a team can force-load, regardless of how many members. Default of 0 means no hard limit.");
 	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CONFIG.getEnum("party_limit_mode", PartyLimitMode.NAME_MAP).comment("Method by which party claim & force-load limits are calculated.","LARGEST: use the limits of the member with the largest limits","SUM: add up all the members' limits","OWNER: use the party owner's limits only","AVERAGE: use the average of all members' limits.");
+	BooleanValue REQUIRE_GAME_STAGE = CONFIG.getBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 
 	Set<ResourceKey<Level>> CLAIM_DIMENSION_BLACKLIST_SET = new HashSet<>();
 
@@ -63,5 +66,13 @@ public interface FTBChunksWorldConfig {
 		}
 
 		return NO_WILDERNESS.get();
+	}
+
+	static boolean playerHasMapStage(Player player) {
+		return !REQUIRE_GAME_STAGE.get() || StageHelper.INSTANCE.get().has(player, "ftbchunks_mapping");
+	}
+
+	static boolean shouldShowMinimap(Player player) {
+		return !FORCE_DISABLE_MINIMAP.get() && playerHasMapStage(player);
 	}
 }

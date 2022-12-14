@@ -124,5 +124,7 @@
 	"ftbchunks.hard_team_force_limit": "Hard Max Team Forceload Limit",
 	"ftbchunks.hard_team_force_limit.tooltip": "Hard forceload limit for party teams,\n regardless of member count or Party Limit Calculation mode",
 	"ftbchunks.party_limit_mode": "Party Limit Calculation Mode",
-	"ftbchunks.party_limit_mode.tooltip": "Method by which party claim & force-load limits are calculated.\nLARGEST: use the limits of the member with the largest limits\nSUM: add up all the members' limits\nOWNER: use the party owner's limits only\nAVERAGE: use the average of all members' limits."
+	"ftbchunks.party_limit_mode.tooltip": "Method by which party claim & force-load limits are calculated.\nLARGEST: use the limits of the member with the largest limits\nSUM: add up all the members' limits\nOWNER: use the party owner's limits only\nAVERAGE: use the average of all members' limits.",
+	"ftbchunks.require_game_stage": "Require Game Stage for Mapping",
+	"ftbchunks.require_game_stage.tooltip": "If true, players must have the 'ftbchunks_mapping' game stage (KubeJS and/or Gamestages required) to be able to open the map or see the minimap"
 }

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1802.3.11]
+
+### Added
+- Gamestage support for map and minimap usage
+  - New `require_game_stage` server setting, default false. If true, players must have the `ftbchunks_mapping` stage to view the map or minimap
+  - Requires KubeJS (Forge or Fabric) and/or Gamestages (Forge only) to be installed
+
+### Fixes
+- Fixed FTB Chunks keybinds getting picked up where they shouldn't be, e.g. when chat is open (bug introduced in 1802.3.10)
+
 ## [1802.3.10]
 
 ### Added

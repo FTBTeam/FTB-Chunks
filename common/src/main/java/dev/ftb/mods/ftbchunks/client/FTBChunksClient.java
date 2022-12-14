@@ -377,7 +377,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public EventResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
-		if (action != GLFW.GLFW_PRESS || client.screen != null) {
+		if (action != GLFW.GLFW_PRESS || client.screen != null || !FTBChunksWorldConfig.playerHasMapStage(client.player)) {
 			return EventResult.pass();
 		}
 		if (openMapKey.matches(keyCode, scanCode)) {
@@ -564,7 +564,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.options.renderDebug || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || FTBChunksWorldConfig.FORCE_DISABLE_MINIMAP.get()) {
+		if (mc.options.renderDebug || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
 			return;
 		}
 

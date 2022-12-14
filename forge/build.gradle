@@ -43,6 +43,12 @@ repositories {
 			includeGroup "mezz.jei"
 		}
 	}
+	maven {
+		url "https://maven.blamejared.com"
+		content {
+			includeGroup "net.darkhax.gamestages"
+		}
+	}
 }
 
 dependencies {
@@ -58,6 +64,8 @@ dependencies {
 	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:9.1.574")
 	modImplementation("curse.maven:balm-531761:${balm_forge_version}")
 	modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
+
+	modCompileOnlyApi "net.darkhax.gamestages:GameStages-Forge-${rootProject.minecraft_version}:${rootProject.gamestages_version}"
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }

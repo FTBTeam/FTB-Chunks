@@ -376,7 +376,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public EventResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
-		if (action != GLFW.GLFW_PRESS) {
+		if (action != GLFW.GLFW_PRESS || client.screen != null) {
 			return EventResult.pass();
 		}
 		if (openMapKey.matches(keyCode, scanCode)) {

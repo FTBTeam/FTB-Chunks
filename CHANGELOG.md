@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `require_game_stage` server setting, default false. If true, players must have the `ftbchunks_mapping` stage to view the map or minimap
   - Requires KubeJS (Forge or Fabric) and/or Gamestages (Forge only) to be installed
 
+### Fixed
+- Fixed player death waypoints being added in the wrong place on Fabric
+
 ## [1902.3.13]
 
 ### Added

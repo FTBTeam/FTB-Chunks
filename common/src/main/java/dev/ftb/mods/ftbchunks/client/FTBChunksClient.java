@@ -305,7 +305,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 	@Override
 	public void playerDeath(PlayerDeathPacket packet) {
-		if (FTBChunksClientConfig.DEATH_WAYPOINTS.get()) {
+		if (FTBChunksClientConfig.DEATH_WAYPOINTS.get() && FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
 			MapDimension dimension = MapManager.inst.getDimension(packet.dimension);
 
 			for (Waypoint w : dimension.getWaypointManager()) {
@@ -854,7 +854,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Camera camera, float tickDelta) {
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.options.hideGui || MapManager.inst == null || mc.level == null || mc.player == null) {
+		if (mc.options.hideGui || MapManager.inst == null || mc.level == null || mc.player == null || !FTBChunksWorldConfig.playerHasMapStage(mc.player)) {
 			return;
 		}
 

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed player death waypoints being added in the wrong place on Fabric
+- Fix force-loaded chunks not always ticking entities & block entities in those chunks
 
 ## [1902.3.13]
 

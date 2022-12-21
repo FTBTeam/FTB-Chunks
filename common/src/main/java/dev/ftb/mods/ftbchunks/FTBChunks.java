@@ -404,12 +404,14 @@ public class FTBChunks {
 		// this is better than checking for living death event, because player cloning isn't cancellable
 		// the player death event is cancellable, and we can't detect cancelled events with Architectury
 		if (!wonGame) {
-			ResourceKey<Level> dim = oldPlayer.level.dimension();
-			int x = oldPlayer.getBlockX();
-			int y = oldPlayer.getBlockY();
-			int z = oldPlayer.getBlockZ();
-			int num = newPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-			new PlayerDeathPacket(dim, x, y, z, num).sendTo(newPlayer);
+			newPlayer.getLastDeathLocation().ifPresent(loc -> {
+				ResourceKey<Level> dim = loc.dimension();
+				int x = loc.pos().getX();
+				int y = loc.pos().getY();
+				int z = loc.pos().getZ();
+				int num = newPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+				new PlayerDeathPacket(dim, x, y, z, num).sendTo(newPlayer);
+			});
 		}
 	}
 

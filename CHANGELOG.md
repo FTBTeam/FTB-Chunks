@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1802.3.12]
+
+### Fixes
+- Fix force-loaded chunks not always ticking entities & block entities in those chunks
+
 ## [1802.3.11]
 
 ### Added
@@ -19,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Server settings are now editable via a new button in the map GUI (bottom right), for players with permission level >= 2
 
-### Fixed
+### Fixes
 * Fixed a server CME crash under some circumstances when players disconnect
 * Fixed keybinds used by FTB Chunks sometimes getting "stuck" if other keys pressed at the same time
 

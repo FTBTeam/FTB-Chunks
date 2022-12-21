@@ -1,18 +1,29 @@
 package dev.ftb.mods.ftbchunks.forge;
 
+import com.google.common.collect.Sets;
 import dev.architectury.platform.Platform;
 import dev.architectury.platform.forge.EventBuses;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.compat.waystones.WaystonesCompat;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.data.Protection;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mod(FTBChunks.MOD_ID)
 public class FTBChunksForge {
@@ -44,13 +55,20 @@ public class FTBChunksForge {
 	}
 
 	private void validateLoadedChunks(ServerLevel level, ForgeChunkManager.TicketHelper ticketHelper) {
-		// It's safe to just remove all stored Forge tickets, since we do our own forced chunk tracking,
-		//   and we'll just re-force all the chunks we care about shortly after this is called (which
-		//   also re-registers them with Forge).
-		// This should prevent our forced list getting out of sync with Forge's for whatever reason.
+		// Clean up any ticking Forge chunk-loading tickets for chunks which aren't both claimed and force-loaded
 		ticketHelper.getEntityTickets().forEach((id, chunks) -> {
-			FTBChunks.LOGGER.info(String.format("cleaning up %d non-ticking and %d ticking tickets for %s", chunks.getFirst().size(), chunks.getSecond().size(), id));
-			ticketHelper.removeAllTickets(id);
+			Set<Long> toRemove = new HashSet<>();
+			chunks.getSecond().forEach(l -> {
+				ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));
+				if (cc == null || !cc.teamData.getTeamId().equals(id) || !cc.isForceLoaded()) {
+					toRemove.add(l);
+				}
+			});
+			toRemove.forEach(l -> ticketHelper.removeTicket(id, l, true));
+			if (!toRemove.isEmpty()) {
+				FTBChunks.LOGGER.info("cleaned up {} stale Forge chunkloading tickets for team ID {} in dimension {}",
+						toRemove.size(), id, level.dimension().location());
+			}
 		});
 	}
 }

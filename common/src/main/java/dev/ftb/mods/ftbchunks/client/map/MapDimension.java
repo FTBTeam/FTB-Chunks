@@ -38,6 +38,10 @@ public class MapDimension implements MapTask {
 
 	public static MapDimension getCurrent() {
 		if (current == null) {
+			if (MapManager.inst == null) {
+				FTBChunks.LOGGER.warn("Attempted to access MapManager before it's set up! Client never received team initialization data from server; check server log for errors around the time your player logged in.");
+				return null;
+			}
 			current = MapManager.inst.getDimension(Minecraft.getInstance().level.dimension());
 		}
 

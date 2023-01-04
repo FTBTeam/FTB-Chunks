@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
@@ -62,7 +63,14 @@ public class LargeMapScreen extends BaseScreen {
 
 	public LargeMapScreen() {
 		regionPanel = new RegionMapPanel(this);
-		dimension = MapDimension.getCurrent();
+		MapDimension dim = MapDimension.getCurrent();
+		if (dim == null) {
+			FTBChunks.LOGGER.warn("Closed large map screen to prevent map dimension manager crash");
+			this.closeGui();
+		}
+
+		dimension = dim;
+
 		regionPanel.setScrollX(0D);
 		regionPanel.setScrollY(0D);
 	}

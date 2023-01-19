@@ -186,7 +186,7 @@ public class ClaimedChunkManager {
 	 * @return true to prevent the interaction, false to permit it
 	 */
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
-		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
+		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level == null) {
 			return false;
 		}
 

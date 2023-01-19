@@ -42,8 +42,10 @@ public enum ClaimExpirationManager {
                 .filter(data -> now - data.getLastLoginTime() > max)
                 .forEach(data -> {
                     Collection<ClaimedChunk> chunks = data.getClaimedChunks();
-                    expired.addAll(chunks);
-                    FTBChunks.LOGGER.info("all chunk claims for team {} have expired due to team inactivity; unclaiming {} chunks", data, chunks.size());
+                    if (!chunks.isEmpty()) {
+                        expired.addAll(chunks);
+                        FTBChunks.LOGGER.info("all chunk claims for team {} have expired due to team inactivity; unclaiming {} chunks", data, chunks.size());
+                    }
                 });
 
         if (!expired.isEmpty()) {

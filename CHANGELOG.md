@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1802.3.13]
+
+### Added
+- The handling of Fake Player access to protected chunks has been improved
+  - New team property "Allow Fake Players by Player ID", default true. This is the secure way to allow fake player access to your claims, but it depends on mods actually giving their fake players the ID of the real player deploying that fake player. Examples of mods which do this properly are the Mekanism Digital Miner, PneumaticCraft: Repressurized Drones, and Modular Routers (with an installed Security Upgrade).
+  - Team property "Allow Fake Players" is now "Allow All Fake Players", and is false by default (you may wish to review this setting for your team). Beware: setting this to true treats ALL fake players as team allies, including those from blocks/entities owned by potentially hostile players!
+  - New team property "Allied Fake Player Names/IDs": you can add names or IDs of known fake players. Beware: adding names or IDs to this list treats these fake players as team allies, even from blocks/entities owned by potentially hostile players!
+- Right-clicking corpse entities from the "Corpse" mod is now permitted in any claimed chunk
+  - the `corpse:corpse` entity type is added to the `ftbchunks:entity_interact_whitelist` entity type tag
+
 ## [1802.3.12]
 
 ### Fixes

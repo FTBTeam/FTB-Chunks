@@ -121,6 +121,7 @@ public class FTBChunks {
 		PlayerEvent.PLAYER_QUIT.register(this::loggedOut);
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
+		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
@@ -409,6 +410,10 @@ public class FTBChunks {
 			int num = newPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
 			new PlayerDeathPacket(dim, x, y, z, num).sendTo(newPlayer);
 		}
+	}
+
+	private void playerChangedDimension(ServerPlayer serverPlayer, ResourceKey<Level> oldLevel, ResourceKey<Level> newLevel) {
+		LongRangePlayerTracker.INSTANCE.stopTracking(serverPlayer);
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {

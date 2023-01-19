@@ -19,6 +19,7 @@ import dev.ftb.mods.ftbteams.data.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.property.PrivacyProperty;
+import dev.ftb.mods.ftbteams.property.StringListProperty;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
@@ -30,6 +31,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,7 +43,10 @@ import java.util.stream.Collectors;
  * @author LatvianModder
  */
 public class FTBChunksTeamData {
-	public static final BooleanProperty ALLOW_FAKE_PLAYERS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_fake_players"), true);
+	public static final BooleanProperty ALLOW_ALL_FAKE_PLAYERS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_fake_players"), false);
+	public static final StringListProperty ALLOW_NAMED_FAKE_PLAYERS = new StringListProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_named_fake_players"), new ArrayList<>());
+	public static final BooleanProperty ALLOW_FAKE_PLAYERS_BY_ID = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_fake_players_by_id"), true);
+
 	public static final PrivacyProperty BLOCK_EDIT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_edit_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty BLOCK_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "block_interact_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty ENTITY_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "entity_interact_mode"), PrivacyMode.ALLIES);
@@ -64,6 +69,7 @@ public class FTBChunksTeamData {
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
 	private long lastLoginTime;
+	private Set<String> fakePlayerNameCache;
 
 	public FTBChunksTeamData(ClaimedChunkManager m, Path f, Team t) {
 		manager = m;
@@ -274,15 +280,45 @@ public class FTBChunksTeamData {
 
 		if (mode == PrivacyMode.PUBLIC) {
 			return true;
-		} else if (mode == PrivacyMode.ALLIES) {
-			if (PlayerHooks.isFake(p)) {
-				return team.getProperty(ALLOW_FAKE_PLAYERS);
-			}
-
-			return isAlly(p.getUUID());
 		}
 
-		return team.isMember(p.getUUID());
+		if (PlayerHooks.isFake(p)) {
+			return canFakePlayerUse(p, mode);
+		} else if (mode == PrivacyMode.ALLIES) {
+			return isAlly(p.getUUID());
+		} else {
+			return team.isMember(p.getUUID());
+		}
+	}
+
+	private boolean canFakePlayerUse(Player player, PrivacyMode mode) {
+		if (team.getProperty(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS)) {
+			return mode == PrivacyMode.ALLIES;
+		}
+
+		boolean checkById = team.getProperty(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID) && player.getUUID() != null;
+		if (mode == PrivacyMode.ALLIES) {
+			return checkById && isAlly(player.getUUID())
+					|| getCachedFakePlayerNames().contains(player.getGameProfile().getName().toLowerCase(Locale.ROOT))
+					|| getCachedFakePlayerNames().contains(player.getGameProfile().getId().toString().toLowerCase(Locale.ROOT));
+		} else if (mode == PrivacyMode.PRIVATE) {
+			return checkById && team.isMember(player.getUUID());
+		}
+
+		return false;
+	}
+
+	private Set<String> getCachedFakePlayerNames() {
+		if (fakePlayerNameCache == null) {
+			fakePlayerNameCache = team.getProperty(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS).stream()
+					.map(s -> s.toLowerCase(Locale.ROOT))
+					.collect(Collectors.toSet());
+		}
+		return fakePlayerNameCache;
+	}
+
+	public void clearFakePlayerNameCache() {
+		fakePlayerNameCache = null;
 	}
 
 	public SNBTCompoundTag serializeNBT() {

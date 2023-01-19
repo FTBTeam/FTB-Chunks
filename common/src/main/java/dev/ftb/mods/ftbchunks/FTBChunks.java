@@ -417,7 +417,9 @@ public class FTBChunks {
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
-		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
@@ -542,6 +544,8 @@ public class FTBChunks {
 			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(event.getTeam());
 			teamData.syncChunksToAll(server);
 		}
+
+		FTBChunksAPI.getManager().getData(event.getTeam()).clearFakePlayerNameCache();
 	}
 
 	private void playerAllianceChange(TeamAllyEvent event) {

@@ -17,10 +17,7 @@ import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
-import dev.ftb.mods.ftbchunks.ColorMapLoader;
-import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksCommon;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.*;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.integration.*;
@@ -513,6 +510,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		if (dim.dimension != mc.level.dimension()) {
 			MapDimension.updateCurrent();
 			dim = MapDimension.getCurrent();
+			longRangePlayerTracker.clear();
 		}
 
 		long now = System.currentTimeMillis();

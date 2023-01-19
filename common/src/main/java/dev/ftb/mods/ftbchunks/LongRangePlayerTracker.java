@@ -9,7 +9,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Tracks which players can see which players on the long-range display (i.e. outside of standard vanilla entity
@@ -53,7 +56,7 @@ public enum LongRangePlayerTracker {
     }
 
     public void stopTracking(ServerPlayer player) {
-        // called when a player logs out
+        // called when a player logs out or changes dimension
 
         if (player.getServer() == null) return;
 
@@ -81,5 +84,4 @@ public enum LongRangePlayerTracker {
         FTBChunksTeamData p2Team = FTBChunksAPI.getManager().getData(p2);
         return p2Team.canUse(p1, FTBChunksTeamData.LOCATION_MODE);
     }
-
 }

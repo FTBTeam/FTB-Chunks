@@ -182,10 +182,15 @@ public class FTBChunks {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.updateLimits();
 
+		String playerId = event.getPlayer().getUUID().toString();
+		FTBChunks.LOGGER.debug("handling player team login: player = {}, team = {}",
+				playerId, data.getTeamId());
+
 		SNBTCompoundTag config = new SNBTCompoundTag();
 		FTBChunksWorldConfig.CONFIG.write(config);
 		new LoginDataPacket(event.getTeam().manager.getId(), config).sendTo(player);
 		SendGeneralDataPacket.send(data, player);
+		FTBChunks.LOGGER.debug("server config and team data sent to {}", playerId);
 
 		long now = System.currentTimeMillis();
 		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
@@ -203,6 +208,7 @@ public class FTBChunks {
 				packet.sendTo(player);
 			}
 		});
+		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
 
 		data.setLastLoginTime(now);
 
@@ -214,6 +220,7 @@ public class FTBChunks {
 		}
 
 		SendVisiblePlayerListPacket.syncToLevel(player.level);
+		FTBChunks.LOGGER.debug("visible player list sent to {}", playerId);
 	}
 
 	public void loggedOut(ServerPlayer player) {

@@ -8,15 +8,47 @@
 			"required": false
 		},
 		{
-			"id": "waystones:waystone",
+			"id": "#waystones:waystone",
 			"required": false
 		},
 		{
-			"id": "waystones:mossy_waystone",
+			"id": "#waystones:sharestone",
 			"required": false
 		},
 		{
-			"id": "waystones:sandy_waystone",
+			"id": "fwaystones:waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:desert_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:stone_brick_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:red_desert_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:nether_brick_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:red_nether_brick_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:end_stone_brick_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:deepslate_brick_waystone",
+			"required": false
+		},
+		{
+			"id": "fwaystones:blackstone_brick_waystone",
 			"required": false
 		}
 	]

@@ -128,6 +128,8 @@
 	"ftbchunks.force_disable_minimap": "Disable Minimap for Clients",
 	"ftbchunks.max_idle_days_before_unclaim": "Max Idle Days Before Unclaim",
 	"ftbchunks.max_idle_days_before_unclaim.tooltip": "If no team member logs in for this many days,\nthe team's claims will be released.\nSetting this to 0 disables auto-unclaiming.",
+	"ftbchunks.max_idle_days_before_unforce": "Max Idle Days Before Unforceload",
+	"ftbchunks.max_idle_days_before_unforce.tooltip": "If no team member logs in for this many days,\nany force-loaded chunks will no longer be force-loaded.\nSetting this to 0 disables auto-unforceloading.",
 	"ftbchunks.long_range_tracker_interval": "Long Range Player Tracker Interval",
 	"ftbchunks.long_range_tracker_interval.tooltip": "Interval in ticks to send updates to clients with long-range player tracking data.\nLower values mean more frequent updates but more server load and network traffic;\n be careful with this, especially on busy servers.\nSetting this to 0 disables long-range tracking.",
 	"ftbchunks.protect_unknown_explosions": "Prevent Explosions from Unknown Sources",

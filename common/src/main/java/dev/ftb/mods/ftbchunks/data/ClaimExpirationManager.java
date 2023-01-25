@@ -4,7 +4,6 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceKey;
@@ -12,57 +11,76 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public enum ClaimExpirationManager {
     INSTANCE;
 
-    private static final int RUN_INTERVAL = 600_000; // in milliseconds - every 10 minutes
+    private static final long RUN_INTERVAL = 600_000L;       // milliseconds in 10 minutes
+    private static final long DAYS_TO_MILLIS = 86_400_000L;  // milliseconds in a day
+
     private long lastRun = 0L;
 
     public void tick(MinecraftServer server) {
-        long now = System.currentTimeMillis();
-        if (now - lastRun > RUN_INTERVAL) {
-            checkForIdleTeams(server, now);
-            checkForTemporaryClaims(server, now);
-            lastRun = now;
+        if ((server.getTickCount() & 0x3f) == 0) {
+            // System.currentTimeMillis() can be slow-ish on some JVMs so don't check every single tick
+            long now = System.currentTimeMillis();
+            if (now - lastRun > RUN_INTERVAL) {
+                Map<UUID, List<ClaimedChunk>> chunkMap = FTBChunksAPI.getManager().getClaimedChunksByTeam();
+                checkForIdleTeams(server, now, chunkMap);
+                checkForTemporaryClaims(server, now, chunkMap);
+                lastRun = now;
+            }
         }
     }
 
-    private void checkForIdleTeams(MinecraftServer server, final long now) {
-        final long max = FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNCLAIM.get() * 86_400_000L; // days -> milliseconds
+    private void checkForIdleTeams(MinecraftServer server, final long now, Map<UUID, List<ClaimedChunk>> chunkMap) {
+        final long maxClaim = FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNCLAIM.get() * DAYS_TO_MILLIS;
+        final long maxForce = FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNFORCE.get() * DAYS_TO_MILLIS;
 
-        if (max == 0L) return;
+        if (maxClaim == 0L && maxForce == 0L) return;
 
-        ClaimedChunkManager manager = FTBChunksAPI.getManager();
+        List<ClaimedChunk> expiredClaims = new ArrayList<>();
+        List<ClaimedChunk> expiredForceloads = new ArrayList<>();
 
-        List<ClaimedChunk> expired = new ArrayList<>();
-        FTBTeamsAPI.getManager().getTeams().stream()
-                .map(manager::getData)
-                .filter(data -> now - data.getLastLoginTime() > max)
-                .forEach(data -> {
-                    Collection<ClaimedChunk> chunks = data.getClaimedChunks();
-                    if (!chunks.isEmpty()) {
-                        expired.addAll(chunks);
-                        FTBChunks.LOGGER.info("all chunk claims for team {} have expired due to team inactivity; unclaiming {} chunks", data, chunks.size());
-                    }
-                });
+        chunkMap.forEach((id, chunks) -> {
+            List<ClaimedChunk> toExpireClaims = new ArrayList<>();
+            List<ClaimedChunk> toExpireForce = new ArrayList<>();
+            chunks.forEach(cc -> {
+                if (maxClaim > 0 && now - cc.teamData.getLastLoginTime() > maxClaim && cc.teamData.getTeam().getOnlineMembers().isEmpty()) {
+                    toExpireClaims.add(cc);
+                }
+                if (maxForce > 0 && cc.isForceLoaded() && now - cc.teamData.getLastLoginTime() > maxForce && cc.teamData.getTeam().getOnlineMembers().isEmpty()) {
+                    toExpireForce.add(cc);
+                }
+            });
+            if (!toExpireClaims.isEmpty()) {
+                FTBChunks.LOGGER.info("all chunk claims for team {} have expired due to team inactivity; unclaiming {} chunks", id.toString(), toExpireClaims.size());
+                expiredClaims.addAll(toExpireClaims);
+            }
+            if (!toExpireForce.isEmpty()) {
+                FTBChunks.LOGGER.info("all forceloads for team {} have expired due to team inactivity; unforcing {} chunks", id.toString(), toExpireForce.size());
+                expiredForceloads.addAll(toExpireForce);
+            }
+        });
 
-        if (!expired.isEmpty()) {
-            CommandSourceStack sourceStack = server.createCommandSourceStack();
-            Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
-            expired.forEach(c -> unclaimChunk(now, c, toSync, sourceStack));
+        CommandSourceStack sourceStack = server.createCommandSourceStack();
+        Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
+
+        if (!expiredForceloads.isEmpty()) {
+            expiredForceloads.forEach(cc -> unloadChunk(now, cc, toSync, sourceStack));
+        }
+        if (!expiredClaims.isEmpty()) {
+            expiredClaims.forEach(cc -> unclaimChunk(now, cc, toSync, sourceStack));
+        }
+        if (!toSync.isEmpty()) {
             syncChunks(toSync, server, Util.NIL_UUID);
         }
     }
 
-    private void checkForTemporaryClaims(MinecraftServer server, final long now) {
-        Map<UUID,List<ClaimedChunk>> chunkMap = FTBChunksAPI.getManager().getAllClaimedChunks().stream()
-                .collect(Collectors.groupingBy(cc -> cc.teamData.getTeamId()));
-
+    private void checkForTemporaryClaims(MinecraftServer server, final long now, Map<UUID, List<ClaimedChunk>> chunkMap) {
         chunkMap.forEach((teamId, chunks) -> {
             List<ClaimedChunk> expired = chunks.stream()
-                    .filter(cc -> cc.hasExpired(now))
+                    .filter(cc -> cc.isForceLoaded() && cc.hasExpired(now))
                     .toList();
             if (!expired.isEmpty()) {
                 FTBChunksTeamData teamData = expired.get(0).teamData;

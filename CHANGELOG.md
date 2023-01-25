@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New team property "Allied Fake Player Names/IDs": you can add names or IDs of known fake players. Beware: adding names or IDs to this list treats these fake players as team allies, even from blocks/entities owned by potentially hostile players!
 - Right-clicking corpse entities from the "Corpse" mod is now permitted in any claimed chunk
   - the `corpse:corpse` entity type is added to the `ftbchunks:entity_interact_whitelist` entity type tag
+- Sharestones from the Waystones mod, and all waystones from the Fabric Waystones mods can now be interacted with in claimed chunks
+  - added some more entries to the `ftbchunks:block_interact_whitelist` block tag
+- Added new server-side config setting `max_idle_days_before_unforce`
+  - If no member of a team logs in for this many days, any force-loaded chunks owned by the team will become un-forceloaded
+  - Default is 0, meaning no un-forceloading will be done; server admins should set this to a value suiting their server
 
 ### Fixed
 - Fixed NPE when a block break event is received with bad level data in it

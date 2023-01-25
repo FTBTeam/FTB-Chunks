@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -160,6 +161,11 @@ public class ClaimedChunkManager {
 
 	public Collection<ClaimedChunk> getAllClaimedChunks() {
 		return claimedChunks.values();
+	}
+
+	public Map<UUID,List<ClaimedChunk>> getClaimedChunksByTeam() {
+		return getAllClaimedChunks().stream()
+				.collect(Collectors.groupingBy(cc -> cc.teamData.getTeamId()));
 	}
 
 	public boolean getBypassProtection(UUID player) {

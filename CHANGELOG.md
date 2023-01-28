@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed NPE when a block break event is received with bad level data in it
 - Fixed player head icons in the previous dimension not disappearing from the map or minimap when you change dimension
   - Only players on long-range tracking (i.e. outside normal vanilla entity tracking range)
+- Fixed forceloaded chunks not always become unforced when players log out and offline chunkloading is disabled for them
 
 ## [1902.3.14]
 

@@ -72,7 +72,7 @@ public class FTBChunksForge {
 			Set<Long> toRemove = new HashSet<>();
 			chunks.getSecond().forEach(l -> {
 				ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));
-				if (cc == null || !cc.teamData.getTeamId().equals(id) || !cc.isForceLoaded()) {
+				if (cc == null || !cc.teamData.getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
 					toRemove.add(l);
 				}
 			});

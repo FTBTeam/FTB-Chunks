@@ -196,6 +196,12 @@ public class ClaimedChunkManager {
 			return FTBChunksWorldConfig.FAKE_PLAYERS.get().getProtect();
 		}
 
+		// Some mod interactions can cause player.level to be null
+		if (!(player.level instanceof Level))
+		{
+			return false;
+		}
+
 		ClaimedChunk chunk = getChunk(new ChunkDimPos(player.level, pos));
 
 		if (chunk != null) {

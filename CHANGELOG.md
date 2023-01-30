@@ -18,11 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new server-side config setting `max_idle_days_before_unforce`
   - If no member of a team logs in for this many days, any force-loaded chunks owned by the team will become un-forceloaded
   - Default is 0, meaning no un-forceloading will be done; server admins should set this to a value suiting their server
+- Added new protection team property: "Non-living Entity Attack Mode"
+  - Allows for protection from left-clicking of non-living entities like Item Frames and Paintings in your base
+  - Does *not* prevent living entities from being attacked
 
 ### Fixes
 - Fixed NPE when a block break event is received with bad level data in it
 - Fixed player head icons in the previous dimension not disappearing from the map or minimap when you change dimension
   - Only players on long-range tracking (i.e. outside normal vanilla entity tracking range)
+- Fixed chunkloading issue on Forge where some forceloaded tickets weren't being cleared when offline chunkloading is disabled for a team
+  - Causing chunks to sometimes stay loaded when they should not be
 
 ## [1802.3.12]
 

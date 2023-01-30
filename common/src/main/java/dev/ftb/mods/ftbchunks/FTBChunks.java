@@ -49,6 +49,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -122,6 +123,8 @@ public class FTBChunks {
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
+		// TODO when the arch PR is merged
+		//		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
@@ -141,6 +144,16 @@ public class FTBChunks {
 		}
 
 		PROXY.init();
+	}
+
+	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
+		// note: intentionally does not prevent attacking living entities;
+		// this is for preventing griefing of entities like paintings & item frames
+		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.INTERACT_ENTITY, entity)) {
+			return EventResult.interruptFalse();
+		}
+
+		return EventResult.pass();
 	}
 
 	private void playerTickPost(Player player) {
@@ -424,6 +437,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
+		event.add(FTBChunksTeamData.NONLIVING_ENTITY_ATTACK_MODE);
 		event.add(FTBChunksTeamData.CLAIM_VISIBILITY);
 		event.add(FTBChunksTeamData.LOCATION_MODE);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);

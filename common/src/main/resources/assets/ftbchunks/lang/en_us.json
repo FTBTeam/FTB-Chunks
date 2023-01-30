@@ -102,6 +102,8 @@
 	"ftbteamsconfig.ftbchunks.block_interact_mode.tooltip": "Used when blocks are right-clicked, e.g. opening a chest or flipping a lever",
 	"ftbteamsconfig.ftbchunks.entity_interact_mode": "Entity Interact Mode",
 	"ftbteamsconfig.ftbchunks.entity_interact_mode.tooltip": "Used when entities are right-clicked",
+	"ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode": "Non-living Entity Attack Mode",
+	"ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode.tooltip": "Used when non-living entities (paintings, item frames etc.) are left-clicked",
 	"ftbteamsconfig.ftbchunks.minimap_mode": "Minimap Mode",
 	"ftbteamsconfig.ftbchunks.location_mode": "Location Visibility",
 	"ftbteamsconfig.ftbchunks.location_mode.tooltip": "Controls who can see you on the map or minimap (outside the normal vanilla tracking range)",

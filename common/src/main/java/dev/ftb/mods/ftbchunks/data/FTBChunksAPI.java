@@ -26,6 +26,7 @@ public class FTBChunksAPI {
 	public static final TagKey<Item> RIGHT_CLICK_BLACKLIST_TAG = TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "right_click_blacklist"));
 	public static final TagKey<Item> RIGHT_CLICK_WHITELIST_TAG = TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "right_click_whitelist"));
 	public static final TagKey<EntityType<?>> ENTITY_INTERACT_WHITELIST_TAG = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "entity_interact_whitelist"));
+	public static final TagKey<EntityType<?>> NONLIVING_ENTITY_ATTACK_WHITELIST_TAG = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "nonliving_entity_attack_whitelist"));
 
 	public static final TicketType<ChunkPos> FORCE_LOADED_TICKET = TicketType.create(FTBChunks.MOD_ID + ":force_loaded", Comparator.comparingLong(ChunkPos::toLong));
 

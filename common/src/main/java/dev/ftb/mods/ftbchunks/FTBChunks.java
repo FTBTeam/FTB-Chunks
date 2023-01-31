@@ -49,6 +49,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -121,6 +122,9 @@ public class FTBChunks {
 		PlayerEvent.PLAYER_QUIT.register(this::loggedOut);
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
+		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
+		// TODO when the arch PR is merged
+		//		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
@@ -141,6 +145,16 @@ public class FTBChunks {
 		}
 
 		PROXY.init();
+	}
+
+	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
+		// note: intentionally does not prevent attacking living entities;
+		// this is for preventing griefing of entities like paintings & item frames
+		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.INTERACT_ENTITY, entity)) {
+			return EventResult.interruptFalse();
+		}
+
+		return EventResult.pass();
 	}
 
 	private void playerTickPost(Player player) {
@@ -181,10 +195,15 @@ public class FTBChunks {
 		FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 		data.updateLimits();
 
+		String playerId = event.getPlayer().getUUID().toString();
+		FTBChunks.LOGGER.debug("handling player team login: player = {}, team = {}",
+				playerId, data.getTeamId());
+
 		SNBTCompoundTag config = new SNBTCompoundTag();
 		FTBChunksWorldConfig.CONFIG.write(config);
 		new LoginDataPacket(event.getTeam().manager.getId(), config).sendTo(player);
 		SendGeneralDataPacket.send(data, player);
+		FTBChunks.LOGGER.debug("server config and team data sent to {}", playerId);
 
 		long now = System.currentTimeMillis();
 		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
@@ -202,6 +221,7 @@ public class FTBChunks {
 				packet.sendTo(player);
 			}
 		});
+		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
 
 		data.setLastLoginTime(now);
 
@@ -213,6 +233,7 @@ public class FTBChunks {
 		}
 
 		SendVisiblePlayerListPacket.syncToLevel(player.level);
+		FTBChunks.LOGGER.debug("visible player list sent to {}", playerId);
 	}
 
 	public void loggedOut(ServerPlayer player) {
@@ -415,12 +436,19 @@ public class FTBChunks {
 		}
 	}
 
+	private void playerChangedDimension(ServerPlayer serverPlayer, ResourceKey<Level> oldLevel, ResourceKey<Level> newLevel) {
+		LongRangePlayerTracker.INSTANCE.stopTracking(serverPlayer);
+	}
+
 	private void teamConfig(TeamCollectPropertiesEvent event) {
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
-		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
+		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);
 		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
 		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
 		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
+		event.add(FTBChunksTeamData.NONLIVING_ENTITY_ATTACK_MODE);
 		event.add(FTBChunksTeamData.CLAIM_VISIBILITY);
 		event.add(FTBChunksTeamData.LOCATION_MODE);
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
@@ -542,6 +570,8 @@ public class FTBChunks {
 			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(event.getTeam());
 			teamData.syncChunksToAll(server);
 		}
+
+		FTBChunksAPI.getManager().getData(event.getTeam()).clearFakePlayerNameCache();
 	}
 
 	private void playerAllianceChange(TeamAllyEvent event) {

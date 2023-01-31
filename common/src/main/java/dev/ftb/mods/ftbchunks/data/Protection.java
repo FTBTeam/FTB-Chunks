@@ -71,5 +71,15 @@ public interface Protection {
 		return ProtectionOverride.CHECK;
 	};
 
+	Protection ATTACK_NONLIVING_ENTITY = (player, pos, hand, chunk, entity) -> {
+		if (entity != null && entity.getType().is(FTBChunksAPI.NONLIVING_ENTITY_ATTACK_WHITELIST_TAG)) {
+			return ProtectionOverride.ALLOW;
+		} else if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.NONLIVING_ENTITY_ATTACK_MODE)) {
+			return ProtectionOverride.ALLOW;
+		}
+
+		return ProtectionOverride.CHECK;
+	};
+
 	ProtectionOverride override(ServerPlayer player, BlockPos pos, InteractionHand hand, @Nullable ClaimedChunk chunk, @Nullable Entity entity);
 }

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author LatvianModder
@@ -162,6 +163,11 @@ public class ClaimedChunkManager {
 		return claimedChunks.values();
 	}
 
+	public Map<UUID,List<ClaimedChunk>> getClaimedChunksByTeam() {
+		return getAllClaimedChunks().stream()
+				.collect(Collectors.groupingBy(cc -> cc.teamData.getTeamId()));
+	}
+
 	public boolean getBypassProtection(UUID player) {
 		PlayerTeam team = teamManager.getInternalPlayerTeam(player);
 		return team != null && team.getExtraData().getBoolean("BypassFTBChunksProtection");
@@ -186,7 +192,7 @@ public class ClaimedChunkManager {
 	 * @return true to prevent the interaction, false to permit it
 	 */
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
-		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
+		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level == null) {
 			return false;
 		}
 

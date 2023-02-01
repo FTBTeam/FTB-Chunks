@@ -85,7 +85,7 @@ public class FTBChunksCommands {
 				.then(Commands.literal("admin")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("bypass_protection")
-								.executes(context -> bypassProtection(context.getSource().getPlayerOrException()))
+								.executes(context -> bypassProtection(context.getSource()))
 						)
 						.then(Commands.literal("extra_claim_chunks")
 								.then(Commands.argument("player", EntityArgument.player())
@@ -177,14 +177,15 @@ public class FTBChunksCommands {
 		dispatcher.register(Commands.literal("chunks").redirect(command));
 	}
 
-	private static int bypassProtection(ServerPlayer player) {
+	private static int bypassProtection(CommandSourceStack source) throws CommandSyntaxException {
+		ServerPlayer player = source.getPlayerOrException();
 		ClaimedChunkManager manager = FTBChunksAPI.getManager();
 		manager.setBypassProtection(player.getUUID(), !manager.getBypassProtection(player.getUUID()));
+		source.sendSuccess(new TextComponent("bypass_protection = " + manager.getBypassProtection(player.getUUID())), true);
 		return 1;
 	}
 
 	private interface ChunkCallback {
-
 		void accept(FTBChunksTeamData data, ChunkDimPos pos) throws CommandSyntaxException;
 	}
 

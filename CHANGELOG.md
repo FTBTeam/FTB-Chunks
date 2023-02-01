@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1802.3.13]
+
+### Added
+- The handling of Fake Player access to protected chunks has been improved
+  - New team property "Allow Fake Players by Player ID", default true. This is the secure way to allow fake player access to your claims, but it depends on mods actually giving their fake players the ID of the real player deploying that fake player. Examples of mods which do this properly are the Mekanism Digital Miner, PneumaticCraft: Repressurized Drones, and Modular Routers (with an installed Security Upgrade).
+  - Team property "Allow Fake Players" is now "Allow All Fake Players", and is false by default (you may wish to review this setting for your team). Beware: setting this to true treats ALL fake players as team allies, including those from blocks/entities owned by potentially hostile players!
+  - New team property "Allied Fake Player Names/IDs": you can add names or IDs of known fake players. Beware: adding names or IDs to this list treats these fake players as team allies, even from blocks/entities owned by potentially hostile players!
+- Right-clicking corpse entities from the "Corpse" mod is now permitted in any claimed chunk
+  - the `corpse:corpse` entity type is added to the `ftbchunks:entity_interact_whitelist` entity type tag
+- Sharestones from the Waystones mod, and all waystones from the Fabric Waystones mods can now be interacted with in claimed chunks
+  - added some more entries to the `ftbchunks:block_interact_whitelist` block tag
+- Added new server-side config setting `max_idle_days_before_unforce`
+  - If no member of a team logs in for this many days, any force-loaded chunks owned by the team will become un-forceloaded
+  - Default is 0, meaning no un-forceloading will be done; server admins should set this to a value suiting their server
+- Added new protection team property: "Non-living Entity Attack Mode"
+  - Allows for protection from left-clicking of non-living entities like Item Frames and Paintings in your base
+  - Does *not* prevent living entities from being attacked
+
+### Fixes
+- Fixed NPE when a block break event is received with bad level data in it
+- Fixed player head icons in the previous dimension not disappearing from the map or minimap when you change dimension
+  - Only players on long-range tracking (i.e. outside normal vanilla entity tracking range)
+- Fixed chunkloading issue on Forge where some forceloaded tickets weren't being cleared when offline chunkloading is disabled for a team
+  - Causing chunks to sometimes stay loaded when they should not be
+
 ## [1802.3.12]
 
 ### Fixes

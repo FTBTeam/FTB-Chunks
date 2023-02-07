@@ -123,8 +123,7 @@ public class FTBChunks {
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
-		// TODO when the arch PR is merged
-		//		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
+		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);

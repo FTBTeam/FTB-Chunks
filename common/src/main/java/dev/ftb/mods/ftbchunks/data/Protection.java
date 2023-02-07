@@ -81,5 +81,20 @@ public interface Protection {
 		return ProtectionOverride.CHECK;
 	};
 
-	ProtectionOverride override(ServerPlayer player, BlockPos pos, InteractionHand hand, @Nullable ClaimedChunk chunk, @Nullable Entity entity);
+	// for use on Fabric
+    Protection EDIT_AND_INTERACT_BLOCK = (player, pos, hand, chunk, entity) -> {
+		BlockState blockState = player.level.getBlockState(pos);
+
+		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
+			return ProtectionOverride.ALLOW;
+		}
+
+		if (chunk != null && chunk.teamData.canUse(player, FTBChunksTeamData.BLOCK_EDIT_AND_INTERACT_MODE)) {
+			return ProtectionOverride.ALLOW;
+		}
+
+		return ProtectionOverride.CHECK;
+	};
+
+    ProtectionOverride override(ServerPlayer player, BlockPos pos, InteractionHand hand, @Nullable ClaimedChunk chunk, @Nullable Entity entity);
 }

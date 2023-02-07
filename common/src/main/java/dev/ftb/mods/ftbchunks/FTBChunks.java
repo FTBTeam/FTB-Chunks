@@ -123,8 +123,7 @@ public class FTBChunks {
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
-		// TODO when the arch PR is merged
-		//		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
+		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
@@ -149,7 +148,7 @@ public class FTBChunks {
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
 		// note: intentionally does not prevent attacking living entities;
 		// this is for preventing griefing of entities like paintings & item frames
-		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.INTERACT_ENTITY, entity)) {
+		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
 			return EventResult.interruptFalse();
 		}
 

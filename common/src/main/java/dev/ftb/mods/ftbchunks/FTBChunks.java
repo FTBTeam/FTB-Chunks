@@ -392,14 +392,6 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-
-//	private EventResult entityAddedToWorld(Entity entity, Level level) {
-//		if (entity instanceof ServerPlayer) {
-//			SendVisiblePlayerListPacket.syncToLevel(level);
-//		}
-//		return EventResult.pass();
-//	}
-
 	private boolean ignoreExplosion(Level level, Explosion explosion) {
 		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
 			return true;

@@ -50,8 +50,10 @@ public class FTBChunksForge {
 	}
 
 	private void validateLoadedChunks(ServerLevel level, ForgeChunkManager.TicketHelper ticketHelper) {
+		FTBChunks.LOGGER.debug("validating chunk tickets for level {}", level.dimension().location());
 		// Clean up any ticking Forge chunk-loading tickets for chunks which aren't both claimed and force-loaded
 		ticketHelper.getEntityTickets().forEach((id, chunks) -> {
+			FTBChunks.LOGGER.debug("validating {} ticking chunk tickets for {}", chunks.getSecond().size(), id);
 			Set<Long> toRemove = new HashSet<>();
 			chunks.getSecond().forEach(l -> {
 				ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));

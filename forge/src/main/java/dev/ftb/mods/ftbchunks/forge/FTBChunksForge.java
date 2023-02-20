@@ -56,18 +56,24 @@ public class FTBChunksForge {
 			FTBChunks.LOGGER.debug("validating {} ticking chunk tickets for {}", chunks.getSecond().size(), id);
 
 			// non-ticking tickets - shouldn't have any of these; purge just in case (older releases of Chunks registered them)
-			Set<Long> toRemove = new HashSet<>(chunks.getFirst());
+			Set<Long> toRemoveNon = new HashSet<>(chunks.getFirst());
+			if (!toRemoveNon.isEmpty()) {
+				toRemoveNon.forEach(l -> ticketHelper.removeTicket(id, l, false));
+				FTBChunks.LOGGER.info("purged {} non-ticking Forge chunkloading tickets for team ID {} in dimension {}",
+						toRemoveNon.size(), id, level.dimension().location());
+			}
+
 			// ticking tickets - purge if the chunk is either unclaimed or should not be offline-force-loaded
+			Set<Long> toRemove = new HashSet<>();
 			chunks.getSecond().forEach(l -> {
 				ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));
 				if (cc == null || !cc.teamData.getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
 					toRemove.add(l);
 				}
 			});
-
-			toRemove.forEach(l -> ticketHelper.removeTicket(id, l, true));
 			if (!toRemove.isEmpty()) {
-				FTBChunks.LOGGER.info("cleaned up {} stale Forge chunkloading tickets for team ID {} in dimension {}",
+				toRemove.forEach(l -> ticketHelper.removeTicket(id, l, true));
+				FTBChunks.LOGGER.info("cleaned up {} stale ticking Forge chunkloading tickets for team ID {} in dimension {}",
 						toRemove.size(), id, level.dimension().location());
 			}
 		});

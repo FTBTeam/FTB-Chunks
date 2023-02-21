@@ -25,7 +25,7 @@ public class StaticMapIcon extends MapIcon {
 	}
 
 	@Override
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
+	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
 		if (icon != Icon.EMPTY) {
 			icon.draw(stack, x, y, w, h);
 		}

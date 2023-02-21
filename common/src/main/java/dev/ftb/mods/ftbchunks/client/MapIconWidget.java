@@ -24,7 +24,7 @@ public class MapIconWidget extends Widget {
 	public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		if (width > 0 && height > 0) {
 			updatePosition(regionMapPanel.getPartialTicks());
-			mapIcon.draw(MapType.LARGE_MAP, matrixStack, x, y, w, h, false);
+			mapIcon.draw(MapType.LARGE_MAP, matrixStack, x, y, w, h, false, 255);
 		}
 	}
 

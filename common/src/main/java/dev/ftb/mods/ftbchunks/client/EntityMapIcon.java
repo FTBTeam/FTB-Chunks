@@ -69,7 +69,7 @@ public class EntityMapIcon extends MapIcon {
 	}
 
 	@Override
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
+	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
 		if (icon instanceof ImageIcon) {
 			var manager = Minecraft.getInstance().getTextureManager();
 			var tex = manager.getTexture(((ImageIcon) icon).texture);

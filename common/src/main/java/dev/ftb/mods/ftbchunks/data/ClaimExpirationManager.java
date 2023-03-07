@@ -34,8 +34,8 @@ public enum ClaimExpirationManager {
     }
 
     private void checkForIdleTeams(MinecraftServer server, final long now, Map<UUID, List<ClaimedChunk>> chunkMap) {
-        final long maxClaim = FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNCLAIM.get() * DAYS_TO_MILLIS;
-        final long maxForce = FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNFORCE.get() * DAYS_TO_MILLIS;
+        final long maxClaim = (long) (FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNCLAIM.get() * DAYS_TO_MILLIS);
+        final long maxForce = (long) (FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNFORCE.get() * DAYS_TO_MILLIS);
 
         if (maxClaim == 0L && maxForce == 0L) return;
 

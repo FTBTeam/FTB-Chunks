@@ -10,11 +10,7 @@ import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
+import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -38,7 +34,8 @@ public interface FTBChunksClientConfig {
 	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
 	IntValue DEATH_WAYPOINT_AUTOREMOVE_DISTANCE = CONFIG.getInt("death_waypoint_autoremove_distance", 0, 0, Integer.MAX_VALUE).comment("Automatically remove death waypoints if closer than this many blocks away (distance of 0 disables removal)");
 	BooleanValue ONLY_SURFACE_ENTITIES = CONFIG.getBoolean("only_surface_entities", true).comment("Only show entities that are on the surface");
-	DoubleValue WAYPOINT_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Distance at which waypoints start to fade");
+	DoubleValue WAYPOINT_BEACON_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Distance at which waypoint beacons start to fade");
+	DoubleValue WAYPOINT_DOT_FADE_DISTANCE = CONFIG.getDouble("waypoint_dot_fade_distance", 1D, 1D, 200D).comment("Distance at which waypoint dots start to fade");
 	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
 	IntValue WATER_HEIGHT_FACTOR = CONFIG.getInt("water_height_factor", 8, 0, 128).comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain");
 	EnumValue<BiomeBlendMode> BIOME_BLEND = CONFIG.getEnum("biome_blend", BiomeBlendMode.NAME_MAP).comment("Biome blend");

@@ -41,7 +41,7 @@ public class TrackedPlayerMapIcon extends MapIcon {
     }
 
     @Override
-    public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
+    public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         if (mapType.isMinimap() || w < 4) {
             faceIcon.draw(stack, x, y, w, h);
         } else {

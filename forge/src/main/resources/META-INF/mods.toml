@@ -31,7 +31,7 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "architectury"
 mandatory = true
-versionRange = "[3.4.9,)"
+versionRange = "[4.11.89,)"
 ordering = "AFTER"
 side = "BOTH"
 

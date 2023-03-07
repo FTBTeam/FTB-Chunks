@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.3.16]
+
+### Added
+- New team property "Non-living Entity Attack Mode", used when left-clicking non-living entities like item frames or paintings
+- The `max_idle_days_before_unforce` and `max_idle_days_before_unclaim` server config settings can now be floating-point values
+- Fade distances for waypoint beacons and waypoint dots can now be configured independently
+  - Previously in-game dot icons for waypoints never faded out, regardless of proximity
+  - New client-side setting "Waypoint dot fade distance", default 1 block away
+  - "Waypoint fade distance" is now "Waypoint beacon fade distance" (default still 12 blocks)
+
+### Fixed
+- Fixed a block placement dupe issue on Fabric
+  - On Fabric, there is now only a single "Block Interaction and Edit" team property, since it isn't possible to reliably distinguish between right-clicking a block to use vs. right-clicking a block to place another block
+  - Forge functionality is unchanged
+- Re-sync player's held item when a block placement fails due to protected claims
+- Fixed another chunkloading issue on Forge where stale tickets weren't always being cleaned up on server restart
+
 ## [1902.3.15]
 
 ### Added

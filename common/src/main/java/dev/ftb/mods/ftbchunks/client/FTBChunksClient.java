@@ -17,7 +17,10 @@ import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
-import dev.ftb.mods.ftbchunks.*;
+import dev.ftb.mods.ftbchunks.ColorMapLoader;
+import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksCommon;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.integration.*;
@@ -726,7 +729,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			matrixStack.pushPose();
 			matrixStack.translate(wx - ws, wy - ws - (icon.isIconOnEdge(MapType.MINIMAP, d >= s2d) ? ws / 2D : 0D), z);
 			matrixStack.scale(wsf, wsf, 1F);
-			icon.draw(MapType.MINIMAP, matrixStack, 0, 0, 1, 1, d >= s2d);
+			icon.draw(MapType.MINIMAP, matrixStack, 0, 0, 1, 1, d >= s2d, 255);
 			matrixStack.popPose();
 		}
 
@@ -806,7 +809,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 			GuiHelper.setupDrawing();
 			float ww2 = ww / 2F;
 			float wh2 = wh / 2F;
-			InWorldMapIcon iconOver = null;
+			InWorldMapIcon focusedIcon = null;
 
 			for (MapIcon icon : mapIcons) {
 				Vec3 pos = icon.getPos(tickDelta);
@@ -824,8 +827,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 						double mouseDist = MathUtils.dist(ix, iy, ww2, wh2);
 						InWorldMapIcon inWorldMapIcon = new InWorldMapIcon(icon, ix, iy, playerDist, mouseDist);
 
-						if (mouseDist <= 5D && (iconOver == null || iconOver.distanceToMouse() > mouseDist)) {
-							iconOver = inWorldMapIcon;
+						if (mouseDist <= 5D && (focusedIcon == null || focusedIcon.distanceToMouse() > mouseDist)) {
+							focusedIcon = inWorldMapIcon;
 						}
 
 						inWorldMapIcons.add(inWorldMapIcon);
@@ -833,14 +836,24 @@ public class FTBChunksClient extends FTBChunksCommon {
 				}
 			}
 
-			for (InWorldMapIcon icon : inWorldMapIcons) {
-				float iconScale = icon == iconOver ? 0.5F : 0.25F;
+			double fadeStart = FTBChunksClientConfig.WAYPOINT_DOT_FADE_DISTANCE.get();
+			double fadeMin = fadeStart * 2D / 3D;
 
-				matrixStack.pushPose();
-				matrixStack.translate(icon.x(), icon.y(), icon == iconOver ? 50F : -100F);
-				matrixStack.scale(iconScale, iconScale, 1F);
-				icon.icon().draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, icon != iconOver);
-				matrixStack.popPose();
+			for (InWorldMapIcon icon : inWorldMapIcons) {
+				if (icon.distanceToPlayer() > fadeMin) {
+					int iconAlpha = icon.distanceToPlayer() < fadeStart ?
+							(int) (255 * ((icon.distanceToPlayer() - fadeMin) / (fadeStart - fadeMin))) :
+							255;
+
+					if (iconAlpha > 0) {
+						float iconScale = Mth.lerp((50f - Math.min((float)icon.distanceToMouse(), 50f)) / 50f, 0.25f, 0.5f);
+						matrixStack.pushPose();
+						matrixStack.translate(icon.x(), icon.y(), icon == focusedIcon ? 50F : -100F);
+						matrixStack.scale(iconScale, iconScale, 1F);
+						icon.icon().draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, icon != focusedIcon, iconAlpha);
+						matrixStack.popPose();
+					}
+				}
 			}
 
 			inWorldMapIcons.clear();
@@ -878,19 +891,19 @@ public class FTBChunksClient extends FTBChunksCommon {
 				continue;
 			}
 
-			double faceOutDistance = FTBChunksClientConfig.WAYPOINT_FADE_DISTANCE.get();
-			double faceOutDistanceP = faceOutDistance * 2D / 3D;
+			double fadeOutDistance = FTBChunksClientConfig.WAYPOINT_BEACON_FADE_DISTANCE.get();
+			double fadeOutDistanceP = fadeOutDistance * 2D / 3D;
 
 			double distance = MathUtils.dist(playerX, playerZ, waypoint.x + 0.5D, waypoint.z + 0.5D);
 
-			if (distance <= faceOutDistanceP || distance > waypoint.inWorldDistance) {
+			if (distance <= fadeOutDistanceP || distance > waypoint.inWorldDistance) {
 				continue;
 			}
 
 			int alpha = 150;
 
-			if (distance < faceOutDistance) {
-				alpha = (int) (alpha * ((distance - faceOutDistanceP) / (faceOutDistance - faceOutDistanceP)));
+			if (distance < fadeOutDistance) {
+				alpha = (int) (alpha * ((distance - fadeOutDistanceP) / (fadeOutDistance - fadeOutDistanceP)));
 			}
 
 			if (alpha > 0) {

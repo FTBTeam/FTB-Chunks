@@ -8,6 +8,7 @@ import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -141,9 +142,15 @@ public class WaypointMapIcon extends StaticMapIcon {
 	}
 
 	@Override
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
+	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
 		checkIcon();
-		(outsideVisibleArea || mapType.isWorldIcon() ? outsideIcon : icon).draw(stack, x, y, w, h);
+
+		Icon toDraw = outsideVisibleArea || mapType.isWorldIcon() ? outsideIcon : icon;
+		if (iconAlpha < 255 && toDraw instanceof ImageIcon img) {
+			img.withColor(img.color.withAlpha(iconAlpha)).draw(stack, x, y, w, h);
+		} else {
+			toDraw.draw(stack, x, y, w, h);
+		}
 
 		if (!outsideVisibleArea && mapType.isWorldIcon()) {
 			Minecraft mc = Minecraft.getInstance();

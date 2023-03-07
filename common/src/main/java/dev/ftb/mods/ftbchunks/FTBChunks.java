@@ -123,8 +123,7 @@ public class FTBChunks {
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
-		// TODO when the arch PR is merged
-		//		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
+		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
@@ -150,7 +149,7 @@ public class FTBChunks {
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
 		// note: intentionally does not prevent attacking living entities;
 		// this is for preventing griefing of entities like paintings & item frames
-		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.INTERACT_ENTITY, entity)) {
+		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
 			return EventResult.interruptFalse();
 		}
 
@@ -273,7 +272,10 @@ public class FTBChunks {
 	}
 
 	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.INTERACT_BLOCK, null)) {
+		// calling architectury stub method
+		//noinspection ConstantConditions
+		if (player instanceof ServerPlayer sp && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockInteractProtection(), null)) {
+			FTBCUtils.forceHeldItemSync(sp, hand);
 			return EventResult.interruptFalse();
 		}
 
@@ -281,7 +283,8 @@ public class FTBChunks {
 	}
 
 	public CompoundEventResult<ItemStack> itemRightClick(Player player, InteractionHand hand) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM, null)) {
+		if (player instanceof ServerPlayer sp && FTBChunksAPI.getManager().protect(player, hand, new BlockPos(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM, null)) {
+			FTBCUtils.forceHeldItemSync(sp, hand);
 			return CompoundEventResult.interruptFalse(player.getItemInHand(hand));
 		}
 
@@ -298,7 +301,7 @@ public class FTBChunks {
 	}
 
 	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
-		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
+		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
 			return EventResult.interruptFalse();
 		}
 
@@ -306,7 +309,10 @@ public class FTBChunks {
 	}
 
 	public EventResult blockPlace(Level level, BlockPos pos, BlockState blockState, @Nullable Entity entity) {
-		if (entity instanceof ServerPlayer && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
+		// calling architectury stub method
+		//noinspection ConstantConditions
+		if (entity instanceof ServerPlayer sp && FTBChunksAPI.getManager().protect(entity, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockPlaceProtection(), null)) {
+			FTBCUtils.forceHeldItemSync(sp, InteractionHand.MAIN_HAND);
 			return EventResult.interruptFalse();
 		}
 
@@ -386,14 +392,6 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-
-//	private EventResult entityAddedToWorld(Entity entity, Level level) {
-//		if (entity instanceof ServerPlayer) {
-//			SendVisiblePlayerListPacket.syncToLevel(level);
-//		}
-//		return EventResult.pass();
-//	}
-
 	private boolean ignoreExplosion(Level level, Explosion explosion) {
 		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
 			return true;
@@ -445,12 +443,15 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);
-		event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
-		event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+
+		// block edit/interact properties vary on forge & fabric
+		FTBChunksExpected.getPlatformSpecificProperties(event);
+
 		event.add(FTBChunksTeamData.ENTITY_INTERACT_MODE);
 		event.add(FTBChunksTeamData.NONLIVING_ENTITY_ATTACK_MODE);
 		event.add(FTBChunksTeamData.CLAIM_VISIBILITY);
 		event.add(FTBChunksTeamData.LOCATION_MODE);
+
 		// event.add(FTBChunksTeamData.MINIMAP_MODE);
 	}
 

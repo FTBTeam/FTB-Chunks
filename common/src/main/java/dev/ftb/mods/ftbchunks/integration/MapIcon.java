@@ -56,6 +56,6 @@ public abstract class MapIcon {
 		return false;
 	}
 
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea) {
+	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
 	}
 }

@@ -263,7 +263,9 @@ public class FTBChunks {
 	}
 
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, Protection.EDIT_BLOCK, null)) {
+		// calling architectury stub method
+		//noinspection ConstantConditions
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
 			return EventResult.interruptFalse();
 		}
 

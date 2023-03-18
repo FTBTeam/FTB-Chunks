@@ -28,6 +28,8 @@ public class FTBCUtils {
 	 * @param hand the hand being used
 	 */
 	public static void forceHeldItemSync(ServerPlayer sp, InteractionHand hand) {
-		sp.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, sp.getInventory().selected, sp.getItemInHand(hand)));
+		if (sp.connection != null) {
+			sp.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, sp.getInventory().selected, sp.getItemInHand(hand)));
+		}
 	}
 }

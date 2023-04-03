@@ -71,6 +71,8 @@ dependencies {
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
 }
 
+apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
+
 processResources {
 	def file = new File("./build/resources/main/META-INF/mods.toml")
 	if (file.exists()) {

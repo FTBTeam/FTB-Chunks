@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * This version of Architectury fixes some block break event timing issues leading to dupes on Fabric
 
 ## Fixed
+* Fixed a crash with fake player mods which use buckets to pick up water in protected chunks
 * Fixed interaction with Fabric mods which do block placement protection by firing the FAPI block break event directly
   * Example mod: Bumblezone 
   * Architectury currently handles this via its own mixin

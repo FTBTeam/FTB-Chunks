@@ -12,9 +12,10 @@ public class FTBChunksFabric implements ModInitializer {
 	public void onInitialize() {
 		FTBChunks.instance = new FTBChunks();
 
+		// Temporary until Arch makes BlockEvent.BREAK event be fired from Fabric API's PlayerBlockBreakEvents.BEFORE event.
 		PlayerBlockBreakEvents.BEFORE.register((level, player, blockPos, blockState, blockEntity) -> {
 			if (player instanceof ServerPlayer serverPlayer) {
-				return !FTBChunks.blockBreak(level, blockPos, blockState, serverPlayer, null).isFalse();
+				return !FTBChunks.instance.blockBreak(level, blockPos, blockState, serverPlayer, null).isFalse();
 			}
 			 return true;
 		});

@@ -116,7 +116,7 @@ public class FTBChunks {
 		InteractionEvent.INTERACT_ENTITY.register(this::interactEntity);
 		InteractionEvent.FARMLAND_TRAMPLE.register(this::farmlandTrample);
 
-		BlockEvent.BREAK.register(FTBChunks::blockBreak);
+		BlockEvent.BREAK.register(this::blockBreak);
 		BlockEvent.PLACE.register(this::blockPlace);
 
 		PlayerEvent.PLAYER_QUIT.register(this::loggedOut);
@@ -302,7 +302,7 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-	public static EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
+	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
 		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
 			return EventResult.interruptFalse();
 		}

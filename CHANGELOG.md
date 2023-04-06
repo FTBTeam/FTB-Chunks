@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.3.19]
+
+### Added
+* Architectury >= 6.5.77 is now a requirement
+  * This version of Architectury fixes some block break event timing issues leading to dupes on Fabric
+
+## Fixed
+* Fixed interaction with Fabric mods which do block placement protection by firing the FAPI block break event directly
+  * Example mod: Bumblezone 
+  * Architectury currently handles this via its own mixin
+
+
 ## [1902.3.18]
 
 ### Fixed

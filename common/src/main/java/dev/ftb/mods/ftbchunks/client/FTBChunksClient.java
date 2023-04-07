@@ -1061,7 +1061,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 				Icon icon = EntityIcons.get(entity);
 
-				if (icon != Icon.EMPTY) {
+				if (icon != Color4I.EMPTY) {
 					if (FTBChunksClientConfig.ONLY_SURFACE_ENTITIES.get() && !mc.level.dimensionType().hasCeiling()) {
 						int x = Mth.floor(entity.getX());
 						int z = Mth.floor(entity.getZ());

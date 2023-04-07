@@ -322,8 +322,11 @@ public class FTBChunks {
 	}
 
 	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
-		if (player instanceof ServerPlayer && target instanceof BlockHitResult && FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, ((BlockHitResult) target).getBlockPos(), Protection.EDIT_FLUID, null)) {
-			return CompoundEventResult.interrupt(false, null);
+		if (player instanceof ServerPlayer && target instanceof BlockHitResult hitResult) {
+			InteractionHand hand = player.getUsedItemHand();
+			if (FTBChunksAPI.getManager().protect(player, hand, hitResult.getBlockPos(), Protection.EDIT_FLUID, null)) {
+				return CompoundEventResult.interrupt(false, player.getItemInHand(hand));
+			}
 		}
 
 		return CompoundEventResult.pass();

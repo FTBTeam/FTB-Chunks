@@ -45,6 +45,7 @@ repositories {
 			includeGroup "com.faux.ingredientextension"
 		}
 	}
+	maven { url "https://maven.nucleoid.xyz/" }
 }
 
 dependencies {
@@ -64,6 +65,8 @@ dependencies {
 	// compile-only because for some reason loom isn't deobfuscating these...
 	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")  { transitive = false }
 	modCompileOnly("curse.maven:waystones-fabric-500087:${waystones_fabric_version}")  { transitive = false }
+
+	modCompileOnly("eu.pb4:common-protection-api:${common_prot_api_version}") { transitive = false }
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }

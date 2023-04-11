@@ -42,7 +42,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
                 .expireAfterWrite(
                     30, TimeUnit.SECONDS)
                 .softValues()
-                .build(CacheLoader.from((profile) -> new ServerPlayer(server, server.overworld(), profile, null)));
+                .build(CacheLoader.from((profile) -> new OfflineServerPlayer(server.overworld(), profile)));
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
@@ -62,10 +62,11 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
         int maxCX = (int) Math.ceil(area.maxX / 16);
         int maxCZ = (int) Math.ceil(area.maxZ / 16);
 
-        for (var chunk : FTBChunksAPI.getManager().getAllClaimedChunks()) {
-            if (chunk.pos.x >= minCX && chunk.pos.x < maxCX
-                && chunk.pos.z >= minCZ && chunk.pos.z < maxCZ) {
-                return true;
+        for (int cx = minCX; cx < maxCX; cx++) {
+            for (int cz = minCZ; cz < maxCZ; cz++) {
+                if (FTBChunksAPI.getManager().getChunk(new ChunkDimPos(world.dimension(), cx, cz)) != null) {
+                    return true;
+                }
             }
         }
 
@@ -142,5 +143,11 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
         if (online != null) return online;
 
         return FAKE_PLAYERS.getUnchecked(profile);
+    }
+
+    private static class OfflineServerPlayer extends ServerPlayer {
+        public OfflineServerPlayer(ServerLevel serverLevel, GameProfile gameProfile) {
+            super(serverLevel.getServer(), serverLevel, gameProfile, null);
+        }
     }
 }

@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client.map;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
@@ -26,6 +27,11 @@ import java.util.stream.Collectors;
  * @author LatvianModder
  */
 public class MapManager implements MapTask {
+	// 4MB per 512x512 region data:
+	// - 0.5MB each for heightmap and water/light/biome map
+	// - 1MB each for foliage, grass & water
+	public static final long MEMORY_PER_REGION = 4L * 1024L * 1024L;
+
 	public static MapManager inst;
 
 	public final Object lock = new Object();
@@ -34,6 +40,7 @@ public class MapManager implements MapTask {
 	public final Path directory;
 	private final Map<ResourceKey<Level>, MapDimension> dimensions;
 	public boolean saveData;
+	private MapDimension pendingRegionPurge = null;
 
 	private final Int2ObjectOpenHashMap<ResourceLocation> blockColorIndexMap;
 	private final Object2IntOpenHashMap<ResourceLocation> blockColorIndexMapReverse;
@@ -261,7 +268,38 @@ public class MapManager implements MapTask {
 		return biomeColorIndexMap.get(id & 0b111_11111111);
 	}
 
-	public Biome getBiome(Level level, int id) {
-		return level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).get(getBiomeKey(id));
+	public void releaseStaleRegionData(long releaseIntervalMillis) {
+		long now = System.currentTimeMillis();
+		dimensions.values().forEach(dim -> dim.releaseStaleRegionData(now, releaseIntervalMillis));
+	}
+
+	public long estimateMemoryUsage() {
+		long memory = 0L;
+
+		for (MapDimension dim : dimensions.values()) {
+			memory += dim.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).mapToLong(region -> MEMORY_PER_REGION).sum();
+		}
+
+		return memory;
+	}
+
+	public void scheduleRegionPurge(MapDimension toPurge) {
+		pendingRegionPurge = toPurge;
+	}
+
+	public void checkForRegionPurge() {
+		if (pendingRegionPurge != null) {
+			int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
+			List<MapRegion> dataLoadedRegions = pendingRegionPurge.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).toList();
+			long nLoaded = dataLoadedRegions.size();
+			autoRelease = Math.max(4, autoRelease);  // not useful to release regions which will be reloaded pretty much immediately
+			if (nLoaded > autoRelease) {
+				dataLoadedRegions.stream()
+						.sorted(Comparator.comparingLong(MapRegion::getLastDataAccess))
+						.limit(nLoaded - autoRelease)
+						.forEach(r -> r.release(false));
+			}
+			pendingRegionPurge = null;
+		}
 	}
 }

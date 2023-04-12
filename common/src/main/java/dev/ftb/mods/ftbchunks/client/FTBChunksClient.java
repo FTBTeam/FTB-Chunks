@@ -36,6 +36,7 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.util.ClientUtils;
+import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
@@ -111,6 +112,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	public static long taskQueueTicks = 0L;
 	public static Map<ChunkPos, IntOpenHashSet> rerenderCache = new HashMap<>();
+
 	public static void queue(MapTask task) {
 		taskQueue.addLast(task);
 	}
@@ -779,9 +781,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
-			XZ r = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+			long memory = MapManager.inst.estimateMemoryUsage();
 			MINIMAP_TEXT_LIST.add(Component.literal("Queued tasks: " + taskQueue.size()));
-			MINIMAP_TEXT_LIST.add(Component.literal(r.toRegionString()));
+			MINIMAP_TEXT_LIST.add(Component.literal("Region: " + playerXZ.toRegionString() + " " + playerXZ));
+			MINIMAP_TEXT_LIST.add(Component.literal("Estimated Memory: " + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB"));
 			MINIMAP_TEXT_LIST.add(Component.literal("Total updates: " + renderedDebugCount));
 
 			if (ChunkUpdateTask.debugLastTime > 0L) {
@@ -1030,6 +1034,17 @@ public class FTBChunksClient extends FTBChunksCommon {
 				}
 			}
 
+			Level level = Objects.requireNonNull(mc.level);
+
+			int releaseInterval = FTBChunksClientConfig.REGION_RELEASE_TIME.get();
+			if (releaseInterval > 0 && level.getGameTime() % (releaseInterval * 20L) == 0) {
+				manager.releaseStaleRegionData(releaseInterval * 1000L);
+			}
+
+			if (mc.screen == null) {
+				manager.checkForRegionPurge();
+			}
+
 			taskQueueTicks++;
 		}
 	}
@@ -1200,4 +1215,5 @@ public class FTBChunksClient extends FTBChunksCommon {
 			LargeMapScreen.refreshIconsIfOpen();
 		}
 	}
+
 }

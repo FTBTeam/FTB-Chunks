@@ -6,19 +6,12 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -33,7 +26,6 @@ public class MapRegionData {
 	// B - Biome (x & 0b111_11111111)
 
 	public final MapRegion region;
-	public final Map<XZ, MapChunk> chunks = new HashMap<>();
 	public final short[] height = new short[512 * 512];
 	public final short[] waterLightAndBiome = new short[512 * 512];
 	public final int[] foliage = new int[512 * 512];
@@ -43,6 +35,7 @@ public class MapRegionData {
 	public MapRegionData(MapRegion r) {
 		region = r;
 		Arrays.fill(height, (short) HeightUtils.UNKNOWN);
+		FTBChunks.LOGGER.debug("constructing map region data for {} / {}", region, region.pos);
 	}
 
 	public int getBlockIndex(int index) {
@@ -66,6 +59,7 @@ public class MapRegionData {
 		Path file = region.dimension.directory.resolve(region.pos.toRegionString() + ".zip");
 
 		if (Files.exists(file) && Files.isReadable(file)) {
+			FTBChunks.LOGGER.debug("reading data from {} for {} / {}", file.getFileName(), region, region.pos);
 			try (BufferedInputStream bufferedInputStream = new BufferedInputStream(Files.newInputStream(file));
 				 ZipInputStream zis = new ZipInputStream(bufferedInputStream)) {
 				ZipEntry ze;
@@ -91,12 +85,11 @@ public class MapRegionData {
 								int z = stream.readByte();
 								long m = stream.readLong();
 
-								MapChunk c = new MapChunk(region, XZ.of(x, z));
-								c.version = v;
-								c.modified = m;
-
+								MapChunk mapChunk = Objects.requireNonNullElse(region.getMapChunk(XZ.of(x, z)), new MapChunk(region, XZ.of(x, z)));
+								mapChunk.version = v;
+								mapChunk.modified = m;
 								synchronized (region.dimension.manager.lock) {
-									chunks.put(c.pos, c);
+									region.addMapChunk(mapChunk);
 								}
 							}
 						}
@@ -131,14 +124,9 @@ public class MapRegionData {
 	}
 
 	public void write() throws IOException {
-		if (chunks.isEmpty()) {
-			return;
-		}
-
-		List<MapChunk> chunkList;
-
+		Collection<MapChunk> chunkList;
 		synchronized (region.dimension.manager.lock) {
-			chunkList = chunks.values().stream().filter(c -> c.modified > 0L).collect(Collectors.toList());
+			chunkList = region.getModifiedChunks();
 		}
 
 		if (chunkList.isEmpty()) {
@@ -172,7 +160,7 @@ public class MapRegionData {
 		});
 	}
 
-	private void writeData(List<MapChunk> chunkList, BufferedImage dataImage, BufferedImage foliageImage, BufferedImage grassImage, BufferedImage waterImage, BufferedImage blocksImage) throws IOException {
+	private void writeData(Collection<MapChunk> chunkList, BufferedImage dataImage, BufferedImage foliageImage, BufferedImage grassImage, BufferedImage waterImage, BufferedImage blocksImage) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(baos);
@@ -218,16 +206,17 @@ public class MapRegionData {
 			Files.createDirectories(region.dimension.directory);
 		}
 
+		FTBChunks.LOGGER.debug("writing data to {} for {} / {}", region.pos.toRegionString() + ".zip", region, region.pos);
 		Files.write(region.dimension.directory.resolve(region.pos.toRegionString() + ".zip"), baos.toByteArray());
 	}
 
 	public MapChunk getChunk(XZ pos) {
-		if (pos.x != (pos.x & 31) || pos.z != (pos.z & 31)) {
-			pos = XZ.of(pos.x & 31, pos.z & 31);
-		}
+		XZ effectivePos = pos.x != (pos.x & 31) || pos.z != (pos.z & 31) ?
+				XZ.of(pos.x & 31, pos.z & 31) :
+				pos;
 
 		synchronized (region.dimension.manager.lock) {
-			return chunks.computeIfAbsent(pos, p -> new MapChunk(region, p).created());
+			return region.getOrCreateMapChunk(effectivePos);
 		}
 	}
 }

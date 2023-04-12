@@ -197,6 +197,8 @@ public class MapDimension implements MapTask {
 	}
 
 	public void releaseStaleRegionData(long now, long releaseIntervalMillis) {
-		regions.values().forEach(region -> region.releaseIfStale(now, releaseIntervalMillis));
+		if (regions != null) {
+			regions.values().forEach(region -> region.releaseIfStale(now, releaseIntervalMillis));
+		}
 	}
 }

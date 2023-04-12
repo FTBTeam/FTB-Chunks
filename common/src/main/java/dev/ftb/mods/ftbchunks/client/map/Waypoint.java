@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.WaypointMapIcon;
 
 import java.util.Objects;
@@ -14,7 +15,7 @@ public class Waypoint {
 	public final int z;
 	public boolean hidden = false;
 	public double minimapDistance = 50000;
-	public double inWorldDistance = 4000;
+	public double inWorldDistance = 0;
 	public String name = "";
 	public int color = 0xFFFFFF;
 	public WaypointType type = WaypointType.DEFAULT;
@@ -30,6 +31,15 @@ public class Waypoint {
 
 	public void update() {
 		mapIcon = new WaypointMapIcon(this);
+	}
+
+	public double getDrawDistance(boolean isMinimap) {
+		// TODO allow draw distances to be configured per-waypoint
+		if (isMinimap) {
+			return minimapDistance;
+		} else {
+			return inWorldDistance == 0 ? FTBChunksClientConfig.WAYPOINT_MAX_DISTANCE.get() : inWorldDistance;
+		}
 	}
 
 	@Override

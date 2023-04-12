@@ -35,7 +35,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 	public WaypointMapIcon(Waypoint w) {
 		super(new Vec3(w.x + 0.5D, w.y + 0.5D, w.z + 0.5D));
 		waypoint = w;
-		outsideIcon = Icon.EMPTY;
+		outsideIcon = Color4I.EMPTY;
 	}
 
 	@Override
@@ -93,8 +93,8 @@ public class WaypointMapIcon extends StaticMapIcon {
 					Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
 					waypoint.color = col.rgba();
 					waypoint.dimension.saveData = true;
-					icon = Icon.EMPTY;
-					outsideIcon = Icon.EMPTY;
+					icon = Color4I.EMPTY;
+					outsideIcon = Color4I.EMPTY;
 					checkIcon();
 					contextMenu.get(0).icon = icon;
 				}).setCloseMenu(false));
@@ -134,7 +134,7 @@ public class WaypointMapIcon extends StaticMapIcon {
 	}
 
 	public void checkIcon() {
-		if (icon == Icon.EMPTY || outsideIcon == Icon.EMPTY) {
+		if (icon == Color4I.EMPTY || outsideIcon == Color4I.EMPTY) {
 			Color4I tint = Color4I.rgb(waypoint.color).withAlpha(waypoint.hidden ? 130 : 255);
 			icon = waypoint.type.icon.withTint(tint);
 			outsideIcon = waypoint.type.outsideIcon.withTint(tint);

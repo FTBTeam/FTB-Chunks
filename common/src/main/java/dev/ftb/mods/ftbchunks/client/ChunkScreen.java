@@ -46,7 +46,7 @@ public class ChunkScreen extends BaseScreen {
 		private long lastAdjust = 0L;
 
 		public ChunkButton(Panel panel, XZ xz) {
-			super(panel, Component.empty(), Icon.EMPTY);
+			super(panel, Component.empty(), Color4I.EMPTY);
 			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
 			chunkPos = xz;
 			chunk = dimension.getRegion(XZ.regionFromChunk(chunkPos.x, chunkPos.z)).getDataBlocking().getChunk(chunkPos);

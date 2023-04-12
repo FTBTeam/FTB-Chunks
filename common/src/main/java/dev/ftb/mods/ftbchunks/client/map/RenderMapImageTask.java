@@ -8,7 +8,6 @@ import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
@@ -252,7 +251,7 @@ public class RenderMapImageTask implements MapTask {
 					claimBarLeft = !c.connects(c.offsetBlocking(-1, 0));
 					claimBarRight = !c.connects(c.offsetBlocking(1, 0));
 				} else {
-					claimColor = Icon.EMPTY;
+					claimColor = Color4I.EMPTY;
 					fullClaimColor = 0;
 					claimBarUp = false;
 					claimBarDown = false;

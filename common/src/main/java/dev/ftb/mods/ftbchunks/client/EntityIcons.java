@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.registry.registries.Registries;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.client.Minecraft;
@@ -42,7 +43,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 			ResourceLocation invisible = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".invisible");
 
 			if (resourceManager.getResource(invisible).isPresent()) {
-				map.put(t, Icon.EMPTY);
+				map.put(t, Color4I.EMPTY);
 				continue;
 			}
 

@@ -2,11 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
-import dev.ftb.mods.ftbchunks.net.LoginDataPacket;
-import dev.ftb.mods.ftbchunks.net.PlayerDeathPacket;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
+import dev.ftb.mods.ftbchunks.net.*;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;

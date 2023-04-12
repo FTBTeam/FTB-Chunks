@@ -115,7 +115,12 @@ public class MapDimension implements MapTask {
 
 	public int[] getColors(int x, int z, ColorsFromRegion colors) {
 		MapRegion region = getRegions().get(XZ.of(x, z));
-		return region == null ? null : colors.getColors(region.getDataBlocking());
+		if (region == null) {
+			return null;
+		} else {
+			MapRegionData data = region.getDataBlocking();
+			return data == null ? null : colors.getColors(data);
+		}
 	}
 
 	public MapRegion getRegion(XZ pos) {
@@ -143,7 +148,7 @@ public class MapDimension implements MapTask {
 
 	public void release() {
 		for (MapRegion region : getLoadedRegions()) {
-			region.release();
+			region.release(true);
 		}
 
 		regions = null;
@@ -189,5 +194,11 @@ public class MapDimension implements MapTask {
 	public void sync() {
 		long now = System.currentTimeMillis();
 		getRegions().values().stream().sorted(Comparator.comparingDouble(MapRegion::distToPlayer)).forEach(region -> FTBChunksClient.queue(new SyncTXTask(region, now)));
+	}
+
+	public void releaseStaleRegionData(long now, long releaseIntervalMillis) {
+		if (regions != null) {
+			regions.values().forEach(region -> region.releaseIfStale(now, releaseIntervalMillis));
+		}
 	}
 }

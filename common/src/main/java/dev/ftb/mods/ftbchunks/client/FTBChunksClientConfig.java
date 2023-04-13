@@ -77,6 +77,7 @@ public interface FTBChunksClientConfig {
 	SNBTConfig MEMORY = CONFIG.getGroup("memory");
 	IntValue REGION_RELEASE_TIME = MEMORY.getInt("region_release_time", 300, 0, Integer.MAX_VALUE).comment("Periodically release region data for non-recently-used regions to save memory (units of seconds, 0 disables releasing");
 	IntValue AUTORELEASE_ON_MAP_CLOSE = MEMORY.getInt("autorelease_on_map_close", 32, 0, Integer.MAX_VALUE).comment("When the large map is closed, auto-release least recently accessed regions down to this number (0 disables releasing)");
+	BooleanValue MAX_ZOOM_CONSTRAINT = MEMORY.getBoolean("max_zoom_constraint", true).comment("Constrain maximum map zoom-out based on number of explored regions and available memory");
 
 	static boolean hasOtherMinimapMod() {
 		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");

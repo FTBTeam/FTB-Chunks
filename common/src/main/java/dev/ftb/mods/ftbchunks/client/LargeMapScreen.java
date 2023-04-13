@@ -80,7 +80,7 @@ public class LargeMapScreen extends BaseScreen {
 		super.onClosed();
 
 		int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
-		if (autoRelease > 0) {
+		if (autoRelease > 0 && dimension != null) {
 			dimension.manager.scheduleRegionPurge(dimension);
 		}
 	}
@@ -417,6 +417,10 @@ public class LargeMapScreen extends BaseScreen {
 	}
 
 	private int determineMinZoom() {
+		if (!FTBChunksClientConfig.MAX_ZOOM_CONSTRAINT.get()) {
+			return 1;
+		}
+
 		// limit the possible zoom-out based on number of regions known about (i.e. which *could* be loaded,
 		// taking up ~4MB RAM per region)
 
@@ -430,7 +434,7 @@ public class LargeMapScreen extends BaseScreen {
 
 		long ratio = freeMem / Math.max(1, potentialUsage);
 
-		FTBChunks.LOGGER.info("large map: free mem = {}, potential usage = {}, ratio = {}", freeMem, potentialUsage, ratio);
+		FTBChunks.LOGGER.debug("large map: free mem = {}, potential usage = {}, ratio = {}", freeMem, potentialUsage, ratio);
 		if (ratio < 8) {
 			return 64;
 		} else if (ratio < 16) {

@@ -153,6 +153,8 @@
 	"ftbchunks.party_limit_mode.tooltip": "Method by which party claim & force-load limits are calculated.\nLARGEST: use the limits of the member with the largest limits\nSUM: add up all the members' limits\nOWNER: use the party owner's limits only\nAVERAGE: use the average of all members' limits.",
 	"ftbchunks.require_game_stage": "Require Game Stage for Mapping",
 	"ftbchunks.require_game_stage.tooltip": "If true, players must have the 'ftbchunks_mapping' game stage (KubeJS and/or Gamestages required) to be able to open the map or see the minimap",
+	"ftbchunks.location_mode_override": "Override Team \"Location Visibility\"",
+	"ftbchunks.location_mode_override.tooltip": "If true, team \"Location Visibility\" settings are ignored, and all players can see each other anywhere on the map",
 	"ftbchunks.memory.region_release_time": "Idle region release timeout",
 	"ftbchunks.memory.region_release_time.tooltip": "Timeout in seconds to release data for 512x512 regions which haven't been accessed recently\nSmaller values mean less memory usage, but more disk access as released regions are reloaded\nSet to 0 to disable releasing of region data.",
 	"ftbchunks.memory.autorelease_on_map_close": "Autorelease regions on map close",

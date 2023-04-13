@@ -735,11 +735,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 			matrixStack.popPose();
 		}
 
-		if (rotationLocked) {
+		if (rotationLocked || FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED.get()) {
 			RenderSystem.setShaderTexture(0, PLAYER);
 			matrixStack.pushPose();
 			matrixStack.translate(x + s2d, y + s2d, z);
-			matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.getYRot() + 180F));
+			if (rotationLocked) {
+				matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.getYRot() + 180F));
+			}
 			matrixStack.scale(s / 16F, s / 16F, 1F);
 			m = matrixStack.last().pose();
 

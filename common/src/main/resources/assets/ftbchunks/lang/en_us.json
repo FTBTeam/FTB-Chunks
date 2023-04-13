@@ -45,6 +45,7 @@
 	"ftbchunks.minimap.position.bottom_right": "Bottom Right",
 	"ftbchunks.minimap.scale": "Scale",
 	"ftbchunks.minimap.locked_north": "Locked north",
+	"ftbchunks.minimap.show_player_when_unlocked": "Show player when not locked north",
 	"ftbchunks.minimap.waypoints": "Waypoints",
 	"ftbchunks.minimap.entities": "Entities",
 	"ftbchunks.minimap.entity_heads": "Entity heads",

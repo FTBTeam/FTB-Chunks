@@ -127,7 +127,6 @@ public class FTBChunks {
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
-//		EntityEvent.ADD.register(this::entityAddedToWorld);
 
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
@@ -445,6 +444,7 @@ public class FTBChunks {
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
+		event.add(FTBChunksTeamData.ALLOW_MOB_GRIEFING);
 		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);

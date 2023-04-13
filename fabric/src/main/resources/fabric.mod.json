@@ -21,6 +21,7 @@
 		]
 	},
 	"mixins": [
+		"ftbchunks-fabric.mixins.json",
 		"ftbchunks-common.mixins.json"
 	],
 	"accessWidener": "ftbchunks.accesswidener",

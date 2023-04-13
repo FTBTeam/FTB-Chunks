@@ -10,9 +10,11 @@ import dev.ftb.mods.ftbchunks.data.Protection;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.ForgeChunkManager;
+import net.minecraftforge.event.entity.EntityMobGriefingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -25,6 +27,7 @@ public class FTBChunksForge {
 	public FTBChunksForge() {
 		EventBuses.registerModEventBus(FTBChunks.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
 		MinecraftForge.EVENT_BUS.addListener(this::entityInteractSpecific);
+		MinecraftForge.EVENT_BUS.addListener(this::mobGriefing);
 		FTBChunks.instance = new FTBChunks();
 
 		ForgeChunkManager.setForcedChunkLoadingCallback(FTBChunks.MOD_ID, this::validateLoadedChunks);
@@ -46,6 +49,18 @@ public class FTBChunksForge {
 		if (!event.getEntity().level.isClientSide && FTBChunksAPI.getManager().protect(event.getEntity(), event.getHand(), event.getEntity().blockPosition(), Protection.INTERACT_ENTITY, event.getTarget())) {
 			event.setCancellationResult(InteractionResult.FAIL);
 			event.setCanceled(true);
+		}
+	}
+
+	private void mobGriefing(EntityMobGriefingEvent event) {
+		// we could do this for all mob griefing but that's arguably OP (could trivialize wither fights, for example)
+		// enderman block stealing is the most common annoyance, and this also has parity with the fabric support
+		if (event.getEntity() instanceof EnderMan) {
+			ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(event.getEntity()));
+
+			if (cc != null && !cc.allowMobGriefing()) {
+				event.setCanceled(true);
+			}
 		}
 	}
 

@@ -104,6 +104,10 @@ public class ClaimedChunk implements ClaimResult {
 		return teamData.allowExplosions();
 	}
 
+	public boolean allowMobGriefing() {
+		return teamData.allowMobGriefing();
+	}
+
 	public void sendUpdateToAll() {
 		SendChunkPacket packet = new SendChunkPacket(pos.dimension, teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this));
 		ChunkSendingUtils.sendChunkToAll(teamData.manager.getMinecraftServer(), teamData, packet);

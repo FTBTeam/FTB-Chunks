@@ -100,6 +100,8 @@
 	"ftbteamsconfig.ftbchunks.allow_fake_players_by_id.tooltip": "Allows fake players which have the ID of a real player access to your claims, IF that real player would be permitted, either as ally or team member. Set this to true if you're unsure.",
 	"ftbteamsconfig.ftbchunks.allow_explosions": "Allow Explosions",
 	"ftbteamsconfig.ftbchunks.allow_explosions.tooltip": "Should explosions be able to damage blocks in claimed areas?",
+	"ftbteamsconfig.ftbchunks.allow_mob_griefing": "Allow Mob Griefing Actions",
+	"ftbteamsconfig.ftbchunks.allow_mob_griefing.tooltip": "Should mobs be allowed to damage blocks in claimed areas?\nNote: currently Endermen only; may include other mobs in future\nCreeper explosions are protected against via \"Allow Explosions\"",
 	"ftbteamsconfig.ftbchunks.block_edit_and_interact_mode": "Block Edit/Interact Mode",
 	"ftbteamsconfig.ftbchunks.block_edit_and_interact_mode.tooltip": "Used when blocks are being placed, broken, or interacted with",
 	"ftbteamsconfig.ftbchunks.block_edit_mode": "Block Edit Mode",

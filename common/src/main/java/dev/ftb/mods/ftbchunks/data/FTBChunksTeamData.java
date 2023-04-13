@@ -54,6 +54,7 @@ public class FTBChunksTeamData {
 	public static final PrivacyProperty ENTITY_INTERACT_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "entity_interact_mode"), PrivacyMode.ALLIES);
 	public static final PrivacyProperty NONLIVING_ENTITY_ATTACK_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "nonliving_entity_attack_mode"), PrivacyMode.ALLIES);
 	public static final BooleanProperty ALLOW_EXPLOSIONS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_explosions"), false);
+	public static final BooleanProperty ALLOW_MOB_GRIEFING = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_mob_griefing"), false);
 	public static final PrivacyProperty CLAIM_VISIBILITY = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "claim_visibility"), PrivacyMode.PUBLIC);
 
 	//	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
@@ -470,6 +471,10 @@ public class FTBChunksTeamData {
 
 	public boolean allowExplosions() {
 		return team.getProperty(ALLOW_EXPLOSIONS);
+	}
+
+	public boolean allowMobGriefing() {
+		return team.getProperty(ALLOW_MOB_GRIEFING);
 	}
 
 	public void setLastLoginTime(long when) {

@@ -425,17 +425,20 @@ public class LargeMapScreen extends BaseScreen {
 
 		// note: this not necessarily the amount of memory that can be allocated, but this is a
 		// fairly fuzzy check anyway
-		long freeMem = Runtime.getRuntime().freeMemory();
+		long allocatedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long freeMem = Runtime.getRuntime().maxMemory() - allocatedMemory;
 
 		long ratio = freeMem / Math.max(1, potentialUsage);
 
-		FTBChunks.LOGGER.debug("large map: free mem = {}, potential usage = {}, ratio = {}", freeMem, potentialUsage, ratio);
-		if (ratio < 4) {
+		FTBChunks.LOGGER.info("large map: free mem = {}, potential usage = {}, ratio = {}", freeMem, potentialUsage, ratio);
+		if (ratio < 8) {
 			return 64;
-		} else if (ratio < 8) {
+		} else if (ratio < 16) {
 			return 32;
-		} else if (ratio < 12) {
+		} else if (ratio < 32) {
 			return 16;
+		} else if (ratio < 64) {
+			return 8;
 		} else {
 			return 1;
 		}

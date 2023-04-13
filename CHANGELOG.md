@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1902.3.21]
 
+### Added
+* Fabric: FTB Chunks now acts as a protection provider for [Patbox's Common™ Protection API](https://github.com/Patbox/common-protection-api)
+  * Mods which support the Common Protection API will now benefit from FTB Chunks claim protection
+* Player arrow icon is now shown on the minimap even when minimap rotation is not locked
+  * Added new "Show Player When Unlocked" client config setting to toggle this behaviour
+* Added mob griefing protection (Enderman only for now, but maybe more in future)
+  * New "Mob Griefing" boolean property, which can be changed in the team properties manager (top right button in the FTB Teams window)
+  * True by default; prevents Endermen taking or placing blocks in claimed chunks
+* Large map screen now supports more hotkeys, and hotkey tooltips have been added to buttons on this screen as appropriate
+  * "S" opens the settings GUI
+  * "Ctrl + S" opens the server settings GUI, if the player has permission
+  * The "Waypoint Manager" keybind now works in the large map screen too
+  * "C" still opens the chunk claiming GUI
+* In-world waypoint dots can now be seen at any range; no more arbitrary cut-off at around 750 blocks
+  * Added new "Waypoints: max draw distance" setting in client config to control the maximum range
+  * Note: the vertical beacon still fades out when more than a couple of hundred blocks away
+
 ### Fixed
 
 * Some significant client-side memory management improvement has been done

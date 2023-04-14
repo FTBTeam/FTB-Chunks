@@ -22,9 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * In-world waypoint dots can now be seen at any range; no more arbitrary cut-off at around 750 blocks
   * Added new "Waypoints: max draw distance" setting in client config to control the maximum range
   * Note: the vertical beacon still fades out when more than a couple of hundred blocks away
-* Added some face icons for various vanilla entities (mostly new 1.19 mobs, but a few older ones too)
+* Added some missing face icons for various vanilla entities (mostly new 1.19 mobs, but some older ones too)
 * Added "Override Team Location Visibilty" boolean server config setting, default false
   * When true, all players can see everyone on the map, regardless of team location visibility preferences
+* Added "Dimension Whitelist" setting to server config (in addition to existing "Dimension Blacklist")
+  * If whitelist is not empty, *only* dimension ID's in the whitelist may have chunks claimed, and only those dimensions are not in the blacklist
+  * Wildcarded dimensions are now supported too, e.g. `somemod:*` matches all the dimensions added by the mod `somemod`
+* When chunks are claimed/unclaimed/forceloaded/unforceloaded in the chunk GUI, feedback is now given on how many chunks were modified
+  * Also shows the reasons why any chunks could not be modified (e.g. dimension blacklisted, chunk owned by someone else...)
 
 ### Fixed
 
@@ -32,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Addressed some conditions which could lead to client-side memory starvation when the game has been running for a while
   * Specifically, well-explored worlds where the player is either moving around the world a lot, or viewing the world with high map zoom-out
   * Periodically, least-recently accessed region data is released from RAM, requiring reload from disk on the next access. Every 300 seconds by default; can be tuned in client config.
-  * When the large map screen is closed, least-recently accessed regions are released from RAM, down to 32 loaded regions by default; also tunable in client config.
+  * When the large map screen is closed, regions furthest from the player are released from RAM, down to 32 loaded regions by default; also tunable in client config.
   * Map zoom-out is limited where the ratio of the number of known (explored) regions to available JVM memory is poor. Limiting zoom-out reduces the number of regions which need to be loaded in memory at a given moment. This can be disabled in client config if you prefer.
   * New client config settings are available in the "Memory Usage" section of the client config; tuning them is a trade-off between RAM usage and disk activity. However, even when tuned toward lower RAM usage, the level of disk activity should not be a major concern. 
 

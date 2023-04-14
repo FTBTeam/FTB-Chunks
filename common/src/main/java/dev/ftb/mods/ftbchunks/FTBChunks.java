@@ -13,6 +13,7 @@ import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesCommon;
 import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -31,7 +32,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -164,12 +164,6 @@ public class FTBChunks {
 	private void serverBeforeStart(MinecraftServer server) {
 		var configPath = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR);
 		ConfigUtil.loadDefaulted(FTBChunksWorldConfig.CONFIG, configPath, FTBChunks.MOD_ID);
-
-		FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.clear();
-
-		for (String s : FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST.get()) {
-			FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.add(ResourceKey.create(net.minecraft.core.Registry.DIMENSION_REGISTRY, new ResourceLocation(s)));
-		}
 	}
 
 	private void serverLevelLoad(ServerLevel level) {
@@ -440,6 +434,8 @@ public class FTBChunks {
 
 	private void playerChangedDimension(ServerPlayer serverPlayer, ResourceKey<Level> oldLevel, ResourceKey<Level> newLevel) {
 		LongRangePlayerTracker.INSTANCE.stopTracking(serverPlayer);
+
+		StageHelper.INSTANCE.get().sync(serverPlayer);
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {

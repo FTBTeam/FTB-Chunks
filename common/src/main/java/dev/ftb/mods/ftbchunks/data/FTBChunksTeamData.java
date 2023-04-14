@@ -9,6 +9,7 @@ import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
+import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
@@ -150,7 +151,7 @@ public class FTBChunksTeamData {
 
 		if (chunk != null) {
 			return ClaimResults.ALREADY_CLAIMED;
-		} else if (FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST_SET.contains(pos.dimension)) {
+		} else if (!DimensionFilter.isDimensionOK(pos.dimension)) {
 			return ClaimResults.DIMENSION_FORBIDDEN;
 		} else if (!team.getType().isServer() && getClaimedChunks().size() >= getMaxClaimChunks()) {
 			return ClaimResults.NOT_ENOUGH_POWER;

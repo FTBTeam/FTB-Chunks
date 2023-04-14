@@ -5,6 +5,7 @@ import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.SNBTNet;
 import dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil;
@@ -42,6 +43,8 @@ public class ServerConfigRequestPacket extends BaseC2SMessage {
 
             FTBChunks.LOGGER.info("FTB Chunks server config updated from client by player {}", sp.getName().getString());
             FTBChunksWorldConfig.CONFIG.read(config);
+
+            DimensionFilter.clearMatcherCaches();
 
             Path file = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR).resolve(FTBChunksWorldConfig.CONFIG.key + ".snbt");
             FTBChunksWorldConfig.CONFIG.save(file);

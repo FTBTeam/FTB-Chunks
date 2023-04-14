@@ -48,6 +48,11 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	@Override
+	public String claimResultName() {
+		return "ok";
+	}
+
+	@Override
 	public boolean isSuccess() {
 		return true;
 	}

@@ -4,14 +4,10 @@ import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author LatvianModder
@@ -26,7 +22,8 @@ public interface FTBChunksWorldConfig {
 	EnumValue<ForceLoadMode> FORCE_LOAD_MODE = CONFIG.getEnum("force_load_mode", ForceLoadMode.NAME_MAP).comment("Control how force-loaded chunks work.","NEVER: only allow chunk force-loading if the owning team has at least one online player.","ALWAYS: always allow force-loading, even if no players are online.","DEFAULT: allow force-loading IF the team has at least one player with the 'ftbchunks.chunk_load_offline' FTB Ranks permission OR 'chunk_load_offline' is true.");
 	BooleanValue DISABLE_PROTECTION = CONFIG.getBoolean("disable_protection", false).comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for force-loading");
 	EnumValue<AllyMode> ALLY_MODE = CONFIG.getEnum("ally_mode", AllyMode.NAME_MAP).comment("Forced modes won't let players change their ally settings");
-	StringListValue CLAIM_DIMENSION_BLACKLIST = CONFIG.getStringList("claim_dimension_blacklist", Collections.emptyList()).comment("Blacklist for dimensions where chunks can't be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End");
+	StringListValue CLAIM_DIMENSION_BLACKLIST = CONFIG.getStringList("claim_dimension_blacklist", Collections.emptyList()).comment("Dimension ID's where chunks may not be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End, or \"othermod:*\" to disable chunk claiming in *all* dimensions added by \"othermod\"");
+	StringListValue CLAIM_DIMENSION_WHITELIST = CONFIG.getStringList("claim_dimension_whitelist", Collections.emptyList()).comment("Dimension ID's where chunks may be claimed. If non-empty, chunks may be claimed *only* in these dimensions (and the dimension is not in \"claim_dimension_blacklist\"). Same syntax as for \"claim_dimension_blacklist\".");
 	BooleanValue NO_WILDERNESS = CONFIG.getBoolean("no_wilderness", false).comment("Requires you to claim chunks in order to edit and interact with blocks");
 	BooleanValue FORCE_DISABLE_MINIMAP = CONFIG.getBoolean("force_disable_minimap", false).comment("Minimap for clients connecting to this server will be disabled");
 	DoubleValue MAX_IDLE_DAYS_BEFORE_UNCLAIM = CONFIG.getDouble("max_idle_days_before_unclaim", 0D, 0D, 3650D).comment("Maximum time (in real-world days) where if no player in a team logs in, the team automatically loses their claims.", "Prevents chunks being claimed indefinitely by teams who no longer play.","Default of 0 means no automatic loss of claims.");
@@ -38,8 +35,6 @@ public interface FTBChunksWorldConfig {
 	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CONFIG.getEnum("party_limit_mode", PartyLimitMode.NAME_MAP).comment("Method by which party claim & force-load limits are calculated.","LARGEST: use the limits of the member with the largest limits","SUM: add up all the members' limits","OWNER: use the party owner's limits only","AVERAGE: use the average of all members' limits.");
 	BooleanValue REQUIRE_GAME_STAGE = CONFIG.getBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.getBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
-
-	Set<ResourceKey<Level>> CLAIM_DIMENSION_BLACKLIST_SET = new HashSet<>();
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (FTBChunks.ranksMod && player != null) {
@@ -77,4 +72,5 @@ public interface FTBChunksWorldConfig {
 	static boolean shouldShowMinimap(Player player) {
 		return !FORCE_DISABLE_MINIMAP.get() && playerHasMapStage(player);
 	}
+
 }

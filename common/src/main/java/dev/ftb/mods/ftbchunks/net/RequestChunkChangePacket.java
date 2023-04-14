@@ -5,6 +5,7 @@ import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimResult;
+import dev.ftb.mods.ftbchunks.data.ClaimResults;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -12,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -80,13 +82,22 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 			}
 		}
 
+		EnumMap<ClaimResults,Integer> problems = new EnumMap<>(ClaimResults.class);
+		int changed = 0;
 		for (XZ pos : chunks) {
 			ClaimResult r = consumer.apply(pos);
 
 			if (!r.isSuccess()) {
 				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(), ACTION_NAMES[action], player.level.dimension().location(), pos.x, pos.z, r));
+				if (r instanceof ClaimResults cr) {
+					problems.put(cr, problems.getOrDefault(cr, 0) + 1);
+				}
+			} else {
+				changed++;
 			}
 		}
+
+		new ChunkChangeResponsePacket(chunks.size(), changed, problems).sendTo(player);
 
 		SendGeneralDataPacket.send(data, player);
 	}

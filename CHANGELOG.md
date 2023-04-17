@@ -23,10 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Added new "Waypoints: max draw distance" setting in client config to control the maximum range
   * Note: the vertical beacon still fades out when more than a couple of hundred blocks away
 * Added some missing face icons for various vanilla entities (mostly new 1.19 mobs, but some older ones too)
-* Added "Override Team Location Visibilty" boolean server config setting, default false
+* Added "Override Team Location Visibility" boolean server config setting, default false
   * When true, all players can see everyone on the map, regardless of team location visibility preferences
 * Added "Dimension Whitelist" setting to server config (in addition to existing "Dimension Blacklist")
-  * If whitelist is not empty, *only* dimension ID's in the whitelist may have chunks claimed, and only those dimensions are not in the blacklist
+  * If whitelist is not empty, *only* dimension ID's in the whitelist may have chunks claimed, and only if those dimensions are not in the blacklist
   * Wildcarded dimensions are now supported too, e.g. `somemod:*` matches all the dimensions added by the mod `somemod`
 * When chunks are claimed/unclaimed/forceloaded/unforceloaded in the chunk GUI, feedback is now given on how many chunks were modified
   * Also shows the reasons why any chunks could not be modified (e.g. dimension blacklisted, chunk owned by someone else...)

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1802.3.17]
+
+### Fixed
+
+* Some significant client-side memory management work has been done
+  * Addressed some conditions which could lead to client-side memory starvation when the game has been running for a while
+  * Specifically, well-explored worlds where the player is either moving around the world a lot, or viewing the world with high map zoom-out
+  * Periodically, least-recently accessed region data is released from RAM, requiring reload from disk on the next access. Every 300 seconds by default; can be tuned in client config.
+  * When the large map screen is closed, least-recently accessed regions are released from RAM, down to 32 loaded regions by default; also tunable in client config.
+  * Map zoom-out is limited where the ratio of the number of known (explored) regions to available JVM memory is poor. Limiting zoom-out reduces the number of regions which need to be loaded in memory at a given moment. This can be disabled in client config if you prefer.
+  * New client config settings are available in the "Memory Usage" section of the client config; tuning them is a trade-off between RAM usage and disk activity. However, even when tuned toward lower RAM usage, the level of disk activity should not be a major concern.
+
 ## [1802.3.16]
 
 ### Fixed

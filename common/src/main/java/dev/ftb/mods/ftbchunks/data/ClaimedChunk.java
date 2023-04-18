@@ -48,6 +48,11 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	@Override
+	public String claimResultName() {
+		return "ok";
+	}
+
+	@Override
 	public boolean isSuccess() {
 		return true;
 	}
@@ -102,6 +107,10 @@ public class ClaimedChunk implements ClaimResult {
 
 	public boolean allowExplosions() {
 		return teamData.allowExplosions();
+	}
+
+	public boolean allowMobGriefing() {
+		return teamData.allowMobGriefing();
 	}
 
 	public void sendUpdateToAll() {

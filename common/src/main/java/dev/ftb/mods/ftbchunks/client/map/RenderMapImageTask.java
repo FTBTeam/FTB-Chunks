@@ -237,7 +237,7 @@ public class RenderMapImageTask implements MapTask {
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
 				int loadedView = region.dimension.loadedChunkView.get(ChunkPos.asLong((region.pos.x << 5) + cx, (region.pos.z << 5) + cz));
-				MapChunk c = data.chunks.get(XZ.of(cx, cz));
+				MapChunk c = region.getMapChunk(XZ.of(cx, cz));
 				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.pos.toLong()));
 				Color4I claimColor;
 				int fullClaimColor;

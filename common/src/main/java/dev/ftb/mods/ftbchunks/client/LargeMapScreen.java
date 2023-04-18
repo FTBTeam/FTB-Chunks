@@ -10,6 +10,7 @@ import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -17,7 +18,10 @@ import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
@@ -53,6 +57,7 @@ public class LargeMapScreen extends BaseScreen {
 	public Button serverSettingsButton;
 	public Button clearDeathpointsButton;
 	private boolean needIconRefresh;
+	private final int minZoom;
 
 	public LargeMapScreen() {
 		regionPanel = new RegionMapPanel(this);
@@ -66,6 +71,18 @@ public class LargeMapScreen extends BaseScreen {
 		dimension = dim;
 		regionPanel.setScrollX(0D);
 		regionPanel.setScrollY(0D);
+
+		minZoom = determineMinZoom();
+	}
+
+	@Override
+	public void onClosed() {
+		super.onClosed();
+
+		int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
+		if (autoRelease > 0 && dimension != null) {
+			dimension.manager.scheduleRegionPurge(dimension);
+		}
 	}
 
 	public int getRegionButtonSize() {
@@ -81,7 +98,7 @@ public class LargeMapScreen extends BaseScreen {
 			zoom /= 2;
 		}
 
-		zoom = Mth.clamp(zoom, 1, 1024);
+		zoom = Mth.clamp(zoom, minZoom, 1024);
 
 		if (zoom != z) {
 			grabbed = 0;
@@ -99,18 +116,21 @@ public class LargeMapScreen extends BaseScreen {
 	public void addWidgets() {
 		add(regionPanel);
 
-		add(claimChunksButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.claimed_chunks"), Icons.MAP, (b, m) -> new ChunkScreen().openGui()));
+		add(claimChunksButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.claimed_chunks"), Icons.MAP,
+				(b, m) -> new ChunkScreen().openGui(),
+				Component.literal("[C]").withStyle(ChatFormatting.GRAY)));
 
-		add(waypointManagerButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS, (b, m) -> new WaypointEditorScreen().openGui()));
+		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
+				(b, m) -> new WaypointEditorScreen().openGui(),
+				Component.literal("[").append(FTBChunksClient.waypointManagerKey.getTranslatedKeyMessage()).append(Component.literal("]")).withStyle(ChatFormatting.GRAY)));
 
-		// add(alliesButton = new SimpleButton(this, new TranslatableComponent("ftbchunks.gui.allies"), GuiIcons.FRIENDS, (b, m) -> {}));
-
-		add(clearDeathpointsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CLOSE, (b, m) -> {
-			WaypointManager wpm = MapManager.inst.getDimension(dimension.dimension).getWaypointManager();
-			if (wpm.removeIf(wp -> wp.type == WaypointType.DEATH)) {
-				refreshWidgets();
-			}
-		}) {
+		add(clearDeathpointsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CLOSE,
+				(b, m) -> {
+					WaypointManager wpm = MapManager.inst.getDimension(dimension.dimension).getWaypointManager();
+					if (wpm.removeIf(wp -> wp.type == WaypointType.DEATH)) {
+						refreshWidgets();
+					}
+				}) {
 			@Override
 			public boolean shouldDraw() {
 				return super.shouldDraw() && MapManager.inst.getDimension(dimension.dimension).getWaypointManager().hasDeathpoint();
@@ -122,30 +142,41 @@ public class LargeMapScreen extends BaseScreen {
 			}
 		});
 
-		/*
+        /*
 		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), Icons.REFRESH, (b, m) -> {
 			dimension.sync();
 		}));
 		 */
 
-		add(dimensionButton = new SimpleButton(this, Component.literal(dimension.dimension.location().getPath().replace('_', ' ')), Icons.GLOBE, (b, m) -> {
-			try {
-				List<MapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
-				int i = list.indexOf(dimension);
+		Component dimName = Component.literal(dimension.dimension.location().getPath().replace('_', ' '));
+		add(dimensionButton = new SimpleButton(this, dimName, Icons.GLOBE,
+				(b, m) -> cycleVisibleDimension(m)));
 
-				if (i != -1) {
-					dimension = list.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), list.size()));
-					refreshWidgets();
-					movedToPlayer = false;
-				}
-			} catch (Exception ignored) {
-			}
-		}));
-
-		add(settingsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS, (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this))));
+		add(settingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
+				(b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this)),
+				Component.literal("[S]").withStyle(ChatFormatting.GRAY))
+		);
 
 		if (Minecraft.getInstance().player.hasPermissions(2)) {
-			add(serverSettingsButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.settings.server"), Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)), (b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this))));
+			add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
+					Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
+					(b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this)),
+					Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
+			));
+		}
+	}
+
+	private void cycleVisibleDimension(MouseButton m) {
+		try {
+			List<MapDimension> list = new ArrayList<>(dimension.manager.getDimensions().values());
+			int i = list.indexOf(dimension);
+
+			if (i != -1) {
+				dimension = list.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), list.size()));
+				refreshWidgets();
+				movedToPlayer = false;
+			}
+		} catch (Exception ignored) {
 		}
 	}
 
@@ -228,8 +259,19 @@ public class LargeMapScreen extends BaseScreen {
 			dimension.manager.updateAllRegions(false);
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_C)) {
-			new ChunkScreen().openGui();
+			claimChunksButton.onClicked(MouseButton.LEFT);
 			return true;
+		} else if (key.is(GLFW.GLFW_KEY_S)) {
+			if (Screen.hasControlDown()) {
+				if (serverSettingsButton != null) {
+					serverSettingsButton.onClicked(MouseButton.LEFT);
+				}
+			} else {
+				settingsButton.onClicked(MouseButton.LEFT);
+			}
+			return true;
+		} else if (FTBChunksClient.waypointManagerKey.matches(key.keyCode, key.scanCode)) {
+			waypointManagerButton.onClicked(MouseButton.LEFT);
 		}
 
 		return false;
@@ -344,16 +386,7 @@ public class LargeMapScreen extends BaseScreen {
 		matrixStack.popPose();
 
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
-			long memory = 0L;
-
-			for (MapDimension dim : dimension.manager.getDimensions().values()) {
-				for (MapRegion region : dim.getLoadedRegions()) {
-					if (region.isDataLoaded()) {
-						memory += 2L * 2L * 512L * 512L; // height, waterLightAndBiome
-						memory += 3L * 4L * 512L * 512L; // foliage, grass, water
-					}
-				}
-			}
+			long memory = MapManager.inst.estimateMemoryUsage();
 
 			String memoryUsage = "Estimated Memory Usage: " + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB";
 			int memoryUsagew = theme.getStringWidth(memoryUsage) / 2;
@@ -366,11 +399,67 @@ public class LargeMapScreen extends BaseScreen {
 			theme.drawString(matrixStack, memoryUsage, 0, 0, Theme.SHADOW);
 			matrixStack.popPose();
 		}
+
+		if (zoom == minZoom && zoom > 1) {
+			Component zoomWarn = Component.translatable("ftbchunks.zoom_warning");
+			matrixStack.pushPose();
+			matrixStack.translate(x + w / 2F, y + 1, 0F);
+			matrixStack.scale(0.5F, 0.5F, 1F);
+			theme.drawString(matrixStack, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
+			matrixStack.popPose();
+		}
 	}
 
 	public static void refreshIconsIfOpen() {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof LargeMapScreen lms) {
 			lms.needIconRefresh = true;
+		}
+	}
+
+	private int determineMinZoom() {
+		if (!FTBChunksClientConfig.MAX_ZOOM_CONSTRAINT.get()) {
+			return 1;
+		}
+
+		// limit the possible zoom-out based on number of regions known about (i.e. which *could* be loaded,
+		// taking up ~4MB RAM per region)
+
+		// possible memory that could be used
+		long potentialUsage = dimension.getLoadedRegions().size() * MapManager.MEMORY_PER_REGION;
+
+		// note: this not necessarily the amount of memory that can be allocated, but this is a
+		// fairly fuzzy check anyway
+		long allocatedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long freeMem = Runtime.getRuntime().maxMemory() - allocatedMemory;
+
+		long ratio = freeMem / Math.max(1, potentialUsage);
+
+		FTBChunks.LOGGER.debug("large map: free mem = {}, potential usage = {}, ratio = {}", freeMem, potentialUsage, ratio);
+		if (ratio < 8) {
+			return 64;
+		} else if (ratio < 16) {
+			return 32;
+		} else if (ratio < 32) {
+			return 16;
+		} else if (ratio < 64) {
+			return 8;
+		} else {
+			return 1;
+		}
+	}
+
+	private static class SimpleTooltipButton extends SimpleButton {
+		private final List<Component> tooltipLines;
+
+		public SimpleTooltipButton(Panel panel, Component text, Icon icon, Callback c, Component tooltipLine) {
+			super(panel, text, icon, c);
+			this.tooltipLines = List.of(tooltipLine);
+		}
+
+		@Override
+		public void addMouseOverText(TooltipList list) {
+			super.addMouseOverText(list);
+			tooltipLines.forEach(list::add);
 		}
 	}
 }

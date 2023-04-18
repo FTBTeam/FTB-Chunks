@@ -9,9 +9,14 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.ChunkPos;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author LatvianModder
@@ -22,6 +27,7 @@ public class MapRegion implements MapTask {
 	public final MapDimension dimension;
 	public final XZ pos;
 	private MapRegionData data;
+	private long lastDataAccess; // time of last access, so stale regions can be released to save memory
 	private boolean isLoadingData;
 	public boolean saveData;
 	private NativeImage renderedMapImage;
@@ -30,6 +36,7 @@ public class MapRegion implements MapTask {
 	private int renderedMapImageTextureId;
 	public boolean mapImageLoaded;
 	public boolean renderingMapImage;
+	private final Map<XZ, MapChunk> chunks = new HashMap<>();
 
 	public MapRegion(MapDimension d, XZ p) {
 		dimension = d;
@@ -52,25 +59,29 @@ public class MapRegion implements MapTask {
 		return data != null;
 	}
 
+	public long getLastDataAccess() {
+		return lastDataAccess;
+	}
+
+	@Nonnull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.manager.lock) {
 			return getDataBlockingNoSync();
 		}
 	}
 
+	@Nonnull
 	public MapRegionData getDataBlockingNoSync() {
-		if (data != null) {
-			return data;
+		if (data == null) {
+			data = new MapRegionData(this);
+			try {
+				data.read();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
 		}
 
-		data = new MapRegionData(this);
-
-		try {
-			data.read();
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-
+		lastDataAccess = System.currentTimeMillis();
 		return data;
 	}
 
@@ -79,6 +90,10 @@ public class MapRegion implements MapTask {
 		if (data == null && !isLoadingData) {
 			isLoadingData = true;
 			FTBChunks.EXECUTOR.execute(this::getDataBlocking);
+		}
+
+		if (data != null) {
+			lastDataAccess = System.currentTimeMillis();
 		}
 
 		return data;
@@ -126,7 +141,7 @@ public class MapRegion implements MapTask {
 		return renderedMapImageTextureId;
 	}
 
-	public void release() {
+	public void release(boolean releaseMapChunks) {
 		if (saveData && data != null) {
 			try {
 				data.write();
@@ -135,9 +150,28 @@ public class MapRegion implements MapTask {
 			}
 		}
 
+		if (releaseMapChunks) chunks.clear();
 		data = null;
+		lastDataAccess = 0L;
 		isLoadingData = false;
 		releaseMapImage();
+	}
+
+	public void releaseIfStale(long now, long releaseIntervalMillis) {
+		if (now - lastDataAccess > releaseIntervalMillis && data != null) {
+			if (pos.equals(XZ.regionFromChunk(Minecraft.getInstance().player.chunkPosition()))) {
+				FTBChunks.LOGGER.debug("not releasing region {} / {} - player present", this, pos);
+				return;  // don't release region where the player is
+			}
+			for (ChunkPos cp : FTBChunksClient.rerenderCache.keySet()) {
+				if (XZ.regionFromChunk(cp).equals(pos)) {
+					FTBChunks.LOGGER.debug("not releasing region {} / {} - re-render pending", this, pos);
+					return;  // don't release regions that have a re-render pending
+				}
+			}
+			FTBChunks.LOGGER.debug("releasing data for region {} / {} (not accessed in last {} seconds)", this, pos, releaseIntervalMillis / 1000L);
+			release(false);
+		}
 	}
 
 	public void releaseMapImage() {
@@ -214,5 +248,21 @@ public class MapRegion implements MapTask {
 	@Override
 	public String toString() {
 		return pos.toRegionString();
+	}
+
+	public MapChunk getMapChunk(XZ xz) {
+		return chunks.get(xz);
+	}
+
+	public MapChunk getOrCreateMapChunk(XZ xz) {
+		return chunks.computeIfAbsent(xz, p -> new MapChunk(this, p).created());
+	}
+
+	public void addMapChunk(MapChunk mapChunk) {
+		chunks.put(mapChunk.pos, mapChunk);
+	}
+
+	public Collection<MapChunk> getModifiedChunks() {
+		return chunks.values().stream().filter(c -> c.modified > 0L).toList();
 	}
 }

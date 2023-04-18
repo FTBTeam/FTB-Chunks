@@ -8,11 +8,15 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
+import dev.ftb.mods.ftbchunks.data.ClaimResults;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
-import dev.ftb.mods.ftblibrary.icon.*;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.FaceIcon;
+import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.*;
@@ -162,6 +166,7 @@ public class ChunkScreen extends BaseScreen {
 	public MapDimension dimension = MapDimension.getCurrent();
 	public List<ChunkButton> chunkButtons;
 	public Set<XZ> selectedChunks;
+	private ChunkUpdateInfo updateInfo;
 
 	public ChunkScreen() {
 		FTBChunksClient.alwaysRenderChunksOnMap = true;
@@ -173,6 +178,12 @@ public class ChunkScreen extends BaseScreen {
 
 		if (MapManager.inst != null) {
 			MapManager.inst.updateAllRegions(false);
+		}
+	}
+
+	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResults, Integer> problems) {
+		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
+			cs.updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
 	}
 
@@ -215,8 +226,6 @@ public class ChunkScreen extends BaseScreen {
 		addAll(chunkButtons);
 		new RequestMapDataPacket(chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET, chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET).sendToServer();
 		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP, (simpleButton, mouseButton) -> new LargeMapScreen().openGui()).setPosAndSize(1, 1, 16, 16));
-
-		// add(new SimpleButton(this, Component.translatable("ftbchunks.gui.allies"), Icons.FRIENDS, (simpleButton, mouseButton) -> {}).setPosAndSize(1, 19, 16, 16));
 	}
 
 	@Override
@@ -304,6 +313,29 @@ public class ChunkScreen extends BaseScreen {
 			for (int i = 0; i < list.size(); i++) {
 				theme.drawString(matrixStack, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
 			}
+		}
+
+		if (updateInfo != null && updateInfo.shouldDisplay()) {
+			theme.drawString(matrixStack, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
+			int line = 1;
+			for (Map.Entry<ClaimResults, Integer> entry : updateInfo.problems.entrySet()) {
+				ClaimResults problem = entry.getKey();
+				int count = entry.getValue();
+				theme.drawString(matrixStack, Component.translatable(problem.getTranslationKey()).append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
+			}
+		}
+	}
+
+	private record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResults, Integer> problems, long timestamp) {
+		public boolean shouldDisplay() {
+			// display for 3 seconds + 1 second per line of problem data
+			long timeout = 60L + 20L * problems.size();
+			return Minecraft.getInstance().level.getGameTime() - timestamp < timeout;
+		}
+
+		public Component summary() {
+			ChatFormatting color = changedChunks == 0 ? ChatFormatting.RED : (changedChunks < totalChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN);
+			return Component.translatable("ftbchunks.claim_result", changedChunks, totalChunks).withStyle(ChatFormatting.UNDERLINE, color);
 		}
 	}
 }

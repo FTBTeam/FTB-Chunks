@@ -3,9 +3,10 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -67,11 +68,12 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 				.map(player -> new VisiblePlayerItem(player, FTBChunksAPI.getManager().getData(player)))
 				.collect(Collectors.toList());
 
+		boolean override = FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE.get();
 		for (VisiblePlayerItem recipient : playerList) {
 			List<UUID> playerIds = new ArrayList<>();
 
 			for (VisiblePlayerItem other : playerList) {
-				if (recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksTeamData.LOCATION_MODE)) {
+				if (override || recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksTeamData.LOCATION_MODE)) {
 					playerIds.add(other.player.getUUID());
 				}
 			}

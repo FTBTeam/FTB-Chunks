@@ -40,7 +40,10 @@ public class WaypointMapIcon extends StaticMapIcon {
 
 	@Override
 	public boolean isVisible(MapType mapType, double distanceToPlayer, boolean outsideVisibleArea) {
-		return (!outsideVisibleArea || distanceToPlayer <= (mapType.isMinimap() ? waypoint.minimapDistance : waypoint.inWorldDistance)) && (!mapType.isWorldIcon() || distanceToPlayer >= 0.5F);
+		if (outsideVisibleArea || distanceToPlayer > waypoint.getDrawDistance(mapType.isMinimap())) {
+			return false;
+		}
+		return !mapType.isWorldIcon() || distanceToPlayer >= 0.5F;
 	}
 
 	@Override

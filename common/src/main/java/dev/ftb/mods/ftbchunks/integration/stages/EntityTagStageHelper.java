@@ -18,4 +18,8 @@ public class EntityTagStageHelper extends StageHelper {
 	public void remove(ServerPlayer player, String stage) {
 		player.removeTag(stage);
 	}
+
+	@Override
+	public void sync(ServerPlayer player) {
+	}
 }

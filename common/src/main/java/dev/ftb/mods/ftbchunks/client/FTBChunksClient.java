@@ -36,6 +36,7 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.util.ClientUtils;
+import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
@@ -111,6 +112,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 	private static final ArrayDeque<MapTask> taskQueue = new ArrayDeque<>();
 	public static long taskQueueTicks = 0L;
 	public static Map<ChunkPos, IntOpenHashSet> rerenderCache = new HashMap<>();
+
 	public static void queue(MapTask task) {
 		taskQueue.addLast(task);
 	}
@@ -503,8 +505,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 		double playerY = Mth.lerp(tickDelta, prevPlayerY, currentPlayerY);
 		double playerZ = Mth.lerp(tickDelta, prevPlayerZ, currentPlayerZ);
 		double guiScale = mc.getWindow().getGuiScale();
-		int ww = mc.getWindow().getGuiScaledWidth();
-		int wh = mc.getWindow().getGuiScaledHeight();
+		int scaledWidth = mc.getWindow().getGuiScaledWidth();
+		int scaledHeight = mc.getWindow().getGuiScaledHeight();
 		MapDimension dim = MapDimension.getCurrent();
 		if (dim == null) {
 			return;
@@ -579,8 +581,8 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		var minimapPosition = FTBChunksClientConfig.MINIMAP_POSITION.get();
 
-		int x = minimapPosition.getX(ww, s);
-		int y = minimapPosition.getY(wh, s);
+		int x = minimapPosition.getX(scaledWidth, s);
+		int y = minimapPosition.getY(scaledHeight, s);
 		int z = 0;
 
 		int offsetX = FTBChunksClientConfig.MINIMAP_OFFSET_X.get();
@@ -733,11 +735,13 @@ public class FTBChunksClient extends FTBChunksCommon {
 			matrixStack.popPose();
 		}
 
-		if (rotationLocked) {
+		if (rotationLocked || FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED.get()) {
 			RenderSystem.setShaderTexture(0, PLAYER);
 			matrixStack.pushPose();
 			matrixStack.translate(x + s2d, y + s2d, z);
-			matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.getYRot() + 180F));
+			if (rotationLocked) {
+				matrixStack.mulPose(Vector3f.ZP.rotationDegrees(mc.player.getYRot() + 180F));
+			}
 			matrixStack.scale(s / 16F, s / 16F, 1F);
 			m = matrixStack.last().pose();
 
@@ -779,9 +783,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
-			XZ r = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+			long memory = MapManager.inst.estimateMemoryUsage();
 			MINIMAP_TEXT_LIST.add(Component.literal("Queued tasks: " + taskQueue.size()));
-			MINIMAP_TEXT_LIST.add(Component.literal(r.toRegionString()));
+			MINIMAP_TEXT_LIST.add(Component.literal("Region: " + playerXZ.toRegionString() + " " + playerXZ));
+			MINIMAP_TEXT_LIST.add(Component.literal("Estimated Memory: " + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB"));
 			MINIMAP_TEXT_LIST.add(Component.literal("Total updates: " + renderedDebugCount));
 
 			if (ChunkUpdateTask.debugLastTime > 0L) {
@@ -806,60 +812,61 @@ public class FTBChunksClient extends FTBChunksCommon {
 		RenderSystem.enableDepthTest();
 
 		if (worldMatrix != null) {
-			GuiHelper.setupDrawing();
-			float ww2 = ww / 2F;
-			float wh2 = wh / 2F;
-			InWorldMapIcon focusedIcon = null;
+			drawInWorldIcons(mc, matrixStack, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
+		}
+	}
 
-			for (MapIcon icon : mapIcons) {
-				Vec3 pos = icon.getPos(tickDelta);
-				double playerDist = MathUtils.dist(pos.x, pos.y, pos.z, playerX, playerY, playerZ);
+	private void drawInWorldIcons(Minecraft mc, PoseStack matrixStack, float tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
+		GuiHelper.setupDrawing();
+		float ww2 = scaledWidth / 2F;
+		float wh2 = scaledHeight / 2F;
+		InWorldMapIcon focusedIcon = null;
 
-				if (icon.isVisible(MapType.WORLD_ICON, playerDist, false)) {
-					Vector4f v = new Vector4f((float) (pos.x - cameraPos.x), (float) (pos.y - cameraPos.y), (float) (pos.z - cameraPos.z), 1F);
+		for (MapIcon icon : mapIcons) {
+			Vec3 pos = icon.getPos(tickDelta);
+			double playerDist = MathUtils.dist(pos.x, pos.y, pos.z, playerX, playerY, playerZ);
+
+			if (icon.isVisible(MapType.WORLD_ICON, playerDist, false)) {
+				Vector4f v = new Vector4f((float) (pos.x - cameraPos.x), (float) (pos.y - cameraPos.y), (float) (pos.z - cameraPos.z), 1F);
+				double lookAngle = mc.player.getLookAngle().dot(new Vec3(v.x(), v.y(), v.z()).normalize());
+				if (lookAngle > 0) {  // icon in front of the player
 					v.transform(worldMatrix);
 					v.perspectiveDivide();
+					float ix = ww2 + v.x() * ww2;
+					float iy = wh2 - v.y() * wh2;
+					double mouseDist = MathUtils.dist(ix, iy, ww2, wh2);
+					InWorldMapIcon inWorldMapIcon = new InWorldMapIcon(icon, ix, iy, playerDist, mouseDist);
 
-					// need to remove v.z() < 1F check, because clipping plane is 1e3. Use other method to check if icon is behind camera
-					if (v.z() > 0F && v.z() < 1F) {
-						float ix = ww2 + v.x() * ww2;
-						float iy = wh2 - v.y() * wh2;
-						double mouseDist = MathUtils.dist(ix, iy, ww2, wh2);
-						InWorldMapIcon inWorldMapIcon = new InWorldMapIcon(icon, ix, iy, playerDist, mouseDist);
-
-						if (mouseDist <= 5D && (focusedIcon == null || focusedIcon.distanceToMouse() > mouseDist)) {
-							focusedIcon = inWorldMapIcon;
-						}
-
-						inWorldMapIcons.add(inWorldMapIcon);
+					if (mouseDist <= 5D && (focusedIcon == null || focusedIcon.distanceToMouse() > mouseDist)) {
+						focusedIcon = inWorldMapIcon;
 					}
+
+					inWorldMapIcons.add(inWorldMapIcon);
 				}
 			}
-
-			double fadeStart = FTBChunksClientConfig.WAYPOINT_DOT_FADE_DISTANCE.get();
-			double fadeMin = fadeStart * 2D / 3D;
-
-			for (InWorldMapIcon icon : inWorldMapIcons) {
-				if (icon.distanceToPlayer() > fadeMin) {
-					int iconAlpha = icon.distanceToPlayer() < fadeStart ?
-							(int) (255 * ((icon.distanceToPlayer() - fadeMin) / (fadeStart - fadeMin))) :
-							255;
-
-					if (iconAlpha > 0) {
-						float iconScale = Mth.lerp((50f - Math.min((float)icon.distanceToMouse(), 50f)) / 50f, 0.25f, 0.5f);
-						matrixStack.pushPose();
-						matrixStack.translate(icon.x(), icon.y(), icon == focusedIcon ? 50F : -100F);
-						matrixStack.scale(iconScale, iconScale, 1F);
-						icon.icon().draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, icon != focusedIcon, iconAlpha);
-						matrixStack.popPose();
-					}
-				}
-			}
-
-			inWorldMapIcons.clear();
 		}
 
-//		matrixStack.popPose();
+		double fadeStart = FTBChunksClientConfig.WAYPOINT_DOT_FADE_DISTANCE.get();
+		double fadeMin = fadeStart * 2D / 3D;
+
+		for (InWorldMapIcon icon : inWorldMapIcons) {
+			if (icon.distanceToPlayer() > fadeMin) {
+				int iconAlpha = icon.distanceToPlayer() < fadeStart ?
+						(int) (255 * ((icon.distanceToPlayer() - fadeMin) / (fadeStart - fadeMin))) :
+						255;
+
+				if (iconAlpha > 0) {
+					float iconScale = Mth.lerp((50f - Math.min((float)icon.distanceToMouse(), 50f)) / 50f, 0.25f, 0.5f);
+					matrixStack.pushPose();
+					matrixStack.translate(icon.x(), icon.y(), icon == focusedIcon ? 50F : -100F);
+					matrixStack.scale(iconScale, iconScale, 1F);
+					icon.icon().draw(MapType.WORLD_ICON, matrixStack, -8, -8, 16, 16, icon != focusedIcon, iconAlpha);
+					matrixStack.popPose();
+				}
+			}
+		}
+
+		inWorldMapIcons.clear();
 	}
 
 	public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Camera camera, float tickDelta) {
@@ -896,7 +903,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 			double distance = MathUtils.dist(playerX, playerZ, waypoint.x + 0.5D, waypoint.z + 0.5D);
 
-			if (distance <= fadeOutDistanceP || distance > waypoint.inWorldDistance) {
+			if (distance <= fadeOutDistanceP || distance > FTBChunksClientConfig.WAYPOINT_MAX_DISTANCE.get()) {
 				continue;
 			}
 
@@ -1028,6 +1035,17 @@ public class FTBChunksClient extends FTBChunksCommon {
 						}
 					}
 				}
+			}
+
+			Level level = Objects.requireNonNull(mc.level);
+
+			int releaseInterval = FTBChunksClientConfig.REGION_RELEASE_TIME.get();
+			if (releaseInterval > 0 && level.getGameTime() % (releaseInterval * 20L) == 0) {
+				manager.releaseStaleRegionData(releaseInterval * 1000L);
+			}
+
+			if (mc.screen == null) {
+				manager.checkForRegionPurge();
 			}
 
 			taskQueueTicks++;
@@ -1200,4 +1218,5 @@ public class FTBChunksClient extends FTBChunksCommon {
 			LargeMapScreen.refreshIconsIfOpen();
 		}
 	}
+
 }

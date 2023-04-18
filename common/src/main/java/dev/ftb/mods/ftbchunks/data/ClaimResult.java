@@ -4,6 +4,8 @@ package dev.ftb.mods.ftbchunks.data;
  * @author LatvianModder
  */
 public interface ClaimResult {
+	String claimResultName();
+
 	default boolean isSuccess() {
 		return false;
 	}
@@ -12,5 +14,9 @@ public interface ClaimResult {
 	}
 
 	default void setForceLoadedTime(long time) {
+	}
+
+	default String getTranslationKey() {
+		return "ftbchunks.claim_result." + claimResultName();
 	}
 }

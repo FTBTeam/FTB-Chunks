@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.3.21]
+
+### Added
+* Fabric: FTB Chunks now acts as a protection provider for [Patbox's Common™ Protection API](https://github.com/Patbox/common-protection-api)
+  * Mods which support the Common Protection API will now benefit from FTB Chunks claim protection
+* Player arrow icon is now shown on the minimap even when minimap rotation is not locked
+  * Added new "Show Player When Unlocked" client config setting to toggle this behaviour
+* Added mob griefing protection (Enderman only for now, but maybe more in future)
+  * New "Mob Griefing" boolean property, which can be changed in the team properties manager (top right button in the FTB Teams window)
+  * True by default; prevents Endermen taking or placing blocks in claimed chunks
+* Large map screen now supports more hotkeys, and hotkey tooltips have been added to buttons on this screen as appropriate
+  * "S" opens the settings GUI
+  * "Ctrl + S" opens the server settings GUI, if the player has permission
+  * The "Waypoint Manager" keybind now works in the large map screen too
+  * "C" still opens the chunk claiming GUI
+* In-world waypoint dots can now be seen at any range; no more arbitrary cut-off at around 750 blocks
+  * Added new "Waypoints: max draw distance" setting in client config to control the maximum range
+  * Note: the vertical beacon still fades out when more than a couple of hundred blocks away
+* Added some missing face icons for various vanilla entities (mostly new 1.19 mobs, but some older ones too)
+* Added "Override Team Location Visibility" boolean server config setting, default false
+  * When true, all players can see everyone on the map, regardless of team location visibility preferences
+* Added "Dimension Whitelist" setting to server config (in addition to existing "Dimension Blacklist")
+  * If whitelist is not empty, *only* dimension ID's in the whitelist may have chunks claimed, and only if those dimensions are not in the blacklist
+  * Wildcarded dimensions are now supported too, e.g. `somemod:*` matches all the dimensions added by the mod `somemod`
+* When chunks are claimed/unclaimed/forceloaded/unforceloaded in the chunk GUI, feedback is now given on how many chunks were modified
+  * Also shows the reasons why any chunks could not be modified (e.g. dimension blacklisted, chunk owned by someone else...)
+
+### Fixed
+
+* Some significant client-side memory management work has been done
+  * Addressed some conditions which could lead to client-side memory starvation when the game has been running for a while
+  * Specifically, well-explored worlds where the player is either moving around the world a lot, or viewing the world with high map zoom-out
+  * Periodically, least-recently accessed region data is released from RAM, requiring reload from disk on the next access. Every 300 seconds by default; can be tuned in client config.
+  * When the large map screen is closed, regions furthest from the player are released from RAM, down to 32 loaded regions by default; also tunable in client config.
+  * Map zoom-out is limited where the ratio of the number of known (explored) regions to available JVM memory is poor. Limiting zoom-out reduces the number of regions which need to be loaded in memory at a given moment. This can be disabled in client config if you prefer.
+  * New client config settings are available in the "Memory Usage" section of the client config; tuning them is a trade-off between RAM usage and disk activity. However, even when tuned toward lower RAM usage, the level of disk activity should not be a major concern. 
+
 ## [1902.3.20]
 
 ### Fixed
@@ -22,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Fixed
 * Fixed a crash with fake player mods which use buckets to pick up water in protected chunks
-* Fixed interaction with Fabric mods which do block placement protection by firing the FAPI block break event directly
+* Fixed interaction with Fabric mods which do block placement protection by firing the FAPI block break event directly (thanks @TelepathicGrunt)
   * Example mod: Bumblezone 
   * Architectury currently handles this via its own mixin
 

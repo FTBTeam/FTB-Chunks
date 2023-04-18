@@ -80,6 +80,10 @@ public enum LongRangePlayerTracker {
         // must be a different player, in the same dimension, and outside the standard vanilla player tracking distance
         if (p1 == p2 || p1.distanceToSqr(p2) < maxDistSq) return false;
 
+        if (FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE.get()) {
+            return true;
+        }
+
         // and player 1 must be able to see player 2 (i.e. player 2's team settings must allow it)
         FTBChunksTeamData p2Team = FTBChunksAPI.getManager().getData(p2);
         return p2Team.canUse(p1, FTBChunksTeamData.LOCATION_MODE);

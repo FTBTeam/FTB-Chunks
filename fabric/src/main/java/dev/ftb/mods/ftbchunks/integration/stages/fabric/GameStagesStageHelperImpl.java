@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.integration.stages.fabric;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -15,5 +16,8 @@ public class GameStagesStageHelperImpl {
     }
 
     public static void removeStage(Player player, String stage) {
+    }
+
+    public static void sync(ServerPlayer player) {
     }
 }

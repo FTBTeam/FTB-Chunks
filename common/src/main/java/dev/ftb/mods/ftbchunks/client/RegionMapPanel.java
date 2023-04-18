@@ -193,7 +193,7 @@ public class RegionMapPanel extends Panel {
 			MapRegionData data = r.getData();
 
 			if (data != null) {
-				MapChunk c = data.chunks.get(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+				MapChunk c = r.getMapChunk(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
 				ClientTeam team = c == null ? null : c.getTeam();
 
 				if (team != null) {

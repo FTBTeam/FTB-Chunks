@@ -20,6 +20,11 @@ public class GameStagesStageHelper extends StageHelper {
         removeStage(player, stage);
     }
 
+    @Override
+    public void sync(ServerPlayer player) {
+        syncStages(player);
+    }
+
     @ExpectPlatform
     public static boolean hasStage(Player player, String stage) {
         throw new AssertionError();
@@ -32,6 +37,11 @@ public class GameStagesStageHelper extends StageHelper {
 
     @ExpectPlatform
     public static void removeStage(Player player, String stage) {
+        throw new AssertionError();
+    }
+
+    @ExpectPlatform
+    public static void syncStages(ServerPlayer player) {
         throw new AssertionError();
     }
 }

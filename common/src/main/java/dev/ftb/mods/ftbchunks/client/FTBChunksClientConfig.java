@@ -34,8 +34,9 @@ public interface FTBChunksClientConfig {
 	BooleanValue DEATH_WAYPOINTS = CONFIG.getBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
 	IntValue DEATH_WAYPOINT_AUTOREMOVE_DISTANCE = CONFIG.getInt("death_waypoint_autoremove_distance", 0, 0, Integer.MAX_VALUE).comment("Automatically remove death waypoints if closer than this many blocks away (distance of 0 disables removal)");
 	BooleanValue ONLY_SURFACE_ENTITIES = CONFIG.getBoolean("only_surface_entities", true).comment("Only show entities that are on the surface");
-	DoubleValue WAYPOINT_BEACON_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Distance at which waypoint beacons start to fade");
-	DoubleValue WAYPOINT_DOT_FADE_DISTANCE = CONFIG.getDouble("waypoint_dot_fade_distance", 1D, 1D, 200D).comment("Distance at which waypoint dots start to fade");
+	DoubleValue WAYPOINT_BEACON_FADE_DISTANCE = CONFIG.getDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Minimum distance before waypoint beacons start to fade");
+	DoubleValue WAYPOINT_DOT_FADE_DISTANCE = CONFIG.getDouble("waypoint_dot_fade_distance", 1D, 1D, 200D).comment("Minimum distance before waypoint dots start to fade");
+	DoubleValue WAYPOINT_MAX_DISTANCE = CONFIG.getDouble("waypoint_max_distance", 5000D, 1D, Integer.MAX_VALUE).comment("Maximum distance at which waypoints are drawn");
 	EnumValue<MapMode> MAP_MODE = CONFIG.getEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
 	IntValue WATER_HEIGHT_FACTOR = CONFIG.getInt("water_height_factor", 8, 0, 128).comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain");
 	EnumValue<BiomeBlendMode> BIOME_BLEND = CONFIG.getEnum("biome_blend", BiomeBlendMode.NAME_MAP).comment("Biome blend");
@@ -47,6 +48,7 @@ public interface FTBChunksClientConfig {
 	DoubleValue MINIMAP_SCALE = MINIMAP.getDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
 	DoubleValue MINIMAP_ZOOM = MINIMAP.getDouble("zoom", 1D, 1D, 4D).comment("Zoom distance of the minimap");
 	BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.getBoolean("locked_north", true).comment("Minimap will not rotate");
+	BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP.getBoolean("show_player_when_unlocked", true).comment("Always show player on minimap, even when rotation not locked");
 	BooleanValue MINIMAP_WAYPOINTS = MINIMAP.getBoolean("waypoints", true).comment("Show waypoints on minimap");
 	BooleanValue MINIMAP_PLAYER_HEADS = MINIMAP.getBoolean("player_heads", true).comment("Show player heads on minimap");
 	BooleanValue MINIMAP_ENTITIES = MINIMAP.getBoolean("entities", true).comment("Show entities on minimap");
@@ -71,6 +73,11 @@ public interface FTBChunksClientConfig {
 	IntValue GRASS_DARKNESS = CONFIG.getInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
 	IntValue FOLIAGE_DARKNESS = CONFIG.getInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
 	IntValue MINIMAP_ICON_UPDATE_TIMER = CONFIG.getInt("minimap_icon_update_timer", 500, 0, 10000).excluded().comment("Advanced option. Change how often the minimap will refresh icons");
+
+	SNBTConfig MEMORY = CONFIG.getGroup("memory");
+	IntValue REGION_RELEASE_TIME = MEMORY.getInt("region_release_time", 300, 0, Integer.MAX_VALUE).comment("Periodically release region data for non-recently-used regions to save memory (units of seconds, 0 disables releasing");
+	IntValue AUTORELEASE_ON_MAP_CLOSE = MEMORY.getInt("autorelease_on_map_close", 32, 0, Integer.MAX_VALUE).comment("When the large map is closed, auto-release least recently accessed regions down to this number (0 disables releasing)");
+	BooleanValue MAX_ZOOM_CONSTRAINT = MEMORY.getBoolean("max_zoom_constraint", true).comment("Constrain maximum map zoom-out based on number of explored regions and available memory");
 
 	static boolean hasOtherMinimapMod() {
 		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");

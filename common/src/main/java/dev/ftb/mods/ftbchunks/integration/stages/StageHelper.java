@@ -24,4 +24,6 @@ public abstract class StageHelper {
 	public abstract void add(ServerPlayer player, String stage);
 
 	public abstract void remove(ServerPlayer player, String stage);
+
+	public abstract void sync(ServerPlayer player);
 }

@@ -19,4 +19,9 @@ public class KubeJSStageHelper extends StageHelper {
 	public void remove(ServerPlayer player, String stage) {
 		Stages.get(player).remove(stage);
 	}
+
+	@Override
+	public void sync(ServerPlayer player) {
+		Stages.get(player).sync();
+	}
 }

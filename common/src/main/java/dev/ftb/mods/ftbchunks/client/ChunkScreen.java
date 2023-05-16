@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
@@ -241,7 +242,7 @@ public class ChunkScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C)) {
+		if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player) && (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C))) {
 			new LargeMapScreen().openGui();
 			return true;
 		}

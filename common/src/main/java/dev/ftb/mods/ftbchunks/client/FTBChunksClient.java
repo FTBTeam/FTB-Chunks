@@ -92,7 +92,9 @@ import java.util.*;
  * @author LatvianModder
  */
 public class FTBChunksClient extends FTBChunksCommon {
-	private static final ResourceLocation BUTTON_ID = new ResourceLocation("ftbchunks:open_gui");
+	private static final ResourceLocation BUTTON_ID_MAP = new ResourceLocation("ftbchunks:open_gui");
+	private static final ResourceLocation BUTTON_ID_CLAIM = new ResourceLocation("ftbchunks:open_claim_gui");
+
 	public static final ResourceLocation CIRCLE_MASK = new ResourceLocation("ftbchunks:textures/circle_mask.png");
 	public static final ResourceLocation CIRCLE_BORDER = new ResourceLocation("ftbchunks:textures/circle_border.png");
 	public static final ResourceLocation SQUARE_MASK = new ResourceLocation("ftbchunks:textures/square_mask.png");
@@ -119,6 +121,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 
 	public static KeyMapping openMapKey;
+	public static KeyMapping openClaimManagerKey;
 	public static KeyMapping zoomInKey;
 	public static KeyMapping zoomOutKey;
 	public static KeyMapping addWaypointKey;
@@ -174,6 +177,10 @@ public class FTBChunksClient extends FTBChunksCommon {
 		// Keybinding to open Large map screen
 		openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(openMapKey);
+
+		// Keybinding to open claim manager screen
+		openClaimManagerKey = new KeyMapping("key.ftbchunks.claim_manager", InputConstants.Type.KEYSYM, -1, "key.categories.ftbchunks");
+		KeyMappingRegistry.register(openClaimManagerKey);
 
 		// Keybindings to zoom in minimap
 		zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "key.categories.ftbchunks");
@@ -370,8 +377,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public EventResult customClick(CustomClickEvent event) {
-		if (event.id().equals(BUTTON_ID)) {
+		if (event.id().equals(BUTTON_ID_MAP)) {
 			openGui();
+			return EventResult.interruptTrue();
+		} else if (event.id().equals(BUTTON_ID_CLAIM)) {
+			new ChunkScreen().openGui();
 			return EventResult.interruptTrue();
 		}
 
@@ -400,6 +410,9 @@ public class FTBChunksClient extends FTBChunksCommon {
 				openGui();
 				return EventResult.interruptTrue();
 			}
+		} else if (openClaimManagerKey.matches(keyCode, scanCode)) {
+			new ChunkScreen().openGui();
+			return EventResult.interruptTrue();
 		} else if (zoomInKey.matches(keyCode, scanCode)) {
 			return changeZoom(true);
 		} else if (zoomOutKey.matches(keyCode, scanCode)) {

@@ -4,5 +4,11 @@
 		"icon": "ftblibrary:icons/map",
 		"x": 310,
 		"click": "ftbchunks:open_gui"
+	},
+	"claim_chunks": {
+		"group": "ftblibrary:util",
+		"icon": "ftblibrary:icons/map; tint=#FF80FFFF",
+		"x": 400,
+		"click": "ftbchunks:open_claim_gui"
 	}
 }

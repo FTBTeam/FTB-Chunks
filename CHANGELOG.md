@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.3.22]
+
+### Added
+* The claim manager screen can now be opened without first opening the large map screen
+  * Added a new sidebar button "FTB Chunks: Claim Manager" to open the claim manager screen
+  * Also added a new key binding to open the claim manager, not bound to any key by default
+
 ## [1902.3.21]
 
 ### Added

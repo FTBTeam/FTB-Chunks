@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks;
 
 import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
@@ -37,16 +38,16 @@ public interface FTBChunksWorldConfig {
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.getBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
-		if (FTBChunks.ranksMod && player != null) {
-			return FTBRanksIntegration.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
+		if (player != null) {
+			return PermissionsHelper.getInstance().getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
 		}
 
 		return MAX_CLAIMED_CHUNKS.get() + playerData.getExtraClaimChunks();
 	}
 
 	static int getMaxForceLoadedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
-		if (FTBChunks.ranksMod && player != null) {
-			return FTBRanksIntegration.getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
+		if (player != null) {
+			return PermissionsHelper.getInstance().getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
 		}
 
 		return MAX_FORCE_LOADED_CHUNKS.get() + playerData.getExtraForceLoadChunks();
@@ -54,12 +55,12 @@ public interface FTBChunksWorldConfig {
 
 	static boolean canPlayerOfflineForceload(ServerPlayer player) {
 		// note: purely checking the player's own permission here; not interested in server defaults or party data
-		return FTBChunks.ranksMod && player != null && FTBRanksIntegration.getChunkLoadOffline(player, false);
+		return player != null && PermissionsHelper.getInstance().getChunkLoadOffline(player, false);
 	}
 
 	static boolean noWilderness(ServerPlayer player) {
-		if (FTBChunks.ranksMod && player != null) {
-			return FTBRanksIntegration.getNoWilderness(player, NO_WILDERNESS.get());
+		if (player != null) {
+			return PermissionsHelper.getInstance().getNoWilderness(player, NO_WILDERNESS.get());
 		}
 
 		return NO_WILDERNESS.get();

@@ -1,8 +1,10 @@
-package dev.ftb.mods.ftbchunks;
+package dev.ftb.mods.ftbchunks.integration.ftbranks;
 
 import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
+import dev.ftb.mods.ftbchunks.integration.PermissionsProvider;
 import dev.ftb.mods.ftbranks.api.FTBRanksAPI;
 import dev.ftb.mods.ftbranks.api.RankManager;
 import dev.ftb.mods.ftbranks.api.event.*;
@@ -10,28 +12,30 @@ import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.server.level.ServerPlayer;
 
+import static dev.ftb.mods.ftbchunks.integration.PermissionsHelper.*;
+
 /**
  * @author LatvianModder
  */
-public class FTBRanksIntegration {
-	private static final String MAX_CLAIMED_PERM = "ftbchunks.max_claimed";
-	private static final String MAX_FORCE_LOADED_PERM = "ftbchunks.max_force_loaded";
-	private static final String CHUNK_LOAD_OFFLINE_PERM = "ftbchunks.chunk_load_offline";
-
-	public static int getMaxClaimedChunks(ServerPlayer player, int def) {
+public class FTBRanksIntegration implements PermissionsProvider {
+	@Override
+	public int getMaxClaimedChunks(ServerPlayer player, int def) {
 		return Math.max(FTBRanksAPI.getPermissionValue(player, MAX_CLAIMED_PERM).asInteger().orElse(def), 0);
 	}
 
-	public static int getMaxForceLoadedChunks(ServerPlayer player, int def) {
+	@Override
+	public int getMaxForceLoadedChunks(ServerPlayer player, int def) {
 		return Math.max(FTBRanksAPI.getPermissionValue(player, MAX_FORCE_LOADED_PERM).asInteger().orElse(def), 0);
 	}
 
-	public static boolean getChunkLoadOffline(ServerPlayer player, boolean def) {
+	@Override
+	public boolean getChunkLoadOffline(ServerPlayer player, boolean def) {
 		return FTBRanksAPI.getPermissionValue(player, CHUNK_LOAD_OFFLINE_PERM).asBoolean().orElse(def);
 	}
 
-	public static boolean getNoWilderness(ServerPlayer player, boolean def) {
-		return FTBRanksAPI.getPermissionValue(player, "ftbchunks.no_wilderness").asBoolean().orElse(def);
+	@Override
+	public boolean getNoWilderness(ServerPlayer player, boolean def) {
+		return FTBRanksAPI.getPermissionValue(player, NO_WILDERNESS_PERM).asBoolean().orElse(def);
 	}
 
 	public static void registerEvents() {
@@ -42,8 +46,8 @@ public class FTBRanksIntegration {
 		RankEvent.CONDITION_CHANGED.register(FTBRanksIntegration::conditionChanged);
 	}
 
-
 	// ---------------------- event listeners below here ------------------
+
 	private static void playerAdded(PlayerAddedToRankEvent event) {
 		updateForPlayer(event.getManager(), event.getPlayer());
 	}
@@ -71,7 +75,7 @@ public class FTBRanksIntegration {
 		if (FTBChunksAPI.isManagerLoaded()) {
 			manager.getServer().getPlayerList().getPlayers().forEach(player -> {
 				FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
-				data.setForceLoadMember(player.getUUID(), getChunkLoadOffline(player, false));
+				data.setForceLoadMember(player.getUUID(), PermissionsHelper.getInstance().getChunkLoadOffline(player, false));
 			});
 			FTBTeamsAPI.getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
 		}
@@ -83,7 +87,7 @@ public class FTBRanksIntegration {
 			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(team);
 			ServerPlayer player = manager.getServer().getPlayerList().getPlayer(profile.getId());
 			if (player != null) {
-				teamData.setForceLoadMember(player.getUUID(), getChunkLoadOffline(player, false));
+				teamData.setForceLoadMember(player.getUUID(), PermissionsHelper.getInstance().getChunkLoadOffline(player, false));
 			}
 			teamData.updateLimits();
 		}

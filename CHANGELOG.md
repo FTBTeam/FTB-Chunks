@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The claim manager screen can now be opened without first opening the large map screen
   * Added a new sidebar button "FTB Chunks: Claim Manager" to open the claim manager screen
   * Also added a new key binding to open the claim manager, not bound to any key by default
+* Added Luckperms support, as an alternative to FTB Ranks
+  * Same permission node names: "ftbchunks.max_claimed", "ftbchunks.max_force_loaded", "ftbchunks.chunk_load_offline", "ftbchunks.no_wilderness"
 
 ## [1902.3.21]
 

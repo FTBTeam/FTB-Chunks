@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Also added a new key binding to open the claim manager, not bound to any key by default
 * Added Luckperms support, as an alternative to FTB Ranks
   * Same permission node names: "ftbchunks.max_claimed", "ftbchunks.max_force_loaded", "ftbchunks.chunk_load_offline", "ftbchunks.no_wilderness"
+* The minimap is now sized as a proportional of the current screen width
+  * Base size is 10% of the screen width, although this is modifiable with the existing "Scale" client setting
+  * Added new "Proportional Sizing" client setting, true by default. Set this to false if you prefer the old behaviour (fixed-size minimap regardless of screen resolution)
+
+### Fixed
+* Fixed occasional (non-fatal) NPE which could be thrown in the client block scanning thread
 
 ## [1902.3.21]
 

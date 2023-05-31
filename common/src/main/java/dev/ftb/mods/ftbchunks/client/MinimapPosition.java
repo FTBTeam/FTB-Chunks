@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 
 import javax.annotation.Nullable;
+import java.util.function.Predicate;
 
 /**
  * @author LatvianModder
@@ -40,14 +41,14 @@ public enum MinimapPosition {
 			return (h - s) / 2;
 		}
 
-		return h - s - 20;
+		return h - s - 5;
 	}
 
 	/**
 	 * Used for applying a conditional check for the minimap offset. When set to none
 	 * the offset will apply in all positions. When set, it will only apply to that position.
 	 */
-	public enum MinimapOffsetConditional {
+	public enum MinimapOffsetConditional implements Predicate<MinimapPosition> {
 		BOTTOM_LEFT(MinimapPosition.BOTTOM_LEFT),
 		LEFT(MinimapPosition.LEFT),
 		TOP_LEFT(MinimapPosition.TOP_LEFT),
@@ -59,19 +60,15 @@ public enum MinimapPosition {
 		public static final NameMap<MinimapOffsetConditional> NAME_MAP = NameMap.of(NONE, values()).baseNameKey("ftbchunks.minimap.position").create();
 
 		@Nullable
-		private MinimapPosition position;
+		private final MinimapPosition position;
 
 		MinimapOffsetConditional(@Nullable MinimapPosition position) {
 			this.position = position;
 		}
 
-		public boolean isNone() {
-			return this == NONE;
-		}
-
-		@Nullable
-		public MinimapPosition getPosition() {
-			return position;
+		@Override
+		public boolean test(MinimapPosition minimapPosition) {
+			return this == NONE || position == minimapPosition;
 		}
 	}
 }

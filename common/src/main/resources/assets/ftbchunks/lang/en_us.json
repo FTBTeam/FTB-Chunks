@@ -62,6 +62,8 @@
 	"ftbchunks.minimap.visibility": "Visibility",
 	"ftbchunks.minimap.zone": "Zone",
 	"ftbchunks.minimap.square": "Square Minimap",
+	"ftbchunks.minimap.proportional": "Proportional sizing",
+	"ftbchunks.minimap.proportional.tooltip": "When true, minimap size is proportional to 10%% of the screen width (modifiable by the Scale setting)\nWhen false, it is a fixed size regardless of screen resolution",
 	"sidebar_button.ftbchunks.chunks": "FTB Chunks: Map",
 	"sidebar_button.ftbchunks.claim_chunks": "FTB Chunks: Claim Manager",
 	"key.categories.ftbchunks": "FTB Chunks",

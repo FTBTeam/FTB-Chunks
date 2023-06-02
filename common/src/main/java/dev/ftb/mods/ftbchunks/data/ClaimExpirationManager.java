@@ -4,6 +4,7 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
+import dev.ftb.mods.ftbteams.data.ServerTeam;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceKey;
@@ -25,7 +26,7 @@ public enum ClaimExpirationManager {
             // System.currentTimeMillis() can be slow-ish on some JVMs so don't check every single tick
             long now = System.currentTimeMillis();
             if (now - lastRun > RUN_INTERVAL) {
-                Map<UUID, List<ClaimedChunk>> chunkMap = FTBChunksAPI.getManager().getClaimedChunksByTeam();
+                var chunkMap = FTBChunksAPI.getManager().getClaimedChunksByTeam(cc -> !(cc.teamData.getTeam() instanceof ServerTeam));
                 checkForIdleTeams(server, now, chunkMap);
                 checkForTemporaryClaims(server, now, chunkMap);
                 lastRun = now;

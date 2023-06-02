@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * Fixed occasional (non-fatal) NPE which could be thrown in the client block scanning thread
+* Made chunks owned by server teams exempt from claim and forceload auto-expiry (server teams are admin-level)
 
 ## [1902.3.21]
 

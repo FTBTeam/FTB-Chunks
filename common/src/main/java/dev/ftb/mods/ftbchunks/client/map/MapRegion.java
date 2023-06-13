@@ -163,7 +163,7 @@ public class MapRegion implements MapTask {
 				FTBChunks.LOGGER.debug("not releasing region {} / {} - player present", this, pos);
 				return;  // don't release region where the player is
 			}
-			for (ChunkPos cp : FTBChunksClient.rerenderCache.keySet()) {
+			for (ChunkPos cp : FTBChunksClient.getPendingRerender()) {
 				if (XZ.regionFromChunk(cp).equals(pos)) {
 					FTBChunks.LOGGER.debug("not releasing region {} / {} - re-render pending", this, pos);
 					return;  // don't release regions that have a re-render pending

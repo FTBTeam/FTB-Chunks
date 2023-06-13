@@ -7,6 +7,8 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-ranks:${rootProject.ftb_ranks_version}") { transitive = false }
 	modImplementation("dev.latvian.mods:rhino:${rootProject.rhino_version}") { transitive = false }
 	modImplementation("dev.latvian.mods:kubejs:${rootProject.kubejs_version}") { transitive = false }
+
+	compileOnly 'net.luckperms:api:5.4'
 }
 
 def ENV = System.getenv()

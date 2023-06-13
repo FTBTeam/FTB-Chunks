@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.3.22]
+
+### Added
+* The claim manager screen can now be opened without first opening the large map screen
+  * Added a new sidebar button "FTB Chunks: Claim Manager" to open the claim manager screen
+  * Also added a new key binding to open the claim manager, not bound to any key by default
+* Added Luckperms support, as an alternative to FTB Ranks
+  * Same permission node names: "ftbchunks.max_claimed", "ftbchunks.max_force_loaded", "ftbchunks.chunk_load_offline", "ftbchunks.no_wilderness"
+* The minimap is now sized as a proportional of the current screen width
+  * Base size is 10% of the screen width, although this is modifiable with the existing "Scale" client setting
+  * Added new "Proportional Sizing" client setting, true by default. Set this to false if you prefer the old behaviour (fixed-size minimap regardless of screen resolution)
+
+### Fixed
+* Fixed occasional (non-fatal) NPE which could be thrown in the client block scanning thread
+* Made chunks owned by server teams exempt from claim and forceload auto-expiry (server teams are admin-level)
+
 ## [1902.3.21]
 
 ### Added

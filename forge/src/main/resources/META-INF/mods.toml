@@ -62,3 +62,10 @@ mandatory = false
 versionRange = "[${kubejsversion},)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "luckperms"
+mandatory = false
+versionRange = "[5.4.46,)"
+ordering = "AFTER"
+side = "SERVER"

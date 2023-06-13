@@ -126,7 +126,9 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			waterLightAndBiome |= (waterY != HeightUtils.UNKNOWN) ? (1 << 15) : 0; // Water
 			waterLightAndBiome |= (level.getBrightness(LightLayer.BLOCK, blockPos) & 15) << 11; // Light
 
-			ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
+			// state shouldn't ever be null here, but yay threads
+			// https://github.com/FTBTeam/FTB-Mods-Issues/issues/811
+			@SuppressWarnings("ConstantValue") ResourceLocation id = state == null ? AIR : FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
 			int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
 
 			// Biome biome = biomeManager.getBiome(blockPos);

@@ -64,6 +64,7 @@ public interface FTBChunksClientConfig {
 	IntValue MINIMAP_OFFSET_Y = MINIMAP.getInt("position_offset_y", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
 	EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.getEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
 	BooleanValue SQUARE_MINIMAP = MINIMAP.getBoolean("square", false).comment("Draw a square minimap instead of a circular one");
+	BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.getBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
 
 	BooleanValue DEBUG_INFO = CONFIG.getBoolean("debug_info", false).comment("Enables debug info");
 	IntValue TASK_QUEUE_TICKS = CONFIG.getInt("task_queue_ticks", 4, 1, 300).excluded().comment("Advanced option. How often queued tasks will run");

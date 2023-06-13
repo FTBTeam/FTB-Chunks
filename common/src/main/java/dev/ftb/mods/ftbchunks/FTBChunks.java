@@ -13,6 +13,7 @@ import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.integration.ftbranks.FTBRanksIntegration;
 import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesCommon;
 import dev.ftb.mods.ftbchunks.net.*;
@@ -80,12 +81,8 @@ public class FTBChunks {
 
 	public static final Registrar<Block> BLOCK_REGISTRY = Registries.get(MOD_ID).get(Registry.BLOCK_REGISTRY);
 
-	public static boolean ranksMod = false;
-
 	public FTBChunks() {
 		PROXY = EnvExecutor.getEnvSpecific(() -> FTBChunksClient::new, () -> FTBChunksCommon::new);
-		// FTBChunksWorldConfig.init();
-		ranksMod = Platform.isModLoaded("ftbranks");
 		FTBChunksNet.init();
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
@@ -135,7 +132,7 @@ public class FTBChunks {
 		TickEvent.SERVER_POST.register(this::serverTickPost);
 		TickEvent.PLAYER_POST.register(this::playerTickPost);
 
-		if (ranksMod) {
+		if (Platform.isModLoaded("ftbranks")) {
 			FTBRanksIntegration.registerEvents();
 		}
 		if (Platform.isModLoaded("waystones")) {

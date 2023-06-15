@@ -82,11 +82,11 @@ public class ClaimedChunk implements ClaimResult {
 		teamData.manager.clearForceLoadedCache();
 		sendUpdateToAll();
 
-		ServerLevel level = teamData.manager.getMinecraftServer().getLevel(pos.dimension);
+		ServerLevel level = teamData.manager.getMinecraftServer().getLevel(pos.dimension());
 
 		if (level != null) {
 			if (forceLoaded > 0L) {
-				level.getChunk(pos.x, pos.z);
+				level.getChunk(pos.x(), pos.z());
 			}
 
 			ServerChunkCache cache = level.getChunkSource();
@@ -96,7 +96,7 @@ public class ClaimedChunk implements ClaimResult {
 				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
 				cache.save(false);
 			} else {
-				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x + ", " + pos.z + " @ " + pos.dimension.location() + "!");
+				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x() + ", " + pos.z() + " @ " + pos.dimension().location() + "!");
 			}
 		}
 	}
@@ -114,7 +114,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public void sendUpdateToAll() {
-		SendChunkPacket packet = new SendChunkPacket(pos.dimension, teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, this));
+		SendChunkPacket packet = new SendChunkPacket(pos.dimension(), teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x(), pos.z(), this));
 		ChunkSendingUtils.sendChunkToAll(teamData.manager.getMinecraftServer(), teamData, packet);
 	}
 
@@ -122,7 +122,7 @@ public class ClaimedChunk implements ClaimResult {
 		if (isForceLoaded()) {
 			setForceLoadedTime(0L);
 			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, this);
-			teamData.save();
+			teamData.markDirty();
 			forceLoadExpiryTime = 0L;
 		}
 	}
@@ -132,10 +132,10 @@ public class ClaimedChunk implements ClaimResult {
 
 		teamData.manager.unregisterClaim(pos);
 		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, this);
-		teamData.save();
+		teamData.markDirty();
 
 		if (sync) {
-			SendChunkPacket packet = new SendChunkPacket(pos.dimension, Util.NIL_UUID, new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x, pos.z, null));
+			SendChunkPacket packet = new SendChunkPacket(pos.dimension(), Util.NIL_UUID, new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x(), pos.z(), null));
 			packet.sendToAll(source.getServer());
 		}
 	}
@@ -146,7 +146,7 @@ public class ClaimedChunk implements ClaimResult {
 
 	public void setForceLoadExpiryTime(long forceLoadExpiryTime) {
 		this.forceLoadExpiryTime = forceLoadExpiryTime;
-		teamData.save();
+		teamData.markDirty();
 	}
 
 	public boolean hasExpired(long now) {
@@ -161,8 +161,8 @@ public class ClaimedChunk implements ClaimResult {
 	public CompoundTag serializeNBT() {
 		SNBTCompoundTag o = new SNBTCompoundTag();
 		o.singleLine();
-		o.putInt("x", getPos().x);
-		o.putInt("z", getPos().z);
+		o.putInt("x", getPos().x());
+		o.putInt("z", getPos().z());
 		o.putLong("time", getTimeClaimed());
 		if (isForceLoaded()) {
 			o.putLong("force_loaded", getForceLoadedTime());

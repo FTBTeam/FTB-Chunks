@@ -59,8 +59,8 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 		buf.writeVarInt(chunks.size());
 
 		for (XZ pos : chunks) {
-			buf.writeVarInt(pos.x);
-			buf.writeVarInt(pos.z);
+			buf.writeVarInt(pos.x());
+			buf.writeVarInt(pos.z());
 		}
 	}
 
@@ -72,10 +72,10 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 		Function<XZ, ClaimResult> consumer;
 
 		switch (action) {
-			case CLAIM -> consumer = pos -> data.claim(source, pos.dim(player.level), false);
-			case UNCLAIM -> consumer = pos -> data.unclaim(source, pos.dim(player.level), false);
-			case LOAD -> consumer = pos -> data.load(source, pos.dim(player.level), false);
-			case UNLOAD -> consumer = pos -> data.unload(source, pos.dim(player.level), false);
+			case CLAIM -> consumer = pos -> data.claim(source, pos.dim(player.level()), false);
+			case UNCLAIM -> consumer = pos -> data.unclaim(source, pos.dim(player.level()), false);
+			case LOAD -> consumer = pos -> data.load(source, pos.dim(player.level()), false);
+			case UNLOAD -> consumer = pos -> data.unload(source, pos.dim(player.level()), false);
 			default -> {
 				FTBChunks.LOGGER.warn("Unknown chunk action ID: " + action);
 				return;
@@ -88,7 +88,7 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 			ClaimResult r = consumer.apply(pos);
 
 			if (!r.isSuccess()) {
-				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(), ACTION_NAMES[action], player.level.dimension().location(), pos.x, pos.z, r));
+				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(), ACTION_NAMES[action], player.level().dimension().location(), pos.x(), pos.z(), r));
 				if (r instanceof ClaimResults cr) {
 					problems.put(cr, problems.getOrDefault(cr, 0) + 1);
 				}

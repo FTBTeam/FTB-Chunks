@@ -1,6 +1,6 @@
 plugins {
 	id "architectury-plugin" version "3.4-SNAPSHOT"
-	id "dev.architectury.loom" version "0.12.0-SNAPSHOT" apply false
+	id "dev.architectury.loom" version "1.2-SNAPSHOT" apply false
 }
 
 architectury {
@@ -51,7 +51,14 @@ allprojects {
 		}
 
 		maven {
-			url "https://maven.saps.dev/minecraft"
+			url "https://maven.saps.dev/releases"
+			content {
+				includeGroup "dev.latvian.mods"
+				includeGroup "dev.ftb.mods"
+			}
+		}
+		maven {
+			url "https://maven.saps.dev/snapshots"
 			content {
 				includeGroup "dev.latvian.mods"
 				includeGroup "dev.ftb.mods"

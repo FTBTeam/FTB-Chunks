@@ -25,7 +25,6 @@ loom {
 		convertAccessWideners = true
 		extraAccessWideners.add("ftbchunks.accesswidener")
 		mixinConfigs = [
-				/*"ftbchunks-forge.mixins.json", */
 				"ftbchunks-common.mixins.json"
 		]
 	}
@@ -58,14 +57,15 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}")
+	//modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}")
+	modCompileOnlyApi("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}")
 //	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
 
-	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:9.1.574")
-	modImplementation("curse.maven:balm-531761:${balm_forge_version}")
-	modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
+//	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:12.0.625")
+	modCompileOnlyApi("curse.maven:balm-531761:${balm_forge_version}")
+	modCompileOnlyApi("curse.maven:waystones-245755:${waystones_forge_version}")
 
-	modCompileOnlyApi "net.darkhax.gamestages:GameStages-Forge-${rootProject.minecraft_version}:${rootProject.gamestages_version}"
+	modCompileOnlyApi "net.darkhax.gamestages:GameStages-Forge-1.19.2:${rootProject.gamestages_version}"
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
@@ -101,7 +101,7 @@ shadowJar {
 	exclude "fabric.mod.json"
 
 	configurations = [project.configurations.shadowCommon]
-	classifier "dev-shadow"
+	setArchiveClassifier("dev-shadow")
 }
 
 remapJar {
@@ -124,7 +124,7 @@ jar {
 		])
 	}
 
-	classifier "dev"
+	setArchiveClassifier("dev")
 }
 
 components.java {

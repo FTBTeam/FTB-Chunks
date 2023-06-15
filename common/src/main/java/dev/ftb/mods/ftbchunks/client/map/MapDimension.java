@@ -183,8 +183,8 @@ public class MapDimension implements MapTask {
 			stream.writeShort(regionList.size());
 
 			for (MapRegion region : regionList) {
-				stream.writeByte(region.pos.x);
-				stream.writeByte(region.pos.z);
+				stream.writeByte(region.pos.x());
+				stream.writeByte(region.pos.z());
 			}
 		}
 

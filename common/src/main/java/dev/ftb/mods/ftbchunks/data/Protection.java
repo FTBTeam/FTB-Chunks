@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @FunctionalInterface
 public interface Protection {
 	Protection EDIT_BLOCK = (player, pos, hand, chunk, entity) -> {
-		BlockState blockState = player.level.getBlockState(pos);
+		BlockState blockState = player.level().getBlockState(pos);
 
 		if (blockState.is(FTBChunksAPI.EDIT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
@@ -26,7 +26,7 @@ public interface Protection {
 	};
 
 	Protection INTERACT_BLOCK = (player, pos, hand, chunk, entity) -> {
-		BlockState blockState = player.level.getBlockState(pos);
+		BlockState blockState = player.level().getBlockState(pos);
 
 		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
@@ -83,7 +83,7 @@ public interface Protection {
 
 	// for use on Fabric
     Protection EDIT_AND_INTERACT_BLOCK = (player, pos, hand, chunk, entity) -> {
-		BlockState blockState = player.level.getBlockState(pos);
+		BlockState blockState = player.level().getBlockState(pos);
 
 		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;

@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -11,18 +12,23 @@ import java.util.Objects;
  * @author LatvianModder
  */
 public class RegionSyncKey {
-	public ResourceKey<Level> dim;
-	public int x, z;
-	public int random;
-
-	public RegionSyncKey() {
-	}
+	private final ResourceKey<Level> dim;
+	private final int x;
+	private final int z;
+	private final int random;
 
 	public RegionSyncKey(FriendlyByteBuf buf) {
-		dim = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+		dim = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
 		x = buf.readVarInt();
 		z = buf.readVarInt();
 		random = buf.readInt();
+	}
+
+	public RegionSyncKey(ResourceKey<Level> dim, int x, int z, int random) {
+		this.dim = dim;
+		this.x = x;
+		this.z = z;
+		this.random = random;
 	}
 
 	public void write(FriendlyByteBuf buf) {

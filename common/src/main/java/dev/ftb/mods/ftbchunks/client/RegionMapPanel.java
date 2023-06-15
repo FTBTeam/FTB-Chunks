@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
@@ -14,8 +13,9 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import dev.ftb.mods.ftbteams.data.ClientTeam;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.util.Mth;
 
@@ -50,9 +50,9 @@ public class RegionMapPanel extends Panel {
 		regionMaxZ = Integer.MIN_VALUE;
 
 		for (Widget w : widgets) {
-			if (w instanceof RegionMapButton) {
-				int qx = ((RegionMapButton) w).region.pos.x;
-				int qy = ((RegionMapButton) w).region.pos.z;
+			if (w instanceof RegionMapButton rmb) {
+				int qx = rmb.region.pos.x();
+				int qy = rmb.region.pos.z();
 
 				regionMinX = Math.min(regionMinX, qx);
 				regionMinZ = Math.min(regionMinZ, qy);
@@ -124,18 +124,17 @@ public class RegionMapPanel extends Panel {
 		largeMap.scrollHeight = (regionMaxZ - regionMinZ) * z;
 
 		for (Widget w : widgets) {
-			if (w instanceof RegionMapButton) {
-				double qx = ((RegionMapButton) w).region.pos.x;
-				double qy = ((RegionMapButton) w).region.pos.z;
+			if (w instanceof RegionMapButton rmb) {
+				double qx = rmb.region.pos.x();
+				double qy = rmb.region.pos.z();
 				double qw = 1D;
 				double qh = 1D;
 
 				double x = (qx - regionMinX) * z;
 				double y = (qy - regionMinZ) * z;
 				w.setPosAndSize((int) x, (int) y, (int) (z * qw), (int) (z * qh));
-			} else if (w instanceof MapIconWidget) {
-				MapIconWidget i = (MapIconWidget) w;
-				double s = Math.max(i.mapIcon.isZoomDependant(MapType.LARGE_MAP) ? 0D : 6D, z / 128D * i.mapIcon.getIconScale(MapType.LARGE_MAP));
+			} else if (w instanceof MapIconWidget mapIconWidget) {
+				double s = Math.max(mapIconWidget.mapIcon.isZoomDependant(MapType.LARGE_MAP) ? 0D : 6D, z / 128D * mapIconWidget.mapIcon.getIconScale(MapType.LARGE_MAP));
 
 				if (s <= 1D) {
 					w.setSize(0, 0);
@@ -150,8 +149,8 @@ public class RegionMapPanel extends Panel {
 	}
 
 	@Override
-	public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		super.draw(matrixStack, theme, x, y, w, h);
+	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+		super.draw(graphics, theme, x, y, w, h);
 
 		int dx = (regionMaxX - regionMinX);
 		int dy = (regionMaxZ - regionMinZ);
@@ -194,7 +193,7 @@ public class RegionMapPanel extends Panel {
 
 			if (data != null) {
 				MapChunk c = r.getMapChunk(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
-				ClientTeam team = c == null ? null : c.getTeam();
+				Team team = c == null ? null : c.getTeam();
 
 				if (team != null) {
 					list.add(team.getName());

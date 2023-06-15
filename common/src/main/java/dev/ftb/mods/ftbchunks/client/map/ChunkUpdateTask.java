@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -78,7 +79,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
 		MapRegionData data = mapChunk.region.getDataBlocking();
 
-		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
+		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registries.BIOME);
 
 		/*
 		if (biomeContainer == null) {
@@ -112,8 +113,8 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			int height = blockPos.getY();
 			BlockState state = chunkAccess.getBlockState(blockPos);
 
-			int ax = mapChunk.pos.x * 16 + wx;
-			int az = mapChunk.pos.z * 16 + wz;
+			int ax = mapChunk.pos.x() * 16 + wx;
+			int az = mapChunk.pos.z() * 16 + wz;
 			int index = ax + az * 512;
 
 			int waterLightAndBiome0 = data.waterLightAndBiome[index] & 0xFFFF;

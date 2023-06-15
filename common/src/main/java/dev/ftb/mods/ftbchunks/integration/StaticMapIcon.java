@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.integration;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
@@ -13,7 +13,7 @@ public class StaticMapIcon extends MapIcon {
 
 	public StaticMapIcon(Vec3 p) {
 		pos = p;
-		icon = Color4I.EMPTY;
+		icon = Color4I.empty();
 	}
 
 	public StaticMapIcon(BlockPos p) {
@@ -26,9 +26,9 @@ public class StaticMapIcon extends MapIcon {
 	}
 
 	@Override
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-		if (icon != Color4I.EMPTY) {
-			icon.draw(stack, x, y, w, h);
+	public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+		if (!icon.isEmpty()) {
+			icon.draw(graphics, x, y, w, h);
 		}
 	}
 }

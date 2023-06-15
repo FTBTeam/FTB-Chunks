@@ -5,7 +5,7 @@ import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.data.HeightUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +36,7 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 		y = buf.readInt();
 		z = buf.readInt();
 		unknownY = buf.readBoolean();
-		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
 	}
 
 	@Override

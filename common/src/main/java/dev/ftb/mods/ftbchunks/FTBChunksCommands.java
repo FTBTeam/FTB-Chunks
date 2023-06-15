@@ -12,8 +12,8 @@ import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.data.TeamArgument;
 import dev.ftb.mods.ftbteams.data.TeamArgumentProvider;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
@@ -34,12 +34,14 @@ import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.ToIntBiFunction;
 
 /**
@@ -73,7 +75,7 @@ public class FTBChunksCommands {
 						.then(forTeam(FTBChunksCommands::unloadAll))
 				)
 				.then(Commands.literal("info")
-						.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getLevel(), new BlockPos(context.getSource().getPosition()))))
+						.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getLevel(), BlockPos.containing(context.getSource().getPosition()))))
 						.then(Commands.argument("x", IntegerArgumentType.integer())
 								.then(Commands.argument("z", IntegerArgumentType.integer())
 										.executes(context -> info(context.getSource(), new ChunkDimPos(context.getSource().getLevel(), new BlockPos(IntegerArgumentType.getInteger(context, "x"), 0, IntegerArgumentType.getInteger(context, "z")))))
@@ -182,7 +184,7 @@ public class FTBChunksCommands {
 		ServerPlayer player = source.getPlayerOrException();
 		ClaimedChunkManager manager = FTBChunksAPI.getManager();
 		manager.setBypassProtection(player.getUUID(), !manager.getBypassProtection(player.getUUID()));
-		source.sendSuccess(Component.literal("bypass_protection = " + manager.getBypassProtection(player.getUUID())), true);
+		source.sendSuccess(() -> Component.literal("bypass_protection = " + manager.getBypassProtection(player.getUUID())), true);
 		return 1;
 	}
 
@@ -191,7 +193,8 @@ public class FTBChunksCommands {
 	}
 
 	private static void forEachChunk(CommandSourceStack source, int r, ChunkCallback callback) throws CommandSyntaxException {
-		Team team = FTBTeamsAPI.getPlayerTeam(source.getPlayerOrException());
+		ServerPlayer player = source.getPlayerOrException();
+		Team team = FTBTeamsAPI.api().getManager().getTeamForPlayer(player).orElseThrow(() -> TeamArgument.TEAM_NOT_FOUND.create(player.getId()));
 		forEachChunk(team, source.getLevel(), toColumn(source.getPosition()), r, callback);
 	}
 
@@ -210,7 +213,7 @@ public class FTBChunksCommands {
 			}
 		}
 
-		list.sort(Comparator.comparingDouble(o -> MathUtils.distSq(ox, oz, o.x, o.z)));
+		list.sort(Comparator.comparingDouble(cdp -> MathUtils.distSq(ox, oz, cdp.x(), cdp.z())));
 
 		for (ChunkDimPos pos : list) {
 			callback.accept(data, pos);
@@ -230,10 +233,10 @@ public class FTBChunksCommands {
 			}
 		});
 
-		source.sendSuccess(Component.literal("Claimed " + success[0] + " chunks!"), false);
+		source.sendSuccess(() -> Component.literal("Claimed " + success[0] + " chunks!"), false);
 
 		ChunkDimPos origin = new ChunkDimPos(level.dimension(), anchor.x() >> 4, anchor.z() >> 4);
-		FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks around " + origin + "for team " + team.getDisplayName());
+		FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks around " + origin + "for team " + team.getShortName());
 
 		return success[0];
 	}
@@ -251,10 +254,10 @@ public class FTBChunksCommands {
 			}
 		});
 
-		source.sendSuccess(Component.literal("Unclaimed " + success[0] + " chunks!"), false);
+		source.sendSuccess(() -> Component.literal("Unclaimed " + success[0] + " chunks!"), false);
 
 		ChunkDimPos origin = new ChunkDimPos(level.dimension(), anchor.x() >> 4, anchor.z() >> 4);
-		FTBChunks.LOGGER.info(source.getTextName() + " unclaimed " + success[0] + " chunks around " + origin + "for team " + team.getDisplayName());
+		FTBChunks.LOGGER.info(source.getTextName() + " unclaimed " + success[0] + " chunks around " + origin + "for team " + team.getShortName());
 
 		return success[0];
 	}
@@ -269,7 +272,7 @@ public class FTBChunksCommands {
 			}
 		});
 
-		source.sendSuccess(Component.literal("Loaded " + success[0] + " chunks!"), false);
+		source.sendSuccess(() -> Component.literal("Loaded " + success[0] + " chunks!"), false);
 		FTBChunks.LOGGER.info(source.getTextName() + " loaded " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
 		return success[0];
 	}
@@ -283,7 +286,7 @@ public class FTBChunksCommands {
 			}
 		});
 
-		source.sendSuccess(Component.literal("Unloaded " + success[0] + " chunks!"), false);
+		source.sendSuccess(() -> Component.literal("Unloaded " + success[0] + " chunks!"), false);
 		FTBChunks.LOGGER.info(source.getTextName() + " unloaded " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
 		return success[0];
 	}
@@ -294,7 +297,7 @@ public class FTBChunksCommands {
 		for (ClaimedChunk c : new ArrayList<>(data.getClaimedChunks())) {
 			data.unclaim(source, c.getPos(), false);
 		}
-		data.save();
+		data.markDirty();
 
 		return 1;
 	}
@@ -305,25 +308,25 @@ public class FTBChunksCommands {
 		for (ClaimedChunk c : new ArrayList<>(data.getClaimedChunks())) {
 			data.unload(source, c.getPos(), false);
 		}
-		data.save();
+		data.markDirty();
 
 		return 1;
 	}
 
 	private static int info(CommandSourceStack source, ChunkDimPos pos) {
-		source.sendSuccess(Component.literal("Location: " + pos), true);
+		source.sendSuccess(() -> Component.literal("Location: " + pos), true);
 
 		ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(pos);
 
 		if (chunk == null) {
-			source.sendSuccess(Component.literal("Chunk not claimed!"), true);
+			source.sendSuccess(() -> Component.literal("Chunk not claimed!"), true);
 			return 0;
 		}
 
-		source.sendSuccess(Component.literal("Owner: ").append(chunk.getTeamData().getTeam().getColoredName()).append(" / " + UUIDTypeAdapter.fromUUID(chunk.getTeamData().getTeamId())), true);
+		source.sendSuccess(() -> Component.literal("Owner: ").append(chunk.getTeamData().getTeam().getColoredName()).append(" / " + UUIDTypeAdapter.fromUUID(chunk.getTeamData().getTeamId())), true);
 
 		if (source.hasPermission(2)) {
-			source.sendSuccess(Component.literal("Force Loaded: " + chunk.isForceLoaded()), true);
+			source.sendSuccess(() -> Component.literal("Force Loaded: " + chunk.isForceLoaded()), true);
 		}
 
 		return 1;
@@ -336,7 +339,7 @@ public class FTBChunksCommands {
 			return 1;
 		}
 
-		source.sendSuccess(player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.extraClaimChunks), false);
+		source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.extraClaimChunks), false);
 		return 1;
 	}
 
@@ -348,14 +351,14 @@ public class FTBChunksCommands {
 			return 1;
 		}
 		personalData.extraClaimChunks = Math.max(0, extra + (adding ? personalData.extraClaimChunks : 0));
-		personalData.save();
+		personalData.markDirty();
 
 		// player's new personal limit will affect the team limit
 		FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(player);
 		teamData.updateLimits();
 		SendGeneralDataPacket.send(teamData, player);
 
-		source.sendSuccess(player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.extraClaimChunks), false);
+		source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.extraClaimChunks), false);
 		return 1;
 	}
 
@@ -366,7 +369,7 @@ public class FTBChunksCommands {
 			return 1;
 		}
 
-		source.sendSuccess(player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.extraForceLoadChunks), false);
+		source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.extraForceLoadChunks), false);
 		return 1;
 	}
 
@@ -378,21 +381,21 @@ public class FTBChunksCommands {
 			return 1;
 		}
 		personalData.extraForceLoadChunks = Math.max(0, extra + (adding ? personalData.extraForceLoadChunks : 0));
-		personalData.save();
+		personalData.markDirty();
 
 		// player's new personal limit will affect the team limit
 		FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(player);
 		teamData.updateLimits();
 		SendGeneralDataPacket.send(teamData, player);
 
-		source.sendSuccess(player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.extraForceLoadChunks), false);
+		source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.extraForceLoadChunks), false);
 		return 1;
 	}
 
 	private static int unclaimEverything(CommandSourceStack source) {
 		for (ClaimedChunk c : new ArrayList<>(FTBChunksAPI.getManager().getAllClaimedChunks())) {
 			c.teamData.unclaim(source, c.getPos(), false);
-			c.teamData.save();
+			c.teamData.markDirty();
 		}
 
 		return 1;
@@ -401,7 +404,7 @@ public class FTBChunksCommands {
 	private static int unloadEverything(CommandSourceStack source) {
 		for (ClaimedChunk c : new ArrayList<>(FTBChunksAPI.getManager().getAllClaimedChunks())) {
 			c.teamData.unload(source, c.getPos(), false);
-			c.teamData.save();
+			c.teamData.markDirty();
 		}
 
 		return 1;
@@ -427,7 +430,7 @@ public class FTBChunksCommands {
 			}
 		}
 
-		source.sendSuccess(Component.literal(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
+		source.sendSuccess(() -> Component.literal(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
 		new LoadedChunkViewPacket(level.dimension(), chunks).sendTo(source.getPlayerOrException());
 		return 1;
 	}
@@ -468,11 +471,12 @@ public class FTBChunksCommands {
 	}
 
 	private static ColumnPos toColumn(Vec3 pos) {
-		BlockPos blockPos = new BlockPos(pos);
+		BlockPos blockPos = BlockPos.containing(pos);
 		return new ColumnPos(blockPos.getX(), blockPos.getZ());
 	}
 
 	private static Team selfTeam(CommandSourceStack source) throws CommandSyntaxException {
-		return FTBTeamsAPI.getPlayerTeam(source.getPlayerOrException());
+		ServerPlayer player = source.getPlayerOrException();
+		return FTBTeamsAPI.api().getManager().getTeamForPlayer(player).orElseThrow(() -> TeamArgument.TEAM_NOT_FOUND.create(player.getId()));
 	}
 }

@@ -56,11 +56,12 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
+	modCompileOnlyApi("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
+	//modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
 //	modImplementation("dev.latvian.mods:rhino-fabric:${rootProject.rhino_version}")
 
 //	modImplementation("curse.maven:auth-me-356643:3725468")
-	modImplementation("curse.maven:cloth-config-348521:3972420")
+	modImplementation("curse.maven:cloth-config-348521:4573053")
 
 	// compile-only because for some reason loom isn't deobfuscating these...
 	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")  { transitive = false }
@@ -91,9 +92,13 @@ processResources {
 	}
 }
 
+sourcesJar {
+	dependsOn copyAccessWidener
+}
+
 shadowJar {
 	configurations = [project.configurations.shadowCommon]
-	classifier "dev-shadow"
+	setArchiveClassifier("dev-shadow")
 }
 
 remapJar {
@@ -104,7 +109,7 @@ remapJar {
 }
 
 jar {
-	classifier "dev"
+	setArchiveClassifier("dev")
 }
 
 components.java {

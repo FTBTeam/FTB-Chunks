@@ -1,8 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.data.HeightUtils;
@@ -21,8 +20,8 @@ import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -219,7 +218,7 @@ public class LargeMapScreen extends BaseScreen {
 				new EditConfigFromStringScreen<>(name, set -> {
 					if (set) {
 						Waypoint w = new Waypoint(dimension, pos.getX(), pos.getY(), pos.getZ());
-						w.name = name.value;
+						w.name = name.getValue();
 						w.color = Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba();
 						dimension.getWaypointManager().add(w);
 						refreshWidgets();
@@ -238,7 +237,7 @@ public class LargeMapScreen extends BaseScreen {
 	@Override
 	public boolean keyPressed(Key key) {
 		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode) || key.escOrInventory()) {
-			if (key.esc() && contextMenu != null) {
+			if (key.esc() && getContextMenu().isPresent()) {
 				closeContextMenu();
 			} else {
 				closeGui(false);
@@ -288,7 +287,7 @@ public class LargeMapScreen extends BaseScreen {
 	}
 
 	@Override
-	public boolean drawDefaultBackground(PoseStack matrixStack) {
+	public boolean drawDefaultBackground(GuiGraphics graphics) {
 		if (!movedToPlayer) {
 			Player p = Minecraft.getInstance().player;
 			regionPanel.resetScroll();
@@ -296,12 +295,12 @@ public class LargeMapScreen extends BaseScreen {
 			movedToPlayer = true;
 		}
 
-		backgroundColor.draw(matrixStack, 0, 0, width, height);
+		backgroundColor.draw(graphics, 0, 0, width, height);
 		return false;
 	}
 
 	@Override
-	public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		if (grabbed != 0) {
 			int mx = getMouseX();
 			int my = getMouseY();
@@ -326,38 +325,20 @@ public class LargeMapScreen extends BaseScreen {
 			regionPanel.setScrollY((scrollHeight - regionPanel.height) / 2D);
 		}
 
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder buffer = tessellator.getBuilder();
-		int r = 70;
-		int g = 70;
-		int b = 70;
-		int a = 100;
-
-		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-		RenderSystem.disableTexture();
-		buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-
 		int s = getRegionButtonSize();
 		double ox = -regionPanel.getScrollX() % s;
 		double oy = -regionPanel.getScrollY() % s;
 
 		for (int gx = 0; gx <= (w / s) + 1; gx++) {
-			buffer.vertex(x + ox + gx * s, y, 0).color(r, g, b, a).endVertex();
-			buffer.vertex(x + ox + gx * s, y + h, 0).color(r, g, b, a).endVertex();
+			graphics.vLine((int) (x + ox + gx * s), y, y + h, 0x64464646);
 		}
-
 		for (int gy = 0; gy <= (h / s) + 1; gy++) {
-			buffer.vertex(x, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
-			buffer.vertex(x + w, y + oy + gy * s, 0).color(r, g, b, a).endVertex();
+			graphics.hLine(x, x + w, (int) (y + oy + gy * s), 0x64464646);
 		}
-
-		tessellator.end();
-		RenderSystem.enableTexture();
 	}
 
 	@Override
-	public void drawForeground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void drawForeground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == HeightUtils.UNKNOWN ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
 
 		if (regionPanel.blockY != HeightUtils.UNKNOWN) {
@@ -378,12 +359,13 @@ public class LargeMapScreen extends BaseScreen {
 
 		int coordsw = theme.getStringWidth(coords) / 2;
 
-		backgroundColor.withAlpha(150).draw(matrixStack, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
-		matrixStack.pushPose();
-		matrixStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
-		matrixStack.scale(0.5F, 0.5F, 1F);
-		theme.drawString(matrixStack, coords, 0, 0, Theme.SHADOW);
-		matrixStack.popPose();
+		backgroundColor.withAlpha(150).draw(graphics, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
+		PoseStack poseStack = graphics.pose();
+		poseStack.pushPose();
+		poseStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
+		poseStack.scale(0.5F, 0.5F, 1F);
+		theme.drawString(graphics, coords, 0, 0, Theme.SHADOW);
+		poseStack.popPose();
 
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
 			long memory = MapManager.inst.estimateMemoryUsage();
@@ -391,22 +373,22 @@ public class LargeMapScreen extends BaseScreen {
 			String memoryUsage = "Estimated Memory Usage: " + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB";
 			int memoryUsagew = theme.getStringWidth(memoryUsage) / 2;
 
-			backgroundColor.withAlpha(150).draw(matrixStack, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
+			backgroundColor.withAlpha(150).draw(graphics, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
 
-			matrixStack.pushPose();
-			matrixStack.translate(x + (w - memoryUsagew) - 1F, y + 1, 0F);
-			matrixStack.scale(0.5F, 0.5F, 1F);
-			theme.drawString(matrixStack, memoryUsage, 0, 0, Theme.SHADOW);
-			matrixStack.popPose();
+			poseStack.pushPose();
+			poseStack.translate(x + (w - memoryUsagew) - 1F, y + 1, 0F);
+			poseStack.scale(0.5F, 0.5F, 1F);
+			theme.drawString(graphics, memoryUsage, 0, 0, Theme.SHADOW);
+			poseStack.popPose();
 		}
 
 		if (zoom == minZoom && zoom > 1) {
 			Component zoomWarn = Component.translatable("ftbchunks.zoom_warning");
-			matrixStack.pushPose();
-			matrixStack.translate(x + w / 2F, y + 1, 0F);
-			matrixStack.scale(0.5F, 0.5F, 1F);
-			theme.drawString(matrixStack, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
-			matrixStack.popPose();
+			poseStack.pushPose();
+			poseStack.translate(x + w / 2F, y + 1, 0F);
+			poseStack.scale(0.5F, 0.5F, 1F);
+			theme.drawString(graphics, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
+			poseStack.popPose();
 		}
 	}
 

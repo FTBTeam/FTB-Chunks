@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 
 import java.io.InputStream;
@@ -19,11 +20,11 @@ public class ColorUtils {
 	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
 
 	public static int convertToNative(int c) {
-		return NativeImage.combine((c >> 24) & 0xFF, (c >> 0) & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF);
+		return FastColor.ABGR32.color((c >> 24) & 0xFF, (c >> 0) & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF);
 	}
 
 	public static int convertFromNative(int c) {
-		return (NativeImage.getA(c) << 24) | (NativeImage.getR(c) << 16) | (NativeImage.getG(c) << 8) | NativeImage.getB(c);
+		return (FastColor.ABGR32.alpha(c) << 24) | (FastColor.ABGR32.red(c) << 16) | (FastColor.ABGR32.green(c) << 8) | FastColor.ABGR32.blue(c);
 	}
 
 	public static Color4I addBrightness(Color4I c, float f) {
@@ -52,12 +53,12 @@ public class ColorUtils {
 				for (int x = 0; x < w; x++) {
 					for (int y = 0; y < h; y++) {
 						int col = image.getPixelRGBA(x, y);
-						reducedColorPalette[x + y * w] = Color4I.rgb((NativeImage.getR(col) << 16) | (NativeImage.getG(col) << 8) | NativeImage.getB(col));
+						reducedColorPalette[x + y * w] = Color4I.rgb((FastColor.ABGR32.red(col) << 16) | (FastColor.ABGR32.green(col) << 8) | FastColor.ABGR32.blue(col));
 					}
 				}
 
 				image.close();
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}
 
@@ -107,7 +108,7 @@ public class ColorUtils {
 				}
 
 				image.close();
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}
 
@@ -133,7 +134,7 @@ public class ColorUtils {
 				}
 
 				image.close();
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}
 

@@ -9,9 +9,9 @@ import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftbteams.data.ClientTeam;
-import dev.ftb.mods.ftbteams.data.ClientTeamManager;
-import dev.ftb.mods.ftbteams.data.TeamBase;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
@@ -53,15 +53,17 @@ public class RenderMapImageTask implements MapTask {
 		int s = 512 + blend * 2;
 		int[][] newColors = new int[s][s];
 
-		int[] rWW = blend == 0 ? null : region.dimension.getColors(region.pos.x - 1, region.pos.z, getter);
-		int[] rEE = blend == 0 ? null : region.dimension.getColors(region.pos.x + 1, region.pos.z, getter);
-		int[] rNN = blend == 0 ? null : region.dimension.getColors(region.pos.x, region.pos.z - 1, getter);
-		int[] rSS = blend == 0 ? null : region.dimension.getColors(region.pos.x, region.pos.z + 1, getter);
+		int posX = region.pos.x();
+		int posZ = region.pos.z();
+		int[] rWW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ, getter);
+		int[] rEE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ, getter);
+		int[] rNN = blend == 0 ? null : region.dimension.getColors(posX, posZ - 1, getter);
+		int[] rSS = blend == 0 ? null : region.dimension.getColors(posX, posZ + 1, getter);
 
-		int[] rNW = blend == 0 ? null : region.dimension.getColors(region.pos.x - 1, region.pos.z - 1, getter);
-		int[] rSW = blend == 0 ? null : region.dimension.getColors(region.pos.x - 1, region.pos.z + 1, getter);
-		int[] rNE = blend == 0 ? null : region.dimension.getColors(region.pos.x + 1, region.pos.z - 1, getter);
-		int[] rSE = blend == 0 ? null : region.dimension.getColors(region.pos.x + 1, region.pos.z + 1, getter);
+		int[] rNW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ - 1, getter);
+		int[] rSW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ + 1, getter);
+		int[] rNE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ - 1, getter);
+		int[] rSE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ + 1, getter);
 
 		for (int i = 0; i < 512; i++) {
 			for (int j = 0; j < 512; j++) {
@@ -211,7 +213,7 @@ public class RenderMapImageTask implements MapTask {
 		}
 
 		float[] hsb = new float[3];
-		ClientTeam ownTeam = ClientTeamManager.INSTANCE.selfTeam;
+		Team ownTeam = FTBTeamsAPI.api().getClientManager().selfTeam();
 		Level world = Minecraft.getInstance().level;
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
@@ -236,22 +238,23 @@ public class RenderMapImageTask implements MapTask {
 
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
-				int loadedView = region.dimension.loadedChunkView.get(ChunkPos.asLong((region.pos.x << 5) + cx, (region.pos.z << 5) + cz));
+				int loadedView = region.dimension.loadedChunkView.get(ChunkPos.asLong((region.pos.x() << 5) + cx, (region.pos.z() << 5) + cz));
 				MapChunk c = region.getMapChunk(XZ.of(cx, cz));
 				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.pos.toLong()));
 				Color4I claimColor;
 				int fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
+				boolean isOwnChunk = c != null && c.getTeam() != null && ownTeam.getTeamId().equals(c.getTeam().getTeamId());
 
-				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (ownTeam.equals(c.getTeam()) ? ownClaimedChunksOnMap : claimedChunksOnMap))) {
-					claimColor = c.getTeam().getProperty(TeamBase.COLOR).withAlpha(100);
+				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (isOwnChunk ? ownClaimedChunksOnMap : claimedChunksOnMap))) {
+					claimColor = c.getTeam().getProperty(TeamProperties.COLOR).withAlpha(100);
 					fullClaimColor = ColorUtils.convertToNative(0xFF000000 | claimColor.rgb());
 					claimBarUp = !c.connects(c.offsetBlocking(0, -1));
 					claimBarDown = !c.connects(c.offsetBlocking(0, 1));
 					claimBarLeft = !c.connects(c.offsetBlocking(-1, 0));
 					claimBarRight = !c.connects(c.offsetBlocking(1, 0));
 				} else {
-					claimColor = Color4I.EMPTY;
+					claimColor = Color4I.empty();
 					fullClaimColor = 0;
 					claimBarUp = false;
 					claimBarDown = false;
@@ -279,7 +282,7 @@ public class RenderMapImageTask implements MapTask {
 							Color4I col;
 							int by = getHeight(mapMode, waterHeightFactor, data.waterLightAndBiome[index], data.height[index]);
 							boolean hasWater = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
-							blockPos.set(region.pos.x * 512 + ax, by, region.pos.z * 512 + az);
+							blockPos.set(region.pos.x() * 512 + ax, by, region.pos.z() * 512 + az);
 
 							if (mapMode == MapMode.TOPOGRAPHY) {
 								col = ColorUtils.getTopographyPalette()[by + (hasWater ? 256 : 0)];

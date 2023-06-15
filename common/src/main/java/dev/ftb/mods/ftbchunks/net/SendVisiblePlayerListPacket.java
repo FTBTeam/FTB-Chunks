@@ -51,7 +51,7 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 	}
 
 	public static void syncToLevel(Level level) {
-		syncToPlayers(FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers().stream().filter(p -> p.level == level).toList());
+		syncToPlayers(FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers().stream().filter(p -> p.level() == level).toList());
 	}
 
 	public static void syncToAll() {

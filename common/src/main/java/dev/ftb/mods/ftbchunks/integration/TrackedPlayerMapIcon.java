@@ -1,11 +1,11 @@
 package dev.ftb.mods.ftbchunks.integration;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
@@ -40,16 +40,16 @@ public class TrackedPlayerMapIcon extends MapIcon {
     }
 
     @Override
-    public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+    public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         if (mapType.isMinimap() || w < 4) {
-            faceIcon.draw(stack, x, y, w, h);
+            faceIcon.draw(graphics, x, y, w, h);
         } else {
-            stack.pushPose();
-            stack.translate(x, y, 0F);
-            stack.scale(w / 18F, h / 18F, 1F);
-            Color4I.BLACK.draw(stack, 0, 0, 18, 18);
-            faceIcon.draw(stack, 1, 1, 16, 16);
-            stack.popPose();
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0F);
+            graphics.pose().scale(w / 18F, h / 18F, 1F);
+            Color4I.BLACK.draw(graphics, 0, 0, 18, 18);
+            faceIcon.draw(graphics, 1, 1, 16, 16);
+            graphics.pose().popPose();
         }
     }
 }

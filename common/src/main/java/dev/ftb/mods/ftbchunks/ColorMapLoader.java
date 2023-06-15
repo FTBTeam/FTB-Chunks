@@ -79,8 +79,8 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x683A2D)));
 				} else if (FTBCUtils.isRail(block)) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
-				} else if (block.defaultMaterialColor() != null) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMaterialColor().col)));
+				} else if (block.defaultMapColor() != null) {
+					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMapColor().col)));
 				} else {
 					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.RED));
 				}

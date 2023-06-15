@@ -6,7 +6,7 @@ import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -24,7 +24,7 @@ public class LoadedChunkViewPacket extends BaseS2CMessage {
 	}
 
 	LoadedChunkViewPacket(FriendlyByteBuf buf) {
-		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
 		int s = buf.readVarInt();
 
 		chunks = new Long2IntOpenHashMap(s);

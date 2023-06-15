@@ -9,6 +9,7 @@ import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.texture.SimpleTexture;
@@ -69,7 +70,7 @@ public class EntityMapIcon extends MapIcon {
 	}
 
 	@Override
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+	public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
 		if (icon instanceof ImageIcon) {
 			var manager = Minecraft.getInstance().getTextureManager();
 			var tex = manager.getTexture(((ImageIcon) icon).texture);
@@ -85,14 +86,15 @@ public class EntityMapIcon extends MapIcon {
 		}
 
 		if (!(entity instanceof AbstractClientPlayer) || mapType.isMinimap() || w < 4 || icon == EntityIcons.NORMAL || icon == EntityIcons.HOSTILE) {
-			icon.draw(stack, x, y, w, h);
+			icon.draw(graphics, x, y, w, h);
 		} else {
-			stack.pushPose();
-			stack.translate(x, y, 0F);
-			stack.scale(w / 18F, h / 18F, 1F);
-			Color4I.BLACK.draw(stack, 0, 0, 18, 18);
-			icon.draw(stack, 1, 1, 16, 16);
-			stack.popPose();
+			PoseStack poseStack = graphics.pose();
+			poseStack.pushPose();
+			poseStack.translate(x, y, 0F);
+			poseStack.scale(w / 18F, h / 18F, 1F);
+			Color4I.BLACK.draw(graphics, 0, 0, 18, 18);
+			icon.draw(graphics, 1, 1, 16, 16);
+			poseStack.popPose();
 		}
 	}
 }

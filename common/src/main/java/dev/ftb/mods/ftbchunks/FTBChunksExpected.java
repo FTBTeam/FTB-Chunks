@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.ftb.mods.ftbchunks.data.Protection;
-import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
+import dev.ftb.mods.ftbteams.api.event.TeamCollectPropertiesEvent;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.UUID;

@@ -138,17 +138,17 @@ if (ENV.CURSEFORGE_KEY) {
 		apiKey = ENV.CURSEFORGE_KEY
 		project {
 			id = project.curseforge_id_forge
-			releaseType = project.curseforge_type
+			releaseType = ftbPublishing.relType
 			addGameVersion "Forge"
-			addGameVersion rootProject.minecraft_version
-			mainArtifact(remapJar.archivePath)
+			addGameVersion project.minecraft_version
+			mainArtifact(remapJar.archiveFile)
 			relations {
 				requiredDependency 'architectury-api'
 				requiredDependency 'ftb-library-forge'
 				requiredDependency 'ftb-teams-forge'
 				optionalDependency 'ftb-ranks-forge'
 			}
-			changelog = getGitChangelog
+			changelog = ENV.CHANGELOG  // expected to exist if ENV.CURSEFORGE_KEY does
 			changelogType = 'markdown'
 		}
 	}

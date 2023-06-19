@@ -93,7 +93,14 @@ processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": project.version,
+				"archversion": project.architectury_version,
+				"fabricapiversion": project.fabric_api_version,
+				"mcversion": project.minecraft_version,
+				"ftblibraryversion": project.ftb_library_version,
+				"ftbteamsversion": project.ftb_teams_version,
+				"ftbranksversion": project.ftb_ranks_version,
+				"kubejsversion": project.kubejs_version
 	}
 }
 

@@ -10,9 +10,9 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.ChunkPos;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,14 +63,14 @@ public class MapRegion implements MapTask {
 		return lastDataAccess;
 	}
 
-	@Nonnull
+	@NotNull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.manager.lock) {
 			return getDataBlockingNoSync();
 		}
 	}
 
-	@Nonnull
+	@NotNull
 	public MapRegionData getDataBlockingNoSync() {
 		if (data == null) {
 			data = new MapRegionData(this);
@@ -233,16 +233,11 @@ public class MapRegion implements MapTask {
 	}
 
 	public RegionSyncKey getSyncKey() {
-		RegionSyncKey key = new RegionSyncKey();
-		key.dim = dimension.dimension;
-		key.x = pos.x;
-		key.z = pos.z;
-		key.random = MathUtils.RAND.nextInt();
-		return key;
+		return new RegionSyncKey(dimension.dimension, pos.x(), pos.z(), MathUtils.RAND.nextInt());
 	}
 
 	public double distToPlayer() {
-		return MathUtils.distSq(pos.x * 512D + 256D, pos.z * 512D + 256D, Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ());
+		return MathUtils.distSq(pos.x() * 512D + 256D, pos.z() * 512D + 256D, Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ());
 	}
 
 	@Override

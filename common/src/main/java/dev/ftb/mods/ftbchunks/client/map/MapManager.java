@@ -10,6 +10,7 @@ import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -74,7 +75,7 @@ public class MapManager implements MapTask {
 					s = s.trim();
 
 					if (s.length() >= 3) {
-						ResourceKey<Level> key = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(s));
+						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(s));
 						dimensions.put(key, new MapDimension(this, key));
 					}
 				}
@@ -110,7 +111,7 @@ public class MapManager implements MapTask {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
 						ResourceLocation loc = new ResourceLocation(s1[1]);
-						ResourceKey<Biome> key = ResourceKey.create(Registry.BIOME_REGISTRY, loc);
+						ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, loc);
 						biomeColorIndexMap.put(i, key);
 					}
 				}

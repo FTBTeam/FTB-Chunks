@@ -2,8 +2,8 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftbteams.data.ClientTeam;
-import dev.ftb.mods.ftbteams.data.ClientTeamManager;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Date;
@@ -21,7 +21,7 @@ public class MapChunk {
 	public long modified;
 	public int version;
 
-	public ClientTeam team;
+	public Team team;
 	public Date claimedDate;
 	public Date forceLoadedDate;
 	public Date expiryDate;
@@ -38,9 +38,9 @@ public class MapChunk {
 	}
 
 	@Nullable
-	public ClientTeam getTeam() {
-		if (team != null && team.invalid) {
-			team = team.manager.getTeam(team.getId());
+	public Team getTeam() {
+		if (team != null && !team.isValid()) {
+			team = FTBTeamsAPI.api().getClientManager().getTeamByID(team.getId()).orElse(null);
 		}
 
 		return team;
@@ -51,7 +51,7 @@ public class MapChunk {
 	}
 
 	public XZ getActualPos() {
-		return XZ.of((region.pos.x << 5) + pos.x, (region.pos.z << 5) + pos.z);
+		return XZ.of((region.pos.x() << 5) + pos.x(), (region.pos.z() << 5) + pos.z());
 	}
 
 	public MapChunk created() {
@@ -61,11 +61,11 @@ public class MapChunk {
 
 	public MapChunk offsetBlocking(int x, int z) {
 		XZ pos = getActualPos().offset(x, z);
-		return region.dimension.getRegion(XZ.regionFromChunk(pos.x, pos.z)).getDataBlocking().getChunk(pos);
+		return region.dimension.getRegion(XZ.regionFromChunk(pos.x(), pos.z())).getDataBlocking().getChunk(pos);
 	}
 
-	public void updateFrom(Date now, SendChunkPacket.SingleChunk packet, UUID t) {
-		team = ClientTeamManager.INSTANCE.teamMap.get(t);
+	public void updateFrom(Date now, SendChunkPacket.SingleChunk packet, UUID teamId) {
+		team = FTBTeamsAPI.api().getClientManager().getTeamByID(teamId).orElse(null);
 		claimedDate = team == null ? null : new Date(now.getTime() - packet.relativeTimeClaimed);
 		forceLoadedDate = packet.forceLoaded && claimedDate != null ? new Date(now.getTime() - packet.relativeTimeForceLoaded) : null;
 		expiryDate = packet.forceLoaded && packet.expires && claimedDate != null ? new Date(now.getTime() + packet.relativeForceLoadExpiryTime) : null;

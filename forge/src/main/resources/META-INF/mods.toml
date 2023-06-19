@@ -38,21 +38,21 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "ftblibrary"
 mandatory = true
-versionRange = "[${libraryversion},)"
+versionRange = "[${ftblibraryversion},)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftbteams"
 mandatory = true
-versionRange = "[${teamsversion},)"
+versionRange = "[${ftbteamsversion},)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftbranks"
 mandatory = false
-versionRange = "[${ranksversion},)"
+versionRange = "[${ftbranksversion},)"
 ordering = "AFTER"
 side = "BOTH"
 
@@ -66,6 +66,6 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "luckperms"
 mandatory = false
-versionRange = "[5.4.46,)"
+versionRange = "[5.4.83,)"
 ordering = "AFTER"
 side = "SERVER"

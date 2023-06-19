@@ -6,7 +6,6 @@ import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -31,11 +30,12 @@ public class SendGeneralDataPacket extends BaseS2CMessage {
 		int loaded = (int) cc.stream().filter(ClaimedChunk::isForceLoaded).count();
 		SendGeneralDataPacket data = new SendGeneralDataPacket(cc.size(), loaded, teamData.getMaxClaimChunks(), teamData.getMaxForceLoadChunks());
 
-		players.forEach(player -> {
-			if (FTBTeamsAPI.getPlayerTeam(player).getId().equals(teamData.getTeamId())) {
-				data.sendTo(player);
-			}
-		});
+		players.forEach(player ->
+				teamData.getTeamManager().getTeamForPlayer(player).ifPresent(team -> {
+					if (team.getId().equals(teamData.getTeamId())) {
+						data.sendTo(player);
+					}
+				}));
 	}
 
 	private SendGeneralDataPacket(int claimed, int loaded, int maxClaimChunks, int maxForceLoadChunks) {

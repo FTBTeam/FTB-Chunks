@@ -98,12 +98,12 @@ public enum ClaimExpirationManager {
 
     private static void unclaimChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
         c.unclaim(sourceStack, false);
-        toSync.computeIfAbsent(c.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x, c.pos.z, null));
+        toSync.computeIfAbsent(c.pos.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x(), c.pos.z(), null));
     }
 
     private static void unloadChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
         c.unload(sourceStack);
-        toSync.computeIfAbsent(c.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x, c.pos.z, c));
+        toSync.computeIfAbsent(c.pos.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x(), c.pos.z(), c));
     }
 
     private static void syncChunks(Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, MinecraftServer server, UUID teamId) {

@@ -174,8 +174,8 @@ public class MapRegionData {
 
 			for (MapChunk chunk : chunkList) {
 				stream.writeByte(chunk.version);
-				stream.writeByte(chunk.pos.x);
-				stream.writeByte(chunk.pos.z);
+				stream.writeByte(chunk.pos.x());
+				stream.writeByte(chunk.pos.z());
 				stream.writeLong(chunk.modified);
 			}
 
@@ -211,8 +211,8 @@ public class MapRegionData {
 	}
 
 	public MapChunk getChunk(XZ pos) {
-		XZ effectivePos = pos.x != (pos.x & 31) || pos.z != (pos.z & 31) ?
-				XZ.of(pos.x & 31, pos.z & 31) :
+		XZ effectivePos = pos.x() != (pos.x() & 31) || pos.z() != (pos.z() & 31) ?
+				XZ.of(pos.x() & 31, pos.z() & 31) :
 				pos;
 
 		synchronized (region.dimension.manager.lock) {

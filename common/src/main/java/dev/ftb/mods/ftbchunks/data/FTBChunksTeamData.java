@@ -13,17 +13,19 @@ import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.api.TeamManager;
+import dev.ftb.mods.ftbteams.api.TeamRank;
+import dev.ftb.mods.ftbteams.api.property.BooleanProperty;
+import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
+import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
+import dev.ftb.mods.ftbteams.api.property.StringListProperty;
 import dev.ftb.mods.ftbteams.data.PartyTeam;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
-import dev.ftb.mods.ftbteams.data.PrivacyMode;
-import dev.ftb.mods.ftbteams.data.Team;
-import dev.ftb.mods.ftbteams.property.BooleanProperty;
-import dev.ftb.mods.ftbteams.property.PrivacyProperty;
-import dev.ftb.mods.ftbteams.property.StringListProperty;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -92,13 +94,17 @@ public class FTBChunksTeamData {
 
 	@Override
 	public String toString() {
-		return team.getStringID();
+		return team.getId().toString();
 	}
 
 	public ClaimedChunkManager getManager() {
 		return manager;
 	}
 
+	public TeamManager getTeamManager() {
+		return manager.getTeamManager();
+	}
+	
 	public Team getTeam() {
 		return team;
 	}
@@ -151,9 +157,9 @@ public class FTBChunksTeamData {
 
 		if (chunk != null) {
 			return ClaimResults.ALREADY_CLAIMED;
-		} else if (!DimensionFilter.isDimensionOK(pos.dimension)) {
+		} else if (!DimensionFilter.isDimensionOK(pos.dimension())) {
 			return ClaimResults.DIMENSION_FORBIDDEN;
-		} else if (!team.getType().isServer() && getClaimedChunks().size() >= getMaxClaimChunks()) {
+		} else if (!team.isServerTeam() && getClaimedChunks().size() >= getMaxClaimChunks()) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -172,7 +178,7 @@ public class FTBChunksTeamData {
 		chunk.setClaimedTime(System.currentTimeMillis());
 		manager.registerClaim(pos, chunk);
 		ClaimedChunkEvent.AFTER_CLAIM.invoker().after(source, chunk);
-		save();
+		markDirty();
 		return chunk;
 	}
 
@@ -208,7 +214,7 @@ public class FTBChunksTeamData {
 			return ClaimResults.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResults.ALREADY_LOADED;
-		} else if (!team.getType().isServer() && getForceLoadedChunks().size() >= getMaxForceLoadChunks()) {
+		} else if (!team.isServerTeam() && getForceLoadedChunks().size() >= getMaxForceLoadChunks()) {
 			return ClaimResults.NOT_ENOUGH_POWER;
 		}
 
@@ -224,7 +230,7 @@ public class FTBChunksTeamData {
 
 		chunk.setForceLoadedTime(System.currentTimeMillis());
 		ClaimedChunkEvent.AFTER_LOAD.invoker().after(source, chunk);
-		chunk.teamData.save();
+		chunk.teamData.markDirty();
 		chunk.sendUpdateToAll();
 		return chunk;
 	}
@@ -258,9 +264,9 @@ public class FTBChunksTeamData {
 		return chunk;
 	}
 
-	public void save() {
+	public void markDirty() {
 		shouldSave = true;
-		team.save();
+		team.markDirty();
 	}
 
 	public boolean isTeamMember(UUID p) {
@@ -268,17 +274,17 @@ public class FTBChunksTeamData {
 			return true;
 		}
 
-		return team.equals(FTBTeamsAPI.getManager().getPlayerTeam(p));
+		return team.getMembers().contains(p);
 	}
 
 	public boolean isAlly(UUID p) {
-		if (FTBChunksWorldConfig.ALLY_MODE.get() == AllyMode.FORCED_ALL || team.isMember(p)) {
+		if (FTBChunksWorldConfig.ALLY_MODE.get() == AllyMode.FORCED_ALL || team.getRankForPlayer(p).isMemberOrBetter()) {
 			return true;
 		} else if (FTBChunksWorldConfig.ALLY_MODE.get() == AllyMode.FORCED_NONE) {
 			return false;
 		}
 
-		return team.isAlly(p);
+		return team.getRankForPlayer(p) == TeamRank.ALLY;
 	}
 
 	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
@@ -293,7 +299,7 @@ public class FTBChunksTeamData {
 		} else if (mode == PrivacyMode.ALLIES) {
 			return isAlly(p.getUUID());
 		} else {
-			return team.isMember(p.getUUID());
+			return team.getRankForPlayer(p.getUUID()).isMemberOrBetter();
 		}
 	}
 
@@ -308,7 +314,7 @@ public class FTBChunksTeamData {
 					|| getCachedFakePlayerNames().contains(player.getGameProfile().getName().toLowerCase(Locale.ROOT))
 					|| getCachedFakePlayerNames().contains(player.getGameProfile().getId().toString().toLowerCase(Locale.ROOT));
 		} else if (mode == PrivacyMode.PRIVATE) {
-			return checkById && team.isMember(player.getUUID());
+			return checkById && team.getRankForPlayer(player.getUUID()).isMemberOrBetter();
 		}
 
 		return false;
@@ -337,7 +343,7 @@ public class FTBChunksTeamData {
 
 		CompoundTag chunksTag = new CompoundTag();
 		for (ClaimedChunk chunk : getClaimedChunks()) {
-			String key = chunk.getPos().dimension.location().toString();
+			String key = chunk.getPos().dimension().location().toString();
 			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 			if (chunksListTag.isEmpty()) {
 				chunksTag.put(key, chunksListTag);
@@ -366,7 +372,7 @@ public class FTBChunksTeamData {
 		CompoundTag chunksTag = tag.getCompound("chunks");
 
 		for (String key : chunksTag.getAllKeys()) {
-			ResourceKey<Level> dimKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(key));
+			ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(key));
 			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 
 			for (int i = 0; i < chunksListTag.size(); i++) {
@@ -395,8 +401,8 @@ public class FTBChunksTeamData {
 			FTBChunksTeamData personalTeam = FTBChunksAPI.getManager().getPersonalData(team.getOwner());
 			personalTeam.extraClaimChunks = extraClaimChunks;
 			extraClaimChunks = 0;
-			save();
-			personalTeam.save();
+			markDirty();
+			personalTeam.markDirty();
 		}
 		return extraClaimChunks;
 	}
@@ -407,8 +413,8 @@ public class FTBChunksTeamData {
 			FTBChunksTeamData personalTeam = FTBChunksAPI.getManager().getPersonalData(team.getOwner());
 			personalTeam.extraForceLoadChunks = extraForceLoadChunks;
 			extraForceLoadChunks = 0;
-			save();
-			personalTeam.save();
+			markDirty();
+			personalTeam.markDirty();
 		}
 		return extraForceLoadChunks;
 	}
@@ -420,7 +426,7 @@ public class FTBChunksTeamData {
 
 		if (oldForceCount != newForceCount) {
 			FTBChunks.LOGGER.debug("team {}: set force load member {} = {}", team.getId(), id, val);
-			save();
+			markDirty();
 			canForceLoadChunks = null;
 			manager.clearForceLoadedCache();
 		}
@@ -439,9 +445,9 @@ public class FTBChunksTeamData {
 	public void updateChunkTickets(boolean load) {
 		getClaimedChunks().forEach(chunk -> {
 			if (chunk.isForceLoaded()) {
-				ServerLevel level = manager.getMinecraftServer().getLevel(chunk.pos.dimension);
+				ServerLevel level = manager.getMinecraftServer().getLevel(chunk.pos.dimension());
 				if (level != null) {
-					FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, getTeamId(), chunk.pos.x, chunk.pos.z, load);
+					FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, getTeamId(), chunk.pos.x(), chunk.pos.z(), load);
 				}
 			}
 		});
@@ -480,7 +486,7 @@ public class FTBChunksTeamData {
 
 	public void setLastLoginTime(long when) {
 		this.lastLoginTime = when;
-		save();
+		markDirty();
 	}
 
 	public long getLastLoginTime() {
@@ -514,7 +520,7 @@ public class FTBChunksTeamData {
 		long now = System.currentTimeMillis();
 		return getClaimedChunks().stream()
 				.collect(Collectors.groupingBy(
-						c -> c.pos.dimension, Collectors.mapping(c -> new SendChunkPacket.SingleChunk(now, c.pos.x, c.pos.z, c), Collectors.toList())
+						c -> c.pos.dimension(), Collectors.mapping(c -> new SendChunkPacket.SingleChunk(now, c.pos.x(), c.pos.z(), c), Collectors.toList())
 				));
 	}
 
@@ -577,14 +583,14 @@ public class FTBChunksTeamData {
 
 		SendGeneralDataPacket.send(this, getTeam().getOnlineMembers());
 
-		save();
+		markDirty();
 	}
 
 	private void updateMemberLimitData(boolean onlinePlayersOnly) {
 		Set<UUID> members = new HashSet<>(team.getMembers());
 
 		for (ServerPlayer p : team.getOnlineMembers()) {
-			Team playerTeam = FTBTeamsAPI.getManager().getInternalPlayerTeam(p.getUUID());
+			Team playerTeam = getTeamManager().getPlayerTeamForPlayerID(p.getUUID()).orElse(null);
 
 			TeamMemberData m = getTeamMemberData(p.getUUID());
 			if (playerTeam != null) {
@@ -606,7 +612,7 @@ public class FTBChunksTeamData {
 			for (UUID id : members) {
 				TeamMemberData m = getTeamMemberData(id);
 
-				Team playerTeam = FTBTeamsAPI.getManager().getInternalPlayerTeam(id);
+				Team playerTeam = getTeamManager().getPlayerTeamForPlayerID(id).orElse(null);
 				int maxC, maxF;
 				if (playerTeam != null) {
 					FTBChunksTeamData personalData = FTBChunksAPI.getManager().getData(playerTeam);
@@ -622,19 +628,19 @@ public class FTBChunksTeamData {
 			}
 		}
 
-		save();
+		markDirty();
 	}
 
 	public void addMemberData(ServerPlayer player, FTBChunksTeamData otherTeam) {
 		if (otherTeam.team instanceof PlayerTeam) {
 			memberData.put(otherTeam.getTeamId(), TeamMemberData.fromPlayerData(player, otherTeam));
-			save();
+			markDirty();
 		}
 	}
 
 	public void deleteMemberData(UUID playerId) {
 		if (memberData.remove(playerId) != null) {
-			save();
+			markDirty();
 		}
 	}
 }

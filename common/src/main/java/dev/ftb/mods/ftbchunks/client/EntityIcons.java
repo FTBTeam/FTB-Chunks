@@ -1,12 +1,13 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.architectury.registry.registries.Registries;
+import dev.architectury.registry.registries.RegistrarManager;
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -33,7 +34,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 	protected Map<EntityType<?>, Icon> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
 		Map<EntityType<?>, Icon> map = new HashMap<>();
 
-		for (Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : Registries.get("ftbchunks").get(Registry.ENTITY_TYPE_REGISTRY).entrySet()) {
+		for (Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : RegistrarManager.get(FTBChunks.MOD_ID).get(Registries.ENTITY_TYPE).entrySet()) {
 			ResourceLocation id = entry.getKey().location();
 			EntityType<?> t = entry.getValue();
 			if (t.getCategory() == MobCategory.MISC) {
@@ -43,7 +44,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 			ResourceLocation invisible = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".invisible");
 
 			if (resourceManager.getResource(invisible).isPresent()) {
-				map.put(t, Color4I.EMPTY);
+				map.put(t, Color4I.empty());
 				continue;
 			}
 

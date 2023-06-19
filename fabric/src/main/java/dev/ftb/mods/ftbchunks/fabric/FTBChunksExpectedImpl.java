@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.fabric;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.data.Protection;
-import dev.ftb.mods.ftbteams.event.TeamCollectPropertiesEvent;
+import dev.ftb.mods.ftbteams.api.event.TeamCollectPropertiesEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;

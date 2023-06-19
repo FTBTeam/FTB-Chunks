@@ -27,14 +27,14 @@
 	"accessWidener": "ftbchunks.accesswidener",
 	"depends": {
 		"fabric": "*",
-		"minecraft": "~1.19",
-		"architectury": ">=6.5.77",
-		"ftblibrary": ">=1902.3.17-build.200",
-		"ftbteams": ">=1902.2.12-build.91"
+		"minecraft": "~${mcversion}",
+		"architectury": ">=${archversion}",
+		"ftblibrary": ">=${ftblibraryversion}",
+		"ftbteams": ">=${ftbteamsversion}"
 	},
 	"breaks": {
-		"kubejs": "<1902.6.0-",
-		"ftbranks": "<1902.1.12-",
-		"luckperms": "<5.4.46"
+		"kubejs": "<${kubejsversion}-",
+		"ftbranks": "<${ftbranksversion}-",
+		"luckperms": "<5.4.83"
 	}
 }

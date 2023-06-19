@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.Waypoint;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -19,6 +18,7 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -35,13 +35,13 @@ public class WaypointEditorScreen extends BaseScreen {
 
     public static Theme THEME = new Theme() {
         @Override
-        public void drawScrollBarBackground(PoseStack matrixStack, int x, int y, int w, int h, WidgetType type) {
-            Color4I.BLACK.withAlpha(70).draw(matrixStack, x, y, w, h);
+        public void drawScrollBarBackground(GuiGraphics graphics, int x, int y, int w, int h, WidgetType type) {
+            Color4I.BLACK.withAlpha(70).draw(graphics, x, y, w, h);
         }
 
         @Override
-        public void drawScrollBar(PoseStack matrixStack, int x, int y, int w, int h, WidgetType type, boolean vertical) {
-            getContentColor(WidgetType.NORMAL).withAlpha(100).withBorder(Color4I.GRAY.withAlpha(100), false).draw(matrixStack, x, y, w, h);
+        public void drawScrollBar(GuiGraphics graphics, int x, int y, int w, int h, WidgetType type, boolean vertical) {
+            getContentColor(WidgetType.NORMAL).withAlpha(100).withBorder(Color4I.GRAY.withAlpha(100), false).draw(graphics, x, y, w, h);
         }
     };
 
@@ -57,9 +57,9 @@ public class WaypointEditorScreen extends BaseScreen {
         waypointPanel = new WaypointPanel(this);
         scrollbar = new PanelScrollBar(this, waypointPanel) {
             @Override
-            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
                 if (getMaxValue() > parent.height) {
-                    super.drawBackground(matrixStack, theme, x, y, w, h);
+                    super.drawBackground(graphics, theme, x, y, w, h);
                 }
             }
         };
@@ -138,14 +138,14 @@ public class WaypointEditorScreen extends BaseScreen {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        COLOR_BACKGROUND.draw(matrixStack, 0, 0, w, 20);
-        theme.drawString(matrixStack, getTitle(), 6, 6, Theme.SHADOW);
+    public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        COLOR_BACKGROUND.draw(graphics, 0, 0, w, 20);
+        theme.drawString(graphics, getTitle(), 6, 6, Theme.SHADOW);
     }
 
     @Override
     public boolean keyPressed(Key key) {
-        if (key.esc() && contextMenu != null) {
+        if (key.esc() && getContextMenu().isPresent()) {
             closeContextMenu();
             return true;
         }
@@ -171,7 +171,7 @@ public class WaypointEditorScreen extends BaseScreen {
 
         @Override
         public void alignWidgets() {
-            scrollbar.setMaxValue(align(WidgetLayout.VERTICAL));
+            align(WidgetLayout.VERTICAL);
             int sbWidth = scrollbar.getMaxValue() > 0 ? 16 : 0;
             scrollbar.setWidth(sbWidth);
             widgets.forEach(w -> {
@@ -204,15 +204,15 @@ public class WaypointEditorScreen extends BaseScreen {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            COLOR_BACKGROUND.draw(matrixStack, x, y, w, h);
-            theme.drawString(matrixStack, getTitle(), x + 3, y + 1 + (h - theme.getFontHeight()) / 2);
+        public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            COLOR_BACKGROUND.draw(graphics, x, y, w, h);
+            theme.drawString(graphics, getTitle(), x + 3, y + 1 + (h - theme.getFontHeight()) / 2);
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 
-            Color4I.GRAY.withAlpha(80).draw(matrixStack, 0, y, width, 1);
-            Color4I.GRAY.withAlpha(80).draw(matrixStack, 0, y, 1, height);
+            Color4I.GRAY.withAlpha(80).draw(graphics, 0, y, width, 1);
+            Color4I.GRAY.withAlpha(80).draw(graphics, 0, y, 1, height);
             if (isMouseOver()) {
-                Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
+                Color4I.WHITE.withAlpha(33).draw(graphics, x, y, w, h);
             }
         }
 
@@ -244,7 +244,7 @@ public class WaypointEditorScreen extends BaseScreen {
             add(new TextField(this).setMaxWidth(maxWidth).setTrim().setText(wp.name).setColor(Color4I.rgb(wp.color)).addFlags(Theme.SHADOW));
 
             LocalPlayer player = Minecraft.getInstance().player;
-            String distStr = player.level.dimension().equals(wp.dimension.dimension) ?
+            String distStr = player.level().dimension().equals(wp.dimension.dimension) ?
                     String.format("%.1fm", Math.sqrt(player.distanceToSqr(wp.x, wp.y, wp.z))) : "";
             add(new TextField(this).setText(distStr).setColor(Color4I.GRAY));
         }
@@ -260,13 +260,13 @@ public class WaypointEditorScreen extends BaseScreen {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            super.draw(matrixStack, theme, x, y, w, h);
+        public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            super.draw(graphics, theme, x, y, w, h);
 
             var mouseOver = getMouseY() >= 20 && isMouseOver();
 
             if (mouseOver) {
-                Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
+                Color4I.WHITE.withAlpha(33).draw(graphics, x, y, w, h);
             }
         }
 
@@ -274,15 +274,16 @@ public class WaypointEditorScreen extends BaseScreen {
         public boolean mousePressed(MouseButton button) {
             if (isMouseOver() && button.isRight()) {
                 List<ContextMenuItem> list = new ArrayList<>();
-                list.add(new ContextMenuItem(Component.literal(wp.name), wp.type.icon.withTint(Color4I.rgb(wp.color)), null));
+                list.add(makeTitleMenuItem());
                 list.add(ContextMenuItem.SEPARATOR);
+
                 list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, () -> {
                     StringConfig config = new StringConfig();
-                    config.defaultValue = "";
-                    config.value = wp.name;
+                    config.setDefaultValue("");
+                    config.setValue(wp.name);
                     config.onClicked(MouseButton.LEFT, accepted -> {
                         if (accepted) {
-                            wp.name = config.value;
+                            wp.name = config.getValue();
                             wp.dimension.saveData = true;
                         }
                         openGui();
@@ -292,15 +293,16 @@ public class WaypointEditorScreen extends BaseScreen {
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
                         int r = (wp.color >> 16) & 0xFF;
                         int g = (wp.color >> 8) & 0xFF;
-                        int b = (wp.color >> 0) & 0xFF;
+                        int b = wp.color & 0xFF;
                         float[] hsb = Color.RGBtoHSB(r, g, b, new float[3]);
                         float add = isShiftKeyDown() ? -1F/12F : 1F/12F;
                         Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
                         wp.color = col.rgba();
                         wp.dimension.saveData = true;
                         wp.update();
-                        if (widgets.get(1) instanceof TextField tf) tf.setColor(Color4I.rgb(wp.color));
-                        list.get(0).icon = wp.type.icon.withColor(Color4I.rgb(wp.color));
+                        if (widgets.get(1) instanceof TextField tf) {
+                            tf.setColor(Color4I.rgb(wp.color));
+                        }
                     }).setCloseMenu(false));
                 }
                 if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
@@ -323,6 +325,15 @@ public class WaypointEditorScreen extends BaseScreen {
                 return true;
             }
             return super.mousePressed(button);
+        }
+        
+        private ContextMenuItem makeTitleMenuItem() {
+            return new ContextMenuItem(Component.literal(wp.name), Icon.empty(), () -> {}) {
+                @Override
+                public Icon getIcon() {
+                    return wp.type.icon.withTint(Color4I.rgb(wp.color));
+                }
+            };
         }
     }
 

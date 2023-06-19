@@ -26,7 +26,7 @@ public class MapIOUtils {
 	public static void write(Path path, IOCallback<DataOutputStream> callback) {
 		try (OutputStream fos = Files.newOutputStream(path)) {
 			write(fos, callback);
-		} catch (Exception ex) {
+		} catch (Exception ignored) {
 		}
 	}
 
@@ -38,13 +38,13 @@ public class MapIOUtils {
 		try (DataInputStream in = new DataInputStream(new BufferedInputStream(new InflaterInputStream(Files.newInputStream(path))))) {
 			callback.callback(in);
 			return true;
-		} catch (Exception ex) {
+		} catch (Exception ignored) {
 		}
 
 		try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(path))))) {
 			callback.callback(in);
 			return false;
-		} catch (Exception ex) {
+		} catch (Exception ignored) {
 		}
 
 		return false;

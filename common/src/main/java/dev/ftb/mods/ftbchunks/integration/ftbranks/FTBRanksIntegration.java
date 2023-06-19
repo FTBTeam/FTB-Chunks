@@ -8,8 +8,8 @@ import dev.ftb.mods.ftbchunks.integration.PermissionsProvider;
 import dev.ftb.mods.ftbranks.api.FTBRanksAPI;
 import dev.ftb.mods.ftbranks.api.RankManager;
 import dev.ftb.mods.ftbranks.api.event.*;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.server.level.ServerPlayer;
 
 import static dev.ftb.mods.ftbchunks.integration.PermissionsHelper.*;
@@ -77,19 +77,18 @@ public class FTBRanksIntegration implements PermissionsProvider {
 				FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
 				data.setForceLoadMember(player.getUUID(), PermissionsHelper.getInstance().getChunkLoadOffline(player, false));
 			});
-			FTBTeamsAPI.getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
+			FTBTeamsAPI.api().getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
 		}
 	}
 
 	private static void updateForPlayer(RankManager manager, GameProfile profile) {
-		Team team = FTBTeamsAPI.getPlayerTeam(profile.getId());
-		if (team != null) {
+		FTBTeamsAPI.api().getManager().getTeamForPlayerID(profile.getId()).ifPresent(team -> {
 			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(team);
 			ServerPlayer player = manager.getServer().getPlayerList().getPlayer(profile.getId());
 			if (player != null) {
 				teamData.setForceLoadMember(player.getUUID(), PermissionsHelper.getInstance().getChunkLoadOffline(player, false));
 			}
 			teamData.updateLimits();
-		}
+		});
 	}
 }

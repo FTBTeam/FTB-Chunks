@@ -5,6 +5,7 @@ import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -25,7 +26,7 @@ public class PlayerDeathPacket extends BaseS2CMessage {
 	}
 
 	PlayerDeathPacket(FriendlyByteBuf buf) {
-		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
 		x = buf.readVarInt();
 		y = buf.readVarInt();
 		z = buf.readVarInt();

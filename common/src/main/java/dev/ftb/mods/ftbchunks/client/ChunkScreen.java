@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
@@ -25,15 +24,19 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -51,10 +54,10 @@ public class ChunkScreen extends BaseScreen {
 		private long lastAdjust = 0L;
 
 		public ChunkButton(Panel panel, XZ xz) {
-			super(panel, Component.empty(), Color4I.EMPTY);
+			super(panel, Component.empty(), Color4I.empty());
 			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
 			chunkPos = xz;
-			chunk = dimension.getRegion(XZ.regionFromChunk(chunkPos.x, chunkPos.z)).getDataBlocking().getChunk(chunkPos);
+			chunk = dimension.getRegion(XZ.regionFromChunk(chunkPos.x(), chunkPos.z())).getDataBlocking().getChunk(chunkPos);
 		}
 
 		@Override
@@ -63,9 +66,9 @@ public class ChunkScreen extends BaseScreen {
 		}
 
 		@Override
-		public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+		public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 			if (chunk.forceLoadedDate != null && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
-				Color4I teamColor = chunk.team.properties.get(Team.COLOR);
+				Color4I teamColor = chunk.team.getProperties().get(TeamProperties.COLOR);
 				float[] hsb = Color4I.RGBtoHSB(teamColor.redi(), teamColor.greeni(), teamColor.bluei(), null);
 				hsb[0] = (hsb[0] + 0.5f) % 1f;
 				FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])).draw(matrixStack, x, y, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
@@ -112,7 +115,7 @@ public class ChunkScreen extends BaseScreen {
 					if (!Screen.hasAltDown()) {
 						list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
 					}
-					if (chunk.team.isMember(Minecraft.getInstance().player.getUUID())){
+					if (chunk.team.getRankForPlayer(Minecraft.getInstance().player.getUUID()).isMemberOrBetter()){
 						list.add(Component.translatable("ftbchunks.gui.mouse_wheel_expiry").withStyle(ChatFormatting.DARK_GRAY));
 					}
 				}
@@ -121,7 +124,7 @@ public class ChunkScreen extends BaseScreen {
 
 		@Override
 		public boolean mouseScrolled(double scroll) {
-			if (isMouseOver && chunk.forceLoadedDate != null && chunk.team.isMember(Minecraft.getInstance().player.getUUID())) {
+			if (isMouseOver && chunk.forceLoadedDate != null && chunk.team.getRankForPlayer(Minecraft.getInstance().player.getUUID()).isMemberOrBetter()) {
 				int dir = (int) Math.signum(scroll);
 				long now = System.currentTimeMillis();
 				if (chunk.expiryDate == null) chunk.expiryDate = new Date(now);
@@ -251,55 +254,27 @@ public class ChunkScreen extends BaseScreen {
 	}
 
 	@Override
-	public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		Player player = Minecraft.getInstance().player;
 
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
 
-		int r = 70;
-		int g = 70;
-		int b = 70;
-		int a = 100;
-
-		RenderSystem.lineWidth(Math.max(2.5F, (float) Minecraft.getInstance().getWindow().getWidth() / 1920.0F * 2.5F));
-
-		RenderSystem.enableTexture();
-		RenderSystem.bindTextureForSetup(FTBChunksClient.minimapTextureId);
-		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-		RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-		RenderSystem.setShaderTexture(0, FTBChunksClient.minimapTextureId);
-		GuiHelper.drawTexturedRect(matrixStack, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
+ 		RenderSystem.setShaderTexture(0, FTBChunksClient.minimapTextureId);
+		GuiHelper.drawTexturedRect(graphics, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
-			Tesselator tessellator = Tesselator.getInstance();
-			BufferBuilder buffer = tessellator.getBuilder();
-
-			RenderSystem.setShader(GameRenderer::getPositionColorShader);
-			RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-			RenderSystem.disableTexture();
-			buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-			Matrix4f m = matrixStack.last().pose();
-
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				buffer.vertex(m, sx, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
-				buffer.vertex(m, sx + FTBChunks.MINIMAP_SIZE, sy + gy * FTBChunks.TILE_SIZE, 0).color(r, g, b, a).endVertex();
+				graphics.hLine(sx, sx + FTBChunks.MINIMAP_SIZE, sy +  gy * FTBChunks.TILE_SIZE, 0x64464646);
 			}
-
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				buffer.vertex(m, sx + gx * FTBChunks.TILE_SIZE, sy, 0).color(r, g, b, a).endVertex();
-				buffer.vertex(m, sx + gx * FTBChunks.TILE_SIZE, sy + FTBChunks.MINIMAP_SIZE, 0).color(r, g, b, a).endVertex();
+				graphics.vLine(sx + gx * FTBChunks.TILE_SIZE, sy, sy + FTBChunks.MINIMAP_SIZE, 0x64464646);
 			}
-
-			tessellator.end();
 		}
-
-		RenderSystem.enableTexture();
-		RenderSystem.lineWidth(1F);
 
 		double hx = sx + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
 		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
-		FaceIcon.getFace(player.getGameProfile()).draw(matrixStack, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
+		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
 		SendGeneralDataPacket d = FTBChunksClient.generalData;
 
@@ -312,17 +287,17 @@ public class ChunkScreen extends BaseScreen {
 
 			int fh = theme.getFontHeight() + 1;
 			for (int i = 0; i < list.size(); i++) {
-				theme.drawString(matrixStack, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
+				theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
 			}
 		}
 
 		if (updateInfo != null && updateInfo.shouldDisplay()) {
-			theme.drawString(matrixStack, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
+			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
 			int line = 1;
 			for (Map.Entry<ClaimResults, Integer> entry : updateInfo.problems.entrySet()) {
 				ClaimResults problem = entry.getKey();
 				int count = entry.getValue();
-				theme.drawString(matrixStack, Component.translatable(problem.getTranslationKey()).append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
+				theme.drawString(graphics, Component.translatable(problem.getTranslationKey()).append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
 		}
 	}

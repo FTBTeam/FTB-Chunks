@@ -5,6 +5,7 @@ import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -33,7 +34,7 @@ public class SendManyChunksPacket extends BaseS2CMessage {
 	}
 
 	SendManyChunksPacket(FriendlyByteBuf buf) {
-		dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation());
+		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
 		teamId = buf.readUUID();
 
 		int s = buf.readVarInt();

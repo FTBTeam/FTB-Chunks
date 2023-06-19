@@ -1,13 +1,13 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -22,7 +22,7 @@ public class RegionMapButton extends Widget {
 	}
 
 	@Override
-	public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		int id = region.getRenderedMapImageTextureId();
 
 		if (region.mapImageLoaded) {
@@ -32,7 +32,7 @@ public class RegionMapButton extends Widget {
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
 
 			RenderSystem.setShaderTexture(0, id);
-			GuiHelper.drawTexturedRect(matrixStack, x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
+			GuiHelper.drawTexturedRect(graphics, x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
 		}
 	}
 }

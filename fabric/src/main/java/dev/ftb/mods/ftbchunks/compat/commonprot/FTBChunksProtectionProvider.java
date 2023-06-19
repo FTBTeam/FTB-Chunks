@@ -147,7 +147,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
     private static class OfflineServerPlayer extends ServerPlayer {
         public OfflineServerPlayer(ServerLevel serverLevel, GameProfile gameProfile) {
-            super(serverLevel.getServer(), serverLevel, gameProfile, null);
+            super(serverLevel.getServer(), serverLevel, gameProfile);
         }
     }
 }

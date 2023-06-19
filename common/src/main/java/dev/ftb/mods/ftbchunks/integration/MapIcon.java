@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.integration;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.client.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -10,6 +9,7 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
@@ -56,6 +56,6 @@ public abstract class MapIcon {
 		return false;
 	}
 
-	public void draw(MapType mapType, PoseStack stack, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+	public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
 	}
 }

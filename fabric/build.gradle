@@ -45,7 +45,12 @@ repositories {
 			includeGroup "com.faux.ingredientextension"
 		}
 	}
-	maven { url "https://maven.nucleoid.xyz/" }
+	maven {
+		url "https://maven.nucleoid.xyz/"
+		content {
+			includeGroup "eu.pb4"
+		}
+	}
 }
 
 dependencies {
@@ -56,11 +61,12 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
+	modCompileOnlyApi("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
+	//modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
 //	modImplementation("dev.latvian.mods:rhino-fabric:${rootProject.rhino_version}")
 
 //	modImplementation("curse.maven:auth-me-356643:3725468")
-	modImplementation("curse.maven:cloth-config-348521:3972420")
+	modImplementation("curse.maven:cloth-config-348521:4573053")
 
 	// compile-only because for some reason loom isn't deobfuscating these...
 	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")  { transitive = false }
@@ -87,13 +93,24 @@ processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": project.version,
+				"archversion": project.architectury_version,
+				"fabricapiversion": project.fabric_api_version,
+				"mcversion": project.minecraft_version,
+				"ftblibraryversion": project.ftb_library_version,
+				"ftbteamsversion": project.ftb_teams_version,
+				"ftbranksversion": project.ftb_ranks_version,
+				"kubejsversion": project.kubejs_version
 	}
+}
+
+sourcesJar {
+	dependsOn copyAccessWidener
 }
 
 shadowJar {
 	configurations = [project.configurations.shadowCommon]
-	classifier "dev-shadow"
+	setArchiveClassifier("dev-shadow")
 }
 
 remapJar {
@@ -104,7 +121,7 @@ remapJar {
 }
 
 jar {
-	classifier "dev"
+	setArchiveClassifier("dev")
 }
 
 components.java {
@@ -118,10 +135,10 @@ if (ENV.CURSEFORGE_KEY) {
 		apiKey = ENV.CURSEFORGE_KEY
 		project {
 			id = project.curseforge_id_fabric
-			releaseType = project.curseforge_type
+			releaseType = ftbPublishing.relType
 			addGameVersion "Fabric"
-			addGameVersion rootProject.minecraft_version
-			mainArtifact(remapJar.archivePath)
+			addGameVersion project.minecraft_version
+			mainArtifact(remapJar.archiveFile)
 			relations {
 				requiredDependency 'architectury-api'
 				requiredDependency 'fabric-api'
@@ -129,7 +146,7 @@ if (ENV.CURSEFORGE_KEY) {
 				requiredDependency 'ftb-teams-fabric'
 				optionalDependency 'ftb-ranks-fabric'
 			}
-			changelog = getGitChangelog
+			changelog = ENV.CHANGELOG  // expected to exist if ENV.CURSEFORGE_KEY does
 			changelogType = 'markdown'
 		}
 	}
@@ -137,29 +154,30 @@ if (ENV.CURSEFORGE_KEY) {
 
 publishing {
 	publications {
-		mavenFabric(MavenPublication) {
+		mavenForge(MavenPublication) {
 			artifactId = "${rootProject.archives_base_name}-${project.name}"
+			version ftbPublishing.mavenVersion
 			from components.java
 		}
 	}
 
 	repositories {
-		if (ENV.FTB_MAVEN_TOKEN) {
+		if (ftbPublishing.ftbToken) {
 			maven {
-				url "https://maven.ftb.dev/release"
+				url ftbPublishing.ftbURL
 				credentials {
-					username = "ftb"
-					password = "${ENV.FTB_MAVEN_TOKEN}"
+					username = ftbPublishing.ftbUser
+					password = ftbPublishing.ftbToken
 				}
 			}
 		}
 
-		if (ENV.SAPS_TOKEN) {
+		if (ftbPublishing.sapsToken) {
 			maven {
-				url "https://maven.saps.dev/minecraft"
+				url ftbPublishing.sapsURL
 				credentials {
-					username = "ftb"
-					password = "${ENV.SAPS_TOKEN}"
+					username = ftbPublishing.sapsUser
+					password = ftbPublishing.sapsToken
 				}
 			}
 		}

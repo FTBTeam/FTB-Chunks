@@ -4,6 +4,7 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -69,11 +70,11 @@ public class TeamMemberData {
 
         Map<String, ListTag> perDimensionTags = new HashMap<>();
         originalClaims.forEach(cdp -> {
-            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension.location().toString(), k -> new ListTag());
+            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension().location().toString(), k -> new ListTag());
             SNBTCompoundTag cdpTag = new SNBTCompoundTag();
             cdpTag.singleLine();
-            cdpTag.putInt("x", cdp.x);
-            cdpTag.putInt("z", cdp.z);
+            cdpTag.putInt("x", cdp.x());
+            cdpTag.putInt("z", cdp.z());
             l.add(cdpTag);
         });
         perDimensionTags.forEach(origTag::put);
@@ -85,7 +86,7 @@ public class TeamMemberData {
         Set<ChunkDimPos> res = new HashSet<>();
         for (String dimStr : tag.getAllKeys()) {
             try {
-                ResourceKey<Level> dimKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(dimStr));
+                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(dimStr));
                 Set<ChunkDimPos> cdpSet = new HashSet<>();
                 tag.getList(dimStr, Tag.TAG_COMPOUND).forEach(el -> {
                     if (el instanceof CompoundTag c) {

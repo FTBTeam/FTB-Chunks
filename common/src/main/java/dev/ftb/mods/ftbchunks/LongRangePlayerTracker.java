@@ -38,18 +38,20 @@ public enum LongRangePlayerTracker {
             // 16 blocks in chunk
             int maxDistSq = server.getPlayerList().getViewDistance() * server.getPlayerList().getViewDistance() * 256;
 
-            players.forEach(p1 -> p1.getLevel().players().forEach(p2 -> {
-                if (shouldTrack(p1, p2, maxDistSq)) {
-                    // send a tracking update to p1 IF p2's pos has changed by more than 4 blocks
-                    BlockPos lastPos = trackingMap.get(p1.getUUID(), p2.getUUID());
-                    if (lastPos == null || p2.blockPosition().distSqr(lastPos) > 16) {
-                        new SendPlayerPositionPacket(p2, p2.blockPosition()).sendTo(p1);
-                        trackingMap.put(p1.getUUID(), p2.getUUID(), p2.blockPosition());
+            players.forEach(p1 -> p1.level().players().forEach(p2a -> {
+                if (p2a instanceof ServerPlayer p2) {
+                    if (shouldTrack(p1, p2, maxDistSq)) {
+                        // send a tracking update to p1 IF p2's pos has changed by more than 4 blocks
+                        BlockPos lastPos = trackingMap.get(p1.getUUID(), p2.getUUID());
+                        if (lastPos == null || p2.blockPosition().distSqr(lastPos) > 16) {
+                            new SendPlayerPositionPacket(p2, p2.blockPosition()).sendTo(p1);
+                            trackingMap.put(p1.getUUID(), p2.getUUID(), p2.blockPosition());
+                        }
+                    } else if (trackingMap.contains(p1.getUUID(), p2.getUUID())) {
+                        // send an invalid pos to tell p1's client to stop tracking p2
+                        new SendPlayerPositionPacket(p2, null).sendTo(p1);
+                        trackingMap.remove(p1.getUUID(), p2.getUUID());
                     }
-                } else if (trackingMap.contains(p1.getUUID(), p2.getUUID())) {
-                    // send an invalid pos to tell p1's client to stop tracking p2
-                    new SendPlayerPositionPacket(p2, null).sendTo(p1);
-                    trackingMap.remove(p1.getUUID(), p2.getUUID());
                 }
             }));
         }

@@ -56,6 +56,7 @@ public class FTBChunksTeamData {
 	public static final PrivacyProperty NONLIVING_ENTITY_ATTACK_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "nonliving_entity_attack_mode"), PrivacyMode.ALLIES);
 	public static final BooleanProperty ALLOW_EXPLOSIONS = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_explosions"), false);
 	public static final BooleanProperty ALLOW_MOB_GRIEFING = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_mob_griefing"), false);
+	public static final BooleanProperty OWNER_UNCLAIM = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "owner_unclaim"), true);
 	public static final PrivacyProperty CLAIM_VISIBILITY = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "claim_visibility"), PrivacyMode.PUBLIC);
 
 	//	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
@@ -181,7 +182,7 @@ public class FTBChunksTeamData {
 
 		if (chunk == null) {
 			return ClaimResults.NOT_CLAIMED;
-		} else if (chunk.teamData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
+		} else if ((chunk.teamData != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) || (chunk.ownerUnclaim() && !team.getOwner().equals(Objects.requireNonNull(source.getPlayer()).getUUID()))) {
 			return ClaimResults.NOT_OWNER;
 		}
 
@@ -476,6 +477,10 @@ public class FTBChunksTeamData {
 
 	public boolean allowMobGriefing() {
 		return team.getProperty(ALLOW_MOB_GRIEFING);
+	}
+
+	public boolean ownerUnclaim() {
+		return team.getProperty(OWNER_UNCLAIM);
 	}
 
 	public void setLastLoginTime(long when) {

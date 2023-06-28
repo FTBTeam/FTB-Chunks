@@ -436,6 +436,7 @@ public class FTBChunks {
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {
+		event.add(FTBChunksTeamData.OWNER_UNCLAIM);
 		event.add(FTBChunksTeamData.ALLOW_EXPLOSIONS);
 		event.add(FTBChunksTeamData.ALLOW_MOB_GRIEFING);
 		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);

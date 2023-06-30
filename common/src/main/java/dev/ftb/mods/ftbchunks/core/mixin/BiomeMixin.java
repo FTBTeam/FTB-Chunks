@@ -4,9 +4,6 @@ import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
 import net.minecraft.world.level.biome.Biome;
 import org.spongepowered.asm.mixin.Mixin;
 
-/**
- * @author LatvianModder
- */
 @Mixin(Biome.class)
 public abstract class BiomeMixin implements BiomeFTBC {
 	private int ftbcBiomeColorIndex = -1;

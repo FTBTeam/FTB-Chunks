@@ -1,17 +1,16 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import dev.ftb.mods.ftbchunks.integration.MapIcon;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
 
 public class MapIconComparator implements Comparator<MapIcon> {
-	public final Vec3 pos;
-	public final float delta;
+	private final Vec3 pos;
+	private final float delta;
 
-	public MapIconComparator(Vec3 p, float d) {
-		pos = p;
-		delta = d;
+	public MapIconComparator(Vec3 pos, float delta) {
+		this.pos = pos;
+		this.delta = delta;
 	}
 
 	@Override

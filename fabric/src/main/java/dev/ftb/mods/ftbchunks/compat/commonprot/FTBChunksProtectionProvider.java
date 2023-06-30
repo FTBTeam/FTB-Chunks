@@ -79,7 +79,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null);
+        return !FTBChunksAPI.getManager().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockPlaceProtection(), null);
+        return !FTBChunksAPI.getManager().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockPlaceProtection(), null);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockInteractProtection(), null);
+        return !FTBChunksAPI.getManager().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockInteractProtection(), null);
 
     }
 
@@ -119,7 +119,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.INTERACT_ENTITY, entity);
+        return !FTBChunksAPI.getManager().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.INTERACT_ENTITY, entity);
     }
 
     @Override
@@ -130,7 +130,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity);
+        return !FTBChunksAPI.getManager().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity);
     }
 
     public static @Nullable ServerPlayer tryResolvePlayer(Level l, GameProfile profile) {

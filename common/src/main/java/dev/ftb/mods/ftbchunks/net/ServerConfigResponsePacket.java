@@ -37,6 +37,6 @@ public class ServerConfigResponsePacket extends BaseS2CMessage {
         FTBChunks.LOGGER.info("Received FTB Chunks server config from server");
         FTBChunksWorldConfig.CONFIG.read(config);
 
-        FTBTeamsAPI.api().getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
+        FTBTeamsAPI.api().getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getOrCreateData(team).updateLimits());
     }
 }

@@ -4,7 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.integration.RefreshMinimapIconsEvent;
+import dev.ftb.mods.ftbchunks.api.event.RefreshMinimapIconsEvent;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,20 +42,17 @@ public class WaypointManager implements Iterable<Waypoint> {
                     for (JsonElement e : json.get("waypoints").getAsJsonArray()) {
                         JsonObject o = e.getAsJsonObject();
 
-                        Waypoint wp = new Waypoint(mapDimension, o.get("x").getAsInt(), o.get("y").getAsInt(), o.get("z").getAsInt());
-                        wp.hidden = o.get("hidden").getAsBoolean();
-                        wp.name = o.get("name").getAsString();
-                        wp.color = 0xFFFFFF;
+                        WaypointType type = o.has("type") ? WaypointType.forId(o.get("type").getAsString()) : WaypointType.DEFAULT;
+                        Waypoint wp = new Waypoint(type, mapDimension, new BlockPos(o.get("x").getAsInt(), o.get("y").getAsInt(), o.get("z").getAsInt()));
+                        wp.setHidden(o.get("hidden").getAsBoolean());
+                        wp.setName(o.get("name").getAsString());
 
+                        wp.setColor(0xFFFFFF);
                         if (o.has("color")) {
                             try {
-                                wp.color = Integer.decode(o.get("color").getAsString());
+                                wp.setColor(Integer.decode(o.get("color").getAsString()));
                             } catch (NumberFormatException ignored) {
                             }
-                        }
-
-                        if (o.has("type")) {
-                            wp.type = WaypointType.TYPES.getOrDefault(o.get("type").getAsString(), WaypointType.DEFAULT);
                         }
 
                         manager.add(wp);
@@ -76,13 +74,13 @@ public class WaypointManager implements Iterable<Waypoint> {
 
         for (Waypoint w : waypoints) {
             JsonObject o = new JsonObject();
-            o.addProperty("hidden", w.hidden);
-            o.addProperty("name", w.name);
-            o.addProperty("x", w.x);
-            o.addProperty("y", w.y);
-            o.addProperty("z", w.z);
-            o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.color));
-            o.addProperty("type", w.type.id);
+            o.addProperty("hidden", w.isHidden());
+            o.addProperty("name", w.getName());
+            o.addProperty("x", w.getPos().getX());
+            o.addProperty("y", w.getPos().getY());
+            o.addProperty("z", w.getPos().getZ());
+            o.addProperty("color", String.format("#%06X", 0xFFFFFF & w.getColor()));
+            o.addProperty("type", w.getType().getId());
             waypointArray.add(o);
         }
 
@@ -95,28 +93,28 @@ public class WaypointManager implements Iterable<Waypoint> {
 
     public void add(Waypoint waypoint) {
         waypoints.add(waypoint);
-        if (waypoint.type == WaypointType.DEATH) {
+        if (waypoint.getType() == WaypointType.DEATH) {
             deathpoints.add(waypoint);
         }
         waypoint.update();
-        mapDimension.saveData = true;
+        mapDimension.markDirty();
         RefreshMinimapIconsEvent.trigger();
     }
 
     public void remove(Waypoint waypoint) {
         waypoints.remove(waypoint);
-        if (waypoint.type == WaypointType.DEATH) {
+        if (waypoint.getType() == WaypointType.DEATH) {
             deathpoints.remove(waypoint);
         }
-        mapDimension.saveData = true;
+        mapDimension.markDirty();
         RefreshMinimapIconsEvent.trigger();
     }
 
     public boolean removeIf(Predicate<Waypoint> predicate) {
         if (waypoints.removeIf(predicate)) {
             deathpoints.clear();
-            deathpoints.addAll(waypoints.stream().filter(w -> w.type == WaypointType.DEATH).toList());
-            mapDimension.saveData = true;
+            deathpoints.addAll(waypoints.stream().filter(w -> w.getType() == WaypointType.DEATH).toList());
+            mapDimension.markDirty();
             RefreshMinimapIconsEvent.trigger();
             return true;
         }
@@ -130,7 +128,7 @@ public class WaypointManager implements Iterable<Waypoint> {
     public Optional<Waypoint> getNearestDeathpoint(Player p) {
         return deathpoints.isEmpty() ?
                 Optional.empty() :
-                deathpoints.stream().min(Comparator.comparingDouble(o -> p.distanceToSqr(o.x, o.y, o.z)));
+                deathpoints.stream().min(Comparator.comparingDouble(o -> o.getDistanceSq(p)));
     }
 
     @NotNull

@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.event;
+package dev.ftb.mods.ftbchunks.api.event;
 
 import dev.architectury.event.CompoundEventResult;
 import dev.architectury.event.Event;

@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
@@ -20,20 +20,23 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public class WaypointEditorScreen extends BaseScreen {
     public static final Color4I COLOR_BACKGROUND = Color4I.rgba(0x99333333);
     private static final Icon PEARL_ICON = ImageIcon.getIcon(new ResourceLocation("minecraft", "textures/item/ender_pearl.png"));
 
-    public static Theme THEME = new Theme() {
+    public static final Theme THEME = new Theme() {
         @Override
         public void drawScrollBarBackground(GuiGraphics graphics, int x, int y, int w, int h, WidgetType type) {
             Color4I.BLACK.withAlpha(70).draw(graphics, x, y, w, h);
@@ -84,18 +87,22 @@ public class WaypointEditorScreen extends BaseScreen {
     private List<DimWayPoints> collectWaypoints() {
         List<DimWayPoints> res = new ArrayList<>();
 
-        MapManager.inst.getDimensions().keySet().stream()
-                .filter(dim -> !MapManager.inst.getDimension(dim).getWaypointManager().isEmpty())
+        Player player = Objects.requireNonNull(Minecraft.getInstance().player);
+        MapManager manager = MapManager.getInstance().orElseThrow();
+        manager.getDimensions().values().stream()
+                .filter(dim -> !dim.getWaypointManager().isEmpty())
                 .sorted((dim1, dim2) -> {
                     // put vanilla dimensions first
-                    if (dim1.location().getNamespace().equals("minecraft") && !dim2.location().getNamespace().equals("minecraft")) {
+                    ResourceLocation dim1id = dim1.dimension.location();
+                    ResourceLocation dim2id = dim2.dimension.location();
+                    if (dim1id.getNamespace().equals("minecraft") && !dim2id.getNamespace().equals("minecraft")) {
                         return -1;
                     }
-                    int i = dim1.location().getNamespace().compareTo(dim2.location().getNamespace());
-                    return i == 0 ? dim1.location().getPath().compareTo(dim2.location().getPath()) : i;
+                    int i = dim1id.getNamespace().compareTo(dim2id.getNamespace());
+                    return i == 0 ? dim1id.getPath().compareTo(dim2id.getPath()) : i;
                 })
-                .forEach(dim -> res.add(new DimWayPoints(dim.location(), MapManager.inst.getDimension(dim).getWaypointManager().stream()
-                        .sorted(Comparator.comparingDouble(o -> Minecraft.getInstance().player.distanceToSqr(o.x, o.y, o.z)))
+                .forEach(dim -> res.add(new DimWayPoints(dim.dimension.location(), dim.getWaypointManager().stream()
+                        .sorted(Comparator.comparingDouble(o -> o.getDistanceSq(player)))
                         .toList()))
                 );
 
@@ -163,7 +170,7 @@ public class WaypointEditorScreen extends BaseScreen {
             for (var row : rows) {
                 if (!(row instanceof RowPanel rowPanel) || !rowPanel.groupButton.collapsed && !rowPanel.deleted) {
                     add(row);
-                    if (row instanceof RowPanel rp) maxWidth = Math.max(maxWidth, getTheme().getStringWidth(rp.wp.name));
+                    if (row instanceof RowPanel rp) maxWidth = Math.max(maxWidth, getTheme().getStringWidth(rp.wp.getName()));
                 }
             }
             maxWidth = Math.min(maxWidth, getGui().width / 2);
@@ -235,17 +242,17 @@ public class WaypointEditorScreen extends BaseScreen {
 
         @Override
         public void addWidgets() {
-            add(new SimpleButton(this, Component.empty(), wp.hidden ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
-                wp.hidden = !wp.hidden;
-                wp.dimension.saveData = true;
-                w.setIcon(wp.hidden ? Icons.REMOVE_GRAY : Icons.ACCEPT);
+            add(new SimpleButton(this, Component.empty(), wp.isHidden() ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
+                wp.setHidden(!wp.isHidden());
+                wp.dimension.markDirty();
+                w.setIcon(wp.isHidden() ? Icons.REMOVE_GRAY : Icons.ACCEPT);
             }));
 
-            add(new TextField(this).setMaxWidth(maxWidth).setTrim().setText(wp.name).setColor(Color4I.rgb(wp.color)).addFlags(Theme.SHADOW));
+            add(new TextField(this).setMaxWidth(maxWidth).setTrim().setText(wp.getName()).setColor(Color4I.rgb(wp.getColor())).addFlags(Theme.SHADOW));
 
             LocalPlayer player = Minecraft.getInstance().player;
             String distStr = player.level().dimension().equals(wp.dimension.dimension) ?
-                    String.format("%.1fm", Math.sqrt(player.distanceToSqr(wp.x, wp.y, wp.z))) : "";
+                    String.format("%.1fm", Math.sqrt(wp.getDistanceSq(player))) : "";
             add(new TextField(this).setText(distStr).setColor(Color4I.GRAY));
         }
 
@@ -280,41 +287,43 @@ public class WaypointEditorScreen extends BaseScreen {
                 list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, () -> {
                     StringConfig config = new StringConfig();
                     config.setDefaultValue("");
-                    config.setValue(wp.name);
+                    config.setValue(wp.getName());
                     config.onClicked(MouseButton.LEFT, accepted -> {
                         if (accepted) {
-                            wp.name = config.getValue();
-                            wp.dimension.saveData = true;
+                            wp.setName(config.getValue());
+                            wp.dimension.markDirty();
                         }
                         openGui();
                     });
                 }));
-                if (wp.type.canChangeColor) {
+                if (wp.getType().canChangeColor()) {
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
-                        int r = (wp.color >> 16) & 0xFF;
-                        int g = (wp.color >> 8) & 0xFF;
-                        int b = wp.color & 0xFF;
+                        int r = (wp.getColor() >> 16) & 0xFF;
+                        int g = (wp.getColor() >> 8) & 0xFF;
+                        int b = wp.getColor() & 0xFF;
                         float[] hsb = Color.RGBtoHSB(r, g, b, new float[3]);
                         float add = isShiftKeyDown() ? -1F/12F : 1F/12F;
                         Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
-                        wp.color = col.rgba();
-                        wp.dimension.saveData = true;
+                        wp.setColor(col.rgba());
+                        wp.dimension.markDirty();
                         wp.update();
                         if (widgets.get(1) instanceof TextField tf) {
-                            tf.setColor(Color4I.rgb(wp.color));
+                            tf.setColor(Color4I.rgb(wp.getColor()));
                         }
                     }).setCloseMenu(false));
                 }
                 if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), PEARL_ICON, () -> {
-                        new TeleportFromMapPacket(wp.x, wp.y + 1, wp.z, false, wp.dimension.dimension).sendToServer();
+                        BlockPos pos = wp.getPos().above();
+                        new TeleportFromMapPacket(pos, false, wp.dimension.dimension).sendToServer();
                         closeGui(false);
                     }));
                 }
                 list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, () -> {
-                            getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.name).withStyle(Style.EMPTY.withColor(wp.color))), Component.empty(), () -> {
-                                MapManager.inst.getDimension(wp.dimension.dimension).getWaypointManager().remove(wp);
-                                wp.dimension.saveData = true;
+                            getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.getName())
+                                    .withStyle(Style.EMPTY.withColor(wp.getColor()))), Component.empty(), () -> {
+                                wp.dimension.getWaypointManager().remove(wp);
+                                wp.dimension.markDirty();
                                 deleted = true;
                                 getGui().refreshWidgets();
                             });
@@ -328,10 +337,10 @@ public class WaypointEditorScreen extends BaseScreen {
         }
         
         private ContextMenuItem makeTitleMenuItem() {
-            return new ContextMenuItem(Component.literal(wp.name), Icon.empty(), () -> {}) {
+            return new ContextMenuItem(Component.literal(wp.getName()), Icon.empty(), () -> {}) {
                 @Override
                 public Icon getIcon() {
-                    return wp.type.icon.withTint(Color4I.rgb(wp.color));
+                    return wp.getType().getIcon().withTint(Color4I.rgb(wp.getColor()));
                 }
             };
         }

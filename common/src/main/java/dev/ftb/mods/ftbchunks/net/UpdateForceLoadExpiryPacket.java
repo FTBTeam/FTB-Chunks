@@ -44,10 +44,10 @@ public class UpdateForceLoadExpiryPacket extends BaseC2SMessage {
     public void handle(NetworkManager.PacketContext context) {
         if (context.getPlayer() instanceof ServerPlayer sp && sp.level().dimension().equals(pos.dimension())) {
             ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(pos);
-            if (chunk != null && chunk.teamData.getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
+            if (chunk != null && chunk.getTeamData().getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
                 chunk.setForceLoadExpiryTime(relativeExpiryTime == 0L ? 0L : System.currentTimeMillis() + relativeExpiryTime);
-                SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.teamData.getTeamId(),
-                        new SendChunkPacket.SingleChunk(System.currentTimeMillis(), chunk.pos.x(), chunk.pos.z(), chunk));
+                SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.getTeamData().getTeamId(),
+                        new SendChunkPacket.SingleChunk(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
                 packet.sendTo(sp);
             }
         }

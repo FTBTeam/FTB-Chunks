@@ -1,10 +1,10 @@
-package dev.ftb.mods.ftbchunks.integration;
+package dev.ftb.mods.ftbchunks.api.event;
 
 import dev.architectury.event.Event;
 import dev.architectury.event.EventFactory;
 
 public class RefreshMinimapIconsEvent {
-	public static Event<Runnable> EVENT = EventFactory.createLoop();
+	public static final Event<Runnable> EVENT = EventFactory.createLoop();
 
 	private RefreshMinimapIconsEvent() {
 	}

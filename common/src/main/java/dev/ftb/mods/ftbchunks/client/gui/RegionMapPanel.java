@@ -1,11 +1,13 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.gui;
 
+import dev.ftb.mods.ftbchunks.api.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.data.HeightUtils;
-import dev.ftb.mods.ftbchunks.integration.MapIcon;
-import dev.ftb.mods.ftbchunks.integration.MapIconEvent;
+import dev.ftb.mods.ftbchunks.client.mapicon.MapIcon;
+import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
+import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -16,7 +18,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
@@ -26,16 +28,16 @@ import java.util.List;
  * @author LatvianModder
  */
 public class RegionMapPanel extends Panel {
-	public final LargeMapScreen largeMap;
-	public double regionX = 0;
-	public double regionZ = 0;
-	public int regionMinX, regionMinZ, regionMaxX, regionMaxZ;
-	public int blockX = 0;
-	public int blockY = HeightUtils.UNKNOWN;
-	public int blockZ = 0;
-	public int blockIndex = 0;
-	public Rect2i visibleArea = new Rect2i(0, 0, 0, 0);
-	public final List<MapIcon> mapIcons;
+	final LargeMapScreen largeMap;
+	double regionX = 0;
+	double regionZ = 0;
+	int regionMinX, regionMinZ, regionMaxX, regionMaxZ;
+	int blockX = 0;
+	int blockY = HeightUtils.UNKNOWN;
+	int blockZ = 0;
+	int blockIndex = 0;
+//	public Rect2i visibleArea = new Rect2i(0, 0, 0, 0);
+	private final List<MapIcon> mapIcons;
 
 	public RegionMapPanel(LargeMapScreen panel) {
 		super(panel);
@@ -50,9 +52,9 @@ public class RegionMapPanel extends Panel {
 		regionMaxZ = Integer.MIN_VALUE;
 
 		for (Widget w : widgets) {
-			if (w instanceof RegionMapButton rmb) {
-				int qx = rmb.region.pos.x();
-				int qy = rmb.region.pos.z();
+			if (w instanceof MapTileWidget tileWidget) {
+				int qx = tileWidget.region.pos.x();
+				int qy = tileWidget.region.pos.z();
 
 				regionMinX = Math.min(regionMinX, qx);
 				regionMinZ = Math.min(regionMinZ, qy);
@@ -69,6 +71,10 @@ public class RegionMapPanel extends Panel {
 		regionMinZ -= 100;
 		regionMaxX += 101;
 		regionMaxZ += 101;
+	}
+
+	public BlockPos blockPos() {
+		return new BlockPos(blockX, blockY, blockZ);
 	}
 
 	public void scrollTo(double x, double y) {
@@ -90,13 +96,13 @@ public class RegionMapPanel extends Panel {
 	@Override
 	public void addWidgets() {
 		for (MapRegion region : largeMap.dimension.getRegions().values()) {
-			add(new RegionMapButton(this, region));
+			add(new MapTileWidget(this, region));
 		}
 
 		Minecraft mc = Minecraft.getInstance();
 
 		mapIcons.clear();
-		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(mc, largeMap.dimension, mapIcons, MapType.LARGE_MAP));
+		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMap.dimension, mapIcons, MapType.LARGE_MAP));
 
 		if (mapIcons.size() >= 2) {
 			mapIcons.sort(new MapIconComparator(mc.player.position(), 1F));
@@ -118,29 +124,30 @@ public class RegionMapPanel extends Panel {
 
 		updateMinMax();
 
-		int z = largeMap.getRegionButtonSize();
+		int buttonSize = largeMap.getRegionTileSize();
 
-		largeMap.scrollWidth = (regionMaxX - regionMinX) * z;
-		largeMap.scrollHeight = (regionMaxZ - regionMinZ) * z;
+		largeMap.scrollWidth = (regionMaxX - regionMinX) * buttonSize;
+		largeMap.scrollHeight = (regionMaxZ - regionMinZ) * buttonSize;
 
 		for (Widget w : widgets) {
-			if (w instanceof RegionMapButton rmb) {
-				double qx = rmb.region.pos.x();
-				double qy = rmb.region.pos.z();
+			if (w instanceof MapTileWidget tileWidget) {
+				double qx = tileWidget.region.pos.x();
+				double qy = tileWidget.region.pos.z();
 				double qw = 1D;
 				double qh = 1D;
 
-				double x = (qx - regionMinX) * z;
-				double y = (qy - regionMinZ) * z;
-				w.setPosAndSize((int) x, (int) y, (int) (z * qw), (int) (z * qh));
-			} else if (w instanceof MapIconWidget mapIconWidget) {
-				double s = Math.max(mapIconWidget.mapIcon.isZoomDependant(MapType.LARGE_MAP) ? 0D : 6D, z / 128D * mapIconWidget.mapIcon.getIconScale(MapType.LARGE_MAP));
+				double x = (qx - regionMinX) * buttonSize;
+				double y = (qy - regionMinZ) * buttonSize;
+				w.setPosAndSize((int) x, (int) y, (int) (buttonSize * qw), (int) (buttonSize * qh));
+			} else if (w instanceof MapIconWidget iconWidget) {
+				MapIcon mapIcon = iconWidget.getMapIcon();
+				double s = Math.max(mapIcon.isZoomDependant(MapType.LARGE_MAP) ? 0D : 6D, buttonSize / 128D * mapIcon.getIconScale(MapType.LARGE_MAP));
 
 				if (s <= 1D) {
 					w.setSize(0, 0);
 				} else {
 					w.setSize(Mth.ceil(s), Mth.ceil(s));
-					((MapIconWidget) w).updatePosition(1F);
+					iconWidget.updatePosition(1F);
 				}
 			}
 		}
@@ -158,11 +165,11 @@ public class RegionMapPanel extends Panel {
 		double px = getScrollX() - getX();
 		double py = getScrollY() - getY();
 
-		int topBlockX = Mth.floor((px / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
-		int topBlockZ = Mth.floor((py / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
-		int bottomBlockX = Mth.floor(((px + w) / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
-		int bottomBlockZ = Mth.floor(((py + h) / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
-		visibleArea = new Rect2i(topBlockX, topBlockZ, bottomBlockX - topBlockX + 1, bottomBlockZ - topBlockZ + 1);
+//		int topBlockX = Mth.floor((px / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
+//		int topBlockZ = Mth.floor((py / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
+//		int bottomBlockX = Mth.floor(((px + w) / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
+//		int bottomBlockZ = Mth.floor(((py + h) / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
+//		visibleArea = new Rect2i(topBlockX, topBlockZ, bottomBlockX - topBlockX + 1, bottomBlockZ - topBlockZ + 1);
 
 		regionX = (parent.getMouseX() + px) / (double) largeMap.scrollWidth * dx + regionMinX;
 		regionZ = (parent.getMouseY() + py) / (double) largeMap.scrollHeight * dy + regionMinZ;
@@ -171,11 +178,9 @@ public class RegionMapPanel extends Panel {
 		blockIndex = (blockX & 511) + (blockZ & 511) * 512;
 		blockY = HeightUtils.UNKNOWN;
 
-		MapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
-
-		if (r != null) {
-			MapRegionData data = r.getData();
-
+		MapRegion region = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+		if (region != null) {
+			MapRegionData data = region.getData();
 			if (data != null) {
 				blockY = data.height[blockIndex];
 			}
@@ -186,15 +191,12 @@ public class RegionMapPanel extends Panel {
 	public void addMouseOverText(TooltipList list) {
 		super.addMouseOverText(list);
 
-		MapRegion r = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
-
-		if (r != null) {
-			MapRegionData data = r.getData();
-
+		MapRegion mapRegion = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+		if (mapRegion != null) {
+			MapRegionData data = mapRegion.getData();
 			if (data != null) {
-				MapChunk c = r.getMapChunk(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
-				Team team = c == null ? null : c.getTeam();
-
+				MapChunk mapChunk = mapRegion.getMapChunk(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
+				Team team = mapChunk == null ? null : mapChunk.getTeam().orElse(null);
 				if (team != null) {
 					list.add(team.getName());
 				}

@@ -10,12 +10,9 @@ import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.UUID;
 
-/**
- * @author LatvianModder
- */
 public class LoginDataPacket extends BaseS2CMessage {
-	public final UUID serverId;
-	public final SNBTCompoundTag config;
+	private final UUID serverId;
+	private final SNBTCompoundTag config;
 
 	public LoginDataPacket(UUID id, SNBTCompoundTag c) {
 		serverId = id;
@@ -41,6 +38,6 @@ public class LoginDataPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.login(this);
+		FTBChunks.PROXY.login(serverId, config);
 	}
 }

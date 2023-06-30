@@ -48,7 +48,7 @@ public class SyncTXPacket extends BaseC2SMessage {
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
 		ServerPlayer p = (ServerPlayer) context.getPlayer();
-		FTBChunksTeamData pd = FTBChunksAPI.getManager().getData(p);
+		FTBChunksTeamData pd = FTBChunksAPI.getManager().getOrCreateData(p);
 
 		for (ServerPlayer p1 : p.getServer().getPlayerList().getPlayers()) {
 			if (p1 != p) {

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.HeightUtils;
+import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 
 import javax.imageio.ImageIO;
@@ -77,18 +77,18 @@ public class MapRegionData {
 							DataInputStream stream = new DataInputStream(zis);
 							stream.readByte();
 							version = stream.readByte();
-							int s = stream.readShort();
+							int nMapChunks = stream.readShort();
 
-							for (int i = 0; i < s; i++) {
-								int v = version >= 2 ? stream.readByte() : 0;
+							for (int i = 0; i < nMapChunks; i++) {
+								int chunkVersion = version >= 2 ? stream.readByte() : 0;
 								int x = stream.readByte();
 								int z = stream.readByte();
-								long m = stream.readLong();
+								long lastModified = stream.readLong();
 
 								MapChunk mapChunk = Objects.requireNonNullElse(region.getMapChunk(XZ.of(x, z)), new MapChunk(region, XZ.of(x, z)));
-								mapChunk.version = v;
-								mapChunk.modified = m;
-								synchronized (region.dimension.manager.lock) {
+								mapChunk.setVersion(chunkVersion);
+								mapChunk.setModified(lastModified);
+								synchronized (region.dimension.getManager().lock) {
 									region.addMapChunk(mapChunk);
 								}
 							}
@@ -109,7 +109,7 @@ public class MapRegionData {
 
 						if (version < 3 && height[index] == 0) {
 							height[index] = (short) HeightUtils.UNKNOWN;
-							region.saveData = true;
+							region.markDirty();
 						}
 
 						waterLightAndBiome[index] = (short) (dataImage.getRGB(x, y) & 0xFFFF);
@@ -125,7 +125,7 @@ public class MapRegionData {
 
 	public void write() throws IOException {
 		Collection<MapChunk> chunkList;
-		synchronized (region.dimension.manager.lock) {
+		synchronized (region.dimension.getManager().lock) {
 			chunkList = region.getModifiedChunks();
 		}
 
@@ -171,12 +171,8 @@ public class MapRegionData {
 			stream.writeByte(0);
 			stream.writeByte(3);
 			stream.writeShort(chunkList.size());
-
 			for (MapChunk chunk : chunkList) {
-				stream.writeByte(chunk.version);
-				stream.writeByte(chunk.pos.x());
-				stream.writeByte(chunk.pos.z());
-				stream.writeLong(chunk.modified);
+				chunk.writeData(stream);
 			}
 
 			out.closeEntry();
@@ -215,7 +211,7 @@ public class MapRegionData {
 				XZ.of(pos.x() & 31, pos.z() & 31) :
 				pos;
 
-		synchronized (region.dimension.manager.lock) {
+		synchronized (region.dimension.getManager().lock) {
 			return region.getOrCreateMapChunk(effectivePos);
 		}
 	}

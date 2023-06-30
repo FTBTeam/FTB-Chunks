@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.client.ChunkScreen;
+import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
 import dev.ftb.mods.ftbchunks.data.ClaimResults;
 import net.minecraft.network.FriendlyByteBuf;
 

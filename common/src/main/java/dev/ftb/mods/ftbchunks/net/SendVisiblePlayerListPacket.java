@@ -4,6 +4,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
@@ -20,18 +21,14 @@ import java.util.stream.Collectors;
  * @author LatvianModder
  */
 public class SendVisiblePlayerListPacket extends BaseS2CMessage {
-	public final List<UUID> uuids;
+	private final List<UUID> uuids;
 
 	private SendVisiblePlayerListPacket(List<UUID> uuids) {
 		this.uuids = uuids;
 	}
 
 	SendVisiblePlayerListPacket(FriendlyByteBuf buf) {
-		uuids = new ArrayList<>();
-		int size = buf.readVarInt();
-		for (int i = 0; i < size; i++) {
-			uuids.add(buf.readUUID());
-		}
+		uuids = buf.readList(FriendlyByteBuf::readUUID);
 	}
 
 	@Override
@@ -41,8 +38,7 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeVarInt(uuids.size());
-		uuids.forEach(buf::writeUUID);
+		buf.writeCollection(uuids, FriendlyByteBuf::writeUUID);
 	}
 
 	@Override
@@ -65,7 +61,7 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 			players = FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers();
 		}
 		playerList = players.stream()
-				.map(player -> new VisiblePlayerItem(player, FTBChunksAPI.getManager().getData(player)))
+				.map(player -> new VisiblePlayerItem(player, FTBChunksAPI.getManager().getOrCreateData(player)))
 				.collect(Collectors.toList());
 
 		boolean override = FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE.get();
@@ -73,7 +69,7 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 			List<UUID> playerIds = new ArrayList<>();
 
 			for (VisiblePlayerItem other : playerList) {
-				if (override || recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksTeamData.LOCATION_MODE)) {
+				if (override || recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksProperties.LOCATION_MODE)) {
 					playerIds.add(other.player.getUUID());
 				}
 			}

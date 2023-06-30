@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.net.SendPlayerPositionPacket;
@@ -87,7 +88,7 @@ public enum LongRangePlayerTracker {
         }
 
         // and player 1 must be able to see player 2 (i.e. player 2's team settings must allow it)
-        FTBChunksTeamData p2Team = FTBChunksAPI.getManager().getData(p2);
-        return p2Team.canUse(p1, FTBChunksTeamData.LOCATION_MODE);
+        FTBChunksTeamData p2Team = FTBChunksAPI.getManager().getOrCreateData(p2);
+        return p2Team.canUse(p1, FTBChunksProperties.LOCATION_MODE);
     }
 }

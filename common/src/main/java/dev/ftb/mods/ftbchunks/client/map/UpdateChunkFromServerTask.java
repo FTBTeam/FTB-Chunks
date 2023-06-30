@@ -24,11 +24,14 @@ public class UpdateChunkFromServerTask implements MapTask {
 
 	@Override
 	public void runMapTask() {
-		dimension.getRegion(XZ.regionFromChunk(chunk.x, chunk.z)).getDataBlocking().getChunk(XZ.of(chunk.x, chunk.z)).updateFrom(now, chunk, teamId);
+		dimension.getRegion(XZ.regionFromChunk(chunk.getX(), chunk.getZ()))
+				.getDataBlocking()
+				.getChunk(XZ.of(chunk.getX(), chunk.getZ()))
+				.updateFromServer(now, chunk, teamId);
 	}
 
 	@Override
 	public String toString() {
-		return "UpdateChunkFromServerTask@" + dimension + ":" + chunk.x + "," + chunk.z;
+		return "UpdateChunkFromServerTask@" + dimension + ":" + chunk.getX() + "," + chunk.getZ();
 	}
 }

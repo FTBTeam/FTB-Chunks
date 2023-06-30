@@ -2,9 +2,6 @@ package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftblibrary.config.NameMap;
 
-/**
- * @author LatvianModder
- */
 public enum AllyMode {
 	DEFAULT,
 	FORCED_ALL,

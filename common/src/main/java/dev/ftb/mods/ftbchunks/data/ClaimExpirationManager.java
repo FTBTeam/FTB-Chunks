@@ -26,7 +26,7 @@ public enum ClaimExpirationManager {
             // System.currentTimeMillis() can be slow-ish on some JVMs so don't check every single tick
             long now = System.currentTimeMillis();
             if (now - lastRun > RUN_INTERVAL) {
-                var chunkMap = FTBChunksAPI.getManager().getClaimedChunksByTeam(cc -> !(cc.teamData.getTeam() instanceof ServerTeam));
+                var chunkMap = FTBChunksAPI.getManager().getClaimedChunksByTeam(cc -> !(cc.getTeamData().getTeam() instanceof ServerTeam));
                 checkForIdleTeams(server, now, chunkMap);
                 checkForTemporaryClaims(server, now, chunkMap);
                 lastRun = now;
@@ -47,10 +47,11 @@ public enum ClaimExpirationManager {
             List<ClaimedChunk> toExpireClaims = new ArrayList<>();
             List<ClaimedChunk> toExpireForce = new ArrayList<>();
             chunks.forEach(cc -> {
-                if (maxClaim > 0 && now - cc.teamData.getLastLoginTime() > maxClaim && cc.teamData.getTeam().getOnlineMembers().isEmpty()) {
+                FTBChunksTeamData teamData = cc.getTeamData();
+                if (maxClaim > 0 && now - teamData.getLastLoginTime() > maxClaim && teamData.getTeam().getOnlineMembers().isEmpty()) {
                     toExpireClaims.add(cc);
                 }
-                if (maxForce > 0 && cc.isForceLoaded() && now - cc.teamData.getLastLoginTime() > maxForce && cc.teamData.getTeam().getOnlineMembers().isEmpty()) {
+                if (maxForce > 0 && cc.isForceLoaded() && now - teamData.getLastLoginTime() > maxForce && teamData.getTeam().getOnlineMembers().isEmpty()) {
                     toExpireForce.add(cc);
                 }
             });
@@ -84,7 +85,7 @@ public enum ClaimExpirationManager {
                     .filter(cc -> cc.isForceLoaded() && cc.hasExpired(now))
                     .toList();
             if (!expired.isEmpty()) {
-                FTBChunksTeamData teamData = expired.get(0).teamData;
+                FTBChunksTeamData teamData = expired.get(0).getTeamData();
                 CommandSourceStack sourceStack = server.createCommandSourceStack();
                 Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
                 expired.forEach(cc -> {
@@ -98,12 +99,12 @@ public enum ClaimExpirationManager {
 
     private static void unclaimChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
         c.unclaim(sourceStack, false);
-        toSync.computeIfAbsent(c.pos.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x(), c.pos.z(), null));
+        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.getPos().x(), c.getPos().z(), null));
     }
 
     private static void unloadChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
         c.unload(sourceStack);
-        toSync.computeIfAbsent(c.pos.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x(), c.pos.z(), c));
+        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.getPos().x(), c.getPos().z(), c));
     }
 
     private static void syncChunks(Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, MinecraftServer server, UUID teamId) {

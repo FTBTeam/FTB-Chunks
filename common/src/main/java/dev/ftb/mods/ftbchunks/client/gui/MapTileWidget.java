@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
@@ -13,19 +13,19 @@ import org.lwjgl.opengl.GL11;
 /**
  * @author LatvianModder
  */
-public class RegionMapButton extends Widget {
+public class MapTileWidget extends Widget {
 	public final MapRegion region;
 
-	public RegionMapButton(RegionMapPanel pa, MapRegion r) {
-		super(pa);
-		region = r;
+	public MapTileWidget(RegionMapPanel panel, MapRegion region) {
+		super(panel);
+		this.region = region;
 	}
 
 	@Override
 	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		int id = region.getRenderedMapImageTextureId();
 
-		if (region.mapImageLoaded) {
+		if (region.isMapImageLoaded()) {
 			RenderSystem.bindTextureForSetup(id);
 			int filter = w * Minecraft.getInstance().getWindow().getGuiScale() < 512D ? GL11.GL_LINEAR : GL11.GL_NEAREST;
 			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);

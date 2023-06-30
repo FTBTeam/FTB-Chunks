@@ -1,7 +1,7 @@
-package dev.ftb.mods.ftbchunks.integration;
+package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import dev.ftb.mods.ftbchunks.client.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.MapType;
+import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -10,6 +10,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
@@ -47,8 +48,7 @@ public abstract class MapIcon {
 
 	public boolean keyPressed(LargeMapScreen screen, Key key) {
 		if (key.is(GLFW.GLFW_KEY_T)) {
-			Vec3 v = getPos(1F);
-			new TeleportFromMapPacket(Mth.floor(v.x), Mth.floor(v.y), Mth.floor(v.z), false, screen.dimension.dimension).sendToServer();
+			new TeleportFromMapPacket(BlockPos.containing(getPos(1F)), false, screen.currentDimension()).sendToServer();
 			screen.closeGui(false);
 			return true;
 		}

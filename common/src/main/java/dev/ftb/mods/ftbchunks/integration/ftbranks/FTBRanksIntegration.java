@@ -9,14 +9,10 @@ import dev.ftb.mods.ftbranks.api.FTBRanksAPI;
 import dev.ftb.mods.ftbranks.api.RankManager;
 import dev.ftb.mods.ftbranks.api.event.*;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.server.level.ServerPlayer;
 
 import static dev.ftb.mods.ftbchunks.integration.PermissionsHelper.*;
 
-/**
- * @author LatvianModder
- */
 public class FTBRanksIntegration implements PermissionsProvider {
 	@Override
 	public int getMaxClaimedChunks(ServerPlayer player, int def) {
@@ -74,16 +70,16 @@ public class FTBRanksIntegration implements PermissionsProvider {
 	private static void updateAll(RankManager manager) {
 		if (FTBChunksAPI.isManagerLoaded()) {
 			manager.getServer().getPlayerList().getPlayers().forEach(player -> {
-				FTBChunksTeamData data = FTBChunksAPI.getManager().getData(player);
+				FTBChunksTeamData data = FTBChunksAPI.getManager().getOrCreateData(player);
 				data.setForceLoadMember(player.getUUID(), PermissionsHelper.getInstance().getChunkLoadOffline(player, false));
 			});
-			FTBTeamsAPI.api().getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getData(team).updateLimits());
+			FTBTeamsAPI.api().getManager().getTeams().forEach(team -> FTBChunksAPI.getManager().getOrCreateData(team).updateLimits());
 		}
 	}
 
 	private static void updateForPlayer(RankManager manager, GameProfile profile) {
 		FTBTeamsAPI.api().getManager().getTeamForPlayerID(profile.getId()).ifPresent(team -> {
-			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(team);
+			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getOrCreateData(team);
 			ServerPlayer player = manager.getServer().getPlayerList().getPlayer(profile.getId());
 			if (player != null) {
 				teamData.setForceLoadMember(player.getUUID(), PermissionsHelper.getInstance().getChunkLoadOffline(player, false));

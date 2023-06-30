@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -26,16 +27,17 @@ public class MapRegion implements MapTask {
 
 	public final MapDimension dimension;
 	public final XZ pos;
+
 	private MapRegionData data;
 	private long lastDataAccess; // time of last access, so stale regions can be released to save memory
 	private boolean isLoadingData;
-	public boolean saveData;
+	private boolean shouldSave;
 	private NativeImage renderedMapImage;
 	private boolean updateRenderedMapImage;
-	public boolean updateRenderedMapTexture;
+	private boolean updateRenderedMapTexture;
 	private int renderedMapImageTextureId;
-	public boolean mapImageLoaded;
-	public boolean renderingMapImage;
+	private boolean mapImageLoaded;
+	private boolean renderingMapImage;
 	private final Map<XZ, MapChunk> chunks = new HashMap<>();
 
 	public MapRegion(MapDimension d, XZ p) {
@@ -43,7 +45,7 @@ public class MapRegion implements MapTask {
 		pos = p;
 		data = null;
 		isLoadingData = false;
-		saveData = false;
+		shouldSave = false;
 		renderedMapImage = null;
 		updateRenderedMapImage = true;
 		updateRenderedMapTexture = true;
@@ -52,7 +54,7 @@ public class MapRegion implements MapTask {
 	}
 
 	public void created() {
-		dimension.saveData = true;
+		dimension.markDirty();
 	}
 
 	public boolean isDataLoaded() {
@@ -63,9 +65,13 @@ public class MapRegion implements MapTask {
 		return lastDataAccess;
 	}
 
+	public boolean isMapImageLoaded() {
+		return mapImageLoaded;
+	}
+
 	@NotNull
 	public MapRegionData getDataBlocking() {
-		synchronized (dimension.manager.lock) {
+		synchronized (dimension.getManager().lock) {
 			return getDataBlockingNoSync();
 		}
 	}
@@ -100,7 +106,7 @@ public class MapRegion implements MapTask {
 	}
 
 	public NativeImage getRenderedMapImage() {
-		synchronized (dimension.manager.lock) {
+		synchronized (dimension.getManager().lock) {
 			if (renderedMapImage == null) {
 				renderedMapImage = new NativeImage(NativeImage.Format.RGBA, 512, 512, true);
 				renderedMapImage.fillRect(0, 0, 512, 512, 0);
@@ -132,7 +138,7 @@ public class MapRegion implements MapTask {
 				RenderSystem.bindTexture(renderedMapImageTextureId);
 				uploadRenderedMapImage();
 				mapImageLoaded = true;
-				FTBChunksClient.updateMinimap = true;
+				FTBChunksClient.scheduleMinimapUpdate();
 			});
 
 			updateRenderedMapTexture = false;
@@ -142,7 +148,7 @@ public class MapRegion implements MapTask {
 	}
 
 	public void release(boolean releaseMapChunks) {
-		if (saveData && data != null) {
+		if (shouldSave && data != null) {
 			try {
 				data.write();
 			} catch (IOException ex) {
@@ -175,7 +181,7 @@ public class MapRegion implements MapTask {
 	}
 
 	public void releaseMapImage() {
-		synchronized (dimension.manager.lock) {
+		synchronized (dimension.getManager().lock) {
 			if (renderedMapImage != null) {
 				renderedMapImage.close();
 				renderedMapImage = null;
@@ -198,34 +204,34 @@ public class MapRegion implements MapTask {
 	}
 
 	public void setRenderedMapImageRGBA(int x, int z, int col) {
-		synchronized (dimension.manager.lock) {
+		synchronized (dimension.getManager().lock) {
 			renderedMapImage.setPixelRGBA(x, z, col);
 		}
 	}
 
 	private void uploadRenderedMapImage() {
-		synchronized (dimension.manager.lock) {
+		synchronized (dimension.getManager().lock) {
 			renderedMapImage.upload(0, 0, 0, false);
 		}
 	}
 
 	public void afterImageRenderTask() {
-		synchronized (dimension.manager.lock) {
+		synchronized (dimension.getManager().lock) {
 			updateRenderedMapTexture = true;
-			FTBChunksClient.updateMinimap = true;
+			FTBChunksClient.scheduleMinimapUpdate();
 			renderingMapImage = false;
 		}
 	}
 
 	public void update(boolean save) {
 		if (save) {
-			saveData = true;
-			dimension.saveData = true;
+			markDirty();
+			dimension.markDirty();
 		}
 
 		updateRenderedMapImage = true;
 		updateRenderedMapTexture = true;
-		FTBChunksClient.updateMinimap = true;
+		FTBChunksClient.scheduleMinimapUpdate();
 	}
 
 	public MapRegion offset(int x, int z) {
@@ -254,10 +260,21 @@ public class MapRegion implements MapTask {
 	}
 
 	public void addMapChunk(MapChunk mapChunk) {
-		chunks.put(mapChunk.pos, mapChunk);
+		chunks.put(mapChunk.getPos(), mapChunk);
 	}
 
 	public Collection<MapChunk> getModifiedChunks() {
-		return chunks.values().stream().filter(c -> c.modified > 0L).toList();
+		return chunks.values().stream().filter(c -> c.getModified() > 0L).toList();
+	}
+
+	public void saveIfChanged() {
+		if (shouldSave) {
+			ClientTaskQueue.queue(this);
+			shouldSave = false;
+		}
+	}
+
+	public void markDirty() {
+		shouldSave = true;
 	}
 }

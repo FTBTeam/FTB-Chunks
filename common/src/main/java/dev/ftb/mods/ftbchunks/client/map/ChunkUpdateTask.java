@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.HeightUtils;
+import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.BiomeColors;
@@ -26,38 +26,47 @@ import org.jetbrains.annotations.Nullable;
  * @author LatvianModder
  */
 public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
-	public static final int[] ALL_BLOCKS = Util.make(new int[256], array -> {
+	private static final int[] ALL_BLOCKS = Util.make(new int[256], array -> {
 		for (int i = 0; i < 256; i++) {
 			array[i] = i;
 		}
 	});
-
 	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
-	public static long debugLastTime = 0L;
+	private static long debugLastTime = 0L;
 
-	public MapManager manager;
-	public final Level level;
-	public final ChunkAccess chunkAccess;
-	public final ChunkPos pos;
-	public final long biomeZoomSeed;
-	public final int[] blocksToUpdate;
+	private MapManager manager;
+	private final Level level;
+	private final ChunkAccess chunkAccess;
+	private final ChunkPos chunkPos;
+	private final int[] blocksToUpdate;
 	private final long taskStartTime;
 
-	public ChunkUpdateTask(@Nullable MapManager m, Level w, ChunkAccess ca, ChunkPos p, long zs, int[] s) {
-		manager = m;
-		level = w;
-		chunkAccess = ca;
-		pos = p;
-		biomeZoomSeed = zs;
-		blocksToUpdate = s;
+	public ChunkUpdateTask(@Nullable MapManager manager, Level level, ChunkAccess chunkAccess, ChunkPos chunkPos) {
+		this(manager, level, chunkAccess, chunkPos, ALL_BLOCKS);
+	}
+
+	public ChunkUpdateTask(@Nullable MapManager manager, Level level, ChunkAccess chunkAccess, ChunkPos chunkPos, int[] blocksToUpdate) {
+		this.manager = manager;
+		this.level = level;
+		this.chunkAccess = chunkAccess;
+		this.chunkPos = chunkPos;
+		this.blocksToUpdate = blocksToUpdate;
+
 		taskStartTime = System.currentTimeMillis();
+	}
+
+	public static void init() {
+		debugLastTime = 0L;
+	}
+
+	public static long getDebugLastTime() {
+		return debugLastTime;
 	}
 
 	@Override
 	public void runMapTask() throws Exception {
 		while (manager == null) {
-			manager = MapManager.inst;
-
+			manager = MapManager.getInstance().orElse(null);
 			if (manager == null) {
 				// Safety mechanic in case for some reason the map task hangs
 				if ((System.currentTimeMillis() - taskStartTime) >= 30000L) {
@@ -68,7 +77,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			}
 		}
 
-		if (manager.invalid) {
+		if (manager.isInvalid()) {
 			return;
 		}
 
@@ -76,32 +85,20 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 		ResourceKey<Level> dimId = level.dimension();
 
-		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(pos)).getDataBlocking().getChunk(XZ.of(pos));
-		MapRegionData data = mapChunk.region.getDataBlocking();
+		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(chunkPos)).getDataBlocking().getChunk(XZ.of(chunkPos));
+		MapRegionData data = mapChunk.getRegionData();
 
 		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registries.BIOME);
 
-		/*
-		if (biomeContainer == null) {
-			biomeContainer = chunkAccess.getBiomes();
-		}
-
-		if (biomeContainer == null) {
-			return;
-		}
-		 */
-
-		// BiomeManager biomeManager = new BiomeManager(this, biomeZoomSeed, level.dimensionType().getBiomeZoomer());
-
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
-		int blockX = pos.getMinBlockX();
-		int blockZ = pos.getMinBlockZ();
+		int blockX = chunkPos.getMinBlockX();
+		int blockZ = chunkPos.getMinBlockZ();
 
 		boolean changed = false;
-		boolean versionChange = mapChunk.version != MapChunk.VERSION;
+		boolean versionChange = mapChunk.getVersion() != MapChunk.VERSION;
 
 		if (versionChange) {
-			mapChunk.version = MapChunk.VERSION;
+			mapChunk.setVersion(MapChunk.VERSION);
 			changed = true;
 		}
 
@@ -113,8 +110,8 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			int height = blockPos.getY();
 			BlockState state = chunkAccess.getBlockState(blockPos);
 
-			int ax = mapChunk.pos.x() * 16 + wx;
-			int az = mapChunk.pos.z() * 16 + wz;
+			int ax = mapChunk.getPos().x() * 16 + wx;
+			int az = mapChunk.getPos().z() * 16 + wz;
 			int index = ax + az * 512;
 
 			int waterLightAndBiome0 = data.waterLightAndBiome[index] & 0xFFFF;
@@ -163,8 +160,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		}
 
 		if (changed) {
-			mapChunk.modified = System.currentTimeMillis();
-			mapChunk.region.update(true);
+			mapChunk.forceUpdate();
 		}
 
 		debugLastTime = System.nanoTime() - startTime;
@@ -172,12 +168,12 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 	@Override
 	public String toString() {
-		return "ChunkUpdateTask@" + pos;
+		return "ChunkUpdateTask@" + chunkPos;
 	}
 
 	@Override
 	public Holder<Biome> getNoiseBiome(int x, int y, int z) {
-		if ((x >> 2) == pos.x && (z >> 2) == pos.z) {
+		if ((x >> 2) == chunkPos.x && (z >> 2) == chunkPos.z) {
 			return chunkAccess.getNoiseBiome(x, y, z);
 			// return biomeContainer.getNoiseBiome(x, y, z);
 		}

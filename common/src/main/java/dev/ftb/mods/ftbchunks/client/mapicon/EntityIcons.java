@@ -1,8 +1,9 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;

@@ -46,11 +46,14 @@ public interface FTBChunksClientConfig {
 	DoubleValue WAYPOINT_BEACON_FADE_DISTANCE = WAYPOINTS.addDouble("waypoint_fade_distance", 12D, 1D, 200D).comment("Minimum distance before waypoint beacons start to fade");
 	DoubleValue WAYPOINT_DOT_FADE_DISTANCE = WAYPOINTS.addDouble("waypoint_dot_fade_distance", 1D, 1D, 200D).comment("Minimum distance before waypoint dots start to fade");
 	DoubleValue WAYPOINT_MAX_DISTANCE = WAYPOINTS.addDouble("waypoint_max_distance", 5000D, 1D, Integer.MAX_VALUE).comment("Maximum distance at which waypoints are drawn");
+	DoubleValue WAYPOINT_FOCUS_DISTANCE = WAYPOINTS.addDouble("waypoint_focus_distance", 1d, 1d, 10d).comment("How close player crosshair needs to be to in-world waypoints to show waypoint labels");
+	DoubleValue WAYPOINT_FOCUS_SCALE = WAYPOINTS.addDouble("waypoint_focus_scale", 2d, 1d, 10d).comment("How much do in-world waypoints enlarge when the player crosshair is close");
 
 	SNBTConfig MINIMAP = CONFIG.addGroup("minimap", 2);
 	BooleanValue MINIMAP_ENABLED = MINIMAP.addBoolean("enabled", !hasOtherMinimapMod()).comment("Enable minimap");
 	EnumValue<MinimapPosition> MINIMAP_POSITION = MINIMAP.addEnum("position", MinimapPosition.NAME_MAP).comment("Enables minimap to show up in corner");
 	DoubleValue MINIMAP_SCALE = MINIMAP.addDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
+	DoubleValue MINIMAP_FONT_SCALE = MINIMAP.addDouble("font_scale", 0.5, 0.1, 5.0).comment("Minimap font scaling (values not a multiple of 0.5 may look bad)");
 	DoubleValue MINIMAP_ZOOM = MINIMAP.addDouble("zoom", 1D, 1D, 4D).comment("Zoom distance of the minimap");
 	BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.addBoolean("locked_north", true).comment("Minimap will not rotate");
 	BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP.addBoolean("show_player_when_unlocked", true).comment("Always show player on minimap, even when rotation not locked");
@@ -83,7 +86,7 @@ public interface FTBChunksClientConfig {
 	IntValue AUTORELEASE_ON_MAP_CLOSE = MEMORY.addInt("autorelease_on_map_close", 32, 0, Integer.MAX_VALUE).comment("When the large map is closed, auto-release least recently accessed regions down to this number (0 disables releasing)");
 	BooleanValue MAX_ZOOM_CONSTRAINT = MEMORY.addBoolean("max_zoom_constraint", true).comment("Constrain maximum map zoom-out based on number of explored regions and available memory");
 
-	static boolean hasOtherMinimapMod() {
+    static boolean hasOtherMinimapMod() {
 		return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
 	}
 
@@ -97,10 +100,7 @@ public interface FTBChunksClientConfig {
 				saveConfig();
 			}
 
-			if (MapManager.inst != null) {
-				MapManager.inst.updateAllRegions(false);
-			}
-
+			MapManager.getInstance().ifPresent(manager -> manager.updateAllRegions(false));
 			Minecraft.getInstance().setScreen(screen);
 		});
 		CONFIG.createClientConfig(group);

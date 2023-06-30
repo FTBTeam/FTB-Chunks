@@ -7,7 +7,6 @@ import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
-import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.TeamManager;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -52,8 +51,9 @@ public class ClaimedChunkManager {
 	private final Path dataDirectory;
 	private Map<ResourceKey<Level>, Long2ObjectMap<UUID>> forceLoadedChunkCache;
 
-	public ClaimedChunkManager(TeamManager m) {
-		teamManager = m;
+	public ClaimedChunkManager(TeamManager teamManager) {
+		this.teamManager = teamManager;
+
 		teamData = new HashMap<>();
 		claimedChunks = new HashMap<>();
 
@@ -79,7 +79,6 @@ public class ClaimedChunkManager {
 
 	public void initForceLoadedChunks(ServerLevel level) {
 		var map = getForceLoadedChunks(level.dimension());
-
 		if (map.isEmpty() || level.getChunkSource() == null) {
 			return;
 		}
@@ -112,13 +111,12 @@ public class ClaimedChunkManager {
 		return teamManager.getServer();
 	}
 
-	public FTBChunksTeamData getData(@Nullable Team team) {
+	public FTBChunksTeamData getOrCreateData(@Nullable Team team) {
 		if (team == null) {
 			throw new IllegalArgumentException("Team not found!");
 		}
 
 		FTBChunksTeamData data = teamData.get(team.getId());
-
 		if (data == null) {
 			data = loadTeamData(team);
 			teamData.put(team.getId(), data);
@@ -129,16 +127,17 @@ public class ClaimedChunkManager {
 
 	public FTBChunksTeamData getPersonalData(UUID id) {
 		return getTeamManager().getPlayerTeamForPlayerID(id)
-				.map(this::getData).orElse(null);
+				.map(this::getOrCreateData)
+				.orElse(null);
 	}
 
 	public FTBChunksTeamData getPersonalData(ServerPlayer player) {
 		return getPersonalData(player.getUUID());
 	}
 
-	public FTBChunksTeamData getData(ServerPlayer player) {
+	public FTBChunksTeamData getOrCreateData(ServerPlayer player) {
 		return getTeamManager().getTeamForPlayer(player)
-				.map(this::getData)
+				.map(this::getOrCreateData)
 				.orElse(null);
 	}
 
@@ -148,7 +147,6 @@ public class ClaimedChunkManager {
 				.orElse(false);
 	}
 
-
 	public void deleteTeam(Team toDelete) {
 		FTBChunksTeamData data = teamData.get(toDelete.getId());
 
@@ -156,9 +154,9 @@ public class ClaimedChunkManager {
 			FTBChunks.LOGGER.debug("dropping references to empty team " + toDelete.getId());
 			teamData.remove(toDelete.getId());
 			try {
-				Files.deleteIfExists(data.file);
+				Files.deleteIfExists(data.getFile());
 			} catch (IOException e) {
-				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.file, e.getMessage()));
+				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.getFile(), e.getMessage()));
 			}
 		}
 	}
@@ -175,7 +173,7 @@ public class ClaimedChunkManager {
 	public Map<UUID,List<ClaimedChunk>> getClaimedChunksByTeam(Predicate<ClaimedChunk> predicate) {
 		return getAllClaimedChunks().stream()
 				.filter(predicate)
-				.collect(Collectors.groupingBy(cc -> cc.teamData.getTeamId()));
+				.collect(Collectors.groupingBy(cc -> cc.getTeamData().getTeamId()));
 	}
 
 	public boolean getBypassProtection(UUID player) {
@@ -201,37 +199,30 @@ public class ClaimedChunkManager {
 	 * @param targetEntity the entity being acted upon, if any (e.g. a painting, armor stand etc.)
 	 * @return true to prevent the interaction, false to permit it
 	 */
-	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
+	public boolean shouldPreventInteraction(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
 		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level() == null) {
 			return false;
 		}
 
 		boolean isFake = PlayerHooks.isFake(player);
-
 		if (isFake && FTBChunksWorldConfig.FAKE_PLAYERS.get().isOverride()) {
-			return FTBChunksWorldConfig.FAKE_PLAYERS.get().getProtect();
+			return FTBChunksWorldConfig.FAKE_PLAYERS.get().shouldPreventInteraction();
 		}
 
 		ClaimedChunk chunk = getChunk(new ChunkDimPos(player.level(), pos));
-
 		if (chunk != null) {
 			ProtectionOverride override = protection.override(player, pos, hand, chunk, targetEntity);
-
-			if (override.isOverride()) {
-				return override.getProtect();
-			}
-
-			return !player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
+			return override.isOverride() ?
+					override.shouldPreventInteraction() :
+					!player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
 			ProtectionOverride override = protection.override(player, pos, hand, null, targetEntity);
-
 			if (override.isOverride()) {
-				return override.getProtect();
+				return override.shouldPreventInteraction();
 			} else if (!isFake && (getBypassProtection(player.getUUID()) || player.isSpectator())) {
 				return false;
 			}
-
-			player.displayClientMessage(Component.literal("You need to claim this chunk to interact with blocks here!"), true);
+			player.displayClientMessage(Component.translatable("ftbchunks.need_to_claim_chunk"), true);
 			return true;
 		}
 
@@ -248,8 +239,8 @@ public class ClaimedChunkManager {
 
 			for (ClaimedChunk chunk : getAllClaimedChunks()) {
 				if (chunk.isActuallyForceLoaded()) {
-					Long2ObjectMap<UUID> pos2idMap = forceLoadedChunkCache.computeIfAbsent(chunk.pos.dimension(), k -> new Long2ObjectOpenHashMap<>());
-					pos2idMap.put(ChunkPos.asLong(chunk.pos.x(), chunk.pos.z()), chunk.teamData.getTeamId());
+					Long2ObjectMap<UUID> pos2idMap = forceLoadedChunkCache.computeIfAbsent(chunk.getPos().dimension(), k -> new Long2ObjectOpenHashMap<>());
+					pos2idMap.put(ChunkPos.asLong(chunk.getPos().x(), chunk.getPos().z()), chunk.getTeamData().getTeamId());
 				}
 			}
 

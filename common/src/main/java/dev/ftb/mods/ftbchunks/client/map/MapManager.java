@@ -1,7 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
@@ -33,14 +35,16 @@ public class MapManager implements MapTask {
 	// - 1MB each for foliage, grass & water
 	public static final long MEMORY_PER_REGION = 4L * 1024L * 1024L;
 
-	public static MapManager inst;
+	private static MapManager instance;
 
 	public final Object lock = new Object();
-	public boolean invalid;
-	public final UUID serverId;
-	public final Path directory;
+
+	private boolean invalid;
+	private final UUID serverId;
+	private final Path directory;
 	private final Map<ResourceKey<Level>, MapDimension> dimensions;
-	public boolean saveData;
+
+	private boolean needsSave;
 	private MapDimension pendingRegionPurge = null;
 
 	private final Int2ObjectOpenHashMap<ResourceLocation> blockColorIndexMap;
@@ -49,12 +53,13 @@ public class MapManager implements MapTask {
 	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColCache;
 	private final List<BiomeFTBC> biomesToRelease;
 
-	public MapManager(UUID id, Path dir) {
+	private MapManager(UUID serverId, Path directory) {
+		this.serverId = serverId;
+		this.directory = directory;
+
 		invalid = false;
-		serverId = id;
-		directory = dir;
 		dimensions = new LinkedHashMap<>();
-		saveData = false;
+		needsSave = false;
 
 		blockColorIndexMap = new Int2ObjectOpenHashMap<>();
 		blockColorIndexMap.defaultReturnValue(new ResourceLocation("minecraft:air"));
@@ -68,7 +73,7 @@ public class MapManager implements MapTask {
 		biomesToRelease = new ArrayList<>();
 
 		try {
-			Path dimFile = directory.resolve("dimensions.txt");
+			Path dimFile = this.directory.resolve("dimensions.txt");
 
 			if (Files.exists(dimFile)) {
 				for (String s : Files.readAllLines(dimFile)) {
@@ -76,14 +81,14 @@ public class MapManager implements MapTask {
 
 					if (s.length() >= 3) {
 						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(s));
-						dimensions.put(key, new MapDimension(this, key));
+						dimensions.put(key, new MapDimension(this, key, directory));
 					}
 				}
 			} else {
-				saveData = true;
+				needsSave = true;
 			}
 
-			Path blockFile = directory.resolve("block_map.txt");
+			Path blockFile = this.directory.resolve("block_map.txt");
 
 			if (Files.exists(blockFile)) {
 				for (String s : Files.readAllLines(blockFile)) {
@@ -98,10 +103,10 @@ public class MapManager implements MapTask {
 					}
 				}
 			} else {
-				saveData = true;
+				needsSave = true;
 			}
 
-			Path biomeFile = directory.resolve("biome_map.txt");
+			Path biomeFile = this.directory.resolve("biome_map.txt");
 
 			if (Files.exists(biomeFile)) {
 				for (String s : Files.readAllLines(biomeFile)) {
@@ -116,10 +121,56 @@ public class MapManager implements MapTask {
 					}
 				}
 			} else {
-				saveData = true;
+				needsSave = true;
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
+		}
+	}
+
+	public static Optional<MapManager> getInstance() {
+		return Optional.ofNullable(instance);
+	}
+
+	public static void startUp(UUID serverId) {
+		Path dir = Platform.getGameFolder().resolve("local/ftbchunks/data/" + serverId);
+		if (Files.notExists(dir)) {
+			try {
+				Files.createDirectories(dir);
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+		}
+		instance = new MapManager(serverId, dir);
+	}
+
+	public static void shutdown() {
+		if (instance != null) {
+			instance.saveAllRegions();
+			instance.release();
+			ClientTaskQueue.flushTasks();
+			MapDimension.clearCurrentDimension();
+			instance = null;
+		}
+	}
+
+	public UUID getServerId() {
+		return serverId;
+	}
+
+	public void saveAllRegions() {
+		if (MapManager.instance == null) {
+			return;
+		}
+
+		for (MapDimension dimension : MapManager.instance.getDimensions().values()) {
+			dimension.getLoadedRegions().forEach(MapRegion::saveIfChanged);
+			dimension.saveIfChanged();
+		}
+
+		if (MapManager.instance.needsSave) {
+			ClientTaskQueue.queue(MapManager.instance);
+			MapManager.instance.needsSave = false;
 		}
 	}
 
@@ -130,7 +181,14 @@ public class MapManager implements MapTask {
 	}
 
 	public synchronized MapDimension getDimension(ResourceKey<Level> dim) {
-		return getDimensions().computeIfAbsent(dim, d -> new MapDimension(this, d).created());
+		return getDimensions().computeIfAbsent(dim, dimKey -> {
+			needsSave = true;
+			return new MapDimension(this, dimKey, directory);
+		});
+	}
+
+	public boolean isInvalid() {
+		return invalid;
 	}
 
 	public void release() {
@@ -154,7 +212,7 @@ public class MapManager implements MapTask {
 			}
 		}
 
-		FTBChunksClient.updateMinimap = true;
+		FTBChunksClient.scheduleMinimapUpdate();
 	}
 
 	@Override
@@ -203,7 +261,7 @@ public class MapManager implements MapTask {
 
 			blockColorIndexMap.put(i, id);
 			blockColorIndexMapReverse.put(id, i);
-			saveData = true;
+			needsSave = true;
 		}
 
 		return i;
@@ -243,7 +301,7 @@ public class MapManager implements MapTask {
 
 			biomeColorIndexMap.put(i, key);
 			b.setFTBCBiomeColorIndex(i);
-			saveData = true;
+			needsSave = true;
 			biomesToRelease.add(b);
 		}
 

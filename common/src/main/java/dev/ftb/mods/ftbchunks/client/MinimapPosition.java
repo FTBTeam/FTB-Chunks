@@ -5,9 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
-/**
- * @author LatvianModder
- */
 public enum MinimapPosition {
 	BOTTOM_LEFT(0, 2),
 	LEFT(0, 1),

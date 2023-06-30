@@ -2,9 +2,6 @@ package dev.ftb.mods.ftbchunks.client;
 
 import dev.ftb.mods.ftblibrary.config.NameMap;
 
-/**
- * @author LatvianModder
- */
 public enum MinimapBlurMode {
 	AUTO,
 	ON,

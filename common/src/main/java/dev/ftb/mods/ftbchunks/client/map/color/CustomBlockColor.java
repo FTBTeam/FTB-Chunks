@@ -4,14 +4,15 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 
-/**
- * @author LatvianModder
- */
 public class CustomBlockColor implements BlockColor {
-	public final Color4I color;
+	private final Color4I color;
 
 	public CustomBlockColor(Color4I c) {
 		color = c.withAlpha(255);
+	}
+
+	public Color4I getColor() {
+		return color;
 	}
 
 	@Override

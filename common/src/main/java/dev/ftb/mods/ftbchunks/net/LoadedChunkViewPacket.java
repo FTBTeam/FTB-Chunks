@@ -11,27 +11,21 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
-/**
- * @author LatvianModder
- */
 public class LoadedChunkViewPacket extends BaseS2CMessage {
-	public final ResourceKey<Level> dimension;
-	public final Long2IntMap chunks;
+	public static final int LOADED = 1;
+	public static final int FORCE_LOADED = 2;
 
-	public LoadedChunkViewPacket(ResourceKey<Level> d, Long2IntMap c) {
-		dimension = d;
-		chunks = c;
+	private final ResourceKey<Level> dimension;
+	private final Long2IntMap chunks;
+
+	public LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap chunks) {
+		this.dimension = dimension;
+		this.chunks = chunks;
 	}
 
 	LoadedChunkViewPacket(FriendlyByteBuf buf) {
 		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
-		int s = buf.readVarInt();
-
-		chunks = new Long2IntOpenHashMap(s);
-
-		for (int i = 0; i < s; i++) {
-			chunks.put(buf.readLong(), buf.readVarInt());
-		}
+		chunks = buf.readMap(Long2IntOpenHashMap::new, FriendlyByteBuf::readLong, FriendlyByteBuf::readVarInt);
 	}
 
 	@Override
@@ -42,13 +36,7 @@ public class LoadedChunkViewPacket extends BaseS2CMessage {
 	@Override
 	public void write(FriendlyByteBuf buf) {
 		buf.writeResourceLocation(dimension.location());
-
-		buf.writeVarInt(chunks.size());
-
-		for (var entry : chunks.long2IntEntrySet()) {
-			buf.writeLong(entry.getLongKey());
-			buf.writeVarInt(entry.getIntValue());
-		}
+		buf.writeMap(chunks, FriendlyByteBuf::writeLong, FriendlyByteBuf::writeVarInt);
 	}
 
 	@Override

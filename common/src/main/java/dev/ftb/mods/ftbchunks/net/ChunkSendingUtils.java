@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -10,8 +11,7 @@ public class ChunkSendingUtils {
         if (!teamData.shouldHideClaims()) {
             packet.sendToAll(server);
         } else {
-            SendChunkPacket hiddenPacket = new SendChunkPacket(packet.dimension, Util.NIL_UUID,
-                    new SendChunkPacket.SingleChunk(0L, packet.chunk.x, packet.chunk.z, null));
+            SendChunkPacket hiddenPacket = new SendChunkPacket(packet.dimension, Util.NIL_UUID, packet.chunk.hidden());
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 (teamData.isAlly(player.getUUID()) ? packet : hiddenPacket).sendTo(player);
             }
@@ -24,7 +24,7 @@ public class ChunkSendingUtils {
         } else {
             // shallow copy of packet.chunks OK here, it only contains primitive elements
             SendManyChunksPacket hiddenPacket = new SendManyChunksPacket(packet.dimension, Util.NIL_UUID,
-                    packet.chunks.stream().map(c -> new SendChunkPacket.SingleChunk(0L, c.x, c.z, null)).toList());
+                    packet.chunks.stream().map(SingleChunk::hidden).toList());
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 (teamData.isAlly(player.getUUID()) ? packet : hiddenPacket).sendTo(player);
             }
@@ -37,7 +37,7 @@ public class ChunkSendingUtils {
         } else {
             // shallow copy of packet.chunks OK here, it only contains primitive elements
             SendManyChunksPacket hiddenPacket = new SendManyChunksPacket(packet.dimension, Util.NIL_UUID,
-                    packet.chunks.stream().map(c -> new SendChunkPacket.SingleChunk(0L, c.x, c.z, null)).toList());
+                    packet.chunks.stream().map(SingleChunk::hidden).toList());
             (teamData.isAlly(player.getUUID()) ? packet : hiddenPacket).sendTo(player);
         }
     }

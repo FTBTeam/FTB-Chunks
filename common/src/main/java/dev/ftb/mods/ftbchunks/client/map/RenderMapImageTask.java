@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.architectury.platform.Platform;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
+import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
@@ -14,7 +14,6 @@ import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
 import javax.imageio.ImageIO;
@@ -28,6 +27,8 @@ import java.util.Random;
  * @author LatvianModder
  */
 public class RenderMapImageTask implements MapTask {
+	private static boolean alwaysRenderChunksOnMap = false;
+
 	public final MapRegion region;
 	private static final boolean exportImages = false;
 
@@ -47,11 +48,15 @@ public class RenderMapImageTask implements MapTask {
 		return height;
 	}
 
+	public static void setAlwaysRenderChunksOnMap(boolean alwaysRenderChunksOnMap) {
+		RenderMapImageTask.alwaysRenderChunksOnMap = alwaysRenderChunksOnMap;
+	}
+
 	private int[][] initColors(BiomeBlendMode blendMode, MapRegionData data, ColorsFromRegion getter) {
 		int[] colors = getter.getColors(data);
-		int blend = blendMode.blend;
-		int s = 512 + blend * 2;
-		int[][] newColors = new int[s][s];
+		int blend = blendMode.getBlendRadius();
+		int size = 512 + blend * 2;
+		int[][] newColors = new int[size][size];
 
 		int posX = region.pos.x();
 		int posZ = region.pos.z();
@@ -110,10 +115,10 @@ public class RenderMapImageTask implements MapTask {
 		}
 
 		if (exportImages && FTBChunksClientConfig.DEBUG_INFO.get()) {
-			BufferedImage export = new BufferedImage(s, s, BufferedImage.TYPE_INT_RGB);
+			BufferedImage export = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
 
-			for (int y = 0; y < s; y++) {
-				for (int x = 0; x < s; x++) {
+			for (int y = 0; y < size; y++) {
+				for (int x = 0; x < size; x++) {
 					export.setRGB(x, y, newColors[x][y]);
 				}
 			}
@@ -141,36 +146,12 @@ public class RenderMapImageTask implements MapTask {
 	}
 
 	private Color4I getColor(BiomeBlendMode blendMode, int[][] colors, int ax, int az) {
-		if (blendMode.blend == 0) {
-			return Color4I.rgb(colors[ax][az]);
-		}
-
-		int r = 0;
-		int g = 0;
-		int b = 0;
-		int c = 0;
-
-		for (int i = 0; i < blendMode.size; i++) {
-			int col = colors[ax + blendMode.blend + blendMode.posX[i]][az + blendMode.blend + blendMode.posY[i]];
-
-			if (col != 0) {
-				r += (col >> 16) & 0xFF;
-				g += (col >> 8) & 0xFF;
-				b += col & 0xFF;
-				c++;
-			}
-		}
-
-		if (c == 0) {
-			return Color4I.rgb(colors[ax + blendMode.blend][az + blendMode.blend]);
-		}
-
-		return Color4I.rgb(r / c, g / c, b / c);
+		return blendMode.doBlending(colors, ax, az);
 	}
 
 	@Override
 	public void runMapTask() {
-		if (region.dimension.manager.invalid) {
+		if (region.dimension.getManager().isInvalid()) {
 			return;
 		}
 
@@ -238,16 +219,16 @@ public class RenderMapImageTask implements MapTask {
 
 		for (int cz = 0; cz < 32; cz++) {
 			for (int cx = 0; cx < 32; cx++) {
-				int loadedView = region.dimension.loadedChunkView.get(ChunkPos.asLong((region.pos.x() << 5) + cx, (region.pos.z() << 5) + cz));
+				int loadedView = region.dimension.getLoadedView(region, cx, cz);
 				MapChunk c = region.getMapChunk(XZ.of(cx, cz));
-				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.pos.toLong()));
+				Random random = new Random(region.pos.toLong() ^ (c == null ? 0L : c.getPos().toLong()));
 				Color4I claimColor;
 				int fullClaimColor;
 				boolean claimBarUp, claimBarDown, claimBarLeft, claimBarRight;
-				boolean isOwnChunk = c != null && c.getTeam() != null && ownTeam.getTeamId().equals(c.getTeam().getTeamId());
+				boolean isOwnChunk = c != null && c.getTeam().isPresent() && ownTeam.getTeamId().equals(c.getTeam().get().getTeamId());
 
-				if (c != null && c.claimedDate != null && (FTBChunksClient.alwaysRenderChunksOnMap || (isOwnChunk ? ownClaimedChunksOnMap : claimedChunksOnMap))) {
-					claimColor = c.getTeam().getProperty(TeamProperties.COLOR).withAlpha(100);
+				if (c != null && c.getClaimedDate().isPresent() && (alwaysRenderChunksOnMap || (isOwnChunk ? ownClaimedChunksOnMap : claimedChunksOnMap))) {
+					claimColor = c.getTeam().get().getProperty(TeamProperties.COLOR).withAlpha(100);
 					fullClaimColor = ColorUtils.convertToNative(0xFF000000 | claimColor.rgb());
 					claimBarUp = !c.connects(c.offsetBlocking(0, -1));
 					claimBarDown = !c.connects(c.offsetBlocking(0, 1));
@@ -270,15 +251,15 @@ public class RenderMapImageTask implements MapTask {
 						boolean tint2 = ax % 4 == (az % 2 == 0 ? 0 : 2);
 
 						if (c == null) {
-							if (loadedView == 1) {
+							if (loadedView == LoadedChunkViewPacket.LOADED) {
 								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? weakLoadedTint2 : weakLoadedTint).rgb()));
-							} else if (loadedView == 2) {
+							} else if (loadedView == LoadedChunkViewPacket.FORCE_LOADED) {
 								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint).rgb()));
 							} else {
 								region.setRenderedMapImageRGBA(ax, az, 0);
 							}
 						} else {
-							BlockColor blockColor = region.dimension.manager.getBlockColor(data.getBlockIndex(index));
+							BlockColor blockColor = region.dimension.getManager().getBlockColor(data.getBlockIndex(index));
 							Color4I col;
 							int by = getHeight(mapMode, waterHeightFactor, data.waterLightAndBiome[index], data.height[index]);
 							boolean hasWater = ((data.waterLightAndBiome[index] >> 15) & 1) != 0;
@@ -294,13 +275,12 @@ public class RenderMapImageTask implements MapTask {
 								region.setRenderedMapImageRGBA(ax, az, fullClaimColor);
 								continue;
 							} else {
-								if (blockColor instanceof CustomBlockColor) {
-									col = ((CustomBlockColor) blockColor).color;
+								if (blockColor instanceof CustomBlockColor cbc) {
+									col = cbc.getColor();
 								} else if (blockColor == BlockColors.FOLIAGE) {
 									if (foliage == null) {
 										foliage = initFoliage(blend, data);
 									}
-
 									col = getColor(blend, foliage, ax, az).withAlpha(255).withTint(Color4I.BLACK.withAlpha(foliageDarkness));
 								} else if (blockColor == BlockColors.GRASS) {
 									if (grass == null) {
@@ -367,9 +347,9 @@ public class RenderMapImageTask implements MapTask {
 								col = col.withTint(claimColor);
 							}
 
-							if (loadedView == 1) {
+							if (loadedView == LoadedChunkViewPacket.LOADED) {
 								col = col.withTint(tint2 ? weakLoadedTint2 : weakLoadedTint);
-							} else if (loadedView == 2) {
+							} else if (loadedView == LoadedChunkViewPacket.FORCE_LOADED) {
 								col = col.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint);
 							}
 

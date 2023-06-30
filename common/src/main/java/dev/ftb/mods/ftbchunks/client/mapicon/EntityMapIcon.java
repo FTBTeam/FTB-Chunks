@@ -1,8 +1,10 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import dev.ftb.mods.ftbchunks.integration.MapIcon;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.client.MapType;
+import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
@@ -18,12 +20,12 @@ import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 
 public class EntityMapIcon extends MapIcon {
-	public final Entity entity;
-	public final Icon icon;
+	private final Entity entity;
+	private final Icon icon;
 
-	public EntityMapIcon(Entity e, Icon i) {
-		entity = e;
-		icon = i;
+	public EntityMapIcon(Entity entity, Icon icon) {
+		this.entity = entity;
+		this.icon = icon;
 	}
 
 	@Override

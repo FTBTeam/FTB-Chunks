@@ -48,7 +48,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 						ex.printStackTrace();
 					}
 				}
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}
 

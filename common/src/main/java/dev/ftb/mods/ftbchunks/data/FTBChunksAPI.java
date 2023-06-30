@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -46,11 +45,11 @@ public class FTBChunksAPI {
 	}
 
 	public static ClaimResult claimAsPlayer(ServerPlayer player, ResourceKey<Level> dimension, ChunkPos pos, boolean checkOnly) {
-		return getManager().getData(player).claim(player.createCommandSourceStack(), new ChunkDimPos(dimension, pos), checkOnly);
+		return getManager().getOrCreateData(player).claim(player.createCommandSourceStack(), new ChunkDimPos(dimension, pos), checkOnly);
 	}
 
 	public static void syncPlayer(ServerPlayer player) {
-		SendGeneralDataPacket.send(getManager().getData(player), player);
+		SendGeneralDataPacket.send(getManager().getOrCreateData(player), player);
 	}
 
 	public static boolean isChunkForceLoaded(ResourceKey<Level> dimension, int x, int z) {

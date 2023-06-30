@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.integration;
+package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftblibrary.icon.Color4I;

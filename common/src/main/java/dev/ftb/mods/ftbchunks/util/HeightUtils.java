@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.data;
+package dev.ftb.mods.ftbchunks.util;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;

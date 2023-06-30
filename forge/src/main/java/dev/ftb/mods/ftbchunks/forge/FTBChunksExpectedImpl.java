@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.forge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.data.Protection;
 import dev.ftb.mods.ftbteams.api.event.TeamCollectPropertiesEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -16,8 +16,8 @@ public class FTBChunksExpectedImpl {
     }
 
     public static void getPlatformSpecificProperties(TeamCollectPropertiesEvent event) {
-        event.add(FTBChunksTeamData.BLOCK_EDIT_MODE);
-        event.add(FTBChunksTeamData.BLOCK_INTERACT_MODE);
+        event.add(FTBChunksProperties.BLOCK_EDIT_MODE);
+        event.add(FTBChunksProperties.BLOCK_INTERACT_MODE);
     }
 
     public static Protection getBlockPlaceProtection() {

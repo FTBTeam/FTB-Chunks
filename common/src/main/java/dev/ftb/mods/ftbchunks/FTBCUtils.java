@@ -4,10 +4,6 @@ import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PotionItem;
-import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.level.block.Block;
 
 public class FTBCUtils {
@@ -16,10 +12,7 @@ public class FTBCUtils {
 		throw new AssertionError();
 	}
 
-	public static boolean isBeneficialPotion(ItemStack stack) {
-		return stack.getItem() instanceof PotionItem && PotionUtils.getMobEffects(stack).stream()
-				.noneMatch(effect -> effect.getEffect().getCategory() == MobEffectCategory.HARMFUL);
-	}
+
 
 	/**
 	 * Used after various events have been cancelled server-side; client may already have updated the held item for the

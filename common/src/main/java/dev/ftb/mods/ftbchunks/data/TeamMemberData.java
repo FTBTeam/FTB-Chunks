@@ -43,12 +43,12 @@ public class TeamMemberData {
         return new TeamMemberData(maxClaims, maxForced, offline, orig);
     }
 
-    public static TeamMemberData fromPlayerData(ServerPlayer player, FTBChunksTeamData otherTeam) {
+    public static TeamMemberData fromPlayerData(ServerPlayer player, ChunkTeamDataImpl otherTeam) {
         return new TeamMemberData(
                 otherTeam.getMaxClaimChunks() + otherTeam.getExtraClaimChunks(),
                 otherTeam.getMaxForceLoadChunks() + otherTeam.getExtraForceLoadChunks(),
                 FTBChunksWorldConfig.canPlayerOfflineForceload(player),
-                new HashSet<>(otherTeam.getClaimedChunks().stream().map(ClaimedChunk::getPos).toList())
+                new HashSet<>(otherTeam.getClaimedChunks().stream().map(ClaimedChunkImpl::getPos).toList())
         );
     }
 

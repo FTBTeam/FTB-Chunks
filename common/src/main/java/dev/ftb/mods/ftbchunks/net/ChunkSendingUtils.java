@@ -1,13 +1,13 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 public class ChunkSendingUtils {
-    public static void sendChunkToAll(MinecraftServer server, FTBChunksTeamData teamData, SendChunkPacket packet) {
+    public static void sendChunkToAll(MinecraftServer server, ChunkTeamData teamData, SendChunkPacket packet) {
         if (!teamData.shouldHideClaims()) {
             packet.sendToAll(server);
         } else {
@@ -18,7 +18,7 @@ public class ChunkSendingUtils {
         }
     }
 
-    public static void sendManyChunksToAll(MinecraftServer server, FTBChunksTeamData teamData, SendManyChunksPacket packet) {
+    public static void sendManyChunksToAll(MinecraftServer server, ChunkTeamData teamData, SendManyChunksPacket packet) {
         if (!teamData.shouldHideClaims()) {
             packet.sendToAll(server);
         } else {
@@ -31,7 +31,7 @@ public class ChunkSendingUtils {
         }
     }
 
-    public static void sendManyChunksToPlayer(ServerPlayer player, FTBChunksTeamData teamData, SendManyChunksPacket packet) {
+    public static void sendManyChunksToPlayer(ServerPlayer player, ChunkTeamData teamData, SendManyChunksPacket packet) {
         if (!teamData.shouldHideClaims()) {
             packet.sendTo(player);
         } else {

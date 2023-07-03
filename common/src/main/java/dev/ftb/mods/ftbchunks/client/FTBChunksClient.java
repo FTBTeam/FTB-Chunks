@@ -19,8 +19,8 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksCommon;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.event.MapIconEvent;
-import dev.ftb.mods.ftbchunks.api.event.RefreshMinimapIconsEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
@@ -29,7 +29,6 @@ import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
 import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesIntegration;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
@@ -93,6 +92,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
+
+import static dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 
 /**
  * @author LatvianModder
@@ -220,8 +221,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		updateMinimapScheduled = true;
 	}
 
-	@Override
-	public void login(UUID serverId, SNBTCompoundTag config) {
+	public static void handlePlayerLogin(UUID serverId, SNBTCompoundTag config) {
 		FTBChunks.LOGGER.info("Loading FTB Chunks client data from world " + serverId);
 		FTBChunksWorldConfig.CONFIG.read(config);
 		MapManager.startUp(serverId);
@@ -234,32 +234,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 		MapManager.shutdown();
 	}
 
-	@Override
-	public void updateGeneralData(GeneralChunkData chunkData) {
+	public static void updateGeneralData(GeneralChunkData chunkData) {
 		generalChunkData = chunkData;
 	}
 
-//	@Override
-//	public void updateChunk(SendChunkPacket packet) {
-//		MapManager.getInstance().ifPresent(manager -> {
-//			MapDimension dimension = manager.getDimension(packet.dimension);
-//			ClientTaskQueue.queue(new UpdateChunkFromServerTask(dimension, packet.chunk, packet.teamId, new Date()));
-//		});
-//	}
-//
-//	@Override
-//	public void updateAllChunks(SendManyChunksPacket packet) {
-//		MapManager.getInstance().ifPresent(manager -> {
-//			MapDimension dimension = manager.getDimension(packet.dimension);
-//			Date now = new Date();
-//			for (SendChunkPacket.SingleChunk c : packet.chunks) {
-//				ClientTaskQueue.queue(new UpdateChunkFromServerTask(dimension, c, packet.teamId, now));
-//			}
-//		});
-//	}
-
-	@Override
-	public void updateChunks(ResourceKey<Level> dimId, UUID teamId, Collection<SendChunkPacket.SingleChunk> chunks) {
+	public static void updateChunksFromServer(ResourceKey<Level> dimId, UUID teamId, Collection<SingleChunk> chunks) {
 		MapManager.getInstance().ifPresent(manager -> {
 			MapDimension dimension = manager.getDimension(dimId);
 			Date now = new Date();
@@ -267,13 +246,11 @@ public class FTBChunksClient extends FTBChunksCommon {
 		});
 	}
 
-	@Override
-	public void syncRegion(RegionSyncKey key, int offset, int total, byte[] data) {
+	public static void syncRegionFromServer(RegionSyncKey key, int offset, int total, byte[] data) {
 		PartialPackets.REGION.read(key, offset, total, data);
 	}
 
-	@Override
-	public void playerDeath(GlobalPos pos, int deathNumber) {
+	public static void handlePlayerDeath(GlobalPos pos, int deathNumber) {
 		if (FTBChunksClientConfig.DEATH_WAYPOINTS.get() && FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
 			MapManager.getInstance().ifPresent(manager -> {
 				MapDimension dimension = manager.getDimension(pos.dimension());
@@ -292,8 +269,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		}
 	}
 
-	@Override
-	public int blockColor() {
+	public static void handleBlockColorRequest() {
 		Minecraft mc = Minecraft.getInstance();
 
 		mc.submit(() -> {
@@ -307,32 +283,32 @@ public class FTBChunksClient extends FTBChunksCommon {
 				}
 
 				mc.submit(() -> {
-					if (mc.hitResult instanceof BlockHitResult hitResult) {
+					if (mc.hitResult instanceof BlockHitResult hitResult && mc.level != null && mc.player != null) {
 						ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(mc.level.getBlockState(hitResult.getBlockPos()).getBlock());
 						Window window = mc.getWindow();
 						try (NativeImage image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
 							int col = image.getPixelRGBA(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
 							String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
-							mc.player.displayClientMessage(Component.literal(id.getNamespace() + " - " + s).withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to copy")))), false);
+							mc.player.displayClientMessage(Component.literal(id.getNamespace() + " - " + s)
+									.withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD)
+											.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s))
+											.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to copy")))
+									), false);
 						}
 					}
 				});
 			}, "Color getter").start();
 		});
-
-		return 1;
 	}
 
-	@Override
-	public void updateLoadedChunkView(ResourceKey<Level> dimension, Long2IntMap chunks) {
+	public static void syncLoadedChunkViewFromServer(ResourceKey<Level> dimension, Long2IntMap chunks) {
 		MapManager.getInstance().ifPresent(manager -> {
 			manager.getDimension(dimension).updateLoadedChunkView(chunks);
 			manager.updateAllRegions(false);
 		});
 	}
 
-	@Override
-	public boolean skipBlock(BlockState state) {
+	public static boolean skipBlock(BlockState state) {
 		ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
 		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}
@@ -1132,8 +1108,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		rerender(p.getPos());
 	}
 
-	@Override
-	public void maybeClearDeathpoint(Player player) {
+	public static void maybeClearDeathpoint(Player player) {
 		int maxDist = FTBChunksClientConfig.DEATH_WAYPOINT_AUTOREMOVE_DISTANCE.get();
 		MapManager.getInstance().ifPresent(manager -> {
 			if (maxDist > 0 && Minecraft.getInstance().screen == null) {
@@ -1149,8 +1124,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 		});
 	}
 
-	@Override
-	public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos, boolean valid) {
+	public static void updateTrackedPlayerPos(GameProfile profile, BlockPos pos, boolean valid) {
 		// called periodically when a player (outside of vanilla entity tracking range) that this client is tracking moves
 		boolean changed = false;
 		if (!valid) {

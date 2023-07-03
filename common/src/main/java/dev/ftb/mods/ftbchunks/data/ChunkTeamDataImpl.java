@@ -4,6 +4,8 @@ import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
+import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
@@ -40,8 +42,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class FTBChunksTeamData {
-	private final ClaimedChunkManager manager;
+public class ChunkTeamDataImpl implements ChunkTeamData {
+	private final ClaimedChunkManagerImpl manager;
 	private final Team team;
 	private final Path file;
 
@@ -59,7 +61,10 @@ public class FTBChunksTeamData {
 	private long lastLoginTime;
 	private Set<String> fakePlayerNameCache;
 
-	public FTBChunksTeamData(ClaimedChunkManager manager, Path file, Team team) {
+	private Collection<ClaimedChunkImpl> claimedChunkCache;
+	private Collection<ClaimedChunkImpl> forcedChunkCache;
+
+	public ChunkTeamDataImpl(ClaimedChunkManagerImpl manager, Path file, Team team) {
 		this.manager = manager;
 		this.file = file;
 		this.team = team;
@@ -78,7 +83,8 @@ public class FTBChunksTeamData {
 		return team.getId().toString();
 	}
 
-	public ClaimedChunkManager getManager() {
+	@Override
+	public ClaimedChunkManagerImpl getManager() {
 		return manager;
 	}
 
@@ -86,10 +92,12 @@ public class FTBChunksTeamData {
 		return file;
 	}
 
+	@Override
 	public TeamManager getTeamManager() {
 		return manager.getTeamManager();
 	}
 	
+	@Override
 	public Team getTeam() {
 		return team;
 	}
@@ -98,44 +106,42 @@ public class FTBChunksTeamData {
 		return team.getId();
 	}
 
+	@Override
 	public void setExtraClaimChunks(int extraClaimChunks) {
 		this.extraClaimChunks = extraClaimChunks;
 	}
 
+	@Override
 	public void setExtraForceLoadChunks(int extraForceLoadChunks) {
 		this.extraForceLoadChunks = extraForceLoadChunks;
 	}
 
-	public Collection<ClaimedChunk> getClaimedChunks() {
-		List<ClaimedChunk> list = new ArrayList<>();
-
-		for (ClaimedChunk chunk : manager.getAllClaimedChunks()) {
-			if (chunk.getTeamData() == this) {
-				list.add(chunk);
-			}
+	@Override
+	public Collection<ClaimedChunkImpl> getClaimedChunks() {
+		if (claimedChunkCache == null) {
+			claimedChunkCache = manager.getAllClaimedChunks().stream()
+					.filter(chunk -> chunk.getTeamData() == this)
+					.collect(Collectors.toList());
 		}
-
-		return list;
+		return claimedChunkCache;
 	}
 
-	public Collection<ClaimedChunk> getForceLoadedChunks() {
-		List<ClaimedChunk> list = new ArrayList<>();
-
-		for (ClaimedChunk chunk : manager.getAllClaimedChunks()) {
-			if (chunk.getTeamData() == this && chunk.isForceLoaded()) {
-				list.add(chunk);
-			}
+	@Override
+	public Collection<ClaimedChunkImpl> getForceLoadedChunks() {
+		if (forcedChunkCache == null) {
+			forcedChunkCache = manager.getAllClaimedChunks().stream()
+					.filter(chunk -> chunk.getTeamData() == this && chunk.isForceLoaded())
+					.collect(Collectors.toList());
 		}
-
-		return list;
+		return forcedChunkCache;
 	}
 
-	public Collection<ClaimedChunk> getOriginalClaims(UUID playerID) {
+	public Collection<ClaimedChunkImpl> getOriginalClaims(UUID playerID) {
 		if (!memberData.containsKey(playerID)) return Collections.emptyList();
 
-		List<ClaimedChunk> res = new ArrayList<>();
+		List<ClaimedChunkImpl> res = new ArrayList<>();
 		for (ChunkDimPos cdp : memberData.get(playerID).getOriginalClaims()) {
-			ClaimedChunk cc = manager.getChunk(cdp);
+			ClaimedChunkImpl cc = manager.getChunk(cdp);
 			// original claim must still be claimed, and by the current team
 			if (cc != null && cc.getTeamData() == this) {
 				res.add(manager.getChunk(cdp));
@@ -145,18 +151,19 @@ public class FTBChunksTeamData {
 		return res;
 	}
 
+	@Override
 	public ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.getChunk(pos);
+		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk != null) {
-			return ClaimResults.ALREADY_CLAIMED;
+			return ClaimResult.StandardProblem.ALREADY_CLAIMED;
 		} else if (!DimensionFilter.isDimensionOK(pos.dimension())) {
-			return ClaimResults.DIMENSION_FORBIDDEN;
+			return ClaimResult.StandardProblem.DIMENSION_FORBIDDEN;
 		} else if (!team.isServerTeam() && getClaimedChunks().size() >= getMaxClaimChunks()) {
-			return ClaimResults.NOT_ENOUGH_POWER;
+			return ClaimResult.StandardProblem.NOT_ENOUGH_POWER;
 		}
 
-		chunk = new ClaimedChunk(this, pos);
+		chunk = new ClaimedChunkImpl(this, pos);
 		ClaimResult result = ClaimedChunkEvent.BEFORE_CLAIM.invoker().before(source, chunk).object();
 		if (result == null) {
 			result = chunk;
@@ -173,13 +180,14 @@ public class FTBChunksTeamData {
 		return chunk;
 	}
 
+	@Override
 	public ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.getChunk(pos);
+		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
-			return ClaimResults.NOT_CLAIMED;
+			return ClaimResult.StandardProblem.NOT_CLAIMED;
 		} else if (chunk.getTeamData() != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
-			return ClaimResults.NOT_OWNER;
+			return ClaimResult.StandardProblem.NOT_OWNER;
 		}
 
 		ClaimResult result = ClaimedChunkEvent.BEFORE_UNCLAIM.invoker().before(source, chunk).object();
@@ -196,17 +204,18 @@ public class FTBChunksTeamData {
 		return chunk;
 	}
 
+	@Override
 	public ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.getChunk(pos);
+		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
-			return ClaimResults.NOT_CLAIMED;
+			return ClaimResult.StandardProblem.NOT_CLAIMED;
 		} else if (chunk.getTeamData() != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
-			return ClaimResults.NOT_OWNER;
+			return ClaimResult.StandardProblem.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
-			return ClaimResults.ALREADY_LOADED;
+			return ClaimResult.StandardProblem.ALREADY_LOADED;
 		} else if (!team.isServerTeam() && getForceLoadedChunks().size() >= getMaxForceLoadChunks()) {
-			return ClaimResults.NOT_ENOUGH_POWER;
+			return ClaimResult.StandardProblem.NOT_ENOUGH_POWER;
 		}
 
 		ClaimResult result = ClaimedChunkEvent.BEFORE_LOAD.invoker().before(source, chunk).object();
@@ -224,19 +233,20 @@ public class FTBChunksTeamData {
 		return chunk;
 	}
 
+	@Override
 	public ClaimResult unForceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
-		ClaimedChunk chunk = manager.getChunk(pos);
+		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
-			return ClaimResults.NOT_CLAIMED;
+			return ClaimResult.StandardProblem.NOT_CLAIMED;
 		} else if (chunk.getTeamData() != this
 				&& !source.hasPermission(2)
 				&& !source.getServer().isSingleplayer()
 				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(source.getEntity().getUUID()))
 		) {
-			return ClaimResults.NOT_OWNER;
+			return ClaimResult.StandardProblem.NOT_OWNER;
 		} else if (!chunk.isForceLoaded()) {
-			return ClaimResults.NOT_LOADED;
+			return ClaimResult.StandardProblem.NOT_LOADED;
 		}
 
 		ClaimResult result = ClaimedChunkEvent.BEFORE_UNLOAD.invoker().before(source, chunk).object();
@@ -256,14 +266,12 @@ public class FTBChunksTeamData {
 		team.markDirty();
 	}
 
+	@Override
 	public boolean isTeamMember(UUID playerId) {
-		if (playerId.equals(getTeamId())) {
-			return true;
-		}
-
-		return team.getMembers().contains(playerId);
+		return playerId.equals(getTeamId()) || team.getMembers().contains(playerId);
 	}
 
+	@Override
 	public boolean isAlly(UUID playerId) {
 		if (FTBChunksWorldConfig.ALLY_MODE.get() == AllyMode.FORCED_ALL || team.getRankForPlayer(playerId).isMemberOrBetter()) {
 			return true;
@@ -274,7 +282,8 @@ public class FTBChunksTeamData {
 		return team.getRankForPlayer(playerId) == TeamRank.ALLY;
 	}
 
-	public boolean canUse(ServerPlayer player, PrivacyProperty property) {
+	@Override
+	public boolean canPlayerUse(ServerPlayer player, PrivacyProperty property) {
 		PrivacyMode mode = team.getProperty(property);
 
 		if (mode == PrivacyMode.PUBLIC) {
@@ -329,7 +338,7 @@ public class FTBChunksTeamData {
 		tag.putLong("last_login_time", lastLoginTime);
 
 		CompoundTag chunksTag = new CompoundTag();
-		for (ClaimedChunk chunk : getClaimedChunks()) {
+		for (ClaimedChunkImpl chunk : getClaimedChunks()) {
 			String key = chunk.getPos().dimension().location().toString();
 			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 			if (chunksListTag.isEmpty()) {
@@ -355,6 +364,8 @@ public class FTBChunksTeamData {
 		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
 		lastLoginTime = tag.getLong("last_login_time");
 		canForceLoadChunks = null;
+		claimedChunkCache = null;
+		forcedChunkCache = null;
 
 		CompoundTag chunksTag = tag.getCompound("chunks");
 
@@ -363,7 +374,7 @@ public class FTBChunksTeamData {
 			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 
 			for (int i = 0; i < chunksListTag.size(); i++) {
-				ClaimedChunk chunk = ClaimedChunk.deserializeNBT(this, dimKey, chunksListTag.getCompound(i));
+				ClaimedChunkImpl chunk = ClaimedChunkImpl.deserializeNBT(this, dimKey, chunksListTag.getCompound(i));
 				manager.registerClaim(chunk.getPos(), chunk);
 			}
 		}
@@ -382,10 +393,11 @@ public class FTBChunksTeamData {
 		}
 	}
 
+	@Override
 	public int getExtraClaimChunks() {
 		if (extraClaimChunks > 0 && team.isPartyTeam()) {
 			FTBChunks.LOGGER.info("found non-zero extra_claim_chunks={} in party team {}: transferring to owner {}", extraClaimChunks, getTeamId(), team.getOwner());
-			FTBChunksTeamData personalTeam = FTBChunksAPI.getManager().getPersonalData(team.getOwner());
+			ChunkTeamDataImpl personalTeam = ClaimedChunkManagerImpl.getInstance().getPersonalData(team.getOwner());
 			personalTeam.extraClaimChunks = extraClaimChunks;
 			extraClaimChunks = 0;
 			markDirty();
@@ -394,10 +406,11 @@ public class FTBChunksTeamData {
 		return extraClaimChunks;
 	}
 
+	@Override
 	public int getExtraForceLoadChunks() {
 		if (extraForceLoadChunks > 0 && team.isPartyTeam()) {
 			FTBChunks.LOGGER.info("found non-zero extra_force_load_chunks={} in party team {}: transferring to owner {}", extraForceLoadChunks, getTeamId(), team.getOwner());
-			FTBChunksTeamData personalTeam = FTBChunksAPI.getManager().getPersonalData(team.getOwner());
+			ChunkTeamDataImpl personalTeam = ClaimedChunkManagerImpl.getInstance().getPersonalData(team.getOwner());
 			personalTeam.extraForceLoadChunks = extraForceLoadChunks;
 			extraForceLoadChunks = 0;
 			markDirty();
@@ -448,7 +461,8 @@ public class FTBChunksTeamData {
 		}
 	}
 
-	public boolean canForceLoadChunks() {
+	@Override
+	public boolean canDoOfflineForceLoading() {
 		if (canForceLoadChunks == null) {
 			canForceLoadChunks = switch (FTBChunksWorldConfig.FORCE_LOAD_MODE.get()) {
 				case ALWAYS -> true;
@@ -459,14 +473,16 @@ public class FTBChunksTeamData {
 		return canForceLoadChunks;
 	}
 
-	public boolean hasForceLoadMembers() {
+	private boolean hasForceLoadMembers() {
 		return memberData.values().stream().anyMatch(TeamMemberData::isOfflineForceLoader);
 	}
 
-	public boolean allowExplosions() {
+	@Override
+	public boolean canExplosionsDamageTerrain() {
 		return team.getProperty(FTBChunksProperties.ALLOW_EXPLOSIONS);
 	}
 
+	@Override
 	public boolean allowMobGriefing() {
 		return team.getProperty(FTBChunksProperties.ALLOW_MOB_GRIEFING);
 	}
@@ -476,6 +492,7 @@ public class FTBChunksTeamData {
 		markDirty();
 	}
 
+	@Override
 	public long getLastLoginTime() {
 		if (lastLoginTime == 0L) {
 			setLastLoginTime(System.currentTimeMillis());
@@ -483,6 +500,7 @@ public class FTBChunksTeamData {
 		return lastLoginTime;
 	}
 
+	@Override
 	public boolean shouldHideClaims() {
 		return getTeam().getProperty(FTBChunksProperties.CLAIM_VISIBILITY) != PrivacyMode.PUBLIC;
 	}
@@ -511,10 +529,12 @@ public class FTBChunksTeamData {
 				));
 	}
 
+	@Override
 	public int getMaxClaimChunks() {
 		return maxClaimChunks;
 	}
 
+	@Override
 	public int getMaxForceLoadChunks() {
 		return maxForceLoadChunks;
 	}
@@ -582,7 +602,7 @@ public class FTBChunksTeamData {
 			TeamMemberData m = getTeamMemberData(p.getUUID());
 			if (playerTeam != null) {
 				// pull limits in from the player's *personal* team data, if possible
-				FTBChunksTeamData personalData = FTBChunksAPI.getManager().getOrCreateData(playerTeam);
+				ChunkTeamDataImpl personalData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(playerTeam);
 				m.setMaxClaims(FTBChunksWorldConfig.getMaxClaimedChunks(personalData, p));
 				m.setMaxForceLoads(FTBChunksWorldConfig.getMaxForceLoadedChunks(personalData, p));
 			} else {
@@ -602,7 +622,7 @@ public class FTBChunksTeamData {
 				Team playerTeam = getTeamManager().getPlayerTeamForPlayerID(id).orElse(null);
 				int maxC, maxF;
 				if (playerTeam != null) {
-					FTBChunksTeamData personalData = FTBChunksAPI.getManager().getOrCreateData(playerTeam);
+					ChunkTeamDataImpl personalData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(playerTeam);
 					maxC = FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS.get() + personalData.getExtraClaimChunks();
 					maxF = FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS.get() + personalData.getExtraForceLoadChunks();
 				} else {
@@ -618,7 +638,7 @@ public class FTBChunksTeamData {
 		markDirty();
 	}
 
-	public void addMemberData(ServerPlayer player, FTBChunksTeamData otherTeam) {
+	public void addMemberData(ServerPlayer player, ChunkTeamDataImpl otherTeam) {
 		if (otherTeam.team.isPlayerTeam()) {
 			memberData.put(otherTeam.getTeamId(), TeamMemberData.fromPlayerData(player, otherTeam));
 			markDirty();
@@ -631,7 +651,7 @@ public class FTBChunksTeamData {
 		}
 	}
 
-	private boolean hasChunkChanged(ClaimedChunk chunk) {
+	private boolean hasChunkChanged(ClaimedChunkImpl chunk) {
 		String s = chunk == null ? "-" : chunk.getTeamData().getTeamId().toString();
 		if (lastChunkID.equals(s)) {
 			lastChunkID = s;
@@ -643,7 +663,7 @@ public class FTBChunksTeamData {
 
 	public void checkForChunkChange(Player player, int chunkX, int chunkZ) {
 		if (prevChunkX != chunkX || prevChunkZ != chunkZ) {
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(player));
+			ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(player));
 			if (hasChunkChanged(chunk)) {
 				if (chunk != null) {
 					player.displayClientMessage(chunk.getTeamData().getTeam().getColoredName(), true);
@@ -654,5 +674,10 @@ public class FTBChunksTeamData {
 			prevChunkX = chunkX;
 			prevChunkZ = chunkZ;
 		}
+	}
+
+	public void clearClaimCaches() {
+		claimedChunkCache = null;
+		forcedChunkCache = null;
 	}
 }

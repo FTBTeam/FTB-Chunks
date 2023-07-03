@@ -3,8 +3,8 @@ package dev.ftb.mods.ftbchunks;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.net.SendPlayerPositionPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * Tracks which players can see which players on the long-range display (i.e. outside of standard vanilla entity
  * tracking range). Updated once a second, if a player has moved by >4 blocks, to keep network chatter down.
- *
+ * <p>
  * By default, players must be in the same party, or allied, to be able to see each other long-range. Non-party players
  * won't be long-range visible to others unless they make their "Location Visibility" team property PUBLIC.
  */
@@ -88,7 +88,7 @@ public enum LongRangePlayerTracker {
         }
 
         // and player 1 must be able to see player 2 (i.e. player 2's team settings must allow it)
-        FTBChunksTeamData p2Team = FTBChunksAPI.getManager().getOrCreateData(p2);
-        return p2Team.canUse(p1, FTBChunksProperties.LOCATION_MODE);
+        ChunkTeamDataImpl p2Team = ClaimedChunkManagerImpl.getInstance().getOrCreateData(p2);
+        return p2Team.canPlayerUse(p1, FTBChunksProperties.LOCATION_MODE);
     }
 }

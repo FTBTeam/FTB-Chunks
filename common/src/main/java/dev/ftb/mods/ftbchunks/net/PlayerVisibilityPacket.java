@@ -6,9 +6,10 @@ import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
@@ -17,17 +18,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * @author LatvianModder
- */
-public class SendVisiblePlayerListPacket extends BaseS2CMessage {
+public class PlayerVisibilityPacket extends BaseS2CMessage {
 	private final List<UUID> uuids;
 
-	private SendVisiblePlayerListPacket(List<UUID> uuids) {
+	private PlayerVisibilityPacket(List<UUID> uuids) {
 		this.uuids = uuids;
 	}
 
-	SendVisiblePlayerListPacket(FriendlyByteBuf buf) {
+	PlayerVisibilityPacket(FriendlyByteBuf buf) {
 		uuids = buf.readList(FriendlyByteBuf::readUUID);
 	}
 
@@ -47,21 +45,23 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 	}
 
 	public static void syncToLevel(Level level) {
-		syncToPlayers(FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers().stream().filter(p -> p.level() == level).toList());
+		if (level instanceof ServerLevel serverLevel) {
+			syncToPlayers(serverLevel.getPlayers(p -> true));
+		}
 	}
 
 	public static void syncToAll() {
-		syncToPlayers(FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers());
+		syncToPlayers(ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getPlayerList().getPlayers());
 	}
 
 	public static void syncToPlayers(List<ServerPlayer> players) {
 		List<VisiblePlayerItem> playerList;
 
 		if (players == null) {
-			players = FTBChunksAPI.getManager().getMinecraftServer().getPlayerList().getPlayers();
+			players = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getPlayerList().getPlayers();
 		}
 		playerList = players.stream()
-				.map(player -> new VisiblePlayerItem(player, FTBChunksAPI.getManager().getOrCreateData(player)))
+				.map(player -> new VisiblePlayerItem(player, ClaimedChunkManagerImpl.getInstance().getOrCreateData(player)))
 				.collect(Collectors.toList());
 
 		boolean override = FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE.get();
@@ -69,15 +69,15 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 			List<UUID> playerIds = new ArrayList<>();
 
 			for (VisiblePlayerItem other : playerList) {
-				if (override || recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksProperties.LOCATION_MODE)) {
+				if (override || recipient.player.hasPermissions(2) || other.data.canPlayerUse(recipient.player, FTBChunksProperties.LOCATION_MODE)) {
 					playerIds.add(other.player.getUUID());
 				}
 			}
 
-			new SendVisiblePlayerListPacket(playerIds).sendTo(recipient.player);
+			new PlayerVisibilityPacket(playerIds).sendTo(recipient.player);
 		}
 	}
 
-	private record VisiblePlayerItem(ServerPlayer player, FTBChunksTeamData data) {
+	private record VisiblePlayerItem(ServerPlayer player, ChunkTeamDataImpl data) {
 	}
 }

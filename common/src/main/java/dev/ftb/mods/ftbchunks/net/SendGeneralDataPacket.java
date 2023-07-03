@@ -3,9 +3,9 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -35,21 +35,21 @@ public class SendGeneralDataPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.updateGeneralData(data);
+		FTBChunksClient.updateGeneralData(data);
 	}
 
-	public static void send(FTBChunksTeamData teamData, ServerPlayer player) {
+	public static void send(ChunkTeamData teamData, ServerPlayer player) {
 		send(teamData, List.of(player));
 	}
 
-	public static void send(FTBChunksTeamData teamData, Collection<ServerPlayer> players) {
-		Collection<ClaimedChunk> cc = teamData.getClaimedChunks();
+	public static void send(ChunkTeamData teamData, Collection<ServerPlayer> players) {
+		var cc = teamData.getClaimedChunks();
 		int loaded = (int) cc.stream().filter(ClaimedChunk::isForceLoaded).count();
 		SendGeneralDataPacket data = new SendGeneralDataPacket(cc.size(), loaded, teamData.getMaxClaimChunks(), teamData.getMaxForceLoadChunks());
 
 		players.forEach(player ->
 				teamData.getTeamManager().getTeamForPlayer(player).ifPresent(team -> {
-					if (team.getId().equals(teamData.getTeamId())) {
+					if (team.getId().equals(teamData.getTeam().getId())) {
 						data.sendTo(player);
 					}
 				}));

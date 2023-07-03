@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.integration.waystones;
 
-import dev.ftb.mods.ftbchunks.api.event.MapIconEvent;
-import dev.ftb.mods.ftbchunks.api.event.RefreshMinimapIconsEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.RefreshMinimapIconsEvent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 

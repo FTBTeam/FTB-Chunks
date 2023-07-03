@@ -1,6 +1,10 @@
 package dev.ftb.mods.ftbchunks;
 
-import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
+import dev.ftb.mods.ftbchunks.data.AllyMode;
+import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
+import dev.ftb.mods.ftbchunks.data.ForceLoadMode;
+import dev.ftb.mods.ftbchunks.data.PartyLimitMode;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.config.NameMap;
@@ -16,7 +20,7 @@ import java.util.Collections;
 public interface FTBChunksWorldConfig {
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
 
-	EnumValue<ProtectionOverride> FAKE_PLAYERS = CONFIG.addEnum("fake_players", NameMap.of(ProtectionOverride.CHECK, ProtectionOverride.values()).create()).comment("Override to disable/enable fake players like miners and auto-clickers globally.","Default will check this setting for each team");
+	EnumValue<ProtectionPolicy> FAKE_PLAYERS = CONFIG.addEnum("fake_players", NameMap.of(ProtectionPolicy.CHECK, ProtectionPolicy.values()).create()).comment("Override to disable/enable fake players like miners and auto-clickers globally.","Default will check this setting for each team");
 	IntValue MAX_CLAIMED_CHUNKS = CONFIG.addInt("max_claimed_chunks", 500).comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission");
 	IntValue MAX_FORCE_LOADED_CHUNKS = CONFIG.addInt("max_force_loaded_chunks", 25).comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission");
 	BooleanValue CHUNK_LOAD_OFFLINE = CONFIG.addBoolean("chunk_load_offline", true).comment("Fallback offline chunk loading behaviour for when 'force_load_mode' is set to 'default'");
@@ -37,7 +41,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue REQUIRE_GAME_STAGE = CONFIG.addBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
 
-	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
+	static int getMaxClaimedChunks(ChunkTeamDataImpl playerData, ServerPlayer player) {
 		if (player != null) {
 			return PermissionsHelper.getInstance().getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
 		}
@@ -45,7 +49,7 @@ public interface FTBChunksWorldConfig {
 		return MAX_CLAIMED_CHUNKS.get() + playerData.getExtraClaimChunks();
 	}
 
-	static int getMaxForceLoadedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
+	static int getMaxForceLoadedChunks(ChunkTeamDataImpl playerData, ServerPlayer player) {
 		if (player != null) {
 			return PermissionsHelper.getInstance().getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
 		}

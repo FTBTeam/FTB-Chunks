@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.registries.Registries;
@@ -41,6 +41,6 @@ public class LoadedChunkViewPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.updateLoadedChunkView(dimension, chunks);
+		FTBChunksClient.syncLoadedChunkViewFromServer(dimension, chunks);
 	}
 }

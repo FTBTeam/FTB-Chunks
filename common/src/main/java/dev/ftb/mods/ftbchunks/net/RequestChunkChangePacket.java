@@ -5,10 +5,9 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.ClaimResult;
-import dev.ftb.mods.ftbchunks.data.ClaimResults;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
+import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
@@ -53,7 +52,7 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 	public void handle(NetworkManager.PacketContext context) {
 		ServerPlayer player = (ServerPlayer) context.getPlayer();
 		CommandSourceStack source = player.createCommandSourceStack();
-		FTBChunksTeamData data = FTBChunksAPI.getManager().getOrCreateData(player);
+		ChunkTeamData data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
 		Function<XZ, ClaimResult> consumer = switch (action) {
 			case CLAIM -> pos -> data.claim(source, pos.dim(player.level()), false);
 			case UNCLAIM -> pos -> data.unclaim(source, pos.dim(player.level()), false);
@@ -61,14 +60,14 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 			case UNLOAD -> pos -> data.unForceLoad(source, pos.dim(player.level()), false);
 		};
 
-		EnumMap<ClaimResults,Integer> problems = new EnumMap<>(ClaimResults.class);
+		EnumMap<ClaimResult.StandardProblem,Integer> problems = new EnumMap<>(ClaimResult.StandardProblem.class);
 		int changed = 0;
 		for (XZ pos : chunks) {
 			ClaimResult r = consumer.apply(pos);
 			if (!r.isSuccess()) {
 				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(),
 						action.name, player.level().dimension().location(), pos.x(), pos.z(), r));
-				if (r instanceof ClaimResults cr) {
+				if (r instanceof ClaimResult.StandardProblem cr) {
 					problems.put(cr, problems.getOrDefault(cr, 0) + 1);
 				}
 			} else {

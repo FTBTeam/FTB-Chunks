@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.event.RefreshMinimapIconsEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.RefreshMinimapIconsEvent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;

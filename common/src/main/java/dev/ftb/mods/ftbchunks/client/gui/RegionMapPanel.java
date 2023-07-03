@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import dev.ftb.mods.ftbchunks.api.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;

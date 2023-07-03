@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -21,8 +21,12 @@ public class HeightUtils {
 		return state instanceof BlockStateFTBC ? ((BlockStateFTBC) state).getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
-	public static boolean skipBlock(BlockState state) {
-		return state.isAir() || FTBChunks.PROXY.skipBlock(state);
+	public static boolean skipBlock(Level level, BlockState state) {
+		if (level.isClientSide) {
+			return state.isAir() || FTBChunksClient.skipBlock(state);
+		} else {
+			return false;
+		}
 	}
 
 	public static int getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos) {
@@ -45,7 +49,7 @@ public class HeightUtils {
 					pos.setY(by);
 					state = chunkAccess.getBlockState(pos);
 
-					if (skipBlock(state)) {
+					if (skipBlock(level, state)) {
 						continue outer;
 					}
 				}
@@ -57,7 +61,7 @@ public class HeightUtils {
 				currentWaterY = by;
 			}
 
-			if (!water && !skipBlock(state)) {
+			if (!water && !skipBlock(level, state)) {
 				return currentWaterY;
 			}
 		}

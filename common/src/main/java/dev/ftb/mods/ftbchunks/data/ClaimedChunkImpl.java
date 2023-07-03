@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
@@ -17,14 +18,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
-public class ClaimedChunk implements ClaimResult {
-	private FTBChunksTeamData teamData;
+public class ClaimedChunkImpl implements ClaimedChunk {
+	private ChunkTeamDataImpl teamData;
 	private final ChunkDimPos pos;
 	private long time;
 	private long forceLoaded;
 	private long forceLoadExpiryTime;
 
-	public ClaimedChunk(FTBChunksTeamData teamData, ChunkDimPos pos) {
+	public ClaimedChunkImpl(ChunkTeamDataImpl teamData, ChunkDimPos pos) {
 		this.teamData = teamData;
 		this.pos = pos;
 
@@ -33,24 +34,27 @@ public class ClaimedChunk implements ClaimResult {
 		forceLoadExpiryTime = 0L;
 	}
 
-	public FTBChunksTeamData getTeamData() {
+	@Override
+	public ChunkTeamDataImpl getTeamData() {
 		return teamData;
 	}
 
-	public void setTeamData(FTBChunksTeamData teamData) {
+	public void setTeamData(ChunkTeamDataImpl teamData) {
 		this.teamData = teamData;
 	}
 
+	@Override
 	public ChunkDimPos getPos() {
 		return pos;
 	}
 
+	@Override
 	public long getTimeClaimed() {
 		return time;
 	}
 
 	@Override
-	public String claimResultName() {
+	public String getId() {
 		return "ok";
 	}
 
@@ -59,26 +63,26 @@ public class ClaimedChunk implements ClaimResult {
 		return true;
 	}
 
-	@Override
 	public void setClaimedTime(long t) {
 		time = t;
 		teamData.getManager().clearForceLoadedCache();
 		sendUpdateToAll();
 	}
 
+	@Override
 	public long getForceLoadedTime() {
 		return forceLoaded;
 	}
 
+	@Override
 	public boolean isForceLoaded() {
 		return forceLoaded > 0L;
 	}
 
 	public boolean isActuallyForceLoaded() {
-		return isForceLoaded() && teamData.canForceLoadChunks();
+		return isForceLoaded() && teamData.canDoOfflineForceLoading();
 	}
 
-	@Override
 	public void setForceLoadedTime(long time) {
 		forceLoaded = time;
 		teamData.getManager().clearForceLoadedCache();
@@ -108,7 +112,7 @@ public class ClaimedChunk implements ClaimResult {
 	}
 
 	public boolean allowExplosions() {
-		return teamData.allowExplosions();
+		return teamData.canExplosionsDamageTerrain();
 	}
 
 	public boolean allowMobGriefing() {
@@ -120,6 +124,7 @@ public class ClaimedChunk implements ClaimResult {
 		ChunkSendingUtils.sendChunkToAll(teamData.getManager().getMinecraftServer(), teamData, packet);
 	}
 
+	@Override
 	public void unload(CommandSourceStack source) {
 		if (isForceLoaded()) {
 			setForceLoadedTime(0L);
@@ -129,6 +134,7 @@ public class ClaimedChunk implements ClaimResult {
 		}
 	}
 
+	@Override
 	public void unclaim(CommandSourceStack source, boolean sync) {
 		unload(source);
 
@@ -142,16 +148,19 @@ public class ClaimedChunk implements ClaimResult {
 		}
 	}
 
+	@Override
 	public long getForceLoadExpiryTime() {
 		return forceLoadExpiryTime;
 	}
 
+	@Override
 	public void setForceLoadExpiryTime(long forceLoadExpiryTime) {
 		this.forceLoadExpiryTime = forceLoadExpiryTime;
 		teamData.markDirty();
 	}
 
-	public boolean hasExpired(long now) {
+	@Override
+	public boolean hasForceLoadExpired(long now) {
 		return forceLoadExpiryTime > 0L && forceLoadExpiryTime < now;
 	}
 
@@ -175,8 +184,8 @@ public class ClaimedChunk implements ClaimResult {
 		return o;
 	}
 
-	public static ClaimedChunk deserializeNBT(FTBChunksTeamData data, ResourceKey<Level> dimKey, CompoundTag tag) {
-		ClaimedChunk chunk = new ClaimedChunk(data, new ChunkDimPos(dimKey, tag.getInt("x"), tag.getInt("z")));
+	public static ClaimedChunkImpl deserializeNBT(ChunkTeamDataImpl data, ResourceKey<Level> dimKey, CompoundTag tag) {
+		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.getInt("x"), tag.getInt("z")));
 		chunk.time = tag.getLong("time");
 		chunk.forceLoaded = tag.getLong("force_loaded");
 		chunk.forceLoadExpiryTime = tag.getLong("expiry_time");

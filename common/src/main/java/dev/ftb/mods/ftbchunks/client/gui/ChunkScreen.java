@@ -4,12 +4,12 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
-import dev.ftb.mods.ftbchunks.data.ClaimResults;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
@@ -67,7 +67,7 @@ public class ChunkScreen extends BaseScreen {
 	}
 
 
-	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResults, Integer> problems) {
+	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
 			cs.updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
@@ -180,10 +180,10 @@ public class ChunkScreen extends BaseScreen {
 		if (updateInfo != null && updateInfo.shouldDisplay()) {
 			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
 			int line = 1;
-			for (Map.Entry<ClaimResults, Integer> entry : updateInfo.problems.entrySet()) {
-				ClaimResults problem = entry.getKey();
+			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
+				ClaimResult.StandardProblem problem = entry.getKey();
 				int count = entry.getValue();
-				theme.drawString(graphics, Component.translatable(problem.getTranslationKey()).append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
+				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
 		}
 	}
@@ -314,7 +314,7 @@ public class ChunkScreen extends BaseScreen {
 		}
 	}
 
-	private record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResults, Integer> problems, long timestamp) {
+	private record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems, long timestamp) {
 		public boolean shouldDisplay() {
 			// display for 3 seconds + 1 second per line of problem data
 			long timeout = 60L + 20L * problems.size();

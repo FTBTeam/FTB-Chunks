@@ -9,6 +9,7 @@ import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.registries.Registrar;
 import dev.architectury.registry.registries.RegistrarManager;
+import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
@@ -73,7 +74,6 @@ public class FTBChunks {
 	public static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
 	public static FTBChunks instance;
-	public static FTBChunksCommon PROXY;
 
 	public static final int TILES = 15;
 	public static final int TILE_SIZE = 16;
@@ -86,7 +86,6 @@ public class FTBChunks {
 	public FTBChunks() {
 		FTBChunksAPI._init(FTBChunksAPIImpl.INSTANCE);
 
-		PROXY = EnvExecutor.getEnvSpecific(() -> FTBChunksClient::new, () -> FTBChunksCommon::new);
 		FTBChunksNet.init();
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
@@ -140,7 +139,7 @@ public class FTBChunks {
 			FTBRanksIntegration.registerEvents();
 		}
 
-		PROXY.init();
+		EnvExecutor.runInEnv(Env.CLIENT, () -> FTBChunksClient.INSTANCE::init);
 	}
 
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
@@ -155,7 +154,7 @@ public class FTBChunks {
 
 	private void playerTickPost(Player player) {
 		if (player.level().isClientSide && player.level().getGameTime() % 20 == 0) {
-			FTBChunksClient.maybeClearDeathpoint(player);
+			FTBChunksClient.INSTANCE.maybeClearDeathpoint(player);
 		}
 	}
 
@@ -229,7 +228,7 @@ public class FTBChunks {
 	}
 
 	public void loggedOut(ServerPlayer player) {
-		if (!FTBTeamsAPI.api().isManagerLoaded() || !FTBChunksAPI.api().isManagerLoaded() || !FTBChunksAPI.api().getManager().hasData(player)) {
+		if (!FTBTeamsAPI.api().isManagerLoaded() || !FTBChunksAPI.api().isManagerLoaded()) {
 			return;
 		}
 

@@ -35,7 +35,7 @@ public class SendGeneralDataPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.updateGeneralData(data);
+		FTBChunksClient.INSTANCE.updateGeneralData(data);
 	}
 
 	public static void send(ChunkTeamData teamData, ServerPlayer player) {

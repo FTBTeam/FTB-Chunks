@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.fabric;
 
-import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -12,7 +11,7 @@ public class FTBChunksClientImpl {
 	}
 
 	private static void renderWorldLastFabric(WorldRenderContext context) {
-		((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(context.matrixStack(), context.projectionMatrix(), context.camera(), context.tickDelta());
+		FTBChunksClient.INSTANCE.renderWorldLast(context.matrixStack(), context.projectionMatrix(), context.camera(), context.tickDelta());
 	}
 
 	public static boolean doesKeybindMatch(KeyMapping keyMapping, int keyCode, int scanCode, int modifiers) {

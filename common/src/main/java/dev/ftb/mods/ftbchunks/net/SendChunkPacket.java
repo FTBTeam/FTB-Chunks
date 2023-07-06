@@ -48,7 +48,7 @@ public class SendChunkPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.updateChunksFromServer(dimension, teamId, List.of(chunk));
+		FTBChunksClient.INSTANCE.updateChunksFromServer(dimension, teamId, List.of(chunk));
 	}
 
 	public static class SingleChunk {

@@ -10,8 +10,18 @@ import java.util.Optional;
  * Represents the result of an operation on a chunk: claiming, un-claiming, force-loading or un-force-loading.
  */
 public interface ClaimResult {
-	String getId();
+	/**
+	 * Get the result's unique ID. Primarily used to generate translation keys for display purposes.
+	 *
+	 * @return the ID
+	 */
+	String getResultId();
 
+	/**
+	 * Was the operation successful?
+	 *
+	 * @return true if the operation succeeded, false is there was a problem
+	 */
 	default boolean isSuccess() {
 		return false;
 	}
@@ -22,16 +32,14 @@ public interface ClaimResult {
 	 *
 	 * @return the message to be displayed
 	 */
-	default MutableComponent getMessage() {
-		return Component.translatable("ftbchunks.claim_result." + getId());
-	}
+	MutableComponent getMessage();
 
 	/**
-	 * Create a custom claim failure result. This may be of use to mods which add checks to claiming/forcing/etc. via
-	 * the events in {@link dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent}; such mods can return a custom claim
+	 * Create a custom claim failure result. This may be of use to mods which add extra checks to claiming/forcing/etc.
+	 * via the events in {@link dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent}; such mods can return a custom claim
 	 * result from the "before" event handler as appropriate.
 	 *
-	 * @param translationKey the translation for message display
+	 * @param translationKey the translation key for message display
 	 * @return a custom result
 	 */
 	static ClaimResult customProblem(String translationKey) {
@@ -39,10 +47,10 @@ public interface ClaimResult {
 	}
 
 	/**
-	 * Convenience method to return a successul claim outcome. This method should be used rather than returning a
+	 * Convenience method to return a successful claim outcome. This method should be used rather than returning a
 	 * literal {@code null} value from "before" event handlers for future compatibility purposes.
 	 *
-	 * @implNote a null return from "before" events is currently treated as successful, but this should not be
+	 * @implNote a null return from "before" events is currently treated as successful, but that should not be
 	 * relied upon; use this method.
 	 *
 	 * @return a successful outcome
@@ -76,8 +84,12 @@ public interface ClaimResult {
 			return Optional.ofNullable(NAME_MAP.get(name));
 		}
 
+		public MutableComponent getMessage() {
+			return Component.translatable("ftbchunks.claim_result." + getResultId());
+		}
+
 		@Override
-		public String getId() {
+		public String getResultId() {
 			return resultName;
 		}
 	}
@@ -95,7 +107,7 @@ public interface ClaimResult {
 		}
 
 		@Override
-		public String getId() {
+		public String getResultId() {
 			return name;
 		}
 

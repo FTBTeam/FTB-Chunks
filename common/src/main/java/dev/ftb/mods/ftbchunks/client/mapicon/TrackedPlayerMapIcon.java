@@ -1,15 +1,19 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.authlib.GameProfile;
-import dev.ftb.mods.ftbchunks.client.MapType;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
-public class TrackedPlayerMapIcon extends MapIcon {
+public class TrackedPlayerMapIcon implements MapIcon {
     private Vec3 pos;
     private final FaceIcon faceIcon;
     private final Component name;
@@ -21,7 +25,7 @@ public class TrackedPlayerMapIcon extends MapIcon {
     }
 
     @Override
-    public Vec3 getPos(float delta) {
+    public Vec3 getPos(float partialTick) {
         return pos;
     }
 
@@ -37,6 +41,16 @@ public class TrackedPlayerMapIcon extends MapIcon {
     @Override
     public void addTooltip(TooltipList list) {
         list.add(name);
+    }
+
+    @Override
+    public boolean onMousePressed(BaseScreen screen, MouseButton button) {
+        return false;
+    }
+
+    @Override
+    public boolean onKeyPressed(BaseScreen screen, Key key) {
+        return false;
     }
 
     @Override

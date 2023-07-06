@@ -1,34 +1,31 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import dev.ftb.mods.ftbchunks.client.MapType;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.minecraft.client.gui.GuiGraphics;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
+import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
+import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
+import org.lwjgl.glfw.GLFW;
 
-public class StaticMapIcon extends MapIcon {
-	public final Vec3 pos;
-	public Icon icon;
-
-	public StaticMapIcon(Vec3 p) {
-		pos = p;
-		icon = Color4I.empty();
-	}
-
-	public StaticMapIcon(BlockPos p) {
-		this(new Vec3(p.getX() + 0.5D, p.getY() + 0.5D, p.getZ() + 0.5D));
+public class StaticMapIcon extends MapIcon.SimpleMapIcon {
+	public StaticMapIcon(BlockPos pos) {
+		super(Vec3.atCenterOf(pos));
 	}
 
 	@Override
-	public Vec3 getPos(float delta) {
-		return pos;
+	public boolean onKeyPressed(BaseScreen screen, Key key) {
+		return handleKeypress(this, screen, key);
 	}
 
-	@Override
-	public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-		if (!icon.isEmpty()) {
-			icon.draw(graphics, x, y, w, h);
+	static boolean handleKeypress(MapIcon icon, BaseScreen screen, Key key) {
+		if (screen instanceof LargeMapScreen lms && key.is(GLFW.GLFW_KEY_T)) {
+			new TeleportFromMapPacket(BlockPos.containing(icon.getPos(1F)).above(), false, lms.currentDimension()).sendToServer();
+			screen.closeGui(false);
+			return true;
 		}
+
+		return false;
 	}
 }

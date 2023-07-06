@@ -212,7 +212,7 @@ public class MapManager implements MapTask {
 			}
 		}
 
-		FTBChunksClient.scheduleMinimapUpdate();
+		FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
 	}
 
 	@Override

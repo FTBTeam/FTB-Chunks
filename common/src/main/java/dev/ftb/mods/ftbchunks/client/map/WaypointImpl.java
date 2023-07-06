@@ -1,18 +1,19 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
+import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.mapicon.WaypointMapIcon;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
 
-/**
- * @author LatvianModder
- */
-public class Waypoint {
-	public final MapDimension dimension;
+public class WaypointImpl implements Waypoint {
+	private final MapDimension mapDimension;
 	private final BlockPos pos;
 	private final WaypointType type;
 
@@ -24,9 +25,9 @@ public class Waypoint {
 	private int color = 0xFFFFFF;
 	private WaypointMapIcon mapIcon;
 
-	public Waypoint(WaypointType type, MapDimension dimension, BlockPos pos) {
+	public WaypointImpl(WaypointType type, MapDimension mapDimension, BlockPos pos) {
 		this.type = type;
-		this.dimension = dimension;
+		this.mapDimension = mapDimension;
 		this.pos = pos;
 	}
 
@@ -34,42 +35,68 @@ public class Waypoint {
 		return type;
 	}
 
+	@Override
+	public boolean isDeathpoint() {
+		return type == WaypointType.DEATH;
+	}
+
+	@Override
+	public ResourceKey<Level> getDimension() {
+		return mapDimension.dimension;
+	}
+
+	@Override
 	public BlockPos getPos() {
 		return pos;
 	}
 
+	@Override
 	public boolean isHidden() {
 		return hidden;
 	}
 
-	public Waypoint setHidden(boolean hidden) {
+	@Override
+	public WaypointImpl setHidden(boolean hidden) {
 		this.hidden = hidden;
+		mapDimension.markDirty();
 		return this;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	public Waypoint setName(String name) {
+	@Override
+	public WaypointImpl setName(String name) {
 		this.name = name;
+		mapDimension.markDirty();
 		return this;
 	}
 
+	@Override
 	public int getColor() {
 		return color;
 	}
 
-	public Waypoint setColor(int color) {
+	@Override
+	public WaypointImpl setColor(int color) {
 		this.color = color;
+		mapDimension.markDirty();
 		return this;
 	}
 
-	public WaypointMapIcon getMapIcon() {
+	@Override
+	public double getDistanceSq(Entity entity) {
+		return entity.distanceToSqr(Vec3.atCenterOf(pos));
+	}
+
+	@Override
+	public WaypointIcon getMapIcon() {
 		return mapIcon;
 	}
 
-	public void update() {
+	public void refreshIcon() {
 		mapIcon = new WaypointMapIcon(this);
 	}
 
@@ -82,20 +109,20 @@ public class Waypoint {
 		}
 	}
 
-	public double getDistanceSq(Entity entity) {
-		return entity.distanceToSqr(Vec3.atCenterOf(pos));
+	public void removeFromManager() {
+		mapDimension.getWaypointManager().remove(this);
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		Waypoint waypoint = (Waypoint) o;
-		return pos.equals(waypoint.pos) && dimension.dimension.equals(waypoint.dimension.dimension);
+		WaypointImpl waypoint = (WaypointImpl) o;
+		return pos.equals(waypoint.pos) && mapDimension.dimension.equals(waypoint.mapDimension.dimension);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dimension.dimension, pos);
+		return Objects.hash(mapDimension.dimension, pos);
 	}
 }

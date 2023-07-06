@@ -1,11 +1,11 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
-import dev.ftb.mods.ftbchunks.client.MapType;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.mapicon.MapIcon;
 import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -36,7 +36,6 @@ public class RegionMapPanel extends Panel {
 	int blockY = HeightUtils.UNKNOWN;
 	int blockZ = 0;
 	int blockIndex = 0;
-//	public Rect2i visibleArea = new Rect2i(0, 0, 0, 0);
 	private final List<MapIcon> mapIcons;
 
 	public RegionMapPanel(LargeMapScreen panel) {
@@ -102,7 +101,7 @@ public class RegionMapPanel extends Panel {
 		Minecraft mc = Minecraft.getInstance();
 
 		mapIcons.clear();
-		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMap.dimension, mapIcons, MapType.LARGE_MAP));
+		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMap.dimension.dimension, mapIcons, MapType.LARGE_MAP));
 
 		if (mapIcons.size() >= 2) {
 			mapIcons.sort(new MapIconComparator(mc.player.position(), 1F));
@@ -164,12 +163,6 @@ public class RegionMapPanel extends Panel {
 
 		double px = getScrollX() - getX();
 		double py = getScrollY() - getY();
-
-//		int topBlockX = Mth.floor((px / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
-//		int topBlockZ = Mth.floor((py / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
-//		int bottomBlockX = Mth.floor(((px + w) / (double) largeMap.scrollWidth * dx + regionMinX) * 512D);
-//		int bottomBlockZ = Mth.floor(((py + h) / (double) largeMap.scrollHeight * dy + regionMinZ) * 512D);
-//		visibleArea = new Rect2i(topBlockX, topBlockZ, bottomBlockX - topBlockX + 1, bottomBlockZ - topBlockZ + 1);
 
 		regionX = (parent.getMouseX() + px) / (double) largeMap.scrollWidth * dx + regionMinX;
 		regionZ = (parent.getMouseY() + py) / (double) largeMap.scrollHeight * dy + regionMinZ;

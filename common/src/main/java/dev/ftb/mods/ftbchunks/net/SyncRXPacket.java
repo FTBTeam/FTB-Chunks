@@ -45,6 +45,6 @@ public class SyncRXPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.syncRegionFromServer(key, offset, total, data);
+		FTBChunksClient.INSTANCE.syncRegionFromServer(key, offset, total, data);
 	}
 }

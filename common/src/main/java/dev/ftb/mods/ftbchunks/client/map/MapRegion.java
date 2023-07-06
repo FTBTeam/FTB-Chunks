@@ -126,7 +126,7 @@ public class MapRegion implements MapTask {
 
 	public int getRenderedMapImageTextureId() {
 		if (renderedMapImageTextureId == -1) {
-			renderedMapImageTextureId = FTBChunksClient.generateTextureId(512, 512);
+			renderedMapImageTextureId = FTBChunksClient.INSTANCE.generateTextureId(512, 512);
 		}
 
 		getRenderedMapImage();
@@ -138,7 +138,7 @@ public class MapRegion implements MapTask {
 				RenderSystem.bindTexture(renderedMapImageTextureId);
 				uploadRenderedMapImage();
 				mapImageLoaded = true;
-				FTBChunksClient.scheduleMinimapUpdate();
+				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
 			});
 
 			updateRenderedMapTexture = false;
@@ -169,7 +169,7 @@ public class MapRegion implements MapTask {
 				FTBChunks.LOGGER.debug("not releasing region {} / {} - player present", this, pos);
 				return;  // don't release region where the player is
 			}
-			for (ChunkPos cp : FTBChunksClient.getPendingRerender()) {
+			for (ChunkPos cp : FTBChunksClient.INSTANCE.getPendingRerender()) {
 				if (XZ.regionFromChunk(cp).equals(pos)) {
 					FTBChunks.LOGGER.debug("not releasing region {} / {} - re-render pending", this, pos);
 					return;  // don't release regions that have a re-render pending
@@ -218,7 +218,7 @@ public class MapRegion implements MapTask {
 	public void afterImageRenderTask() {
 		synchronized (dimension.getManager().lock) {
 			updateRenderedMapTexture = true;
-			FTBChunksClient.scheduleMinimapUpdate();
+			FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
 			renderingMapImage = false;
 		}
 	}
@@ -231,7 +231,7 @@ public class MapRegion implements MapTask {
 
 		updateRenderedMapImage = true;
 		updateRenderedMapTexture = true;
-		FTBChunksClient.scheduleMinimapUpdate();
+		FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
 	}
 
 	public MapRegion offset(int x, int z) {

@@ -23,7 +23,7 @@ public class HeightUtils {
 
 	public static boolean skipBlock(Level level, BlockState state) {
 		if (level.isClientSide) {
-			return state.isAir() || FTBChunksClient.skipBlock(state);
+			return state.isAir() || FTBChunksClient.INSTANCE.skipBlock(state);
 		} else {
 			return false;
 		}

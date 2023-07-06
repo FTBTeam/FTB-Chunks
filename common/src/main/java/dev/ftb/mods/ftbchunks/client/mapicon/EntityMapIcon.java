@@ -2,13 +2,15 @@ package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
-import dev.ftb.mods.ftbchunks.client.MapType;
-import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,7 +21,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 
-public class EntityMapIcon extends MapIcon {
+public class EntityMapIcon implements MapIcon {
 	private final Entity entity;
 	private final Icon icon;
 
@@ -29,12 +31,8 @@ public class EntityMapIcon extends MapIcon {
 	}
 
 	@Override
-	public Vec3 getPos(float delta) {
-		if (delta >= 1F) {
-			return entity.position();
-		}
-
-		return entity.getPosition(delta);
+	public Vec3 getPos(float partialTick) {
+		return partialTick >= 1F ? entity.position() : entity.getPosition(partialTick);
 	}
 
 	@Override
@@ -63,12 +61,13 @@ public class EntityMapIcon extends MapIcon {
 	}
 
 	@Override
-	public boolean keyPressed(LargeMapScreen screen, Key key) {
-		if (entity instanceof LocalPlayer) {
-			return false;
-		}
+	public boolean onMousePressed(BaseScreen screen, MouseButton button) {
+		return false;
+	}
 
-		return super.keyPressed(screen, key);
+	@Override
+	public boolean onKeyPressed(BaseScreen screen, Key key) {
+		return !(entity instanceof LocalPlayer) && StaticMapIcon.handleKeypress(this, screen, key);
 	}
 
 	@Override

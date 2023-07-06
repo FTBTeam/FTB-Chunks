@@ -41,6 +41,6 @@ public class SendPlayerPositionPacket extends BaseS2CMessage {
 
     @Override
     public void handle(NetworkManager.PacketContext context) {
-        FTBChunksClient.updateTrackedPlayerPos(gameProfile, pos, valid);
+        FTBChunksClient.INSTANCE.updateTrackedPlayerPos(gameProfile, pos, valid);
     }
 }

@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+/**
+ * Top-level manager for all known claims and teams. You can get an instance of this via
+ * {@link FTBChunksAPI.API#getManager()}.
+ */
 public interface ClaimedChunkManager {
     /**
      * Get the FTB Chunks team data for the given team, creating a new instance if necessary.
@@ -27,15 +31,6 @@ public interface ClaimedChunkManager {
     ChunkTeamData getOrCreateData(@NotNull Team team);
 
     /**
-     * Get the FTB Chunks team data for the given player ID, creating a new instance if necessary. This will always
-     * for the player's personal team, even if they are currently in a party team.
-     *
-     * @param id a player UUID
-     * @return the FTB Chunks data for the player
-     */
-    ChunkTeamData getPersonalData(UUID id);
-
-    /**
      * Get the FTB Chunks team data for the given player, creating a new instance if necessary. This will get the
      * data for the party team the player is in, if applicable.
      *
@@ -44,7 +39,14 @@ public interface ClaimedChunkManager {
      */
     ChunkTeamData getOrCreateData(ServerPlayer player);
 
-    boolean hasData(ServerPlayer player);
+    /**
+     * Get the FTB Chunks team data for the given player ID, creating a new instance if necessary. This will always
+     * for the player's personal team, even if they are currently in a party team.
+     *
+     * @param id a player UUID
+     * @return the FTB Chunks data for the player
+     */
+    ChunkTeamData getPersonalData(UUID id);
 
     /**
      * Get the claimed chunk data for the chunk at the given position.

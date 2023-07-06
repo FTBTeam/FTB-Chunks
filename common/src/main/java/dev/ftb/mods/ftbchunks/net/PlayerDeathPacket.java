@@ -37,6 +37,6 @@ public class PlayerDeathPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.handlePlayerDeath(pos, number);
+		FTBChunksClient.INSTANCE.handlePlayerDeath(pos, number);
 	}
 }

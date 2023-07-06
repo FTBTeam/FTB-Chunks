@@ -4,7 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.client.event.RefreshMinimapIconsEvent;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
+import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
@@ -18,21 +20,21 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class WaypointManager implements Iterable<Waypoint> {
+public class WaypointManagerImpl implements Iterable<WaypointImpl>, WaypointManager {
     private static final String WAYPOINTS_FILE = "waypoints.json";
 
-    private final Set<Waypoint> waypoints = new HashSet<>();
-    private final Set<Waypoint> deathpoints = new HashSet<>();
+    private final Set<WaypointImpl> waypoints = new HashSet<>();
+    private final Set<WaypointImpl> deathpoints = new HashSet<>();
     private final MapDimension mapDimension;
 
-    public WaypointManager(MapDimension mapDimension) {
+    public WaypointManagerImpl(MapDimension mapDimension) {
         this.mapDimension = mapDimension;
     }
 
-    public static WaypointManager fromJson(MapDimension mapDimension) {
+    public static WaypointManagerImpl fromJson(MapDimension mapDimension) {
         Path file = mapDimension.directory.resolve(WAYPOINTS_FILE);
 
-        WaypointManager manager = new WaypointManager(mapDimension);
+        WaypointManagerImpl manager = new WaypointManagerImpl(mapDimension);
 
         if (Files.exists(file)) {
             try (Reader reader = Files.newBufferedReader(file)) {
@@ -43,11 +45,11 @@ public class WaypointManager implements Iterable<Waypoint> {
                         JsonObject o = e.getAsJsonObject();
 
                         WaypointType type = o.has("type") ? WaypointType.forId(o.get("type").getAsString()) : WaypointType.DEFAULT;
-                        Waypoint wp = new Waypoint(type, mapDimension, new BlockPos(o.get("x").getAsInt(), o.get("y").getAsInt(), o.get("z").getAsInt()));
-                        wp.setHidden(o.get("hidden").getAsBoolean());
-                        wp.setName(o.get("name").getAsString());
+                        WaypointImpl wp = new WaypointImpl(type, mapDimension, new BlockPos(o.get("x").getAsInt(), o.get("y").getAsInt(), o.get("z").getAsInt()))
+                                .setHidden(o.get("hidden").getAsBoolean())
+                                .setName(o.get("name").getAsString())
+                                .setColor(0xFFFFFF);
 
-                        wp.setColor(0xFFFFFF);
                         if (o.has("color")) {
                             try {
                                 wp.setColor(Integer.decode(o.get("color").getAsString()));
@@ -56,7 +58,7 @@ public class WaypointManager implements Iterable<Waypoint> {
                         }
 
                         manager.add(wp);
-                        wp.update();
+                        wp.refreshIcon();
 
                     }
                 }
@@ -68,11 +70,11 @@ public class WaypointManager implements Iterable<Waypoint> {
         return manager;
     }
 
-    public static void writeJson(MapDimension mapDimension, List<Waypoint> waypoints) throws IOException {
+    public static void writeJson(MapDimension mapDimension, List<WaypointImpl> waypoints) throws IOException {
         JsonObject json = new JsonObject();
         JsonArray waypointArray = new JsonArray();
 
-        for (Waypoint w : waypoints) {
+        for (WaypointImpl w : waypoints) {
             JsonObject o = new JsonObject();
             o.addProperty("hidden", w.isHidden());
             o.addProperty("name", w.getName());
@@ -91,31 +93,33 @@ public class WaypointManager implements Iterable<Waypoint> {
         }
     }
 
-    public void add(Waypoint waypoint) {
-        waypoints.add(waypoint);
-        if (waypoint.getType() == WaypointType.DEATH) {
-            deathpoints.add(waypoint);
+    public void add(WaypointImpl waypoint) {
+        if (waypoints.add(waypoint)) {
+            if (waypoint.isDeathpoint()) {
+                deathpoints.add(waypoint);
+            }
+            waypoint.refreshIcon();
+            mapDimension.markDirty();
+            FTBChunksAPI.clientApi().requestMinimapIconRefresh();
         }
-        waypoint.update();
-        mapDimension.markDirty();
-        RefreshMinimapIconsEvent.trigger();
     }
 
-    public void remove(Waypoint waypoint) {
-        waypoints.remove(waypoint);
-        if (waypoint.getType() == WaypointType.DEATH) {
-            deathpoints.remove(waypoint);
+    public void remove(WaypointImpl waypoint) {
+        if (waypoints.remove(waypoint)) {
+            if (waypoint.isDeathpoint()) {
+                deathpoints.remove(waypoint);
+            }
+            mapDimension.markDirty();
+            FTBChunksAPI.clientApi().requestMinimapIconRefresh();
         }
-        mapDimension.markDirty();
-        RefreshMinimapIconsEvent.trigger();
     }
 
-    public boolean removeIf(Predicate<Waypoint> predicate) {
+    public boolean removeIf(Predicate<WaypointImpl> predicate) {
         if (waypoints.removeIf(predicate)) {
             deathpoints.clear();
             deathpoints.addAll(waypoints.stream().filter(w -> w.getType() == WaypointType.DEATH).toList());
             mapDimension.markDirty();
-            RefreshMinimapIconsEvent.trigger();
+            FTBChunksAPI.clientApi().requestMinimapIconRefresh();
             return true;
         }
         return false;
@@ -125,15 +129,16 @@ public class WaypointManager implements Iterable<Waypoint> {
         return waypoints.isEmpty();
     }
 
-    public Optional<Waypoint> getNearestDeathpoint(Player p) {
+    @Override
+    public Optional<WaypointImpl> getNearestDeathpoint(Player player) {
         return deathpoints.isEmpty() ?
                 Optional.empty() :
-                deathpoints.stream().min(Comparator.comparingDouble(o -> o.getDistanceSq(p)));
+                deathpoints.stream().min(Comparator.comparingDouble(o -> o.getDistanceSq(player)));
     }
 
     @NotNull
     @Override
-    public Iterator<Waypoint> iterator() {
+    public Iterator<WaypointImpl> iterator() {
         return waypoints.iterator();
     }
 
@@ -141,7 +146,36 @@ public class WaypointManager implements Iterable<Waypoint> {
         return !deathpoints.isEmpty();
     }
 
-    public Stream<Waypoint> stream() {
+    public Stream<WaypointImpl> stream() {
         return waypoints.stream();
+    }
+
+    /* API methods below here */
+
+    @Override
+    public Waypoint addWaypointAt(BlockPos pos, String name) {
+        WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, pos).setName(name);
+        add(waypoint);
+        return waypoint;
+    }
+
+    @Override
+    public boolean removeWaypointAt(BlockPos pos) {
+        WaypointImpl impl = new WaypointImpl(WaypointType.DEFAULT, mapDimension, pos);
+        if (waypoints.contains(impl)) {
+            remove(impl);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean removeWaypoint(Waypoint waypoint) {
+        return removeWaypointAt(waypoint.getPos());
+    }
+
+    @Override
+    public Collection<Waypoint> getAllWaypoints() {
+        return Collections.unmodifiableCollection(waypoints);
     }
 }

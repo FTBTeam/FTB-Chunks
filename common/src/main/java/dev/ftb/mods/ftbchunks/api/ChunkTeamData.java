@@ -12,7 +12,8 @@ import java.util.UUID;
 
 /**
  * Represents the FTB Chunks information regarding the {@link Team} (either player or party) which may own zero or
- * more chunks on the server.
+ * more chunks on the server. Instances of this can be retrieved via {@link ClaimedChunkManager#getOrCreateData(Team)}
+ * or {@link ClaimedChunkManager#getOrCreateData(ServerPlayer)}.
  */
 public interface ChunkTeamData {
     /**
@@ -43,7 +44,9 @@ public interface ChunkTeamData {
     Collection<? extends ClaimedChunk> getClaimedChunks();
 
     /**
-     * Get a collection of all the chunks this team currently has force-loaded.
+     * Get a collection of all the chunks this team currently has force-loading enabled for. Note that the chunks
+     * are not necessarily force-loaded right now, depending on player online status and server offline force-loading
+     * settings; use {@link ClaimedChunk#isActuallyForceLoaded()} to verify this.
      *
      * @return all the force-loaded chunks for this team
      */
@@ -56,18 +59,18 @@ public interface ChunkTeamData {
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the claim
      *
-     * @return the claim result
+     * @return the result of the attempt
      */
     ClaimResult claim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
     /**
-     * Try to release any claim on this chunk for this team.
+     * Try to release any claim on the given chunk for this team.
      *
      * @param source the command source (player or console) unclaiming the chunk
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the unclaim
      *
-     * @return the unclaim result
+     * @return the result of the attempt
      */
     ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
@@ -78,12 +81,12 @@ public interface ChunkTeamData {
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the force-load
      *
-     * @return the claim result
+     * @return the result of the attempt
      */
     ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
 
     /**
-     * Try to cancel any force-load this team has for this chunk.
+     * Try to cancel any force-load this team has for the given chunk.
      *
      * @param source the command source (player or console) un-force-loading the chunk
      * @param pos the combined dimension and chunk pos

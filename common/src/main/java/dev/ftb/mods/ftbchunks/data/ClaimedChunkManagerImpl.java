@@ -151,13 +151,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 				.orElse(null);
 	}
 
-	@Override
-	public boolean hasData(ServerPlayer player) {
-		return getTeamManager().getTeamForPlayer(player)
-				.map(team -> teamData.containsKey(team.getId()))
-				.orElse(false);
-	}
-
 	public void deleteTeam(Team toDelete) {
 		ChunkTeamDataImpl data = teamData.get(toDelete.getId());
 

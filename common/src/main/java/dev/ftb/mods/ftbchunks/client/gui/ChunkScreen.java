@@ -12,7 +12,6 @@ import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
@@ -141,7 +140,7 @@ public class ChunkScreen extends BaseScreen {
 		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
 		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
 
-		RenderSystem.setShaderTexture(0, FTBChunksClient.minimapTextureId);
+		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
 		GuiHelper.drawTexturedRect(graphics, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
@@ -157,24 +156,10 @@ public class ChunkScreen extends BaseScreen {
 		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
 		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
-		SendGeneralDataPacket.GeneralChunkData d = FTBChunksClient.generalChunkData;
-		if (d != null) {
-			List<Component> list = new ArrayList<>(4);
-			list.add(Component.translatable("ftbchunks.gui.claimed"));
-			list.add(Component.literal(d.claimed() + " / " + d.maxClaimChunks())
-					.withStyle(d.claimed() > d.maxClaimChunks() ?
-							ChatFormatting.RED :
-							d.claimed() == d.maxClaimChunks() ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
-			list.add(Component.translatable("ftbchunks.gui.force_loaded"));
-			list.add(Component.literal(d.loaded() + " / " + d.maxForceLoadChunks())
-					.withStyle(d.loaded() > d.maxForceLoadChunks() ?
-							ChatFormatting.RED :
-							d.loaded() == d.maxForceLoadChunks() ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
-
-			int fh = theme.getFontHeight() + 1;
-			for (int i = 0; i < list.size(); i++) {
-				theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
-			}
+		List<Component> list = FTBChunksClient.INSTANCE.getChunkSummary();
+		int fh = theme.getFontHeight() + 1;
+		for (int i = 0; i < list.size(); i++) {
+			theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
 		}
 
 		if (updateInfo != null && updateInfo.shouldDisplay()) {

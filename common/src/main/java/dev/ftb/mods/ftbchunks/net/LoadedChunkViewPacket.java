@@ -41,6 +41,6 @@ public class LoadedChunkViewPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.syncLoadedChunkViewFromServer(dimension, chunks);
+		FTBChunksClient.INSTANCE.syncLoadedChunkViewFromServer(dimension, chunks);
 	}
 }

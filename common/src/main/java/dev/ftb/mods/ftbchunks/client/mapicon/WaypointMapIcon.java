@@ -1,15 +1,17 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.ftb.mods.ftbchunks.client.MapType;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
+import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
-import dev.ftb.mods.ftbchunks.client.map.Waypoint;
+import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -19,25 +21,38 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WaypointMapIcon extends StaticMapIcon {
-	private final Waypoint waypoint;
+public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
+	private final WaypointImpl waypoint;
 	private Icon outsideIcon;
-	public double distance;
-	public int alpha;
+	private int alpha;
 
-	public WaypointMapIcon(Waypoint waypoint) {
-		super(Vec3.atCenterOf(waypoint.getPos()));
+	public WaypointMapIcon(WaypointImpl waypoint) {
+		super(waypoint.getPos());
 
 		this.waypoint = waypoint;
 
 		outsideIcon = Color4I.empty();
+	}
+
+	@Override
+	public int getAlpha() {
+		return alpha;
+	}
+
+	@Override
+	public void setAlpha(int alpha) {
+		this.alpha = alpha;
+	}
+
+	@Override
+	public Color4I getColor() {
+		return Color4I.rgb(waypoint.getColor());
 	}
 
 	@Override
@@ -65,19 +80,15 @@ public class WaypointMapIcon extends StaticMapIcon {
 	}
 
 	@Override
-	public boolean mousePressed(LargeMapScreen screen, MouseButton button) {
-		if (super.mousePressed(screen, button)) {
+	public boolean onMousePressed(BaseScreen screen, MouseButton button) {
+		if (super.onMousePressed(screen, button)) {
 			return true;
-		} else if (button.isRight()) {
-			openWPContextMenu(screen);
+		} else if (button.isRight() && screen instanceof LargeMapScreen lms) {
+			openWPContextMenu(lms);
 			return true;
 		}
 
 		return false;
-	}
-
-	public Color4I getColor() {
-		return Color4I.rgb(waypoint.getColor());
 	}
 
 	private void openWPContextMenu(LargeMapScreen screen) {
@@ -91,7 +102,6 @@ public class WaypointMapIcon extends StaticMapIcon {
 			config.onClicked(MouseButton.LEFT, accepted -> {
 				if (accepted) {
 					waypoint.setName(config.getValue());
-					waypoint.dimension.markDirty();
 				}
 				screen.openGui();
 			});
@@ -106,7 +116,6 @@ public class WaypointMapIcon extends StaticMapIcon {
 				float add = Widget.isShiftKeyDown() ? -1F/12F : 1F/12F;
 				Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
 				waypoint.setColor(col.rgba());
-				waypoint.dimension.markDirty();
 				icon = Color4I.empty();
 				outsideIcon = Color4I.empty();
 				checkIcon();
@@ -115,12 +124,11 @@ public class WaypointMapIcon extends StaticMapIcon {
 
 		contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.label." + (waypoint.isHidden() ? "show" : "hide")), Icons.BEACON, () -> {
 			waypoint.setHidden(!waypoint.isHidden());
-			waypoint.dimension.markDirty();
 			screen.refreshWidgets();
 		}));
 
 		contextMenu.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, () -> {
-			waypoint.dimension.getWaypointManager().remove(waypoint);
+			waypoint.removeFromManager();
 			screen.refreshIcons();
 		}));
 
@@ -137,12 +145,12 @@ public class WaypointMapIcon extends StaticMapIcon {
 	}
 
 	@Override
-	public boolean keyPressed(LargeMapScreen screen, Key key) {
-		if (super.keyPressed(screen, key)) {
+	public boolean onKeyPressed(BaseScreen screen, Key key) {
+		if (super.onKeyPressed(screen, key)) {
 			return true;
-		} else if (key.is(GLFW.GLFW_KEY_DELETE)) {
-			waypoint.dimension.getWaypointManager().remove(waypoint);
-			screen.refreshIcons();
+		} else if (key.is(GLFW.GLFW_KEY_DELETE) && screen instanceof LargeMapScreen lms) {
+			waypoint.removeFromManager();
+			lms.refreshIcons();
 			return true;
 		}
 

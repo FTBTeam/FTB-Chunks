@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
+import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;

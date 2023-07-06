@@ -11,6 +11,8 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -54,13 +56,18 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	@Override
-	public String getId() {
+	public String getResultId() {
 		return "ok";
 	}
 
 	@Override
 	public boolean isSuccess() {
 		return true;
+	}
+
+	@Override
+	public MutableComponent getMessage() {
+		return Component.literal("OK");
 	}
 
 	public void setClaimedTime(long t) {
@@ -79,6 +86,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return forceLoaded > 0L;
 	}
 
+	@Override
 	public boolean isActuallyForceLoaded() {
 		return isForceLoaded() && teamData.canDoOfflineForceLoading();
 	}

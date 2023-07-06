@@ -24,6 +24,6 @@ public class RequestBlockColorPacket extends BaseS2CMessage {
 
     @Override
     public void handle(NetworkManager.PacketContext context) {
-        FTBChunksClient.handleBlockColorRequest();
+        FTBChunksClient.INSTANCE.handleBlockColorRequest();
     }
 }

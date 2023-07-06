@@ -99,7 +99,7 @@ public class LargeMapScreen extends BaseScreen {
 	}
 
 	public void addZoom(double up) {
-		int z = zoom;
+		int prevZoom = zoom;
 
 		if (up > 0D) {
 			zoom *= 2;
@@ -109,7 +109,7 @@ public class LargeMapScreen extends BaseScreen {
 
 		zoom = Mth.clamp(zoom, minZoom, 1024);
 
-		if (zoom != z) {
+		if (zoom != prevZoom) {
 			grabbed = 0;
 			double sx = regionPanel.regionX;
 			double sy = regionPanel.regionZ;
@@ -129,9 +129,11 @@ public class LargeMapScreen extends BaseScreen {
 				(b, m) -> ChunkScreen.openChunkScreen(),
 				Component.literal("[C]").withStyle(ChatFormatting.GRAY)));
 
+		Component tooltip = Component.literal("[")
+				.append(FTBChunksClient.INSTANCE.waypointManagerKey.getTranslatedKeyMessage())
+				.append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
 		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
-				(b, m) -> new WaypointEditorScreen().openGui(),
-				Component.literal("[").append(FTBChunksClient.waypointManagerKey.getTranslatedKeyMessage()).append(Component.literal("]")).withStyle(ChatFormatting.GRAY)));
+				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
 
 		add(clearDeathpointsButton = new ClearDeathPointButton(this));
 
@@ -159,7 +161,7 @@ public class LargeMapScreen extends BaseScreen {
 		}
 	}
 
-	private WaypointManager getWaypointManager() {
+	private WaypointManagerImpl getWaypointManager() {
 		return MapManager.getInstance().orElseThrow().getDimension(dimension.dimension).getWaypointManager();
 	}
 
@@ -215,10 +217,10 @@ public class LargeMapScreen extends BaseScreen {
 				StringConfig name = new StringConfig();
 				new EditConfigFromStringScreen<>(name, set -> {
 					if (set) {
-						Waypoint w = new Waypoint(WaypointType.DEFAULT, dimension, pos)
+						WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, dimension, pos)
 								.setName(name.getValue())
 								.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
-						dimension.getWaypointManager().add(w);
+						dimension.getWaypointManager().add(waypoint);
 						refreshWidgets();
 					}
 
@@ -234,7 +236,7 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (FTBChunksClient.openMapKey.matches(key.keyCode, key.scanCode) || key.escOrInventory()) {
+		if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key) || key.escOrInventory()) {
 			if (key.esc() && getContextMenu().isPresent()) {
 				closeContextMenu();
 			} else {
@@ -267,7 +269,7 @@ public class LargeMapScreen extends BaseScreen {
 				settingsButton.onClicked(MouseButton.LEFT);
 			}
 			return true;
-		} else if (FTBChunksClient.waypointManagerKey.matches(key.keyCode, key.scanCode)) {
+		} else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key)) {
 			waypointManagerButton.onClicked(MouseButton.LEFT);
 		}
 

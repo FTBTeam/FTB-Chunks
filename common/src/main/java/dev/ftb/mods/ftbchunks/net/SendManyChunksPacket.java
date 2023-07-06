@@ -44,6 +44,6 @@ public class SendManyChunksPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.updateChunksFromServer(dimension, teamId, chunks);
+		FTBChunksClient.INSTANCE.updateChunksFromServer(dimension, teamId, chunks);
 	}
 }

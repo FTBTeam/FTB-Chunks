@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.client.event.RefreshMinimapIconsEvent;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -34,7 +34,7 @@ public class MapDimension implements MapTask {
 	public final Path directory;
 
 	private Map<XZ, MapRegion> regions;
-	private WaypointManager waypointManager;
+	private WaypointManagerImpl waypointManager;
 	private boolean needsSave;
 	private Long2IntMap loadedChunkView;
 
@@ -57,14 +57,13 @@ public class MapDimension implements MapTask {
 	}
 
 	public static Optional<MapDimension> getCurrent() {
-		ClientLevel level = Minecraft.getInstance().level;
-		if (level == null) {
-			return Optional.empty();
-		}
-
 		if (currentDimension == null) {
 			if (MapManager.getInstance().isEmpty()) {
 				LOGGER.warn("Attempted to access MapManager before it was setup!");
+				return Optional.empty();
+			}
+			ClientLevel level = Minecraft.getInstance().level;
+			if (level == null) {
 				return Optional.empty();
 			}
 			currentDimension = MapManager.getInstance()
@@ -147,10 +146,10 @@ public class MapDimension implements MapTask {
 		}
 	}
 
-	public WaypointManager getWaypointManager() {
+	public WaypointManagerImpl getWaypointManager() {
 		if (waypointManager == null) {
-			waypointManager = WaypointManager.fromJson(this);
-			RefreshMinimapIconsEvent.trigger();
+			waypointManager = WaypointManagerImpl.fromJson(this);
+			FTBChunksAPI.clientApi().requestMinimapIconRefresh();
 		}
 		return waypointManager;
 	}
@@ -166,7 +165,7 @@ public class MapDimension implements MapTask {
 
 	@Override
 	public void runMapTask() throws Exception {
-		List<Waypoint> waypoints = ImmutableList.copyOf(getWaypointManager());
+		List<WaypointImpl> waypoints = ImmutableList.copyOf(getWaypointManager());
 		List<MapRegion> regionList = ImmutableList.copyOf(getRegions().values());
 
 		if (!waypoints.isEmpty() || !regionList.isEmpty()) {
@@ -181,8 +180,8 @@ public class MapDimension implements MapTask {
 		}
 	}
 
-	private void writeData(List<Waypoint> waypoints, List<MapRegion> regionList) throws IOException {
-		WaypointManager.writeJson(this, waypoints);
+	private void writeData(List<WaypointImpl> waypoints, List<MapRegion> regionList) throws IOException {
+		WaypointManagerImpl.writeJson(this, waypoints);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

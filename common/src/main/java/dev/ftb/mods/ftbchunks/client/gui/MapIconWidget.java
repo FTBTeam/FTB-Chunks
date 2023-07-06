@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import dev.ftb.mods.ftbchunks.client.MapType;
-import dev.ftb.mods.ftbchunks.client.mapicon.MapIcon;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
+import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -42,7 +42,7 @@ public class MapIconWidget extends Widget {
 
 	@Override
 	public boolean mousePressed(MouseButton button) {
-		if (isMouseOver() && width > 0 && height > 0 && mapIcon.mousePressed(regionMapPanel.largeMap, button)) {
+		if (isMouseOver() && width > 0 && height > 0 && mapIcon.onMousePressed(regionMapPanel.largeMap, button)) {
 			return true;
 		}
 
@@ -51,7 +51,7 @@ public class MapIconWidget extends Widget {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (isMouseOver() && width > 0 && height > 0 && mapIcon.keyPressed(regionMapPanel.largeMap, key)) {
+		if (isMouseOver() && width > 0 && height > 0 && mapIcon.onKeyPressed(regionMapPanel.largeMap, key)) {
 			return true;
 		}
 

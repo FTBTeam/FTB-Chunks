@@ -37,6 +37,6 @@ public class LoginDataPacket extends BaseS2CMessage {
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.handlePlayerLogin(serverId, config);
+		FTBChunksClient.INSTANCE.handlePlayerLogin(serverId, config);
 	}
 }

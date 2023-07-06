@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.api;
 
+import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.event.TeamManagerEvent;
 import net.minecraft.resources.ResourceKey;
@@ -8,20 +9,37 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class FTBChunksAPI {
     public static final String MOD_ID = "ftbchunks";
     public static final String MOD_NAME = "FTB Chunks";
 
     private static API instance;
+    private static FTBChunksClientAPI clientInstance;
 
     /**
      * Retrieve the public API instance.
      *
      * @return the API handler
+     * @throws NullPointerException if called before initialised
      */
+    @NotNull
     public static FTBChunksAPI.API api() {
-        return instance;
+        return Objects.requireNonNull(instance);
+    }
+
+    /**
+     * Retrieve the public client API instance.
+     *
+     * @return the client API handler
+     * @throws NullPointerException if called before initialised, or on the server
+     */
+    @NotNull
+    public static FTBChunksClientAPI clientApi() {
+        return Objects.requireNonNull(clientInstance);
     }
 
     /**
@@ -44,6 +62,18 @@ public class FTBChunksAPI {
             throw new IllegalStateException("can't init more than once!");
         }
         FTBChunksAPI.instance = instance;
+    }
+
+    /**
+     * Do not call this method yourself!
+     * @param instance the client API instance
+     */
+    @ApiStatus.Internal
+    public static void _initClient(FTBChunksClientAPI instance) {
+        if (FTBChunksAPI.clientInstance != null) {
+            throw new IllegalStateException("can't init more than once!");
+        }
+        FTBChunksAPI.clientInstance = instance;
     }
 
     /**

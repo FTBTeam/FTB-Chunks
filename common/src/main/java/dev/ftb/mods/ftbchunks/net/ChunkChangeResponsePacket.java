@@ -44,7 +44,7 @@ public class ChunkChangeResponsePacket extends BaseS2CMessage {
         buf.writeVarInt(changedChunks);
         buf.writeVarInt(problems.size());
         problems.forEach((res, count) -> {
-            buf.writeUtf(res.getId());
+            buf.writeUtf(res.getResultId());
             buf.writeVarInt(count);
         });
     }

@@ -467,7 +467,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			canForceLoadChunks = switch (FTBChunksWorldConfig.FORCE_LOAD_MODE.get()) {
 				case ALWAYS -> true;
 				case NEVER -> false;
-				default -> FTBChunksWorldConfig.CHUNK_LOAD_OFFLINE.get() || hasForceLoadMembers();
+				default -> hasForceLoadMembers();
 			};
 		}
 		return canForceLoadChunks;

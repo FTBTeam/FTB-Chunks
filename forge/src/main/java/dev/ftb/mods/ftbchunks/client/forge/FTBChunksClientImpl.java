@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.forge;
 
-import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -17,7 +16,7 @@ public class FTBChunksClientImpl {
 	@SubscribeEvent
 	public static void renderLevelStageForge(RenderLevelStageEvent event) {
 		if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
-			((FTBChunksClient) FTBChunks.PROXY).renderWorldLast(event.getPoseStack(), event.getProjectionMatrix(), Minecraft.getInstance().getEntityRenderDispatcher().camera, event.getPartialTick());
+			FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getProjectionMatrix(), Minecraft.getInstance().getEntityRenderDispatcher().camera, event.getPartialTick());
 		}
 	}
 

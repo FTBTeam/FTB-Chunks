@@ -30,14 +30,22 @@ public interface ClaimedChunk extends ClaimResult {
     long getTimeClaimed();
 
     /**
-     * Get the time (milliseconds since epoch) at which this chunk was force-loaded.
-     *
-     * @return the claim time; 0 if the chunk is not currently force-loaded
+     * Get the time (milliseconds since epoch) at which force-loading for this chunk was requested.
+     * <p>
+     *     <strong>IMPORTANT</strong>: this does not guarantee that the chunk is actually currently being force-loaded
+     *     by the server. That depends on the offline chunkloading settings, and whether the chunk owner is actually online.
+     *     See {@link #isActuallyForceLoaded()} for a method to check that.</p>
+     * <p>
+     *     To request a chunk be force-loaded, use {@link ChunkTeamData#forceLoad(CommandSourceStack, ChunkDimPos, boolean)}
+     * </p>
+     * @return the force-load time; 0 if the chunk is not currently force-loaded
      */
     long getForceLoadedTime();
 
     /**
-     * Convenience method to check if the chunk is force-loaded; equivalent to: {@code if (getForceLoadedTime() > 0)}
+     * Convenience method to check if the chunk has force-loading enabled; equivalent to: {@code if (getForceLoadedTime() > 0)}
+     * <p>
+     * See the disclaimer in {@link #getForceLoadedTime()} for more information.
      *
      * @return true if the chunk is force-loaded
      */
@@ -49,6 +57,15 @@ public interface ClaimedChunk extends ClaimResult {
      * @param source the command source (player or console) doing the unclaiming
      */
     void unclaim(CommandSourceStack source, boolean sync);
+
+    /**
+     * Check if this chunk is actually currently being force-loaded by the server. This requires that force-loading has
+     * been enabled for the chunk, AND the owner is either currently online, or is allowed by server settings to do
+     * offline force-loading.
+     *
+     * @return true if this chunk actually force-loaded right now
+     */
+    boolean isActuallyForceLoaded();
 
     /**
      * Un-force-load this chunk. This is a no-op if the chunk isn't currently force-loaded.
@@ -67,7 +84,7 @@ public interface ClaimedChunk extends ClaimResult {
     long getForceLoadExpiryTime();
 
     /**
-     * Get the time (milliseconds since epoch) at which any force-loading on this chunk will automatically expire.
+     * Set the time (milliseconds since epoch) at which any force-loading on this chunk will automatically expire.
      * This is normally done via the client chunk claiming GUI (using the mouse wheel to adjust expiry times on a
      * claimed chunk).
      *

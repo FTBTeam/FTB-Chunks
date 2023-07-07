@@ -14,16 +14,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ClientPacketListenerMixin {
 	@Inject(method = "handleChunkBlocksUpdate", at = @At("RETURN"))
 	public void handleChunkBlocksUpdateFTBC(ClientboundSectionBlocksUpdatePacket packet, CallbackInfo ci) {
-		FTBChunksClient.handlePacket(packet);
+		FTBChunksClient.INSTANCE.handlePacket(packet);
 	}
 
 	@Inject(method = "handleLevelChunkWithLight", at = @At("RETURN"))
 	public void handleLevelChunkFTBC(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci) {
-		FTBChunksClient.handlePacket(packet);
+		FTBChunksClient.INSTANCE.handlePacket(packet);
 	}
 
 	@Inject(method = "handleBlockUpdate", at = @At("RETURN"))
 	public void handleBlockUpdateFTBC(ClientboundBlockUpdatePacket packet, CallbackInfo ci) {
-		FTBChunksClient.handlePacket(packet);
+		FTBChunksClient.INSTANCE.handlePacket(packet);
 	}
 }

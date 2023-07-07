@@ -5,9 +5,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
 
-/**
- * @author LatvianModder
- */
 @Mixin(BlockState.class)
 public abstract class BlockStateMixin implements BlockStateFTBC {
 	private Boolean cachedFTBCIsWater;

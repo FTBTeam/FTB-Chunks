@@ -3,33 +3,23 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.FTBChunks;
-import net.minecraft.core.Registry;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 
-/**
- * @author LatvianModder
- */
 public class PlayerDeathPacket extends BaseS2CMessage {
-	public final ResourceKey<Level> dimension;
-	public final int x, y, z, number;
+	private final GlobalPos pos;
+	private final int number;
 
-	public PlayerDeathPacket(ResourceKey<Level> dim, int _x, int _y, int _z, int num) {
-		dimension = dim;
-		x = _x;
-		y = _y;
-		z = _z;
+	public PlayerDeathPacket(GlobalPos pos, int num) {
+		this.pos = pos;
 		number = num;
 	}
 
 	PlayerDeathPacket(FriendlyByteBuf buf) {
-		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
-		x = buf.readVarInt();
-		y = buf.readVarInt();
-		z = buf.readVarInt();
+		pos = GlobalPos.of(ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation()), buf.readBlockPos());
 		number = buf.readVarInt();
 	}
 
@@ -40,15 +30,13 @@ public class PlayerDeathPacket extends BaseS2CMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeResourceLocation(dimension.location());
-		buf.writeVarInt(x);
-		buf.writeVarInt(y);
-		buf.writeVarInt(z);
+		buf.writeResourceLocation(pos.dimension().location());
+		buf.writeBlockPos(pos.pos());
 		buf.writeVarInt(number);
 	}
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.playerDeath(this);
+		FTBChunksClient.INSTANCE.handlePlayerDeath(pos, number);
 	}
 }

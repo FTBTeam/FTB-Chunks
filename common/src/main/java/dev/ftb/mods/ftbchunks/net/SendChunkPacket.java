@@ -3,29 +3,61 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import net.minecraft.Util;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
-/**
- * @author LatvianModder
- */
 public class SendChunkPacket extends BaseS2CMessage {
+	public final ResourceKey<Level> dimension;
+	public final UUID teamId;
+	public final SingleChunk chunk;
+
+	public SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, SingleChunk chunk) {
+		this.dimension = dimension;
+		this.teamId = teamId;
+		this.chunk = chunk;
+	}
+
+	SendChunkPacket(FriendlyByteBuf buf) {
+		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
+		teamId = buf.readUUID();
+		chunk = new SingleChunk(buf, teamId);
+	}
+
+	@Override
+	public MessageType getType() {
+		return FTBChunksNet.SEND_CHUNK;
+	}
+
+	@Override
+	public void write(FriendlyByteBuf buf) {
+		buf.writeResourceLocation(dimension.location());
+		buf.writeUUID(teamId);
+		chunk.write(buf, teamId);
+	}
+
+	@Override
+	public void handle(NetworkManager.PacketContext context) {
+		FTBChunksClient.INSTANCE.updateChunksFromServer(dimension, teamId, List.of(chunk));
+	}
+
 	public static class SingleChunk {
-		public final int x, z;
-		public final long relativeTimeClaimed;
-		public final boolean forceLoaded;
-		public final long relativeTimeForceLoaded;
-		public final boolean expires;
-		public final long relativeForceLoadExpiryTime;
+		private final int x, z;
+		private final long relativeTimeClaimed;
+		private final boolean forceLoaded;
+		private final long relativeTimeForceLoaded;
+		private final boolean expires;
+		private final long relativeForceLoadExpiryTime;
 
 		public SingleChunk(long now, int x, int z, @Nullable ClaimedChunk claimedChunk) {
 			this.x = x;
@@ -41,6 +73,14 @@ public class SendChunkPacket extends BaseS2CMessage {
 				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0L;
 				forceLoaded = expires = false;
 			}
+		}
+
+		public int getX() {
+			return x;
+		}
+
+		public int getZ() {
+			return z;
 		}
 
 		public SingleChunk(FriendlyByteBuf buf, UUID teamId) {
@@ -71,38 +111,20 @@ public class SendChunkPacket extends BaseS2CMessage {
 				if (expires) buf.writeVarLong(relativeForceLoadExpiryTime);
 			}
 		}
-	}
 
-	public final ResourceKey<Level> dimension;
-	public final UUID teamId;
-	public final SingleChunk chunk;
+		public SingleChunk hidden() {
+			return new SingleChunk(0L, x, z, null);
+		}
 
-	public SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, SingleChunk chunk) {
-		this.dimension = dimension;
-		this.teamId = teamId;
-		this.chunk = chunk;
-	}
+		public MapChunk.DateInfo getDateInfo(boolean isClaimed, long now) {
+			if (!isClaimed) {
+				return MapChunk.NO_DATE_INFO;
+			}
 
-	@Override
-	public MessageType getType() {
-		return FTBChunksNet.SEND_CHUNK;
-	}
-
-	SendChunkPacket(FriendlyByteBuf buf) {
-		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
-		teamId = buf.readUUID();
-		chunk = new SingleChunk(buf, teamId);
-	}
-
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeResourceLocation(dimension.location());
-		buf.writeUUID(teamId);
-		chunk.write(buf, teamId);
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.updateChunk(this);
+			Date claimed = new Date(now - relativeTimeClaimed);
+			Date forceLoaded = this.forceLoaded ? new Date(now - relativeTimeForceLoaded) : null;
+			Date expiry = this.forceLoaded && expires ? new Date(now + relativeForceLoadExpiryTime) : null;
+			return new MapChunk.DateInfo(claimed, forceLoaded, expiry);
+		}
 	}
 }

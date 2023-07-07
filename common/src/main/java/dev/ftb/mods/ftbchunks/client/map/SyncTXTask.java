@@ -8,9 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.zip.DeflaterOutputStream;
 
-/**
- * @author LatvianModder
- */
 public class SyncTXTask implements MapTask {
 	public final MapRegion region;
 	public final long now;

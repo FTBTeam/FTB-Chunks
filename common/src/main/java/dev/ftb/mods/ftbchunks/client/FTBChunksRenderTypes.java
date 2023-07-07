@@ -8,9 +8,6 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.OptionalDouble;
 
-/**
- * @author LatvianModder
- */
 public class FTBChunksRenderTypes extends RenderStateShard {
 	public static final ResourceLocation WAYPOINT_BEAM = new ResourceLocation("ftbchunks:textures/waypoint_beam.png");
 

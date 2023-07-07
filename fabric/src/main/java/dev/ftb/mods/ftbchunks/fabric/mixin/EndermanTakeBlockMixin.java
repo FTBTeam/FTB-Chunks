@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.fabric.mixin;
 
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.world.entity.monster.EnderMan;
 import org.spongepowered.asm.mixin.Final;
@@ -17,7 +17,7 @@ public class EndermanTakeBlockMixin {
 
     @Inject(method = "canUse", at = @At("HEAD"), cancellable = true)
     private void injected(CallbackInfoReturnable<Boolean> cir) {
-        ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(this.enderman));
+        ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(this.enderman));
 
         if (cc != null && !cc.allowMobGriefing()) {
             cir.setReturnValue(false);

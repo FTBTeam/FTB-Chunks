@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.util.StringRepresentable;
 
 import java.util.Arrays;
@@ -96,33 +97,63 @@ public enum BiomeBlendMode implements StringRepresentable {
 
 	public static final NameMap<BiomeBlendMode> NAME_MAP = NameMap.of(BLEND_5X5, values()).baseNameKey("ftbchunks.biome_blend").create();
 
-	public final String name;
-	public final int blend;
+	private final String name;
+	private final int blendRadius;
+	private final int[] posX;
+	private final int[] posY;
+	private final int size;
 
-	public final int[] posX;
-	public final int[] posY;
-	public int size;
+	BiomeBlendMode(String name, int blendRadius, String... roundPattern) {
+		this.name = name;
+		this.blendRadius = blendRadius;
 
-	BiomeBlendMode(String n, int b, String... roundPattern) {
-		name = n;
-		blend = b;
+		size = (this.blendRadius * 2 + 1) * (this.blendRadius * 2 + 1);
+		int[] posX0 = new int[size];
+		int[] posY0 = new int[size];
 
-		int[] posX0 = new int[(blend * 2 + 1) * (blend * 2 + 1)];
-		int[] posY0 = new int[posX0.length];
-		size = 0;
-
-		for (int y = 0; y < blend * 2 + 1; y++) {
-			for (int x = 0; x < blend * 2 + 1; x++) {
+		int n = 0;
+		for (int y = 0; y < this.blendRadius * 2 + 1; y++) {
+			for (int x = 0; x < this.blendRadius * 2 + 1; x++) {
 				if (roundPattern[y].charAt(x) != ' ') {
-					posX0[size] = x - blend;
-					posY0[size] = y - blend;
-					size++;
+					posX0[n] = x - this.blendRadius;
+					posY0[n] = y - this.blendRadius;
+					n++;
 				}
 			}
 		}
 
 		posX = Arrays.copyOf(posX0, size);
 		posY = Arrays.copyOf(posY0, size);
+	}
+
+	public int getBlendRadius() {
+		return blendRadius;
+	}
+
+	public Color4I doBlending(int[][] colors, int ax, int az) {
+		if (blendRadius == 0) {
+			return Color4I.rgb(colors[ax][az]);
+		}
+
+		int r = 0;
+		int g = 0;
+		int b = 0;
+		int nColors = 0;
+
+		for (int i = 0; i < size; i++) {
+			int col = colors[ax + blendRadius + posX[i]][az + blendRadius + posY[i]];
+			if (col != 0) {
+				r += (col >> 16) & 0xFF;
+				g += (col >> 8) & 0xFF;
+				b += col & 0xFF;
+				nColors++;
+			}
+		}
+
+		return nColors == 0 ?
+				Color4I.rgb(colors[ax + blendRadius][az + blendRadius]) :
+				Color4I.rgb(r / nColors, g / nColors, b / nColors);
+
 	}
 
 	@Override

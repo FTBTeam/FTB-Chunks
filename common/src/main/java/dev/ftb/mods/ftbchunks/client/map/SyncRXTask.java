@@ -5,9 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.zip.InflaterInputStream;
 
-/**
- * @author LatvianModder
- */
 public class SyncRXTask implements MapTask {
 	public final RegionSyncKey key;
 	public final byte[] data;

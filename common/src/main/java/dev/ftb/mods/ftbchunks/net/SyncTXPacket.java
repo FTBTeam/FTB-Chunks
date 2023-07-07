@@ -4,14 +4,11 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
-/**
- * @author LatvianModder
- */
 public class SyncTXPacket extends BaseC2SMessage {
 	public final RegionSyncKey key;
 	public final int offset;
@@ -48,7 +45,7 @@ public class SyncTXPacket extends BaseC2SMessage {
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
 		ServerPlayer p = (ServerPlayer) context.getPlayer();
-		FTBChunksTeamData pd = FTBChunksAPI.getManager().getData(p);
+		ChunkTeamDataImpl pd = ClaimedChunkManagerImpl.getInstance().getOrCreateData(p);
 
 		for (ServerPlayer p1 : p.getServer().getPlayerList().getPlayers()) {
 			if (p1 != p) {

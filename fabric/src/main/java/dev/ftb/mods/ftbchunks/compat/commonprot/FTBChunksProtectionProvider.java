@@ -7,9 +7,9 @@ import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.Protection;
+import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import eu.pb4.common.protection.api.CommonProtection;
 import eu.pb4.common.protection.api.ProtectionProvider;
@@ -52,7 +52,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
     @Override
     public boolean isProtected(Level world, BlockPos pos) {
-        return FTBChunksAPI.getManager().getChunk(new ChunkDimPos(world, pos)) != null;
+        return ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(world, pos)) != null;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         for (int cx = minCX; cx < maxCX; cx++) {
             for (int cz = minCZ; cz < maxCZ; cz++) {
-                if (FTBChunksAPI.getManager().getChunk(new ChunkDimPos(world.dimension(), cx, cz)) != null) {
+                if (ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(world.dimension(), cx, cz)) != null) {
                     return true;
                 }
             }
@@ -79,7 +79,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null);
+        return !ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
         }
 
         ChunkDimPos chunkPos = new ChunkDimPos(world, pos);
-        ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(chunkPos);
+        ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(chunkPos);
 
         return chunk == null || chunk.allowExplosions();
     }
@@ -100,7 +100,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockPlaceProtection(), null);
+        return !ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockPlaceProtection(), null);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockInteractProtection(), null);
+        return !ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockInteractProtection(), null);
 
     }
 
@@ -119,7 +119,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.INTERACT_ENTITY, entity);
+        return !ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.INTERACT_ENTITY, entity);
     }
 
     @Override
@@ -130,7 +130,7 @@ public class FTBChunksProtectionProvider implements ProtectionProvider {
 
         if (player == null) return true;
 
-        return !FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity);
+        return !ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, InteractionHand.MAIN_HAND, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity);
     }
 
     public static @Nullable ServerPlayer tryResolvePlayer(Level l, GameProfile profile) {

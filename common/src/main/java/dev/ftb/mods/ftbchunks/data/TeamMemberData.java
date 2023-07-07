@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.data;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -44,12 +43,12 @@ public class TeamMemberData {
         return new TeamMemberData(maxClaims, maxForced, offline, orig);
     }
 
-    public static TeamMemberData fromPlayerData(ServerPlayer player, FTBChunksTeamData otherTeam) {
+    public static TeamMemberData fromPlayerData(ServerPlayer player, ChunkTeamDataImpl otherTeam) {
         return new TeamMemberData(
-                otherTeam.getMaxClaimChunks() + otherTeam.extraClaimChunks,
-                otherTeam.getMaxForceLoadChunks() + otherTeam.extraForceLoadChunks,
+                otherTeam.getMaxClaimChunks() + otherTeam.getExtraClaimChunks(),
+                otherTeam.getMaxForceLoadChunks() + otherTeam.getExtraForceLoadChunks(),
                 FTBChunksWorldConfig.canPlayerOfflineForceload(player),
-                new HashSet<>(otherTeam.getClaimedChunks().stream().map(cc -> cc.pos).toList())
+                new HashSet<>(otherTeam.getClaimedChunks().stream().map(ClaimedChunkImpl::getPos).toList())
         );
     }
 

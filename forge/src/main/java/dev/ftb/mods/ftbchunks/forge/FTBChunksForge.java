@@ -3,10 +3,10 @@ package dev.ftb.mods.ftbchunks.forge;
 import dev.architectury.platform.Platform;
 import dev.architectury.platform.forge.EventBuses;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.compat.waystones.WaystonesCompat;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.Protection;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
@@ -16,6 +16,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.entity.EntityMobGriefingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -46,7 +47,7 @@ public class FTBChunksForge {
 	 * @param event the event
 	 */
 	private void entityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
-		if (!event.getEntity().level().isClientSide && FTBChunksAPI.getManager().protect(event.getEntity(), event.getHand(), event.getEntity().blockPosition(), Protection.INTERACT_ENTITY, event.getTarget())) {
+		if (!event.getEntity().level().isClientSide && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(event.getEntity(), event.getHand(), event.getEntity().blockPosition(), Protection.INTERACT_ENTITY, event.getTarget())) {
 			event.setCancellationResult(InteractionResult.FAIL);
 			event.setCanceled(true);
 		}
@@ -56,10 +57,10 @@ public class FTBChunksForge {
 		// we could do this for all mob griefing but that's arguably OP (could trivialize wither fights, for example)
 		// enderman block stealing is the most common annoyance, and this also has parity with the fabric support
 		if (event.getEntity() instanceof EnderMan) {
-			ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(event.getEntity()));
+			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(event.getEntity()));
 
 			if (cc != null && !cc.allowMobGriefing()) {
-				event.setCanceled(true);
+				event.setResult(Event.Result.DENY);
 			}
 		}
 	}
@@ -81,8 +82,8 @@ public class FTBChunksForge {
 			// ticking tickets - purge if the chunk is either unclaimed or should not be offline-force-loaded
 			Set<Long> toRemove = new HashSet<>();
 			chunks.getSecond().forEach(l -> {
-				ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));
-				if (cc == null || !cc.teamData.getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
+				ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));
+				if (cc == null || !cc.getTeamData().getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
 					toRemove.add(l);
 				}
 			});

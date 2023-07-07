@@ -9,9 +9,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author LatvianModder
- */
 @Mixin(Util.class)
 public abstract class UtilMixin {
 	@Inject(method = "shutdownExecutors", at = @At("RETURN"))

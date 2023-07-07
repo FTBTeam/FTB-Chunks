@@ -15,7 +15,7 @@ public interface FTBChunksNet {
 	MessageType SEND_GENERAL_DATA = MAIN.registerS2C("send_general_data", SendGeneralDataPacket::new);
 	MessageType TELEPORT_FROM_MAP = MAIN.registerC2S("teleport_from_map", TeleportFromMapPacket::new);
 	MessageType PLAYER_DEATH = MAIN.registerS2C("player_death", PlayerDeathPacket::new);
-	MessageType SEND_VISIBLE_PLAYER_LIST = MAIN.registerS2C("send_visible_player_list", SendVisiblePlayerListPacket::new);
+	MessageType SEND_VISIBLE_PLAYER_LIST = MAIN.registerS2C("send_visible_player_list", PlayerVisibilityPacket::new);
 	MessageType SYNC_TX = MAIN.registerC2S("sync_tx", SyncTXPacket::new);
 	MessageType SYNC_RX = MAIN.registerS2C("sync_rx", SyncRXPacket::new);
 	MessageType LOADED_CHUNK_VIEW = MAIN.registerS2C("loaded_chunk_view", LoadedChunkViewPacket::new);
@@ -24,6 +24,7 @@ public interface FTBChunksNet {
 	MessageType SERVER_CONFIG_REQUEST = MAIN.registerC2S("server_config_request", ServerConfigRequestPacket::new);
 	MessageType SERVER_CONFIG_RESPONSE = MAIN.registerS2C("server_config_response", ServerConfigResponsePacket::new);
 	MessageType CHUNK_CHANGE_RESPONSE = MAIN.registerS2C("chunk_change_response", ChunkChangeResponsePacket::new);
+	MessageType REQUEST_BLOCK_COLOR = MAIN.registerS2C("request_block_color", RequestBlockColorPacket::new);
 
     static void init() {
 	}

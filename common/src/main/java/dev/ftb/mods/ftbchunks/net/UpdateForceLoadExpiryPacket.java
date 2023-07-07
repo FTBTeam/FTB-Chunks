@@ -3,8 +3,8 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -43,11 +43,11 @@ public class UpdateForceLoadExpiryPacket extends BaseC2SMessage {
     @Override
     public void handle(NetworkManager.PacketContext context) {
         if (context.getPlayer() instanceof ServerPlayer sp && sp.level().dimension().equals(pos.dimension())) {
-            ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(pos);
-            if (chunk != null && chunk.teamData.getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
+            ClaimedChunk chunk = ClaimedChunkManagerImpl.getInstance().getChunk(pos);
+            if (chunk != null && chunk.getTeamData().getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
                 chunk.setForceLoadExpiryTime(relativeExpiryTime == 0L ? 0L : System.currentTimeMillis() + relativeExpiryTime);
-                SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.teamData.getTeamId(),
-                        new SendChunkPacket.SingleChunk(System.currentTimeMillis(), chunk.pos.x(), chunk.pos.z(), chunk));
+                SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.getTeamData().getTeam().getId(),
+                        new SendChunkPacket.SingleChunk(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
                 packet.sendTo(sp);
             }
         }

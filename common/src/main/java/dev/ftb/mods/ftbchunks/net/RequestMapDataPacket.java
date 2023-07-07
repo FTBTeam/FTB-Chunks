@@ -9,7 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
  * @author LatvianModder
  */
 public class RequestMapDataPacket extends BaseC2SMessage {
-	public final int fromX, fromZ, toX, toZ;
+	private final int fromX, fromZ, toX, toZ;
 
 	public RequestMapDataPacket(int fx, int fz, int tx, int tz) {
 		fromX = fx;

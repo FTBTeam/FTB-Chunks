@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.data.HeightUtils;
+import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -12,29 +12,21 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 
-/**
- * @author LatvianModder
- */
 public class TeleportFromMapPacket extends BaseC2SMessage {
-	public final int x, y, z;
-	public final boolean unknownY;
-	public final ResourceKey<Level> dimension;
+	private final BlockPos pos;
+	private final boolean unknownY;
+	private final ResourceKey<Level> dimension;
 
-	public TeleportFromMapPacket(int _x, int _y, int _z, boolean uy, ResourceKey<Level> d) {
-		x = _x;
-		y = _y;
-		z = _z;
-		unknownY = uy;
-		dimension = d;
+	public TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<Level> dimension) {
+		this.pos = pos;
+		this.unknownY = unknownY;
+		this.dimension = dimension;
 	}
 
 	TeleportFromMapPacket(FriendlyByteBuf buf) {
-		x = buf.readInt();
-		y = buf.readInt();
-		z = buf.readInt();
+		pos = buf.readBlockPos();
 		unknownY = buf.readBoolean();
 		dimension = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
 	}
@@ -46,9 +38,7 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeInt(x);
-		buf.writeInt(y);
-		buf.writeInt(z);
+		buf.writeBlockPos(pos);
 		buf.writeBoolean(unknownY);
 		buf.writeResourceLocation(dimension.location());
 	}
@@ -59,22 +49,19 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 		ServerLevel level = p.getServer().getLevel(dimension);
 
 		if (level != null && p.hasPermissions(2)) {
-			int y1 = y;
+			int x1 = pos.getX();
+			int y1 = pos.getY();
+			int z1 = pos.getZ();
 
 			if (unknownY) {
-				ChunkAccess chunkAccess = level.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true);
+				ChunkAccess chunkAccess = level.getChunkAt(pos);
 
-				if (chunkAccess == null) {
-					return;
-				}
-
-				int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-
+				int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x1, z1);
 				if (topY == chunkAccess.getMinBuildHeight() - 1) {
 					return;
 				}
 
-				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x, topY + 2, z);
+				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x1, topY + 2, z1);
 				int water = HeightUtils.getHeight(level, chunkAccess, blockPos);
 
 				if (blockPos.getY() == HeightUtils.UNKNOWN) {
@@ -86,7 +73,7 @@ public class TeleportFromMapPacket extends BaseC2SMessage {
 				y1 = blockPos.getY() + 1;
 			}
 
-			p.teleportTo(level, x + 0.5D, y1 + 0.1D, z + 0.5D, p.getYRot(), p.getXRot());
+			p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, p.getYRot(), p.getXRot());
 		}
 	}
 }

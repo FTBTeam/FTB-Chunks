@@ -10,13 +10,10 @@ import net.minecraft.util.Mth;
 import java.io.InputStream;
 import java.util.HashMap;
 
-/**
- * @author LatvianModder
- */
 public class ColorUtils {
-	public static Color4I[] reducedColorPalette = null;
-	public static Color4I[] topographyPalette = null;
-	public static Color4I[][] lightMapPalette = null;
+	private static Color4I[] reducedColorPalette = null;
+	private static Color4I[] topographyPalette = null;
+	private static Color4I[][] lightMapPalette = null;
 	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
 
 	public static int convertToNative(int c) {

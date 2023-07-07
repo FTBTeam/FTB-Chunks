@@ -3,27 +3,24 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.SNBTNet;
 import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.UUID;
 
-/**
- * @author LatvianModder
- */
 public class LoginDataPacket extends BaseS2CMessage {
-	public final UUID serverId;
-	public final SNBTCompoundTag config;
+	private final UUID serverId;
+	private final SNBTCompoundTag config;
 
-	public LoginDataPacket(UUID id, SNBTCompoundTag c) {
-		serverId = id;
-		config = c;
+	public LoginDataPacket(UUID serverId, SNBTCompoundTag config) {
+		this.serverId = serverId;
+		this.config = config;
 	}
 
 	LoginDataPacket(FriendlyByteBuf buf) {
-		serverId = new UUID(buf.readLong(), buf.readLong());
+		serverId = buf.readUUID();
 		config = SNBTNet.readCompound(buf);
 	}
 
@@ -34,13 +31,12 @@ public class LoginDataPacket extends BaseS2CMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeLong(serverId.getMostSignificantBits());
-		buf.writeLong(serverId.getLeastSignificantBits());
+		buf.writeUUID(serverId);
 		SNBTNet.write(buf, config);
 	}
 
 	@Override
 	public void handle(NetworkManager.PacketContext context) {
-		FTBChunks.PROXY.login(this);
+		FTBChunksClient.INSTANCE.handlePlayerLogin(serverId, config);
 	}
 }

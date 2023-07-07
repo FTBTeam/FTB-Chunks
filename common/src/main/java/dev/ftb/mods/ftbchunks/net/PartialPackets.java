@@ -1,20 +1,18 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.client.map.SyncRXTask;
 
 import java.util.*;
 
-/**
- * @author LatvianModder
- */
 public class PartialPackets<Key, Packet> {
-	public static final PartialPackets<RegionSyncKey, SyncTXPacket> REGION = new PartialPackets<>(SyncTXPacket::new, (key, data) -> FTBChunksClient.queue(new SyncRXTask(key, data)));
+	public static final PartialPackets<RegionSyncKey, SyncTXPacket> REGION
+			= new PartialPackets<>(SyncTXPacket::new, (key, data) -> ClientTaskQueue.queue(new SyncRXTask(key, data)));
 
 	public static class PartialData {
-		public int remaining;
-		public final byte[] data;
+		private int remaining;
+		private final byte[] data;
 
 		public PartialData(int s) {
 			remaining = s;
@@ -32,14 +30,14 @@ public class PartialPackets<Key, Packet> {
 		void accept(K key, byte[] data);
 	}
 
-	public final Map<Key, PartialData> map;
-	public final PacketFactory<Key, Packet> packetFactory;
-	public final Callback<Key> callback;
+	private final Map<Key, PartialData> map;
+	private final PacketFactory<Key, Packet> packetFactory;
+	private final Callback<Key> callback;
 
-	public PartialPackets(PacketFactory<Key, Packet> pf, Callback<Key> c) {
+	public PartialPackets(PacketFactory<Key, Packet> packetFactory, Callback<Key> callback) {
 		map = new HashMap<>();
-		packetFactory = pf;
-		callback = c;
+		this.packetFactory = packetFactory;
+		this.callback = callback;
 	}
 
 	public List<Packet> write(Key key, byte[] data) {

@@ -16,9 +16,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * @author LatvianModder
- */
 public class PlayerHeadTexture extends SimpleTexture {
 	private final String imageUrl;
 	@Nullable
@@ -41,7 +38,7 @@ public class PlayerHeadTexture extends SimpleTexture {
 			if (!this.textureUploaded) {
 				try {
 					super.load(manager);
-				} catch (IOException ioexception) {
+				} catch (IOException ignored) {
 				}
 
 				this.textureUploaded = true;
@@ -62,22 +59,19 @@ public class PlayerHeadTexture extends SimpleTexture {
 						Minecraft.getInstance().execute(() -> {
 							try {
 								NativeImage img = NativeImage.read(inputstream);
-
-								if (img != null) {
-									this.textureUploaded = true;
-									if (!RenderSystem.isOnRenderThread()) {
-										RenderSystem.recordRenderCall(() -> upload(img));
-									} else {
-										upload(img);
-									}
-									httpurlconnection.disconnect();
+								this.textureUploaded = true;
+								if (!RenderSystem.isOnRenderThread()) {
+									RenderSystem.recordRenderCall(() -> upload(img));
+								} else {
+									upload(img);
 								}
+								httpurlconnection.disconnect();
 							} catch (Exception ex) {
 								ex.printStackTrace();
 							}
 						});
 					}
-				} catch (Exception exception) {
+				} catch (Exception ignored) {
 				}
 			}, Util.backgroundExecutor());
 		}

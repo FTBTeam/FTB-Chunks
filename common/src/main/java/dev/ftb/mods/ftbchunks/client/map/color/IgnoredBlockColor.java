@@ -4,9 +4,6 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 
-/**
- * @author LatvianModder
- */
 public class IgnoredBlockColor implements BlockColor {
 	@Override
 	public Color4I getBlockColor(BlockAndTintGetter world, BlockPos pos) {

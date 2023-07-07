@@ -19,9 +19,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author LatvianModder
- */
 public class MapRegion implements MapTask {
 	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
 

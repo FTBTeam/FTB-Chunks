@@ -23,9 +23,6 @@ import org.lwjgl.opengl.GL11;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author LatvianModder
- */
 public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?>, Icon>> {
 	public static final Icon NORMAL = Icon.getIcon("ftbchunks:textures/faces/normal.png");
 	public static final Icon HOSTILE = Icon.getIcon("ftbchunks:textures/faces/hostile.png");

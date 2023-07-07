@@ -38,9 +38,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-/**
- * @author LatvianModder
- */
 public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = new LevelResource("ftbchunks");
 	private static final Long2ObjectMap<UUID> EMPTY_CHUNKS = Long2ObjectMaps.emptyMap();

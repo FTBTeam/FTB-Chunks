@@ -26,9 +26,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * @author LatvianModder
- */
 public class MapManager implements MapTask {
 	// 4MB per 512x512 region data:
 	// - 0.5MB each for heightmap and water/light/biome map

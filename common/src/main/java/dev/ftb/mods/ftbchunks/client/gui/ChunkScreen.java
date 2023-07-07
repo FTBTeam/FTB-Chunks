@@ -39,9 +39,6 @@ import java.util.*;
 
 import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
 
-/**
- * @author LatvianModder
- */
 public class ChunkScreen extends BaseScreen {
 	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(new ResourceLocation(FTBChunks.MOD_ID, "textures/force_loaded.png"));
 

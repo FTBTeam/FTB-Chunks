@@ -17,9 +17,6 @@ import net.minecraft.client.gui.screens.Screen;
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.loadDefaulted;
 
-/**
- * @author LatvianModder
- */
 public interface FTBChunksClientConfig {
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-client");
 

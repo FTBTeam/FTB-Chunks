@@ -7,9 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 
-/**
- * @author LatvianModder
- */
 public class BlockColors {
 	private static final HashMap<String, BlockColor> TYPE_MAP = new HashMap<>();
 

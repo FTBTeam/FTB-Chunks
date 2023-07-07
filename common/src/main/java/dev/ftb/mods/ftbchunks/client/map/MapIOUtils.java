@@ -7,9 +7,6 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
-/**
- * @author LatvianModder
- */
 public class MapIOUtils {
 	public interface IOCallback<T> {
 		void callback(T stream) throws IOException;

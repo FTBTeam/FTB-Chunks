@@ -17,9 +17,6 @@ import java.util.EnumMap;
 import java.util.Set;
 import java.util.function.Function;
 
-/**
- * @author LatvianModder
- */
 public class RequestChunkChangePacket extends BaseC2SMessage {
 	private final ChunkChangeOp action;
 	private final Set<XZ> chunks;

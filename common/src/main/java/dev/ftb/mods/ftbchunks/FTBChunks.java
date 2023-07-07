@@ -64,9 +64,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * @author LatvianModder
- */
 public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");

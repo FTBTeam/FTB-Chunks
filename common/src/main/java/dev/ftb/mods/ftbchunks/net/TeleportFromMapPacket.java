@@ -14,9 +14,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
-/**
- * @author LatvianModder
- */
 public class TeleportFromMapPacket extends BaseC2SMessage {
 	private final BlockPos pos;
 	private final boolean unknownY;

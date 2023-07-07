@@ -24,9 +24,6 @@ import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author LatvianModder
- */
 public class RegionMapPanel extends Panel {
 	final LargeMapScreen largeMap;
 	double regionX = 0;

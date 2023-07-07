@@ -99,10 +99,7 @@ import java.util.*;
 
 import static dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 
-/**
- * @author LatvianModder
- */
-public enum FTBChunksClient /*extends FTBChunksCommon*/ {
+public enum FTBChunksClient {
 	INSTANCE;
 
 	private static final ResourceLocation BUTTON_ID_MAP = new ResourceLocation("ftbchunks:open_gui");
@@ -449,7 +446,7 @@ public enum FTBChunksClient /*extends FTBChunksCommon*/ {
 	public void renderHud(GuiGraphics graphics, float tickDelta) {
 		Minecraft mc = Minecraft.getInstance();
 
-		if (mc.player == null || mc.level == null || MapManager.getInstance().isEmpty()) {
+		if (mc.player == null || mc.level == null || MapManager.getInstance().isEmpty() || MapDimension.getCurrent().isEmpty()) {
 			return;
 		}
 
@@ -459,10 +456,7 @@ public enum FTBChunksClient /*extends FTBChunksCommon*/ {
 		double guiScale = mc.getWindow().getGuiScale();
 		int scaledWidth = mc.getWindow().getGuiScaledWidth();
 		int scaledHeight = mc.getWindow().getGuiScaledHeight();
-		MapDimension dim = MapDimension.getCurrent().orElse(null);
-		if (dim == null) {
-			return;
-		}
+		MapDimension dim = MapDimension.getCurrent().get();
 
 		if (dim.dimension != mc.level.dimension()) {
 			MapDimension.clearCurrentDimension();

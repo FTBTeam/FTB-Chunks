@@ -16,9 +16,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * @author LatvianModder
- */
 public class PlayerHeadTexture extends SimpleTexture {
 	private final String imageUrl;
 	@Nullable

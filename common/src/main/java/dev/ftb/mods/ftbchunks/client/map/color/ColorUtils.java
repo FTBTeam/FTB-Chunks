@@ -10,9 +10,6 @@ import net.minecraft.util.Mth;
 import java.io.InputStream;
 import java.util.HashMap;
 
-/**
- * @author LatvianModder
- */
 public class ColorUtils {
 	private static Color4I[] reducedColorPalette = null;
 	private static Color4I[] topographyPalette = null;

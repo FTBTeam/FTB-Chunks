@@ -38,9 +38,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author LatvianModder
- */
 public class LargeMapScreen extends BaseScreen {
 	private static final Color4I BACKGROUND_COLOR = Color4I.rgb(0x202225);
 

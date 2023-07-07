@@ -22,9 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author LatvianModder
- */
 public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 	private static final Map<ResourceLocation, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
 

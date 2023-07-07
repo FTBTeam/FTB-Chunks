@@ -14,9 +14,6 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.Collections;
 
-/**
- * @author LatvianModder
- */
 public interface FTBChunksWorldConfig {
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
 

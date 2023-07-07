@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * @author LatvianModder
- */
 public final class VisibleClientPlayers {
 	private static final Set<UUID> CLIENT_LIST = new HashSet<>();
 

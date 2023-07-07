@@ -1,8 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-/**
- * @author LatvianModder
- */
 @FunctionalInterface
 public interface MapTask extends Runnable {
 	void runMapTask() throws Exception;

@@ -22,9 +22,6 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author LatvianModder
- */
 public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	private static final int[] ALL_BLOCKS = Util.make(new int[256], array -> {
 		for (int i = 0; i < 256; i++) {

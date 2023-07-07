@@ -2,9 +2,6 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftblibrary.config.NameMap;
 
-/**
- * @author LatvianModder
- */
 public enum MapMode {
 	NONE,
 	NIGHT,

@@ -6,9 +6,6 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * @author LatvianModder
- */
 public class UpdateChunkFromServerTask implements MapTask {
 	private final MapDimension dimension;
 	private final SendChunkPacket.SingleChunk chunk;

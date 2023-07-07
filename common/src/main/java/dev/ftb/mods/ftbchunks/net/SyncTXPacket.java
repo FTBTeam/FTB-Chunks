@@ -9,9 +9,6 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
-/**
- * @author LatvianModder
- */
 public class SyncTXPacket extends BaseC2SMessage {
 	public final RegionSyncKey key;
 	public final int offset;

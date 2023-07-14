@@ -13,10 +13,15 @@ import java.util.function.Predicate;
 public class DimensionFilter {
     private static WildcardedRLMatcher dimensionMatcherB = null;
     private static WildcardedRLMatcher dimensionMatcherW = null;
+    private static WildcardedRLMatcher noWilderness = null;
 
     public static boolean isDimensionOK(ResourceKey<Level> levelKey) {
         ResourceLocation name = levelKey.location();
         return !getDimensionBlacklist().test(name) && (getDimensionWhitelist().isEmpty() || getDimensionWhitelist().test(name));
+    }
+
+    public static boolean isNoWildernessDimension(ResourceKey<Level> levelKey) {
+        return getNoWildernessList().test(levelKey.location());
     }
 
     private static WildcardedRLMatcher getDimensionWhitelist() {
@@ -33,9 +38,18 @@ public class DimensionFilter {
         return dimensionMatcherB;
     }
 
+    private static WildcardedRLMatcher getNoWildernessList() {
+        if (noWilderness == null) {
+            noWilderness = new WildcardedRLMatcher(FTBChunksWorldConfig.NO_WILDERNESS_DIMENSIONS.get());
+        }
+        return noWilderness;
+    }
+
+
     public static void clearMatcherCaches() {
         dimensionMatcherB = null;
         dimensionMatcherW = null;
+        noWilderness = null;
     }
 
     private static class WildcardedRLMatcher implements Predicate<ResourceLocation> {

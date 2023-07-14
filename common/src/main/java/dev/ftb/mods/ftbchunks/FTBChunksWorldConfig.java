@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
+import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,6 +27,7 @@ public interface FTBChunksWorldConfig {
 	StringListValue CLAIM_DIMENSION_BLACKLIST = CONFIG.getStringList("claim_dimension_blacklist", Collections.emptyList()).comment("Dimension ID's where chunks may not be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End, or \"othermod:*\" to disable chunk claiming in *all* dimensions added by \"othermod\"");
 	StringListValue CLAIM_DIMENSION_WHITELIST = CONFIG.getStringList("claim_dimension_whitelist", Collections.emptyList()).comment("Dimension ID's where chunks may be claimed. If non-empty, chunks may be claimed *only* in these dimensions (and the dimension is not in \"claim_dimension_blacklist\"). Same syntax as for \"claim_dimension_blacklist\".");
 	BooleanValue NO_WILDERNESS = CONFIG.getBoolean("no_wilderness", false).comment("Requires you to claim chunks in order to edit and interact with blocks");
+	StringListValue NO_WILDERNESS_DIMENSIONS = CONFIG.getStringList("no_wilderness_dimensions", Collections.emptyList()).comment("Dimension ID's where the no_wilderness rule is enforced - building is only allowed in claimed chunks. If this is non-empty, it overrides the 'no_wilderness' setting.");
 	BooleanValue FORCE_DISABLE_MINIMAP = CONFIG.getBoolean("force_disable_minimap", false).comment("Minimap for clients connecting to this server will be disabled");
 	DoubleValue MAX_IDLE_DAYS_BEFORE_UNCLAIM = CONFIG.getDouble("max_idle_days_before_unclaim", 0D, 0D, 3650D).comment("Maximum time (in real-world days) where if no player in a team logs in, the team automatically loses their claims.", "Prevents chunks being claimed indefinitely by teams who no longer play.","Default of 0 means no automatic loss of claims.");
 	DoubleValue MAX_IDLE_DAYS_BEFORE_UNFORCE = CONFIG.getDouble("max_idle_days_before_unforce", 0D, 0D, 3650D).comment("Maximum time (in real-world days) where if no player in a team logs in, any forceloaded chunks owned by the team are no longer forceloaded.", "Prevents chunks being forceloaded indefinitely by teams who no longer play.","Default of 0 means no automatic loss of forceloading.");
@@ -60,7 +62,8 @@ public interface FTBChunksWorldConfig {
 
 	static boolean noWilderness(ServerPlayer player) {
 		if (player != null) {
-			return PermissionsHelper.getInstance().getNoWilderness(player, NO_WILDERNESS.get());
+			return DimensionFilter.isNoWildernessDimension(player.level.dimension())
+					|| PermissionsHelper.getInstance().getNoWilderness(player, NO_WILDERNESS.get());
 		}
 
 		return NO_WILDERNESS.get();

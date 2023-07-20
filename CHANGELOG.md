@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.1.4]
+
+### Fixed
+* Fixed a NoSuchMethodError crash with Game Stages mod
+* Worked around Optifine bug, which is firing Forge mob griefing events on the client and causing client crashes
+
+## [2001.1.3]
+
+### Fixed
+* Fixed Endermen still being able to grief claimed chunks
+  * Related, fixes crashes with recent Forge releases (event cancelling semantics have changed for the mob griefing event)
+
 ## [2001.1.2]
 
 ### Added

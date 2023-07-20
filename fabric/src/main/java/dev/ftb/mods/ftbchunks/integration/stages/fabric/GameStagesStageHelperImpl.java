@@ -18,6 +18,6 @@ public class GameStagesStageHelperImpl {
     public static void removeStage(Player player, String stage) {
     }
 
-    public static void sync(ServerPlayer player) {
+    public static void syncStages(ServerPlayer player) {
     }
 }

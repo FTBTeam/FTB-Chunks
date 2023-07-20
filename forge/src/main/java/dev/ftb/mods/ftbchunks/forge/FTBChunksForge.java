@@ -56,7 +56,8 @@ public class FTBChunksForge {
 	private void mobGriefing(EntityMobGriefingEvent event) {
 		// we could do this for all mob griefing but that's arguably OP (could trivialize wither fights, for example)
 		// enderman block stealing is the most common annoyance, and this also has parity with the fabric support
-		if (event.getEntity() instanceof EnderMan) {
+		// Note: explicit check for server-side needed due to Optifine brain-damage
+		if (event.getEntity() instanceof EnderMan && !event.getEntity().level().isClientSide()) {
 			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(event.getEntity()));
 
 			if (cc != null && !cc.allowMobGriefing()) {

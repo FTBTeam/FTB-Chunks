@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Wildcarded dimensions can be used, e.g. "somemod:*" disables wilderness building in _all_ dimension added by the mod "somemod"
   * The existing global "no_wilderness" boolean setting is still supported
 
+### Fixed
+* Fixed a NoSuchMethodError crash when Game Stages installed (and KubeJS isn't)
+
 ## [1902.3.22]
 
 ### Added

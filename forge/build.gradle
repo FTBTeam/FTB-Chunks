@@ -57,20 +57,11 @@ dependencies {
 
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
-	modImplementation("dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}")
-//	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
 
 	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:9.1.574")
-	modImplementation("curse.maven:balm-531761:${balm_forge_version}")
-	modImplementation("curse.maven:waystones-245755:${waystones_forge_version}")
-
-	modCompileOnlyApi "net.darkhax.gamestages:GameStages-Forge-${rootProject.minecraft_version}:${rootProject.gamestages_version}"
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
-
-	compileOnly "net.luckperms:api:5.4"
 }
 
 apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
@@ -91,9 +82,7 @@ processResources {
 				"forgeshortversion": project.forge_version.split("\\.")[0],
 				"mcversion": project.minecraft_version,
 				"libraryversion": project.ftb_library_version,
-				"teamsversion": project.ftb_teams_version,
-				"ranksversion": project.ftb_ranks_version,
-				"kubejsversion": project.kubejs_version
+				"teamsversion": project.ftb_teams_version
 	}
 }
 
@@ -147,6 +136,7 @@ if (ENV.CURSEFORGE_KEY) {
 				requiredDependency 'ftb-library-forge'
 				requiredDependency 'ftb-teams-forge'
 				optionalDependency 'ftb-ranks-forge'
+				optionalDependency 'ftb-xmod-compat'
 			}
 			changelog = getGitChangelog
 			changelogType = 'markdown'

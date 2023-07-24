@@ -13,10 +13,8 @@ import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.*;
-import dev.ftb.mods.ftbchunks.integration.ftbranks.FTBRanksIntegration;
-import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
-import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesCommon;
 import dev.ftb.mods.ftbchunks.net.*;
+import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -132,14 +130,11 @@ public class FTBChunks {
 		TickEvent.SERVER_POST.register(this::serverTickPost);
 		TickEvent.PLAYER_POST.register(this::playerTickPost);
 
-		if (Platform.isModLoaded("ftbranks")) {
-			FTBRanksIntegration.registerEvents();
-		}
-		if (Platform.isModLoaded("waystones")) {
-			WaystonesCommon.init();
-		}
-
 		PROXY.init();
+
+		if (!Platform.isModLoaded("ftbxmodcompat")) {
+			LOGGER.info("Mod [FTB XMod Compat] not detected. Install it if you want FTB Chunks integration with KubeJS, Game Stages, Waystones, FTB Ranks/Luckperms and/or Common Protection API");
+		}
 	}
 
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
@@ -432,7 +427,7 @@ public class FTBChunks {
 	private void playerChangedDimension(ServerPlayer serverPlayer, ResourceKey<Level> oldLevel, ResourceKey<Level> newLevel) {
 		LongRangePlayerTracker.INSTANCE.stopTracking(serverPlayer);
 
-		StageHelper.INSTANCE.get().sync(serverPlayer);
+		StageHelper.INSTANCE.getProvider().sync(serverPlayer);
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {

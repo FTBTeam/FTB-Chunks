@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.3.23]
+
+### Added
+* KubeJS events have been added back to the mod, and updated to the new KubeJS syntax
+  * Two new methods have been added:
+    * `setCustomResult(String translationKey)` on before-events, to cancel the event with a custom error message displayed on the client
+    * `getClaimPos()` on all events, which gets the (minX,0,minZ) blockpos of the chunk in question
+  * New event syntax is `FTBChunksEvents.before(<type>, event) => { ... }` or `FTBChunksEvents.after(<type>, event) => { ... }`
+  * `before` events can be cancelled; recommended to use the `setCustomResult()` method so players know why they can't do the operation
+  * `<type>` is one of "claim", "unclaim", "load" or "unload"
+* Added a per-dimension no-wilderness setting, to disable wilderness building in specific dimensions
+  * Add dimension ID's (e.g. "minecraft:overworld") to the "no_wilderness_dimensions" server config setting
+  * Wildcarded dimensions can be used, e.g. "somemod:*" disables wilderness building in _all_ dimension added by the mod "somemod"
+  * The existing global "no_wilderness" boolean setting is still supported
+
+### Fixed
+* Fixed a NoSuchMethodError crash when Game Stages installed (and KubeJS isn't)
+
 ## [1902.3.22]
 
 ### Added

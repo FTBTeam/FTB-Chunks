@@ -9,7 +9,6 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.data.ClaimResults;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
@@ -34,6 +33,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -182,7 +182,7 @@ public class ChunkScreen extends BaseScreen {
 		}
 	}
 
-	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResults, Integer> problems) {
+	public static void notifyChunkUpdates(int totalChunks, int changedChunks, Map<String, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
 			cs.updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
@@ -318,16 +318,14 @@ public class ChunkScreen extends BaseScreen {
 
 		if (updateInfo != null && updateInfo.shouldDisplay()) {
 			theme.drawString(matrixStack, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
-			int line = 1;
-			for (Map.Entry<ClaimResults, Integer> entry : updateInfo.problems.entrySet()) {
-				ClaimResults problem = entry.getKey();
-				int count = entry.getValue();
-				theme.drawString(matrixStack, Component.translatable(problem.getTranslationKey()).append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
-			}
+			MutableInt line = new MutableInt(1);
+			updateInfo.problems.forEach((msgKey, count) ->
+					theme.drawString(matrixStack, Component.translatable(msgKey).append(": " + count),
+							sx + 2, sy + 5 + theme.getFontHeight() * line.getAndIncrement(), Theme.SHADOW));
 		}
 	}
 
-	private record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResults, Integer> problems, long timestamp) {
+	private record ChunkUpdateInfo(int totalChunks, int changedChunks, Map<String, Integer> problems, long timestamp) {
 		public boolean shouldDisplay() {
 			// display for 3 seconds + 1 second per line of problem data
 			long timeout = 60L + 20L * problems.size();

@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "FTB Chunks"
 authors = "FTB Team"
 description = '''
-Claim chunks to protect your base from griefers!
+Mapping, chunk claim protection and chunk loading all in one!
 '''
 # logoFile="logo.png"
 license = "All Rights Reserved"
@@ -50,22 +50,8 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
-modId = "ftbranks"
+modId = "ftbxmodcompat"
 mandatory = false
-versionRange = "[${ranksversion},)"
+versionRange = "[1.2.0,)"
 ordering = "AFTER"
 side = "BOTH"
-
-[[dependencies.ftbchunks]]
-modId = "kubejs"
-mandatory = false
-versionRange = "[${kubejsversion},)"
-ordering = "AFTER"
-side = "BOTH"
-
-[[dependencies.ftbchunks]]
-modId = "luckperms"
-mandatory = false
-versionRange = "[5.4.46,)"
-ordering = "AFTER"
-side = "SERVER"

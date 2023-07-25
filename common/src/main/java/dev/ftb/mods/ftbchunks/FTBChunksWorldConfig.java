@@ -2,9 +2,9 @@ package dev.ftb.mods.ftbchunks;
 
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
-import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -41,7 +41,7 @@ public interface FTBChunksWorldConfig {
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {
-			return PermissionsHelper.getInstance().getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
+			return PermissionsHelper.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
 		}
 
 		return MAX_CLAIMED_CHUNKS.get() + playerData.getExtraClaimChunks();
@@ -49,7 +49,7 @@ public interface FTBChunksWorldConfig {
 
 	static int getMaxForceLoadedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {
-			return PermissionsHelper.getInstance().getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
+			return PermissionsHelper.getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
 		}
 
 		return MAX_FORCE_LOADED_CHUNKS.get() + playerData.getExtraForceLoadChunks();
@@ -57,20 +57,20 @@ public interface FTBChunksWorldConfig {
 
 	static boolean canPlayerOfflineForceload(ServerPlayer player) {
 		// note: purely checking the player's own permission here; not interested in server defaults or party data
-		return player != null && PermissionsHelper.getInstance().getChunkLoadOffline(player, false);
+		return player != null && PermissionsHelper.getChunkLoadOffline(player, false);
 	}
 
 	static boolean noWilderness(ServerPlayer player) {
 		if (player != null) {
 			return DimensionFilter.isNoWildernessDimension(player.level.dimension())
-					|| PermissionsHelper.getInstance().getNoWilderness(player, NO_WILDERNESS.get());
+					|| PermissionsHelper.getNoWilderness(player, NO_WILDERNESS.get());
 		}
 
 		return NO_WILDERNESS.get();
 	}
 
 	static boolean playerHasMapStage(Player player) {
-		return !REQUIRE_GAME_STAGE.get() || StageHelper.INSTANCE.get().has(player, "ftbchunks_mapping");
+		return !REQUIRE_GAME_STAGE.get() || StageHelper.getInstance().getProvider().has(player, "ftbchunks_mapping");
 	}
 
 	static boolean shouldShowMinimap(Player player) {

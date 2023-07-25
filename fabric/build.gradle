@@ -55,23 +55,9 @@ dependencies {
 
 	modImplementation("dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}") { transitive = false }
-	modImplementation("dev.ftb.mods:ftb-ranks-fabric:${rootProject.ftb_ranks_version}") { transitive = false }
-	modImplementation("dev.latvian.mods:kubejs-fabric:${rootProject.kubejs_version}")
-//	modImplementation("dev.latvian.mods:rhino-fabric:${rootProject.rhino_version}")
-
-//	modImplementation("curse.maven:auth-me-356643:3725468")
-	modImplementation("curse.maven:cloth-config-348521:3972420")
-
-	// compile-only because for some reason loom isn't deobfuscating these...
-	modCompileOnly("curse.maven:balm-fabric-500525:${balm_fabric_version}")  { transitive = false }
-	modCompileOnly("curse.maven:waystones-fabric-500087:${waystones_fabric_version}")  { transitive = false }
-
-	modCompileOnly("eu.pb4:common-protection-api:${common_prot_api_version}") { transitive = false }
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
-
-	compileOnly "net.luckperms:api:5.4"
 }
 
 apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
@@ -128,6 +114,7 @@ if (ENV.CURSEFORGE_KEY) {
 				requiredDependency 'ftb-library-fabric'
 				requiredDependency 'ftb-teams-fabric'
 				optionalDependency 'ftb-ranks-fabric'
+				optionalDependency 'ftb-xmod-compat'
 			}
 			changelog = getGitChangelog
 			changelogType = 'markdown'

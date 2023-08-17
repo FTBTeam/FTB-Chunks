@@ -36,6 +36,7 @@ public interface FTBChunksWorldConfig {
 	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CONFIG.addEnum("party_limit_mode", PartyLimitMode.NAME_MAP).comment("Method by which party claim & force-load limits are calculated.","LARGEST: use the limits of the member with the largest limits","SUM: add up all the members' limits","OWNER: use the party owner's limits only","AVERAGE: use the average of all members' limits.");
 	BooleanValue REQUIRE_GAME_STAGE = CONFIG.addBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
+	IntValue MAX_PREVENTED_LOG_AGE = CONFIG.addInt("max_prevented_log_age", 7, 1, Integer.MAX_VALUE).comment("Maximum time in days to keep logs of prevented fakeplayer access to a team's claims.");
 
 	static int getMaxClaimedChunks(ChunkTeamDataImpl playerData, ServerPlayer player) {
 		if (player != null) {

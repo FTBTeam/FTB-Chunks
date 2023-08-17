@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client.mapicon;
+package dev.ftb.mods.ftbchunks.integration;
 
 import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;

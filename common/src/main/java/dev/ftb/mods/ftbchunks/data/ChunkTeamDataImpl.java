@@ -101,7 +101,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public TeamManager getTeamManager() {
 		return manager.getTeamManager();
 	}
-	
+
 	@Override
 	public Team getTeam() {
 		return team;
@@ -439,17 +439,17 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		return extraForceLoadChunks;
 	}
 
-	public void setForceLoadMember(UUID id, boolean val) {
-		long oldForceCount = memberData.values().stream().filter(TeamMemberData::isOfflineForceLoader).count();
-		getTeamMemberData(id).setOfflineForceLoader(val);
-		long newForceCount = memberData.values().stream().filter(TeamMemberData::isOfflineForceLoader).count();
-
-		if (oldForceCount != newForceCount) {
-			FTBChunks.LOGGER.debug("team {}: set force load member {} = {}", team.getId(), id, val);
-			markDirty();
-			canForceLoadChunks = null;
-			manager.clearForceLoadedCache();
+	public boolean setForceLoadMember(UUID id, boolean val) {
+		if (val == getTeamMemberData(id).isOfflineForceLoader()) {
+			return false;
 		}
+
+		getTeamMemberData(id).setOfflineForceLoader(val);
+		FTBChunks.LOGGER.debug("team {}: set force load member {} = {}", team.getId(), id, val);
+		markDirty();
+		canForceLoadChunks = null;
+		manager.clearForceLoadedCache();
+		return true;
 	}
 
 	@NotNull
@@ -701,6 +701,15 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		forcedChunkCache = null;
 	}
 
+	@Override
+	public void checkMemberForceLoading(UUID playerId) {
+		if (isTeamMember(playerId)) {
+			ServerPlayer player = manager.getMinecraftServer().getPlayerList().getPlayer(playerId);
+			if (player != null && setForceLoadMember(playerId, FTBChunksWorldConfig.canPlayerOfflineForceload(player))) {
+				updateLimits();
+			}
+		}
+	}
 
 	public void logPreventedAccess(ServerPlayer player, long when) {
 		preventedAccess.put(player.getUUID(), new PreventedAccess(player.getGameProfile().getName(), when));

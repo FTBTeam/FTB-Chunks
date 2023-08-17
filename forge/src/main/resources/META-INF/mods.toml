@@ -48,24 +48,3 @@ mandatory = true
 versionRange = "[${ftbteamsversion},)"
 ordering = "AFTER"
 side = "BOTH"
-
-[[dependencies.ftbchunks]]
-modId = "ftbranks"
-mandatory = false
-versionRange = "[${ftbranksversion},)"
-ordering = "AFTER"
-side = "BOTH"
-
-[[dependencies.ftbchunks]]
-modId = "kubejs"
-mandatory = false
-versionRange = "[${kubejsversion},)"
-ordering = "AFTER"
-side = "BOTH"
-
-[[dependencies.ftbchunks]]
-modId = "luckperms"
-mandatory = false
-versionRange = "[5.4.83,)"
-ordering = "AFTER"
-side = "SERVER"

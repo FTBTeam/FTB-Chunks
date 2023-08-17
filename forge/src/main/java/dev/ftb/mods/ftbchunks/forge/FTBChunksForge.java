@@ -1,10 +1,8 @@
 package dev.ftb.mods.ftbchunks.forge;
 
-import dev.architectury.platform.Platform;
 import dev.architectury.platform.forge.EventBuses;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.Protection;
-import dev.ftb.mods.ftbchunks.compat.waystones.WaystonesCompat;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -32,10 +30,6 @@ public class FTBChunksForge {
 		FTBChunks.instance = new FTBChunks();
 
 		ForgeChunkManager.setForcedChunkLoadingCallback(FTBChunks.MOD_ID, this::validateLoadedChunks);
-
-		if (Platform.isModLoaded("waystones")) {
-			WaystonesCompat.init();
-		}
 	}
 
 	/**

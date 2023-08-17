@@ -1,11 +1,7 @@
 package dev.ftb.mods.ftbchunks.integration;
 
-import com.google.common.base.Suppliers;
-import dev.architectury.platform.Platform;
-import dev.ftb.mods.ftbchunks.integration.ftbranks.FTBRanksIntegration;
-import dev.ftb.mods.ftbchunks.integration.luckperms.LuckPermsIntegration;
-
-import java.util.function.Supplier;
+import dev.ftb.mods.ftblibrary.integration.permissions.PermissionHelper;
+import net.minecraft.server.level.ServerPlayer;
 
 public class PermissionsHelper {
     public static final String MAX_CLAIMED_PERM = "ftbchunks.max_claimed";
@@ -13,18 +9,19 @@ public class PermissionsHelper {
     public static final String CHUNK_LOAD_OFFLINE_PERM = "ftbchunks.chunk_load_offline";
     public static final String NO_WILDERNESS_PERM = "ftbchunks.no_wilderness";
 
-    private static final Supplier<PermissionsProvider> INSTANCE = Suppliers.memoize(() -> {
-                if (Platform.isModLoaded("ftbranks")) {
-                    return new FTBRanksIntegration();
-                } else if (Platform.isModLoaded("luckperms")) {
-                    return new LuckPermsIntegration();
-                } else {
-                    return new PermissionsProvider() { };
-                }
-            }
-    );
+    public static int getMaxClaimedChunks(ServerPlayer player, int def) {
+        return PermissionHelper.INSTANCE.getProvider().getIntegerPermission(player, MAX_CLAIMED_PERM, def);
+    }
 
-    public static PermissionsProvider getInstance() {
-        return INSTANCE.get();
+    public static int getMaxForceLoadedChunks(ServerPlayer player, int def) {
+        return PermissionHelper.INSTANCE.getProvider().getIntegerPermission(player, MAX_FORCE_LOADED_PERM, def);
+    }
+
+    public static boolean getChunkLoadOffline(ServerPlayer player, boolean def) {
+        return PermissionHelper.INSTANCE.getProvider().getBooleanPermission(player, CHUNK_LOAD_OFFLINE_PERM, def);
+    }
+
+    public static boolean getNoWilderness(ServerPlayer player, boolean def) {
+        return PermissionHelper.INSTANCE.getProvider().getBooleanPermission(player, NO_WILDERNESS_PERM, def);
     }
 }

@@ -12,7 +12,6 @@ import dev.architectury.event.EventResult;
 import dev.architectury.event.events.client.*;
 import dev.architectury.hooks.client.screen.ScreenAccess;
 import dev.architectury.injectables.annotations.ExpectPlatform;
-import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
@@ -30,7 +29,6 @@ import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
-import dev.ftb.mods.ftbchunks.integration.waystones.WaystonesIntegration;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
@@ -172,10 +170,6 @@ public enum FTBChunksClient {
 //		RefreshMinimapIconsEvent.EVENT.register(this::refreshMinimapIcons);
 		ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
 		registerPlatform();
-
-		if (Platform.isModLoaded("waystones")) {
-			WaystonesIntegration.initClient();
-		}
 	}
 
 	private void registerKeys() {

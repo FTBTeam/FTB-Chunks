@@ -34,43 +34,15 @@ artifacts {
 	dev(jar)
 }
 
-repositories {
-	maven {
-		name "ModMaven (JEI)"
-		url "https://modmaven.dev/"
-		content {
-			includeGroup "mezz.jei"
-		}
-	}
-	maven {
-		url "https://maven.blamejared.com"
-		content {
-			includeGroup "net.darkhax.gamestages"
-		}
-	}
-}
-
 dependencies {
 	forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 	modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
-	modImplementation("dev.ftb.mods:ftb-ranks-forge:${rootProject.ftb_ranks_version}") { transitive = false }
-	//modImplementation("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}")
-	modCompileOnlyApi("dev.latvian.mods:kubejs-forge:${rootProject.kubejs_version}")
-//	modImplementation("dev.latvian.mods:rhino-forge:${rootProject.rhino_version}") { transitive = false }
-
-//	modLocalRuntime("me.shedaniel:RoughlyEnoughItems-forge:12.0.625")
-	modCompileOnlyApi("curse.maven:balm-531761:${balm_forge_version}")
-	modCompileOnlyApi("curse.maven:waystones-245755:${waystones_forge_version}")
-
-	modCompileOnlyApi "net.darkhax.gamestages:GameStages-Forge-1.19.2:${rootProject.gamestages_version}"
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
-
-	compileOnly "net.luckperms:api:5.4"
 }
 
 apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
@@ -91,9 +63,7 @@ processResources {
 				"forgeshortversion": project.forge_version.split("\\.")[0],
 				"mcversion": project.minecraft_version,
 				"ftblibraryversion": project.ftb_library_version,
-				"ftbteamsversion": project.ftb_teams_version,
-				"ftbranksversion": project.ftb_ranks_version,
-				"kubejsversion": project.kubejs_version
+				"ftbteamsversion": project.ftb_teams_version
 	}
 }
 

@@ -673,7 +673,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 	private boolean hasChunkChanged(ClaimedChunkImpl chunk) {
 		String s = chunk == null ? "-" : chunk.getTeamData().getTeamId().toString();
-		if (lastChunkID.equals(s)) {
+		if (!lastChunkID.equals(s)) {
 			lastChunkID = s;
 			return true;
 		}

@@ -176,7 +176,7 @@
 	"ftbchunks.claim_result": "Chunks modified: %d / %d",
 	"ftbchunks.claim_result.other": "Unknown issues",
 	"ftbchunks.claim_result.not_owner": "Not the chunk owner",
-	"ftbchunks.claim_result.not_enough_power": "Claim/forceload limit reached",
+	"ftbchunks.claim_result.not_enough_power": "Chunk limit reached",
 	"ftbchunks.claim_result.already_claimed": "Chunk already claimed",
 	"ftbchunks.claim_result.dimension_forbidden": "Claiming forbidden in this dimension",
 	"ftbchunks.claim_result.not_claimed": "Chunk not claimed",

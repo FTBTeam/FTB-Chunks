@@ -267,14 +267,10 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public void registerClaim(ChunkDimPos pos, ClaimedChunk chunk) {
 		if (chunk instanceof ClaimedChunkImpl impl) {
 			claimedChunks.put(pos, impl);
-			impl.getTeamData().clearClaimCaches();
 		}
 	}
 
 	public void unregisterClaim(ChunkDimPos pos) {
-		if (claimedChunks.containsKey(pos)) {
-			claimedChunks.get(pos).getTeamData().clearClaimCaches();
-			claimedChunks.remove(pos);
-		}
+		claimedChunks.remove(pos);
 	}
 }

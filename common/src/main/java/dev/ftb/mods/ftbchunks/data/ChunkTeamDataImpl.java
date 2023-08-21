@@ -174,6 +174,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		}
 
 		chunk.setClaimedTime(System.currentTimeMillis());
+		claimedChunkCache = null;
 		manager.registerClaim(pos, chunk);
 		ClaimedChunkEvent.AFTER_CLAIM.invoker().after(source, chunk);
 		markDirty();
@@ -200,6 +201,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		}
 
 		chunk.unclaim(source, true);
+		claimedChunkCache = null;
 		markDirty();
 		return chunk;
 	}
@@ -227,6 +229,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		}
 
 		chunk.setForceLoadedTime(System.currentTimeMillis());
+		forcedChunkCache = null;
 		ClaimedChunkEvent.AFTER_LOAD.invoker().after(source, chunk);
 		chunk.getTeamData().markDirty();
 		chunk.sendUpdateToAll();
@@ -258,6 +261,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		}
 
 		chunk.unload(source);
+		forcedChunkCache = null;
 		return chunk;
 	}
 

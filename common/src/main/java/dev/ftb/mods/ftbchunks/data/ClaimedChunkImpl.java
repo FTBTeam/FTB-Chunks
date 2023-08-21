@@ -92,6 +92,10 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	public void setForceLoadedTime(long time) {
+		if (forceLoaded == time) {
+			return;
+		}
+
 		forceLoaded = time;
 		teamData.getManager().clearForceLoadedCache();
 		sendUpdateToAll();

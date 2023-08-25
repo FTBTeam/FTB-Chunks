@@ -1,13 +1,14 @@
 package dev.ftb.mods.ftbchunks;
 
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.AllyMode;
-import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ForceLoadMode;
 import dev.ftb.mods.ftbchunks.data.PartyLimitMode;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
-import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
+import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -26,6 +27,7 @@ public interface FTBChunksWorldConfig {
 	StringListValue CLAIM_DIMENSION_BLACKLIST = CONFIG.addStringList("claim_dimension_blacklist", Collections.emptyList()).comment("Dimension ID's where chunks may not be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End, or \"othermod:*\" to disable chunk claiming in *all* dimensions added by \"othermod\"");
 	StringListValue CLAIM_DIMENSION_WHITELIST = CONFIG.addStringList("claim_dimension_whitelist", Collections.emptyList()).comment("Dimension ID's where chunks may be claimed. If non-empty, chunks may be claimed *only* in these dimensions (and the dimension is not in \"claim_dimension_blacklist\"). Same syntax as for \"claim_dimension_blacklist\".");
 	BooleanValue NO_WILDERNESS = CONFIG.addBoolean("no_wilderness", false).comment("Requires you to claim chunks in order to edit and interact with blocks");
+	StringListValue NO_WILDERNESS_DIMENSIONS = CONFIG.addStringList("no_wilderness_dimensions", Collections.emptyList()).comment("Dimension ID's where the no_wilderness rule is enforced - building is only allowed in claimed chunks. If this is non-empty, it overrides the 'no_wilderness' setting.");
 	BooleanValue FORCE_DISABLE_MINIMAP = CONFIG.addBoolean("force_disable_minimap", false).comment("Minimap for clients connecting to this server will be disabled");
 	DoubleValue MAX_IDLE_DAYS_BEFORE_UNCLAIM = CONFIG.addDouble("max_idle_days_before_unclaim", 0D, 0D, 3650D).comment("Maximum time (in real-world days) where if no player in a team logs in, the team automatically loses their claims.", "Prevents chunks being claimed indefinitely by teams who no longer play.","Default of 0 means no automatic loss of claims.");
 	DoubleValue MAX_IDLE_DAYS_BEFORE_UNFORCE = CONFIG.addDouble("max_idle_days_before_unforce", 0D, 0D, 3650D).comment("Maximum time (in real-world days) where if no player in a team logs in, any forceloaded chunks owned by the team are no longer forceloaded.", "Prevents chunks being forceloaded indefinitely by teams who no longer play.","Default of 0 means no automatic loss of forceloading.");
@@ -36,18 +38,19 @@ public interface FTBChunksWorldConfig {
 	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CONFIG.addEnum("party_limit_mode", PartyLimitMode.NAME_MAP).comment("Method by which party claim & force-load limits are calculated.","LARGEST: use the limits of the member with the largest limits","SUM: add up all the members' limits","OWNER: use the party owner's limits only","AVERAGE: use the average of all members' limits.");
 	BooleanValue REQUIRE_GAME_STAGE = CONFIG.addBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
+	IntValue MAX_PREVENTED_LOG_AGE = CONFIG.addInt("max_prevented_log_age", 7, 1, Integer.MAX_VALUE).comment("Maximum time in days to keep logs of prevented fakeplayer access to a team's claims.");
 
-	static int getMaxClaimedChunks(ChunkTeamDataImpl playerData, ServerPlayer player) {
+	static int getMaxClaimedChunks(ChunkTeamData playerData, ServerPlayer player) {
 		if (player != null) {
-			return PermissionsHelper.getInstance().getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
+			return PermissionsHelper.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();
 		}
 
 		return MAX_CLAIMED_CHUNKS.get() + playerData.getExtraClaimChunks();
 	}
 
-	static int getMaxForceLoadedChunks(ChunkTeamDataImpl playerData, ServerPlayer player) {
+	static int getMaxForceLoadedChunks(ChunkTeamData playerData, ServerPlayer player) {
 		if (player != null) {
-			return PermissionsHelper.getInstance().getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
+			return PermissionsHelper.getMaxForceLoadedChunks(player, MAX_FORCE_LOADED_CHUNKS.get()) + playerData.getExtraForceLoadChunks();
 		}
 
 		return MAX_FORCE_LOADED_CHUNKS.get() + playerData.getExtraForceLoadChunks();
@@ -55,19 +58,20 @@ public interface FTBChunksWorldConfig {
 
 	static boolean canPlayerOfflineForceload(ServerPlayer player) {
 		// note: purely checking the player's own permission here; not interested in server defaults or party data
-		return player != null && PermissionsHelper.getInstance().getChunkLoadOffline(player, false);
+		return player != null && PermissionsHelper.getChunkLoadOffline(player, false);
 	}
 
 	static boolean noWilderness(ServerPlayer player) {
 		if (player != null) {
-			return PermissionsHelper.getInstance().getNoWilderness(player, NO_WILDERNESS.get());
+			return DimensionFilter.isNoWildernessDimension(player.level().dimension())
+					|| PermissionsHelper.getNoWilderness(player, NO_WILDERNESS.get());
 		}
 
 		return NO_WILDERNESS.get();
 	}
 
 	static boolean playerHasMapStage(Player player) {
-		return !REQUIRE_GAME_STAGE.get() || StageHelper.INSTANCE.get().has(player, "ftbchunks_mapping");
+		return !REQUIRE_GAME_STAGE.get() || StageHelper.getInstance().getProvider().has(player, "ftbchunks_mapping");
 	}
 
 	static boolean shouldShowMinimap(Player player) {

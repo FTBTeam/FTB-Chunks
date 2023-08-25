@@ -31,10 +31,5 @@
 		"architectury": ">=${archversion}",
 		"ftblibrary": ">=${ftblibraryversion}",
 		"ftbteams": ">=${ftbteamsversion}"
-	},
-	"breaks": {
-		"kubejs": "<${kubejsversion}-",
-		"ftbranks": "<${ftbranksversion}-",
-		"luckperms": "<5.4.83"
 	}
 }

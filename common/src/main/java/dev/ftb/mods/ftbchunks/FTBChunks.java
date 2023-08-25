@@ -6,7 +6,6 @@ import dev.architectury.event.CompoundEventResult;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
-import dev.architectury.platform.Platform;
 import dev.architectury.registry.registries.Registrar;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
@@ -20,9 +19,8 @@ import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimExpirationManager;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.integration.ftbranks.FTBRanksIntegration;
-import dev.ftb.mods.ftbchunks.integration.stages.StageHelper;
 import dev.ftb.mods.ftbchunks.net.*;
+import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -131,10 +129,6 @@ public class FTBChunks {
 
 		TickEvent.SERVER_POST.register(this::serverTickPost);
 		TickEvent.PLAYER_POST.register(this::playerTickPost);
-
-		if (Platform.isModLoaded("ftbranks")) {
-			FTBRanksIntegration.registerEvents();
-		}
 
 		EnvExecutor.runInEnv(Env.CLIENT, () -> FTBChunksClient.INSTANCE::init);
 	}
@@ -399,7 +393,7 @@ public class FTBChunks {
 	private void playerChangedDimension(ServerPlayer serverPlayer, ResourceKey<Level> oldLevel, ResourceKey<Level> newLevel) {
 		LongRangePlayerTracker.INSTANCE.stopTracking(serverPlayer);
 
-		StageHelper.INSTANCE.get().sync(serverPlayer);
+		StageHelper.INSTANCE.getProvider().sync(serverPlayer);
 	}
 
 	private void teamConfig(TeamCollectPropertiesEvent event) {

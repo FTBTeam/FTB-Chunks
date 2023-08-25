@@ -210,9 +210,13 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		ClaimedChunkImpl chunk = getChunk(new ChunkDimPos(player.level(), pos));
 		if (chunk != null) {
 			ProtectionPolicy policy = protection.getProtectionPolicy(player, pos, hand, chunk, targetEntity);
-			return policy.isOverride() ?
+			boolean prevented = policy.isOverride() ?
 					policy.shouldPreventInteraction() :
 					!player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
+			if (prevented && isFake) {
+				chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
+			}
+			return prevented;
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
 			ProtectionPolicy override = protection.getProtectionPolicy(player, pos, hand, null, targetEntity);
 			if (override.isOverride()) {
@@ -263,14 +267,10 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public void registerClaim(ChunkDimPos pos, ClaimedChunk chunk) {
 		if (chunk instanceof ClaimedChunkImpl impl) {
 			claimedChunks.put(pos, impl);
-			impl.getTeamData().clearClaimCaches();
 		}
 	}
 
 	public void unregisterClaim(ChunkDimPos pos) {
-		if (claimedChunks.containsKey(pos)) {
-			claimedChunks.get(pos).getTeamData().clearClaimCaches();
-			claimedChunks.remove(pos);
-		}
+		claimedChunks.remove(pos);
 	}
 }

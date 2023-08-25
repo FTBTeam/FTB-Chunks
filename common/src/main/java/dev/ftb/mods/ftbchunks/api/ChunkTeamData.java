@@ -205,4 +205,14 @@ public interface ChunkTeamData {
      * @return the last login time for this team.
      */
     long getLastLoginTime();
+
+    /**
+     * If the given player is an online player, update the team data based on their offline forceloading permissions.
+     * Intended for use by external permission mods such as FTB Ranks; call this when permissions change.
+     * <p>
+     * If the given player is not currently online or not a member of this team, this is a no-op.
+     *
+     * @param playerId ID of the player to check
+     */
+    void checkMemberForceLoading(UUID playerId);
 }

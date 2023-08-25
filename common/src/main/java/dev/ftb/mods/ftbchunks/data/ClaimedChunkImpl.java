@@ -73,6 +73,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	public void setClaimedTime(long t) {
 		time = t;
 		teamData.getManager().clearForceLoadedCache();
+		teamData.clearClaimCaches();
 		sendUpdateToAll();
 	}
 
@@ -92,8 +93,13 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	public void setForceLoadedTime(long time) {
+		if (forceLoaded == time) {
+			return;
+		}
+
 		forceLoaded = time;
 		teamData.getManager().clearForceLoadedCache();
+		teamData.clearClaimCaches();
 		sendUpdateToAll();
 
 		ServerLevel level = teamData.getManager().getMinecraftServer().getLevel(pos.dimension());
@@ -137,6 +143,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		if (isForceLoaded()) {
 			setForceLoadedTime(0L);
 			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, this);
+			teamData.clearClaimCaches();
 			teamData.markDirty();
 			forceLoadExpiryTime = 0L;
 		}
@@ -148,6 +155,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 
 		teamData.getManager().unregisterClaim(pos);
 		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, this);
+		teamData.clearClaimCaches();
 		teamData.markDirty();
 
 		if (sync) {
@@ -199,4 +207,5 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		chunk.forceLoadExpiryTime = tag.getLong("expiry_time");
 		return chunk;
 	}
+
 }

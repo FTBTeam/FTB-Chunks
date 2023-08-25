@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
@@ -27,6 +29,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -64,6 +67,8 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	private Collection<ClaimedChunkImpl> claimedChunkCache;
 	private Collection<ClaimedChunkImpl> forcedChunkCache;
 
+	private final Map<UUID,PreventedAccess> preventedAccess = new HashMap<>();
+
 	public ChunkTeamDataImpl(ClaimedChunkManagerImpl manager, Path file, Team team) {
 		this.manager = manager;
 		this.file = file;
@@ -96,7 +101,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public TeamManager getTeamManager() {
 		return manager.getTeamManager();
 	}
-	
+
 	@Override
 	public Team getTeam() {
 		return team;
@@ -354,6 +359,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			tag.put("member_data", memberTag);
 		}
 
+		if (!preventedAccess.isEmpty()) {
+			SNBTCompoundTag p = new SNBTCompoundTag();
+			preventedAccess.forEach((id, element) -> p.put(id.toString(), PreventedAccess.CODEC.encodeStart(NbtOps.INSTANCE, element).result().orElseThrow()));
+			tag.put("prevented_access", p);
+		}
+
 		return tag;
 	}
 
@@ -391,6 +402,15 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 				e.printStackTrace();
 			}
 		}
+
+		preventedAccess.clear();
+		if (tag.contains("prevented_access")) {
+			CompoundTag p = tag.getCompound("prevented_access");
+			for (String key : p.getAllKeys()) {
+				preventedAccess.put(UUID.fromString(key), PreventedAccess.CODEC.parse(NbtOps.INSTANCE, p.getCompound(key)).result().orElseThrow());
+			}
+			prunePreventedLog();
+		}
 	}
 
 	@Override
@@ -419,17 +439,17 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		return extraForceLoadChunks;
 	}
 
-	public void setForceLoadMember(UUID id, boolean val) {
-		long oldForceCount = memberData.values().stream().filter(TeamMemberData::isOfflineForceLoader).count();
-		getTeamMemberData(id).setOfflineForceLoader(val);
-		long newForceCount = memberData.values().stream().filter(TeamMemberData::isOfflineForceLoader).count();
-
-		if (oldForceCount != newForceCount) {
-			FTBChunks.LOGGER.debug("team {}: set force load member {} = {}", team.getId(), id, val);
-			markDirty();
-			canForceLoadChunks = null;
-			manager.clearForceLoadedCache();
+	public boolean setForceLoadMember(UUID id, boolean val) {
+		if (val == getTeamMemberData(id).isOfflineForceLoader()) {
+			return false;
 		}
+
+		getTeamMemberData(id).setOfflineForceLoader(val);
+		FTBChunks.LOGGER.debug("team {}: set force load member {} = {}", team.getId(), id, val);
+		markDirty();
+		canForceLoadChunks = null;
+		manager.clearForceLoadedCache();
+		return true;
 	}
 
 	@NotNull
@@ -653,7 +673,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 	private boolean hasChunkChanged(ClaimedChunkImpl chunk) {
 		String s = chunk == null ? "-" : chunk.getTeamData().getTeamId().toString();
-		if (lastChunkID.equals(s)) {
+		if (!lastChunkID.equals(s)) {
 			lastChunkID = s;
 			return true;
 		}
@@ -679,5 +699,43 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public void clearClaimCaches() {
 		claimedChunkCache = null;
 		forcedChunkCache = null;
+	}
+
+	@Override
+	public void checkMemberForceLoading(UUID playerId) {
+		if (isTeamMember(playerId)) {
+			ServerPlayer player = manager.getMinecraftServer().getPlayerList().getPlayer(playerId);
+			if (player != null && setForceLoadMember(playerId, FTBChunksWorldConfig.canPlayerOfflineForceload(player))) {
+				updateLimits();
+			}
+		}
+	}
+
+	public void logPreventedAccess(ServerPlayer player, long when) {
+		preventedAccess.put(player.getUUID(), new PreventedAccess(player.getGameProfile().getName(), when));
+		markDirty();
+	}
+
+	private void prunePreventedLog() {
+		Set<UUID> toRemove = new HashSet<>();
+		long now = System.currentTimeMillis();
+		long max = FTBChunksWorldConfig.MAX_PREVENTED_LOG_AGE.get() * 86400L * 1000L;
+		preventedAccess.forEach((id, el) -> {
+			if (now - el.when() > max) {
+				toRemove.add(id);
+			}
+		});
+		if (!toRemove.isEmpty()) {
+			toRemove.forEach(preventedAccess::remove);
+			markDirty();
+		}
+	}
+
+	private record PreventedAccess(String name, long when) {
+		public static final Codec<PreventedAccess> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+						Codec.STRING.fieldOf("name").forGetter(PreventedAccess::name),
+						Codec.LONG.fieldOf("when").forGetter(PreventedAccess::when)
+				).apply(instance, PreventedAccess::new)
+		);
 	}
 }

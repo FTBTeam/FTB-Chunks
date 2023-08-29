@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.architectury.hooks.level.entity.PlayerHooks;
@@ -311,14 +312,17 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 		boolean checkById = team.getProperty(FTBChunksProperties.ALLOW_FAKE_PLAYERS_BY_ID) && player.getUUID() != null;
 		if (mode == PrivacyMode.ALLIES) {
-			return checkById && isAlly(player.getUUID())
-					|| getCachedFakePlayerNames().contains(player.getGameProfile().getName().toLowerCase(Locale.ROOT))
-					|| getCachedFakePlayerNames().contains(player.getGameProfile().getId().toString().toLowerCase(Locale.ROOT));
+			return checkById && isAlly(player.getUUID()) || fakePlayerMatches(player.getGameProfile());
 		} else if (mode == PrivacyMode.PRIVATE) {
 			return checkById && team.getRankForPlayer(player.getUUID()).isMemberOrBetter();
 		}
 
 		return false;
+	}
+
+	private boolean fakePlayerMatches(GameProfile profile) {
+		return profile.getName() != null && getCachedFakePlayerNames().contains(profile.getName().toLowerCase(Locale.ROOT))
+				|| profile.getId() != null && getCachedFakePlayerNames().contains(profile.getId().toString().toLowerCase(Locale.ROOT));
 	}
 
 	private Set<String> getCachedFakePlayerNames() {

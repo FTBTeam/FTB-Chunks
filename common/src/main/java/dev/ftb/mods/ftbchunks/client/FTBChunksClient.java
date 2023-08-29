@@ -698,7 +698,7 @@ public enum FTBChunksClient {
 
 		RenderSystem.enableDepthTest();
 
-		if (worldMatrix != null) {
+		if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
 			drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
 		}
 	}

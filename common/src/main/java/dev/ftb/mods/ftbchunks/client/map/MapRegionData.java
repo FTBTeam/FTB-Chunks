@@ -17,16 +17,29 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class MapRegionData {
-	// WLLLLBBB BBBBBBBB - waterLightAndBiome
-	// W - Water (x & 1) << 15
-	// L - Light (x & 15) << 11
-	// B - Biome (x & 0b111_11111111)
-
 	public final MapRegion region;
+
+	// a region is a 512x512 block area
+
+	// 16 bits per block pos; the height of the highest non-air block
 	public final short[] height = new short[512 * 512];
+
+	// WLLLLBBB BBBBBBBB - waterLightAndBiome is packed into a 16-bit short
+	// W - Water - 1 bit (water/no water) - (x & 1) << 15
+	// L - Light - 4 bits (16 light levels) - (x & 15) << 11
+	// B - Biome - 11 bits (2048 possible biomes) - (x & 0b111_11111111)
 	public final short[] waterLightAndBiome = new short[512 * 512];
+
+	// top 8 bits are bits 16-23 of the block index
+	// bottom 24 bits are the biome-tinted RGB of foliage
 	public final int[] foliage = new int[512 * 512];
+
+	// top 8 bits are bits 8-15 of the block index
+	// bottom 24 bits are the biome-tinted RGB of grass
 	public final int[] grass = new int[512 * 512];
+
+	// top 8 bits are bits 0-7 of the block index
+	// bottom 24 bits are the biome-tinted RGB of water
 	public final int[] water = new int[512 * 512];
 
 	public MapRegionData(MapRegion r) {

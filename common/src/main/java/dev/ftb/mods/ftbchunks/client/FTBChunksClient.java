@@ -799,7 +799,7 @@ public class FTBChunksClient extends FTBChunksCommon {
 
 		RenderSystem.enableDepthTest();
 
-		if (worldMatrix != null) {
+		if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
 			drawInWorldIcons(mc, matrixStack, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
 		}
 	}

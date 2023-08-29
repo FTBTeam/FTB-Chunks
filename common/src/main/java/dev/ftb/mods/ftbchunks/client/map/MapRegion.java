@@ -258,6 +258,16 @@ public class MapRegion implements MapTask {
 		return chunks.computeIfAbsent(xz, p -> new MapChunk(this, p).created());
 	}
 
+	public MapChunk getChunkForAbsoluteChunkPos(XZ pos) {
+		XZ effectivePos = pos.x != (pos.x & 31) || pos.z != (pos.z & 31) ?
+				XZ.of(pos.x & 31, pos.z & 31) :
+				pos;
+
+		synchronized (dimension.manager.lock) {
+			return getOrCreateMapChunk(effectivePos);
+		}
+	}
+
 	public void addMapChunk(MapChunk mapChunk) {
 		chunks.put(mapChunk.pos, mapChunk);
 	}

@@ -24,7 +24,7 @@ public class UpdateChunkFromServerTask implements MapTask {
 
 	@Override
 	public void runMapTask() {
-		dimension.getRegion(XZ.regionFromChunk(chunk.x, chunk.z)).getDataBlocking().getChunk(XZ.of(chunk.x, chunk.z)).updateFrom(now, chunk, teamId);
+		dimension.getRegion(XZ.regionFromChunk(chunk.x, chunk.z)).getChunkForAbsoluteChunkPos(XZ.of(chunk.x, chunk.z)).updateFrom(now, chunk, teamId);
 	}
 
 	@Override

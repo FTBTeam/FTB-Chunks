@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.4.2]
+
+### Fixes
+* Fixed "Show waypoints in world" client config setting being ignored for waypoint icons
+  * It was only working to suppress beacons when set to false, now it suppresses icons too
+* Fixed NPE when checking for fake players which had a null name or UUID in their GameProfile
+* Client memory fix; eliminated some unnecessary region data loading when players change chunk settings (claiming, forceloading)
+
 ## [1902.4.1]
 
 ### Fixes

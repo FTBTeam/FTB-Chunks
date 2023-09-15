@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.2.2]
+
+### Fixes
+* Fixed crash on player disconnect if they don't have a team assigned
+  * Should never occur under normal circumstance but could happen if external factors force a premature disconnect
+
 ## [2001.2.1]
 
 ### Fixes

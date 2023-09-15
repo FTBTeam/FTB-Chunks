@@ -33,9 +33,12 @@ public interface ClaimedChunkManager {
     /**
      * Get the FTB Chunks team data for the given player, creating a new instance if necessary. This will get the
      * data for the party team the player is in, if applicable.
+     * <p>
+     * This should not normally return null, but it is a possibility if external problems cause the player to be
+     * disconnected before they are assigned an FTB Team. So the return value should be checked.
      *
      * @param player the player
-     * @return the FTB Chunks data for the team
+     * @return the FTB Chunks data for the team, or null if something went wrong
      */
     ChunkTeamData getOrCreateData(ServerPlayer player);
 
@@ -44,7 +47,7 @@ public interface ClaimedChunkManager {
      * for the player's personal team, even if they are currently in a party team.
      *
      * @param id a player UUID
-     * @return the FTB Chunks data for the player
+     * @return the FTB Chunks data for the player, or null if something went wrong
      */
     ChunkTeamData getPersonalData(UUID id);
 

@@ -224,13 +224,19 @@ public class FTBChunks {
 		}
 
 		ChunkTeamDataImpl data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
-		data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.canPlayerOfflineForceload(player));
-		ClaimedChunkManagerImpl.getInstance().clearForceLoadedCache();
-		LongRangePlayerTracker.INSTANCE.stopTracking(player);
+		// shouldn't normally be null here, but external problems could force a player logout before they have a team
+		// https://github.com/FTBTeam/FTB-Mods-Issues/issues/932
+		if (data != null) {
+			data.setForceLoadMember(player.getUUID(), FTBChunksWorldConfig.canPlayerOfflineForceload(player));
+			ClaimedChunkManagerImpl.getInstance().clearForceLoadedCache();
+			LongRangePlayerTracker.INSTANCE.stopTracking(player);
 
-		if (data.getTeam().getOnlineMembers().size() == 1 && !data.canDoOfflineForceLoading()) {
-			// last player on the team to log out; unforce chunks if the team can't do offline chunk-loading
-			data.updateChunkTickets(false);
+			if (data.getTeam().getOnlineMembers().size() == 1 && !data.canDoOfflineForceLoading()) {
+				// last player on the team to log out; unforce chunks if the team can't do offline chunk-loading
+				data.updateChunkTickets(false);
+			}
+		} else {
+			FTBChunks.LOGGER.warn("on player disconnect: player '{}' has no team?", player.getGameProfile().getName());
 		}
 	}
 

@@ -163,7 +163,7 @@ public class FTBChunks {
 
 	private boolean isPvPProtectedChunk(PvPMode mode, Player player) {
 		ClaimedChunk cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(player.level(), player.blockPosition()));
-		return cc != null && (mode == PvPMode.NEVER || !cc.getTeamData().getTeam().getProperty(FTBChunksProperties.ALLOW_PVP));
+		return cc != null && (mode == PvPMode.NEVER || !cc.getTeamData().allowPVP());
 	}
 
 	private void playerTickPost(Player player) {

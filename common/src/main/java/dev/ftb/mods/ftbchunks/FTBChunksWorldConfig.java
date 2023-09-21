@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.AllyMode;
 import dev.ftb.mods.ftbchunks.data.ForceLoadMode;
 import dev.ftb.mods.ftbchunks.data.PartyLimitMode;
+import dev.ftb.mods.ftbchunks.data.PvPMode;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
@@ -24,6 +25,7 @@ public interface FTBChunksWorldConfig {
 	EnumValue<ForceLoadMode> FORCE_LOAD_MODE = CONFIG.addEnum("force_load_mode", ForceLoadMode.NAME_MAP).comment("Control how force-loaded chunks work.","NEVER: only allow chunk force-loading if the owning team has at least one online player.","ALWAYS: always allow force-loading, even if no players are online.","DEFAULT: allow force-loading IF the team has at least one player with the 'ftbchunks.chunk_load_offline' FTB Ranks permission.");
 	BooleanValue DISABLE_PROTECTION = CONFIG.addBoolean("disable_protection", false).comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for force-loading");
 	EnumValue<AllyMode> ALLY_MODE = CONFIG.addEnum("ally_mode", AllyMode.NAME_MAP).comment("Forced modes won't let players change their ally settings");
+	EnumValue<PvPMode> PVP_MODE = CONFIG.addEnum("pvp_mode", PvPMode.NAME_MAP).comment("Should PvP combat be allowed in claimed chunks? Default is ALWAYS; NEVER prevents it in all claimed chunks; PER_TEAM allows teams to decide if PvP is allowed in their claims");
 	StringListValue CLAIM_DIMENSION_BLACKLIST = CONFIG.addStringList("claim_dimension_blacklist", Collections.emptyList()).comment("Dimension ID's where chunks may not be claimed. Add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End, or \"othermod:*\" to disable chunk claiming in *all* dimensions added by \"othermod\"");
 	StringListValue CLAIM_DIMENSION_WHITELIST = CONFIG.addStringList("claim_dimension_whitelist", Collections.emptyList()).comment("Dimension ID's where chunks may be claimed. If non-empty, chunks may be claimed *only* in these dimensions (and the dimension is not in \"claim_dimension_blacklist\"). Same syntax as for \"claim_dimension_blacklist\".");
 	BooleanValue NO_WILDERNESS = CONFIG.addBoolean("no_wilderness", false).comment("Requires you to claim chunks in order to edit and interact with blocks");

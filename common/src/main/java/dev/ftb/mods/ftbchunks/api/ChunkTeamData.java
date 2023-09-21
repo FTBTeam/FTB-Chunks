@@ -199,6 +199,20 @@ public interface ChunkTeamData {
     boolean allowMobGriefing();
 
     /**
+     * Is player-vs-player damage allowed in chunks claimed by this team? This is a convenience method to check
+     * the value of the {@link FTBChunksProperties#ALLOW_PVP} team property.
+     * <p>
+     * If PvP is not allowed, then if either the attacker or the victim are in a claimed chunk, PvP damage will
+     * be cancelled. Note this is not 100% foolproof, e.g. it won't prevent a player pouring a bucket of lava
+     * over another player, for example.
+     * <p>
+     * This is also dependent on the server's "Allow PvP Combat" setting being set to "per_team".
+     *
+     * @return true if PvP os permitted, false if not
+     */
+    boolean allowPVP();
+
+    /**
      * Get the time (milliseconds since the epoch) that any member of this team logged in to the server. This time is
      * used when chunk claiming and force-load expiry is in effect on this server.
      *

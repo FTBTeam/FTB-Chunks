@@ -119,6 +119,8 @@
 	"ftbteamsconfig.ftbchunks.allow_fake_players_by_id.tooltip": "Allows fake players which have the ID of a real player access to your claims, IF that real player would be permitted, either as ally or team member. Set this to true if you're unsure.",
 	"ftbteamsconfig.ftbchunks.allow_explosions": "Allow Explosion Damage",
 	"ftbteamsconfig.ftbchunks.allow_explosions.tooltip": "Should explosions be able to damage blocks in claimed areas?",
+	"ftbteamsconfig.ftbchunks.allow_pvp": "Allow PvP Combat",
+	"ftbteamsconfig.ftbchunks.allow_pvp.tooltip": "Should player-vs-player combat be allowed in claimed areas?\nServer config setting 'Allow PvP Combat' must be 'per_team' for this to function\nNot guaranteed to protect against 100%% of indirect attacks; requires that damage sources can be attributed to a player",
 	"ftbteamsconfig.ftbchunks.allow_mob_griefing": "Allow Mob Griefing Actions",
 	"ftbteamsconfig.ftbchunks.allow_mob_griefing.tooltip": "Should mobs be allowed to damage blocks in claimed areas?\nNote: currently Endermen only; may include other mobs in future\nCreeper explosions are protected against via \"Allow Explosions\"",
 	"ftbteamsconfig.ftbchunks.block_edit_and_interact_mode": "Block Edit/Interact Mode",
@@ -146,6 +148,8 @@
 	"ftbchunks.force_load_mode.tooltip": "NEVER: only allow chunk force-loading if the owning team has at least one online player\nALWAYS: always allow force-loading, even if no players are online\nDEFAULT: allow force-loading IF the team has at least one player with the FTB Ranks 'ftbchunks.chunk_load_offline' permission",
 	"ftbchunks.disable_protection": "Disable Claim Protection",
 	"ftbchunks.disable_protection.tooltip": "Useful for private servers where everyone is trusted, and claims are only used for force-loading",
+	"ftbchunks.pvp_mode": "Allow PvP Combat in Claimed Chunks",
+	"ftbchunks.pvp_mode.tooltip": "ALWAYS: allow PvP combat in all claimed chunks\nNEVER: prevent PvP in all claimed chunks\nPER_TEAM: teams can decide if PvP is allowed in their claims via team property",
 	"ftbchunks.ally_mode": "Allow Player to Change Ally Settings",
 	"ftbchunks.ally_mode.tooltip": "DEFAULT: FTB Teams ally status is checked to decide if players are allied\nFORCED_ALL: all players are always considered to be allied\nFORCED_NONE: no players are ever considered to be allied",
 	"ftbchunks.claim_dimension_blacklist": "Dimension Blacklist",
@@ -188,5 +192,6 @@
 	"ftbchunks.claim_result.not_loaded": "Chunk not loaded",
 	"ftbchunks.need_to_claim_chunk": "You need to claim this chunk to interact with blocks here!",
 	"ftbchunks.label.show": "Show",
-	"ftbchunks.label.hide": "Hide"
+	"ftbchunks.label.hide": "Hide",
+	"ftbchunks.message.no_pvp": "PvP combat is disabled here"
 }

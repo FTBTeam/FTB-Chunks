@@ -4,15 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.2.3]
+
+### Added
+* Added a team property to control whether PvP is permitted in a team's claims
+  * If PvP is prevented, then if either the attacking player or the attacked player is in such a claim, PvP damage will be cancelled
+  * Can be controlled by server admin with the server config "Allow PvP Combat"
+    *  "always" (default) allows PvP everywhere
+    * "never" prevents PvP in all claimed chunks
+    * "per_team" allows teams to configure PvP for their claims via new team property "Allow PvP Combat"
+  * Not 100% guaranteed to prevent all forms of PvP damage, but direct or projectile damage is prevented where the damage source can be traced back to a player
+
+### Fixed
+* Fixed a held item desync when an item or block right-click is prevented in a claimed area
+
 ## [2001.2.2]
 
-### Fixes
+### Fixed
 * Fixed crash on player disconnect if they don't have a team assigned
-  * Should never occur under normal circumstance but could happen if external factors force a premature disconnect
+  * Should never occur under normal circumstances but could happen if external factors force a premature disconnect
 
 ## [2001.2.1]
 
-### Fixes
+### Fixed
 * Fixed "Show waypoints in world" client config setting being ignored for waypoint icons
   * It was only working to suppress beacons when set to false, now it suppresses icons too
 * Fixed NPE when checking for fake players which had a null name or UUID in their GameProfile

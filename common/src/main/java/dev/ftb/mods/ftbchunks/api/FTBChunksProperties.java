@@ -31,6 +31,8 @@ public class FTBChunksProperties {
             = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "claim_visibility"), PrivacyMode.PUBLIC);
     public static final PrivacyProperty LOCATION_MODE
             = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.ALLIES);
+    public static final BooleanProperty ALLOW_PVP
+            = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_pvp"), true);
 
     // FTB Chunks on Forge adds two separate block edit & interact properties
     public static final PrivacyProperty BLOCK_EDIT_MODE

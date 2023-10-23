@@ -1,1 +1,0 @@
-dev.ftb.mods.ftbchunks.integration.kubejs.FTBChunksKubeJSPlugin

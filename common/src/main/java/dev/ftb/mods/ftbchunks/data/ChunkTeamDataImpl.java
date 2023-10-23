@@ -511,6 +511,11 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		return team.getProperty(FTBChunksProperties.ALLOW_MOB_GRIEFING);
 	}
 
+	@Override
+	public boolean allowPVP() {
+		return team.getProperty(FTBChunksProperties.ALLOW_PVP);
+	}
+
 	public void setLastLoginTime(long when) {
 		this.lastLoginTime = when;
 		markDirty();

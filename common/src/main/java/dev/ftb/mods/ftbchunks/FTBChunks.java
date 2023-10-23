@@ -11,14 +11,12 @@ import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
-import dev.ftb.mods.ftbchunks.data.ClaimExpirationManager;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -28,17 +26,20 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.event.*;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -122,6 +123,7 @@ public class FTBChunks {
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
+		EntityEvent.LIVING_HURT.register(this::onLivingHurt);
 
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
@@ -136,11 +138,32 @@ public class FTBChunks {
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
 		// note: intentionally does not prevent attacking living entities;
 		// this is for preventing griefing of entities like paintings & item frames
-		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
-			return EventResult.interruptFalse();
+		if (player instanceof ServerPlayer) {
+			if (!(entity instanceof LivingEntity) && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
+				return EventResult.interruptFalse();
+			}
 		}
 
 		return EventResult.pass();
+	}
+
+	private EventResult onLivingHurt(LivingEntity living, DamageSource damageSource, float dmg) {
+		if (!living.level().isClientSide() && living instanceof Player target && damageSource.getEntity() instanceof Player attacker) {
+			PvPMode mode = FTBChunksWorldConfig.PVP_MODE.get();
+			if (mode == PvPMode.ALWAYS) {
+				return EventResult.pass();
+			}
+			if (isPvPProtectedChunk(mode, attacker) || isPvPProtectedChunk(mode, target)) {
+				PlayerNotifier.notifyWithCooldown(attacker, Component.translatable("ftbchunks.message.no_pvp").withStyle(ChatFormatting.GOLD), 3000L);
+				return EventResult.interruptFalse();
+			}
+		}
+		return EventResult.pass();
+	}
+
+	private boolean isPvPProtectedChunk(PvPMode mode, Player player) {
+		ClaimedChunk cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(player.level(), player.blockPosition()));
+		return cc != null && (mode == PvPMode.NEVER || !cc.getTeamData().allowPVP());
 	}
 
 	private void playerTickPost(Player player) {
@@ -408,6 +431,7 @@ public class FTBChunks {
 		event.add(FTBChunksProperties.ALLOW_ALL_FAKE_PLAYERS);
 		event.add(FTBChunksProperties.ALLOW_NAMED_FAKE_PLAYERS);
 		event.add(FTBChunksProperties.ALLOW_FAKE_PLAYERS_BY_ID);
+		event.add(FTBChunksProperties.ALLOW_PVP);
 
 		// block edit/interact properties vary on forge & fabric
 		FTBChunksExpected.getPlatformSpecificProperties(event);

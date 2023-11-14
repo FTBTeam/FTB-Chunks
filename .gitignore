@@ -25,3 +25,5 @@ run2
 .vscode/
 .architectury-transformer/
 **/extra-mods-*/
+
+.DS_Store

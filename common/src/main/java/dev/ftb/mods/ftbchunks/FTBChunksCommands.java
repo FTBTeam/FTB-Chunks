@@ -6,7 +6,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.mojang.util.UUIDTypeAdapter;
+import com.mojang.util.UndashedUuid;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
@@ -327,7 +327,7 @@ public class FTBChunksCommands {
 			return 0;
 		}
 
-		source.sendSuccess(() -> Component.literal("Owner: ").append(chunk.getTeamData().getTeam().getColoredName()).append(" / " + UUIDTypeAdapter.fromUUID(chunk.getTeamData().getTeam().getId())), true);
+		source.sendSuccess(() -> Component.literal("Owner: ").append(chunk.getTeamData().getTeam().getColoredName()).append(" / " + UndashedUuid.toString(chunk.getTeamData().getTeam().getId())), true);
 
 		if (source.hasPermission(2)) {
 			source.sendSuccess(() -> Component.literal("Force Loaded: " + chunk.isForceLoaded()), true);

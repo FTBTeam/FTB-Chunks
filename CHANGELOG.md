@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.2.4]
+
+### Fixed
+* Fixed cross-mod compat issue causing an NPE
+  * not entirely sure of the cause, but added some defensive coding checks to ensure chunk claim manager is not null when it's used in a mixin
+
 ## [2001.2.3]
 
 ### Added

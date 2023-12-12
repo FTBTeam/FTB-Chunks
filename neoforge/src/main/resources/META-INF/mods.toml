@@ -1,0 +1,53 @@
+modLoader = "javafml"
+loaderVersion = "[${neoforgeloaderversion},)"
+issueTrackerURL = "https://go.ftb.team/support-mod-issues"
+license = "All Rights Reserved"
+
+[[mixins]]
+config = "ftbchunks-common.mixins.json"
+
+[[mods]]
+modId = "ftbchunks"
+version = "${version}"
+displayName = "FTB Chunks"
+authors = "FTB Team"
+description = '''
+Claim chunks to protect your base from griefers!
+'''
+# logoFile="logo.png"
+license = "All Rights Reserved"
+
+[[dependencies.ftbchunks]]
+modId = "neoforge"
+mandatory = true
+versionRange = "[${neoforgeversion},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[${mcversion},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "architectury"
+mandatory = true
+versionRange = "[${archversion},)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "ftblibrary"
+mandatory = true
+versionRange = "[${ftblibraryversion},)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "ftbteams"
+mandatory = true
+versionRange = "[${ftbteamsversion},)"
+ordering = "AFTER"
+side = "BOTH"

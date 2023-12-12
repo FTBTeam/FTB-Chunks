@@ -7,7 +7,7 @@ def ENV = System.getenv()
 
 architectury {
 	platformSetupLoomIde()
-	forge()
+	neoForge()
 }
 
 configurations {
@@ -15,31 +15,31 @@ configurations {
 	shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
 	compileClasspath.extendsFrom common
 	runtimeClasspath.extendsFrom common
-	developmentForge.extendsFrom common
+	developmentNeoForge.extendsFrom common
 	dev
 }
 
 loom {
 	accessWidenerPath = project(":common").file("src/main/resources/ftbchunks.accesswidener")
-	forge {
-		convertAccessWideners = true
-		extraAccessWideners.add("ftbchunks.accesswidener")
-		mixinConfigs = [
-				"ftbchunks-common.mixins.json"
-		]
-	}
 }
 
 artifacts {
 	dev(jar)
 }
 
-dependencies {
-	forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
-	modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
-	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
-	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
+repositories {
+	maven {
+		url "https://maven.neoforged.net/releases/"
+	}
+}
+
+dependencies {
+	neoForge "net.neoforged:neoforge:${rootProject.neoforge_version}"
+	modApi "dev.architectury:architectury-neoforge:${rootProject.architectury_version}"
+
+	modImplementation("dev.ftb.mods:ftb-library-neoforge:${rootProject.ftb_library_version}") { transitive = false }
+	modImplementation("dev.ftb.mods:ftb-teams-neoforge:${rootProject.ftb_teams_version}") { transitive = false }
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
@@ -59,8 +59,8 @@ processResources {
 	filesMatching("META-INF/mods.toml") {
 		expand "version": project.version,
 				"archversion": project.architectury_version,
-				"forgeversion": project.forge_version,
-				"forgeshortversion": project.forge_version.split("\\.")[0],
+				"neoforgeversion": project.neoforge_version,
+				"neoforgeloaderversion": project.neoforge_loader_version,
 				"mcversion": project.minecraft_version,
 				"ftblibraryversion": project.ftb_library_version,
 				"ftbteamsversion": project.ftb_teams_version
@@ -101,13 +101,6 @@ components.java {
 	withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
 		skip()
 	}
-}
-
-// ugh, forge, why?  see https://github.com/MinecraftForge/MinecraftForge/blob/1.20.x/mdk/build.gradle#L209
-sourceSets.each {
-	def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
-	it.output.resourcesDir = dir
-	it.java.destinationDirectory = dir
 }
 
 if (ENV.CURSEFORGE_KEY) {

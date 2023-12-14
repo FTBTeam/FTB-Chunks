@@ -42,7 +42,7 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-teams-neoforge:${rootProject.ftb_teams_version}") { transitive = false }
 
 	common(project(path: ":common", configuration: "dev")) { transitive false }
-	shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
+	shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive false }
 }
 
 apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
@@ -109,14 +109,14 @@ if (ENV.CURSEFORGE_KEY) {
 		project {
 			id = project.curseforge_id_forge
 			releaseType = ftbPublishing.relType
-			addGameVersion "Forge"
+			addGameVersion "NeoForge"
 			addGameVersion project.minecraft_version
 			mainArtifact(remapJar.archiveFile)
 			relations {
 				requiredDependency 'architectury-api'
-				requiredDependency 'ftb-library-forge'
-				requiredDependency 'ftb-teams-forge'
-				optionalDependency 'ftb-ranks-forge'
+				requiredDependency 'ftb-library-neoforge'
+				requiredDependency 'ftb-teams-neoforge'
+				optionalDependency 'ftb-ranks-neoforge'
 			}
 			changelog = ENV.CHANGELOG  // expected to exist if ENV.CURSEFORGE_KEY does
 			changelogType = 'markdown'

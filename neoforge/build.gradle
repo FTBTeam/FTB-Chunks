@@ -79,6 +79,7 @@ remapJar {
 	dependsOn shadowJar
 	archiveBaseName.set "${rootProject.archives_base_name}-${project.name}"
 	archiveClassifier.set null
+	atAccessWideners.add('ftbchunks.accesswidener')
 }
 
 jar {

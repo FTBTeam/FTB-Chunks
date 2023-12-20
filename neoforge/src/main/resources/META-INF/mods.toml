@@ -19,35 +19,35 @@ license = "All Rights Reserved"
 
 [[dependencies.ftbchunks]]
 modId = "neoforge"
-mandatory = true
+type = "required"
 versionRange = "[${neoforgeversion},)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "minecraft"
-mandatory = true
+type = "required"
 versionRange = "[${mcversion},)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "architectury"
-mandatory = true
+type = "required"
 versionRange = "[${archversion},)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftblibrary"
-mandatory = true
+type = "required"
 versionRange = "[${ftblibraryversion},)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
 modId = "ftbteams"
-mandatory = true
+type = "required"
 versionRange = "[${ftbteamsversion},)"
 ordering = "AFTER"
 side = "BOTH"

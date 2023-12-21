@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.2.5]
+
+### Fixed
+* Fixed a couple of claim and force load limit issues
+  * Max claim/force limits weren't synced to clients when changed in server config
+  * Team claim/force limits weren't always correctly recalculated when a player joined/left a team
+
 ## [2001.2.4]
 
 ### Fixed

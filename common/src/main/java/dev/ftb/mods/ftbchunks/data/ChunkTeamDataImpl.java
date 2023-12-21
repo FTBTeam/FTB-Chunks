@@ -571,7 +571,10 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public void updateLimits() {
 		updateMemberLimitData(!memberData.isEmpty());
 
-		if (!team.isPartyTeam()) {
+		int prevMaxClaimed = maxClaimChunks;
+        int prevMaxForced = maxForceLoadChunks;
+
+        if (!team.isPartyTeam()) {
 			TeamMemberData m = getTeamMemberData(getTeam().getId());
 			maxClaimChunks = m.getMaxClaims();
 			maxForceLoadChunks = m.getMaxForceLoads();
@@ -602,7 +605,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 						maxClaimChunks += m.getMaxClaims();
 						maxForceLoadChunks += m.getMaxForceLoads();
 					});
-					if (memberData.size() > 0) {
+					if (!memberData.isEmpty()) {
 						maxClaimChunks /= memberData.size();
 						maxForceLoadChunks /= memberData.size();
 					}
@@ -617,7 +620,9 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			maxForceLoadChunks = Math.min(maxForceLoadChunks, FTBChunksWorldConfig.HARD_TEAM_FORCE_LIMIT.get());
 		}
 
-		SendGeneralDataPacket.send(this, getTeam().getOnlineMembers());
+		if (maxClaimChunks != prevMaxClaimed || maxForceLoadChunks != prevMaxForced) {
+			SendGeneralDataPacket.send(this, getTeam().getOnlineMembers());
+		}
 
 		markDirty();
 	}

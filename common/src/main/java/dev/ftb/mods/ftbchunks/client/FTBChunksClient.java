@@ -376,6 +376,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}
 
+	@Override
+	public void addWaypoint(Player player, String name, BlockPos pos, int color) {
+		MapDimension mapDimension = MapManager.inst.getDimension(player.level.dimension());
+		Waypoint w = new Waypoint(mapDimension, pos.getX(), pos.getY(), pos.getZ());
+		w.name = name;
+		w.color = color;
+		mapDimension.getWaypointManager().add(w);
+	}
+
 	public EventResult customClick(CustomClickEvent event) {
 		if (event.id().equals(BUTTON_ID_MAP)) {
 			openGui();

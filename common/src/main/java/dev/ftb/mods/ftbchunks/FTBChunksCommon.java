@@ -55,4 +55,7 @@ public class FTBChunksCommon {
 
 	public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos, boolean valid) {
 	}
+
+	public void addWaypoint(Player player, String name, BlockPos pos, int color) {
+	}
 }

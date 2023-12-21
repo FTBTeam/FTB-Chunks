@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import com.google.common.primitives.Ints;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
@@ -52,27 +53,35 @@ public class SendChunkPacket extends BaseS2CMessage {
 	}
 
 	public static class SingleChunk {
+		// NOTE: relative times are sent in seconds rather than milliseconds
+		//  (int rather than long for network sync efficiency)
+		//  allows for offsets of up to ~2 billion seconds, which is 62 years - should be enough...
+		//  (come back to me with a bug report in 2085 if not)
 		private final int x, z;
-		private final long relativeTimeClaimed;
+		private final int relativeTimeClaimed;
 		private final boolean forceLoaded;
-		private final long relativeTimeForceLoaded;
+		private final int relativeTimeForceLoaded;
 		private final boolean expires;
-		private final long relativeForceLoadExpiryTime;
+		private final int relativeForceLoadExpiryTime;
 
 		public SingleChunk(long now, int x, int z, @Nullable ClaimedChunk claimedChunk) {
 			this.x = x;
 			this.z = z;
 
 			if (claimedChunk != null) {
-				relativeTimeClaimed = now - claimedChunk.getTimeClaimed();
+				relativeTimeClaimed = millisToSeconds(now - claimedChunk.getTimeClaimed());
 				forceLoaded = claimedChunk.isForceLoaded();
 				expires = claimedChunk.getForceLoadExpiryTime() > 0L;
-				relativeTimeForceLoaded = forceLoaded ? now - claimedChunk.getForceLoadedTime() : 0L;
-				relativeForceLoadExpiryTime = expires ? claimedChunk.getForceLoadExpiryTime() - now : 0L;
+				relativeTimeForceLoaded = forceLoaded ? millisToSeconds(now - claimedChunk.getForceLoadedTime()) : 0;
+				relativeForceLoadExpiryTime = expires ? millisToSeconds(claimedChunk.getForceLoadExpiryTime() - now) : 0;
 			} else {
-				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0L;
+				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0;
 				forceLoaded = expires = false;
 			}
+		}
+
+		private static int millisToSeconds(long ms) {
+			return Ints.saturatedCast(ms / 1000L);
 		}
 
 		public int getX() {
@@ -88,13 +97,14 @@ public class SendChunkPacket extends BaseS2CMessage {
 			z = buf.readVarInt();
 
 			if (!teamId.equals(Util.NIL_UUID)) {
-				relativeTimeClaimed = buf.readVarLong();
-				forceLoaded = buf.readBoolean();
-				expires = buf.readBoolean();
-				relativeTimeForceLoaded = forceLoaded ? buf.readVarLong() : 0L;
-				relativeForceLoadExpiryTime = expires ? buf.readVarLong() : 0L;
+				relativeTimeClaimed = buf.readInt();
+				byte b = buf.readByte();
+				forceLoaded = (b & 0x01) != 0;
+				expires = (b & 0x02) != 0;
+				relativeTimeForceLoaded = forceLoaded ? buf.readInt() : 0;
+				relativeForceLoadExpiryTime = expires ? buf.readInt() : 0;
 			} else {
-				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0L;
+				relativeTimeClaimed = relativeTimeForceLoaded = relativeForceLoadExpiryTime = 0;
 				forceLoaded = expires = false;
 			}
 		}
@@ -104,11 +114,14 @@ public class SendChunkPacket extends BaseS2CMessage {
 			buf.writeVarInt(z);
 
 			if (!teamId.equals(Util.NIL_UUID)) {
-				buf.writeVarLong(relativeTimeClaimed);
-				buf.writeBoolean(forceLoaded);
-				buf.writeBoolean(expires);
-				if (forceLoaded) buf.writeVarLong(relativeTimeForceLoaded);
-				if (expires) buf.writeVarLong(relativeForceLoadExpiryTime);
+				byte b = 0x0;
+				if (forceLoaded) b |= 0x1;
+				if (expires) b |= 0x2;
+
+				buf.writeInt(relativeTimeClaimed);
+				buf.writeByte(b);
+				if (forceLoaded) buf.writeInt(relativeTimeForceLoaded);
+				if (expires) buf.writeInt(relativeForceLoadExpiryTime);
 			}
 		}
 
@@ -121,9 +134,9 @@ public class SendChunkPacket extends BaseS2CMessage {
 				return MapChunk.NO_DATE_INFO;
 			}
 
-			Date claimed = new Date(now - relativeTimeClaimed);
-			Date forceLoaded = this.forceLoaded ? new Date(now - relativeTimeForceLoaded) : null;
-			Date expiry = this.forceLoaded && expires ? new Date(now + relativeForceLoadExpiryTime) : null;
+			Date claimed = new Date(now - relativeTimeClaimed * 1000L);
+			Date forceLoaded = this.forceLoaded ? new Date(now - relativeTimeForceLoaded * 1000L) : null;
+			Date expiry = this.forceLoaded && expires ? new Date(now + relativeForceLoadExpiryTime * 1000L) : null;
 			return new MapChunk.DateInfo(claimed, forceLoaded, expiry);
 		}
 	}

@@ -5,10 +5,12 @@ import dev.architectury.networking.simple.BaseC2SMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.SNBTNet;
 import dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -54,6 +56,9 @@ public class ServerConfigRequestPacket extends BaseC2SMessage {
                     new ServerConfigResponsePacket(config).sendTo(player);
                 }
             }
+
+            FTBTeamsAPI.api().getManager().getTeams().forEach(team ->
+                    ClaimedChunkManagerImpl.getInstance().getOrCreateData(team).updateLimits());
         }
     }
 }

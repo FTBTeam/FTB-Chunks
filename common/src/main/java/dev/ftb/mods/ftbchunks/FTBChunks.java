@@ -475,40 +475,49 @@ public class FTBChunks {
 				// return the departing player's original claims to them, if possible
 				transferClaims(partyData, playerData, partyData.getOriginalClaims(event.getPlayerId()));
 			}
+
+			partyData.deleteMemberData(event.getPlayerId());
+
+			if (event.getPlayer() != null) {
+				PlayerVisibilityPacket.syncToLevel(event.getPlayer().level());
+			}
 		});
-
-		partyData.deleteMemberData(event.getPlayerId());
-
-		partyData.updateLimits();
-
-		if (event.getPlayer() != null) {
-			PlayerVisibilityPacket.syncToLevel(event.getPlayer().level());
-			partyData.syncChunksToPlayer(event.getPlayer());
-		}
 	}
 
 	private void transferClaims(ChunkTeamDataImpl transferFrom, ChunkTeamDataImpl transferTo, Collection<ClaimedChunkImpl> chunksToTransfer) {
 		CommandSourceStack sourceStack = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().createCommandSourceStack();
 
+		String fromName = transferFrom.getTeam().getShortName();
+		String toName = transferTo.getTeam().getShortName();
+
+		transferFrom.clearClaimCaches();
+		transferTo.clearClaimCaches();
+
+		int nChunks = transferTo.getClaimedChunks().size();
+
 		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
 		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
-		int chunks = 0;
+		int transferred = 0;
+		int unclaimed = 0;
 		long now = System.currentTimeMillis();
 		int total = transferTo.getClaimedChunks().size();
+
+		FTBChunks.LOGGER.info("attempting to transfer {} chunks from {} to {}", chunksToTransfer.size(), fromName, toName);
 
 		for (ClaimedChunkImpl chunk : chunksToTransfer) {
 			ChunkDimPos cdp = chunk.getPos();
 			if (total >= transferTo.getMaxClaimChunks()) {
 				chunk.unclaim(sourceStack, false);
 				chunksToUnclaim.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, cdp.x(), cdp.z(), null));
+				unclaimed++;
 			} else {
 				chunk.setTeamData(transferTo);
 				chunksToSend.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, cdp.x(), cdp.z(), chunk));
-				chunks++;
+				transferred++;
 			}
 
 			if (chunk.isForceLoaded()) {
-				// also transfer any claim tickets for the old team's ID, since it's no longer valid
+				// also transfer any force-load tickets for the old team's ID, since it's no longer valid
 				ServerLevel level = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getLevel(cdp.dimension());
 				if (level != null) {
 					FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, transferFrom.getTeamId(), cdp.x(), cdp.z(), false);
@@ -521,10 +530,10 @@ public class FTBChunks {
 			total++;
 		}
 
-		transferFrom.markDirty();
-		transferTo.markDirty();
+		transferFrom.updateLimits();
+		transferTo.updateLimits();
 
-		if (chunks > 0) {
+		if (transferred > 0 || unclaimed > 0) {
 			chunksToSend.forEach((dimension, chunkPackets) -> {
 				if (!chunkPackets.isEmpty()) {
 					ChunkSendingUtils.sendManyChunksToAll(sourceStack.getServer(), transferTo, new SendManyChunksPacket(dimension, transferTo.getTeamId(), chunkPackets));
@@ -536,9 +545,11 @@ public class FTBChunks {
 					new SendManyChunksPacket(dimension, Util.NIL_UUID, chunkPackets).sendToAll(sourceStack.getServer());
 				}
 			});
-
-			FTBChunks.LOGGER.info("Transferred " + chunks + "/" + total + " chunks from " + transferFrom + " to " + transferTo);
 		}
+
+		FTBChunks.LOGGER.info("Transferred {} chunks from {} ({}) to {} ({})", transferred, transferFrom, fromName, transferTo, toName);
+		FTBChunks.LOGGER.info("Unclaimed {} chunks for {} ({}) due to claim limits", unclaimed, transferFrom, fromName);
+		FTBChunks.LOGGER.info("Team {} had {} claimed chunks, now has {}", toName, nChunks, nChunks + transferred);
 	}
 
 	private void teamOwnershipTransferred(PlayerTransferredTeamOwnershipEvent event) {

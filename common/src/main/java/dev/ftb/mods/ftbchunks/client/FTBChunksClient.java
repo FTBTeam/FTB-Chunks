@@ -18,6 +18,7 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
@@ -144,7 +145,7 @@ public enum FTBChunksClient {
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
 
-	public void init() {
+    public void init() {
 		if (Minecraft.getInstance() == null) {
 			return;
 		}
@@ -1154,6 +1155,14 @@ public enum FTBChunksClient {
 		return minimapTextureId;
 	}
 
+	public static Waypoint addWaypoint(Player player, String name, BlockPos position, int color) {
+		return FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).map(mgr -> {
+			Waypoint wp = mgr.addWaypointAt(position, name);
+			wp.setColor(color);
+			return wp;
+		}).orElse(null);
+	}
+
 	private static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;
 		private final MapManager manager;
@@ -1175,14 +1184,10 @@ public enum FTBChunksClient {
 		public void addWidgets() {
 			EditStringConfigOverlay<String> overlay = new EditStringConfigOverlay<>(this, name, set -> {
 				if (set && !name.getValue().isEmpty()) {
-					MapDimension mapDimension = manager.getDimension(player.level().dimension());
-					WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, player.blockPosition())
-							.setName(name.getValue())
-							.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
-					mapDimension.getWaypointManager().add(waypoint);
+					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
 					Minecraft.getInstance().player.displayClientMessage(
 							Component.translatable("ftbchunks.waypoint_added",
-									Component.literal(waypoint.getName()).withStyle(ChatFormatting.YELLOW)
+									Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)
 							), true);
 				}
 				closeGui();

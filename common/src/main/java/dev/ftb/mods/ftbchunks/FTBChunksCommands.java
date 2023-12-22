@@ -2,12 +2,14 @@ package dev.ftb.mods.ftbchunks;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UUIDTypeAdapter;
 import dev.ftb.mods.ftbchunks.data.*;
+import dev.ftb.mods.ftbchunks.net.AddWaypointPacket;
 import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -18,11 +20,14 @@ import dev.ftb.mods.ftbteams.data.TeamArgument;
 import dev.ftb.mods.ftbteams.data.TeamArgumentProvider;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.ColorArgument;
 import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
 import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.core.BlockPos;
@@ -173,9 +178,34 @@ public class FTBChunksCommands {
 						.requires(source -> source.getServer().isSingleplayer())
 						.executes(context -> FTBChunks.PROXY.blockColor())
 				)
+				.then(Commands.literal("waypoint")
+						.then(Commands.literal("add")
+								.then(Commands.argument("name", StringArgumentType.string())
+										.then(Commands.argument("position", BlockPosArgument.blockPos())
+												.executes(context -> addWaypoint(context.getSource(), StringArgumentType.getString(context, "name"), BlockPosArgument.getLoadedBlockPos(context, "position")))
+												.then(Commands.argument("color", ColorArgument.color())
+														.executes(context -> addWaypoint(context.getSource(), StringArgumentType.getString(context, "name"), BlockPosArgument.getLoadedBlockPos(context, "position"), ColorArgument.getColor(context, "color")))
+												)
+										)
+								)
+						)
+				)
 		);
 
 		dispatcher.register(Commands.literal("chunks").redirect(command));
+	}
+
+	private static int addWaypoint(CommandSourceStack source, String name, BlockPos position, ChatFormatting color) throws CommandSyntaxException {
+		if (color.getColor() != null) {
+			ServerPlayer player = source.getPlayerOrException();
+			new AddWaypointPacket(name, position, color.getColor()).sendTo(player);
+		}
+		return 1;
+	}
+
+	private static int addWaypoint(CommandSourceStack source, String name, BlockPos position) throws CommandSyntaxException {
+		int idx = source.getPlayerOrException().getRandom().nextInt(ChatFormatting.values().length);
+		return addWaypoint(source, name, position, ChatFormatting.values()[idx]);
 	}
 
 	private static int bypassProtection(CommandSourceStack source) throws CommandSyntaxException {

@@ -24,6 +24,7 @@ public interface FTBChunksNet {
 	MessageType SERVER_CONFIG_REQUEST = MAIN.registerC2S("server_config_request", ServerConfigRequestPacket::new);
 	MessageType SERVER_CONFIG_RESPONSE = MAIN.registerS2C("server_config_response", ServerConfigResponsePacket::new);
 	MessageType CHUNK_CHANGE_RESPONSE = MAIN.registerS2C("chunk_change_response", ChunkChangeResponsePacket::new);
+	MessageType ADD_WAYPOINT = MAIN.registerS2C("add_waypoint", AddWaypointPacket::new);
 
     static void init() {
 	}

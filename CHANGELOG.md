@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1902.4.3]
+
+### Added
+* Added `/ftbchunks waypoint add <name> <pos> [<color>]` command, to add waypoints from server-side
+  * Name can contain spaces if it's quoted
+  * Pos is a standard blockpos spec, e.g. `~ ~ ~` for the player's current pos
+  * Color is optional; either a chat color or, if omitted, a random color is picked
+
 ## [1902.4.2]
 
 ### Fixes

@@ -47,6 +47,11 @@ public class FTBChunksForge {
 	}
 
 	private void mobGriefing(EntityMobGriefingEvent event) {
+		if (event.getEntity().getLevel().isClientSide) {
+			// shouldn't ever be called clientside but yay Optifine :(
+			return;
+		}
+
 		// we could do this for all mob griefing but that's arguably OP (could trivialize wither fights, for example)
 		// enderman block stealing is the most common annoyance, and this also has parity with the fabric support
 		if (event.getEntity() instanceof EnderMan) {

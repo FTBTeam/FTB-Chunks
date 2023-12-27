@@ -47,7 +47,7 @@ public class FTBChunksForge {
 	}
 
 	private void mobGriefing(EntityMobGriefingEvent event) {
-		if (event.getEntity().getLevel().isClientSide) {
+		if (event.getEntity() == null || event.getEntity().getLevel().isClientSide) {
 			// shouldn't ever be called clientside but yay Optifine :(
 			return;
 		}

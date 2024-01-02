@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.2.5]
+
+### Added
+* Added `/ftbchunks waypoint add <name> <pos> [<color>]` command, to add waypoints from server-side
+  * Name can contain spaces if it's quoted
+  * Pos is a standard blockpos spec, e.g. `~ ~ ~` for the player's current pos
+  * Color is optional; either a chat color or, if omitted, a random color is picked
+
+### Fixed
+* Fixed a couple of claim and force load limit issues
+  * Max claim/force limits weren't synced to clients when changed in server config
+  * Team claim/force limits weren't always correctly recalculated when a player joined/left a team
+
 ## [2001.2.4]
 
 ### Fixed
@@ -16,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added a team property to control whether PvP is permitted in a team's claims
   * If PvP is prevented, then if either the attacking player or the attacked player is in such a claim, PvP damage will be cancelled
   * Can be controlled by server admin with the server config "Allow PvP Combat"
-    *  "always" (default) allows PvP everywhere
+    * "always" (default) allows PvP everywhere
     * "never" prevents PvP in all claimed chunks
     * "per_team" allows teams to configure PvP for their claims via new team property "Allow PvP Combat"
   * Not 100% guaranteed to prevent all forms of PvP damage, but direct or projectile damage is prevented where the damage source can be traced back to a player

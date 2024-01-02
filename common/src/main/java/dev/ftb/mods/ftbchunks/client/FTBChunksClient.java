@@ -18,6 +18,7 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
@@ -145,7 +146,7 @@ public enum FTBChunksClient {
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
 
-	public void init() {
+    public void init() {
 		if (Minecraft.getInstance() == null) {
 			return;
 		}
@@ -1160,5 +1161,12 @@ public enum FTBChunksClient {
 
 	public int getMinimapTextureId() {
 		return minimapTextureId;
+	}
+
+	public static void addWaypoint(Player player, String name, BlockPos position, int color) {
+		FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).ifPresent(mgr -> {
+			Waypoint wp = mgr.addWaypointAt(position, name);
+			wp.setColor(color);
+		});
 	}
 }

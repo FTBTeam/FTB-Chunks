@@ -283,11 +283,11 @@ public class WaypointEditorScreen extends BaseScreen {
                 list.add(makeTitleMenuItem());
                 list.add(ContextMenuItem.SEPARATOR);
 
-                list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, () -> {
+                list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, (b) -> {
                     StringConfig config = new StringConfig();
                     config.setDefaultValue("");
                     config.setValue(wp.getName());
-                    config.onClicked(MouseButton.LEFT, accepted -> {
+                    config.onClicked(b, MouseButton.LEFT, accepted -> {
                         if (accepted) {
                             wp.setName(config.getValue());
                         }
@@ -295,7 +295,7 @@ public class WaypointEditorScreen extends BaseScreen {
                     });
                 }));
                 if (wp.getType().canChangeColor()) {
-                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
+                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, (button1) -> {
                         int r = (wp.getColor() >> 16) & 0xFF;
                         int g = (wp.getColor() >> 8) & 0xFF;
                         int b = wp.getColor() & 0xFF;
@@ -310,13 +310,13 @@ public class WaypointEditorScreen extends BaseScreen {
                     }).setCloseMenu(false));
                 }
                 if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
-                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), PEARL_ICON, () -> {
+                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), PEARL_ICON, (b) -> {
                         BlockPos pos = wp.getPos().above();
                         new TeleportFromMapPacket(pos, false, wp.getDimension()).sendToServer();
                         closeGui(false);
                     }));
                 }
-                list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, () -> {
+                list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, (b) -> {
                             getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.getName())
                                     .withStyle(Style.EMPTY.withColor(wp.getColor()))), Component.empty(), () -> {
                                 wp.removeFromManager();
@@ -331,9 +331,9 @@ public class WaypointEditorScreen extends BaseScreen {
             }
             return super.mousePressed(button);
         }
-        
+
         private ContextMenuItem makeTitleMenuItem() {
-            return new ContextMenuItem(Component.literal(wp.getName()), Icon.empty(), () -> {}) {
+            return new ContextMenuItem(Component.literal(wp.getName()), Icon.empty(), (b) -> {}) {
                 @Override
                 public Icon getIcon() {
                     return wp.getType().getIcon().withTint(Color4I.rgb(wp.getColor()));

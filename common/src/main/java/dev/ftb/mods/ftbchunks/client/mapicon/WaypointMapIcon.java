@@ -96,10 +96,10 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 		contextMenu.add(makeTitleMenuItem());
 		contextMenu.add(ContextMenuItem.SEPARATOR);
 
-		contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, () -> {
+		contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, (b) -> {
 			StringConfig config = new StringConfig();
 			config.setValue(waypoint.getName());
-			config.onClicked(MouseButton.LEFT, accepted -> {
+			config.onClicked(b, MouseButton.LEFT, accepted -> {
 				if (accepted) {
 					waypoint.setName(config.getValue());
 				}
@@ -108,7 +108,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 		}));
 
 		if (waypoint.getType().canChangeColor()) {
-			contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, () -> {
+			contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, (button1) -> {
 				int r = (waypoint.getColor() >> 16) & 0xFF;
 				int g = (waypoint.getColor() >> 8) & 0xFF;
 				int b = waypoint.getColor() & 0xFF;
@@ -122,12 +122,12 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 			}).setCloseMenu(false));
 		}
 
-		contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.label." + (waypoint.isHidden() ? "show" : "hide")), Icons.BEACON, () -> {
+		contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.label." + (waypoint.isHidden() ? "show" : "hide")), Icons.BEACON, (b) -> {
 			waypoint.setHidden(!waypoint.isHidden());
 			screen.refreshWidgets();
 		}));
 
-		contextMenu.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, () -> {
+		contextMenu.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, (b) -> {
 			waypoint.removeFromManager();
 			screen.refreshIcons();
 		}));
@@ -136,7 +136,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 	}
 
 	private ContextMenuItem makeTitleMenuItem() {
-		return new ContextMenuItem(Component.literal(waypoint.getName()), icon, () -> {}) {
+		return new ContextMenuItem(Component.literal(waypoint.getName()), icon, (b) -> {}) {
 			@Override
 			public Icon getIcon() {
 				return icon;

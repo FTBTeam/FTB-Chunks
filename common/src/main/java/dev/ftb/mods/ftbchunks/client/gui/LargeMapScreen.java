@@ -9,7 +9,7 @@ import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
+import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -210,9 +210,9 @@ public class LargeMapScreen extends BaseScreen {
 		} else if (button.isRight()) {
 			final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
 			List<ContextMenuItem> list = new ArrayList<>();
-			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, () -> {
+			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, (b) -> {
 				StringConfig name = new StringConfig();
-				new EditConfigFromStringScreen<>(name, set -> {
+				new EditStringConfigOverlay<>(this, name, set -> {
 					if (set) {
 						WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, dimension, pos)
 								.setName(name.getValue())

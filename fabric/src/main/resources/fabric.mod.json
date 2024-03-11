@@ -31,5 +31,8 @@
 		"architectury": ">=${archversion}",
 		"ftblibrary": ">=${ftblibraryversion}",
 		"ftbteams": ">=${ftbteamsversion}"
+	},
+	"breaks": {
+		"ftblibrary": ">=2001.2.0"
 	}
 }

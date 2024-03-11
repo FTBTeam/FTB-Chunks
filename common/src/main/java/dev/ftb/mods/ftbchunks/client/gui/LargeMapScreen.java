@@ -9,7 +9,7 @@ import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
+import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -18,6 +18,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
@@ -54,6 +55,7 @@ public class LargeMapScreen extends BaseScreen {
 	private Button claimChunksButton;
 	private Button dimensionButton;
 	private Button waypointManagerButton;
+	private Button infoButton;
 	private Button settingsButton;
 	private Button serverSettingsButton;
 	private Button clearDeathpointsButton;
@@ -75,6 +77,11 @@ public class LargeMapScreen extends BaseScreen {
 				mapDimension -> new LargeMapScreen(mapDimension).openGui(),
 				() -> FTBChunks.LOGGER.warn("Missing MapDimension data?? not opening large map")
 		);
+	}
+
+	@Override
+	public Theme getTheme() {
+		return NordTheme.THEME;
 	}
 
 	@Override
@@ -131,6 +138,8 @@ public class LargeMapScreen extends BaseScreen {
 				.append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
 		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
 				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
+		add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
+				(b, m) -> new MapKeyReferenceScreen().openGui()));
 
 		add(clearDeathpointsButton = new ClearDeathPointButton(this));
 
@@ -183,7 +192,8 @@ public class LargeMapScreen extends BaseScreen {
 
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		waypointManagerButton.setPosAndSize(1, 19, 16, 16);
-		clearDeathpointsButton.setPosAndSize(1, 37, 16, 16);
+		infoButton.setPosAndSize(1, 37, 16, 16);
+		clearDeathpointsButton.setPosAndSize(1, 55, 16, 16);
 
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
@@ -210,19 +220,21 @@ public class LargeMapScreen extends BaseScreen {
 		} else if (button.isRight()) {
 			final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
 			List<ContextMenuItem> list = new ArrayList<>();
-			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, () -> {
+			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, btn -> {
 				StringConfig name = new StringConfig();
-				new EditConfigFromStringScreen<>(name, set -> {
-					if (set) {
+				name.setValue("");
+				var overlay = new EditStringConfigOverlay<>(getGui(), name, accepted -> {
+					if (accepted) {
 						WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, dimension, pos)
 								.setName(name.getValue())
 								.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
 						dimension.getWaypointManager().add(waypoint);
 						refreshWidgets();
 					}
-
-					openGui();
-				}).openGui();
+				}, Component.translatable("ftbchunks.gui.add_waypoint")).atMousePosition();
+				overlay.setWidth(150);
+				overlay.setX(Math.min(overlay.getX(), getScreen().getGuiScaledWidth() - 155));
+				getGui().pushModalPanel(overlay);
 			}));
 			openContextMenu(list);
 			return true;
@@ -233,17 +245,10 @@ public class LargeMapScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key) || key.escOrInventory()) {
-			if (key.esc() && getContextMenu().isPresent()) {
-				closeContextMenu();
-			} else {
-				closeGui(false);
-			}
+		if (super.keyPressed(key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_SPACE)) {
 			movedToPlayer = false;
-			return true;
-		} else if (super.keyPressed(key)) {
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_T)) {
 			new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension).sendToServer();
@@ -443,6 +448,17 @@ public class LargeMapScreen extends BaseScreen {
 		public void addMouseOverText(TooltipList list) {
 			super.addMouseOverText(list);
 			tooltipLines.forEach(list::add);
+		}
+	}
+
+	private static class MapKeyReferenceScreen extends KeyReferenceScreen {
+		public MapKeyReferenceScreen() {
+			super("ftbchunks.gui.large_map_info.text");
+		}
+
+		@Override
+		public Component getTitle() {
+			return Component.translatable("ftbchunks.gui.large_map_info");
 		}
 	}
 

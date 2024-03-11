@@ -363,7 +363,7 @@ public enum FTBChunksClient {
 	public EventResult keyPressed(Minecraft client, Screen screen, int keyCode, int scanCode, int modifiers) {
 		if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers)) {
 			LargeMapScreen gui = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
-			if (gui != null) {
+			if (gui != null && !gui.anyModalPanelOpen()) {
 				gui.closeGui(false);
 				return EventResult.interruptTrue();
 			}

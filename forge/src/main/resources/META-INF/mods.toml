@@ -38,7 +38,7 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "ftblibrary"
 mandatory = true
-versionRange = "[${ftblibraryversion},2001.2.0)"
+versionRange = "[${ftblibraryversion},)"
 ordering = "AFTER"
 side = "BOTH"
 

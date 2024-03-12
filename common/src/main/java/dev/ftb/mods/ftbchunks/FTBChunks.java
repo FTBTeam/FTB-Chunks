@@ -390,7 +390,7 @@ public class FTBChunks {
 	}
 
 	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
-		if (ignoreExplosion(level, explosion)) {
+		if (FTBChunksWorldConfig.DISABLE_PROTECTION.get() || ignoreExplosion(level, explosion)) {
 			return;
 		}
 

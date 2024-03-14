@@ -90,6 +90,7 @@
 	"wilderness": "Wilderness",
 	"ftbchunks.no_server_mod": "FTB Chunks requires mod on server!",
 	"ftbchunks.already_claimed": "Chunk is already claimed by %s",
+	"ftbchunks.waypoint_added": "Waypoint '%s' added",
 	"ftbchunks.deathpoint_removed": "Waypoint '%s' auto-removed",
 	"ftbchunks.gui.claimed": "Claimed",
 	"ftbchunks.gui.force_loaded": "Force loaded",

@@ -378,7 +378,7 @@ public enum FTBChunksClient {
 		return MapManager.getInstance().map(manager -> {
 			BaseScreen screen = new WaypointAddScreen(name, manager, player);
 			screen.openGuiLater();
-			  // later needed to prevent keypress being passed into gui
+			// later needed to prevent keypress being passed into gui
 			return EventResult.interruptTrue();
 		}).orElse(EventResult.pass());
 	}
@@ -1154,27 +1154,10 @@ public enum FTBChunksClient {
 		return minimapTextureId;
 	}
 
-	private class WaypointAddScreen extends BaseScreen {
+	private static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;
-		private EditStringConfigOverlay<String> overlay;
-
-		@Override
-		public boolean onInit() {
-			return super.onInit();
-		}
-
-		@Override
-		public ModalPanel popModalPanel() {
-			return null;
-		}
-
 		private final MapManager manager;
 		private final Player player;
-
-		@Override
-		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-
-		}
 
 		public WaypointAddScreen(StringConfig name, MapManager manager, Player player) {
 			super();
@@ -1185,24 +1168,27 @@ public enum FTBChunksClient {
 		}
 
 		@Override
+		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+		}
+
+		@Override
 		public void addWidgets() {
-			overlay = new EditStringConfigOverlay<>(this, name, set -> {
+			EditStringConfigOverlay<String> overlay = new EditStringConfigOverlay<>(this, name, set -> {
 				if (set && !name.getValue().isEmpty()) {
 					MapDimension mapDimension = manager.getDimension(player.level().dimension());
 					WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, player.blockPosition())
 							.setName(name.getValue())
 							.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
 					mapDimension.getWaypointManager().add(waypoint);
+					Minecraft.getInstance().player.displayClientMessage(
+							Component.translatable("ftbchunks.waypoint_added",
+									Component.literal(waypoint.getName()).withStyle(ChatFormatting.YELLOW)
+							), true);
 				}
-				FTBChunksClient.this.openGui();
+				closeGui();
 			}, Component.translatable("key.ftbchunks.add_waypoint"));
 			overlay.setWidth(this.width);
-			this.add(overlay);
-		}
-
-		@Override
-		public void alignWidgets() {
-			this.align(WidgetLayout.VERTICAL);
+			pushModalPanel(overlay);
 		}
 	}
 }

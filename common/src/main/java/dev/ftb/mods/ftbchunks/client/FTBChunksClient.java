@@ -34,14 +34,17 @@ import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
+import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
@@ -378,16 +381,9 @@ public enum FTBChunksClient {
 		if (player == null) return EventResult.pass();
 
 		return MapManager.getInstance().map(manager -> {
-			new EditConfigFromStringScreen<>(name, set -> {
-				if (set && !name.getValue().isEmpty()) {
-					MapDimension mapDimension = manager.getDimension(player.level().dimension());
-					WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, player.blockPosition())
-							.setName(name.getValue())
-							.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
-					mapDimension.getWaypointManager().add(waypoint);
-				}
-				openGui();
-			}).openGuiLater();  // later needed to prevent keypress being passed into gui
+			BaseScreen screen = new WaypointAddScreen(name, manager, player);
+			screen.openGuiLater();
+			// later needed to prevent keypress being passed into gui
 			return EventResult.interruptTrue();
 		}).orElse(EventResult.pass());
 	}
@@ -1163,10 +1159,45 @@ public enum FTBChunksClient {
 		return minimapTextureId;
 	}
 
-	public static void addWaypoint(Player player, String name, BlockPos position, int color) {
-		FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).ifPresent(mgr -> {
+	public static Waypoint addWaypoint(Player player, String name, BlockPos position, int color) {
+		return FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).map(mgr -> {
 			Waypoint wp = mgr.addWaypointAt(position, name);
 			wp.setColor(color);
-		});
+			return wp;
+		}).orElse(null);
+	}
+
+	private static class WaypointAddScreen extends BaseScreen {
+		private final StringConfig name;
+		private final MapManager manager;
+		private final Player player;
+
+		public WaypointAddScreen(StringConfig name, MapManager manager, Player player) {
+			super();
+			this.name = name;
+			this.manager = manager;
+			this.player = player;
+			this.setHeight(35);
+		}
+
+		@Override
+		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+		}
+
+		@Override
+		public void addWidgets() {
+			EditStringConfigOverlay<String> overlay = new EditStringConfigOverlay<>(this, name, set -> {
+				if (set && !name.getValue().isEmpty()) {
+					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
+					Minecraft.getInstance().player.displayClientMessage(
+							Component.translatable("ftbchunks.waypoint_added",
+									Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)
+							), true);
+				}
+				closeGui();
+			}, Component.translatable("key.ftbchunks.add_waypoint"));
+			overlay.setWidth(this.width);
+			pushModalPanel(overlay);
+		}
 	}
 }

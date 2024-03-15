@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
+import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -12,6 +13,7 @@ import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -109,17 +111,17 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 
 		if (waypoint.getType().canChangeColor()) {
 			contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, btn -> {
-				int r = (waypoint.getColor() >> 16) & 0xFF;
-				int g = (waypoint.getColor() >> 8) & 0xFF;
-				int b = waypoint.getColor() & 0xFF;
-				float[] hsb = Color.RGBtoHSB(r, g, b, new float[3]);
-				float add = Widget.isShiftKeyDown() ? -1F/12F : 1F/12F;
-				Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
-				waypoint.setColor(col.rgba());
-				icon = Color4I.empty();
-				outsideIcon = Color4I.empty();
-				checkIcon();
-			}).setCloseMenu(false));
+				ColorConfig col = new ColorConfig();
+				col.setValue(Color4I.rgb(waypoint.getColor()));
+				ColorSelectorPanel.popupAtMouse(btn.getGui(), col, accepted -> {
+					if (accepted) {
+						waypoint.setColor(col.getValue().rgba());
+						icon = Color4I.empty();
+						outsideIcon = Color4I.empty();
+						checkIcon();
+					}
+				});
+			}));
 		}
 
 		contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.label." + (waypoint.isHidden() ? "show" : "hide")), Icons.BEACON, b -> {

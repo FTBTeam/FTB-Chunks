@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
+import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -136,7 +137,7 @@ public class WaypointEditorScreen extends BaseScreen {
 
     @Override
     public Theme getTheme() {
-        return THEME;
+        return super.getTheme();
     }
 
     @Override
@@ -296,18 +297,18 @@ public class WaypointEditorScreen extends BaseScreen {
                 }));
                 if (wp.getType().canChangeColor()) {
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, btn -> {
-                        int r = (wp.getColor() >> 16) & 0xFF;
-                        int g = (wp.getColor() >> 8) & 0xFF;
-                        int b = wp.getColor() & 0xFF;
-                        float[] hsb = Color.RGBtoHSB(r, g, b, new float[3]);
-                        float add = isShiftKeyDown() ? -1F/12F : 1F/12F;
-                        Color4I col = Color4I.hsb(hsb[0] + add, hsb[1], hsb[2]);
-                        wp.setColor(col.rgba());
-                        wp.refreshIcon();
-                        if (widgets.get(1) instanceof TextField tf) {
-                            tf.setColor(Color4I.rgb(wp.getColor()));
-                        }
-                    }).setCloseMenu(false));
+                        ColorConfig col = new ColorConfig();
+                        col.setValue(Color4I.rgb(wp.getColor()));
+                        ColorSelectorPanel.popupAtMouse(btn.getGui(), col, accepted -> {
+                            if (accepted) {
+                                wp.setColor(col.getValue().rgba());
+                                wp.refreshIcon();
+                                if (widgets.get(1) instanceof TextField tf) {
+                                    tf.setColor(Color4I.rgb(wp.getColor()));
+                                }
+                            }
+                        });
+                    }));
                 }
                 if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), PEARL_ICON, btn -> {

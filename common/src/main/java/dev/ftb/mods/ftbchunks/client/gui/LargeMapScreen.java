@@ -8,8 +8,8 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
+import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -223,15 +223,17 @@ public class LargeMapScreen extends BaseScreen {
 			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, btn -> {
 				StringConfig name = new StringConfig();
 				name.setValue("");
-				var overlay = new EditStringConfigOverlay<>(getGui(), name, accepted -> {
-					if (accepted) {
-						WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, dimension, pos)
-								.setName(name.getValue())
-								.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
-						dimension.getWaypointManager().add(waypoint);
-						refreshWidgets();
-					}
-				}, Component.translatable("ftbchunks.gui.add_waypoint")).atMousePosition();
+				ColorConfig col = new ColorConfig();
+				col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
+				var overlay = new AddWaypointOverlay(getGui(), name, col, accepted -> {
+                    if (accepted) {
+                        WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, dimension, pos)
+                                .setName(name.getValue())
+                                .setColor(col.getValue().rgba());
+                        dimension.getWaypointManager().add(waypoint);
+                        refreshWidgets();
+                    }
+                }).atMousePosition();
 				overlay.setWidth(150);
 				overlay.setX(Math.min(overlay.getX(), getScreen().getGuiScaledWidth() - 155));
 				getGui().pushModalPanel(overlay);
@@ -481,4 +483,5 @@ public class LargeMapScreen extends BaseScreen {
 			return shouldDraw();
 		}
 	}
+
 }

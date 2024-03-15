@@ -18,12 +18,12 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
+import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
@@ -32,6 +32,7 @@ import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
+import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -377,7 +378,7 @@ public enum FTBChunksClient {
 		if (player == null) return EventResult.pass();
 
 		return MapManager.getInstance().map(manager -> {
-			BaseScreen screen = new WaypointAddScreen(name, manager, player);
+			BaseScreen screen = new WaypointAddScreen(name, player);
 			screen.openGuiLater();
 			// later needed to prevent keypress being passed into gui
 			return EventResult.interruptTrue();
@@ -1165,13 +1166,11 @@ public enum FTBChunksClient {
 
 	private static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;
-		private final MapManager manager;
 		private final Player player;
 
-		public WaypointAddScreen(StringConfig name, MapManager manager, Player player) {
+		public WaypointAddScreen(StringConfig name, Player player) {
 			super();
 			this.name = name;
-			this.manager = manager;
 			this.player = player;
 			this.setHeight(35);
 		}
@@ -1182,16 +1181,22 @@ public enum FTBChunksClient {
 
 		@Override
 		public void addWidgets() {
-			EditStringConfigOverlay<String> overlay = new EditStringConfigOverlay<>(this, name, set -> {
+			ColorConfig col = new ColorConfig();
+			col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
+			AddWaypointOverlay overlay = new AddWaypointOverlay(this, name, col, set -> {
 				if (set && !name.getValue().isEmpty()) {
-					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
+					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), col.getValue().rgba());
 					Minecraft.getInstance().player.displayClientMessage(
 							Component.translatable("ftbchunks.waypoint_added",
 									Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)
 							), true);
 				}
-				closeGui();
-			}, Component.translatable("key.ftbchunks.add_waypoint"));
+			}) {
+				@Override
+				public void onClosed() {
+					closeGui();
+				}
+			};
 			overlay.setWidth(this.width);
 			pushModalPanel(overlay);
 		}

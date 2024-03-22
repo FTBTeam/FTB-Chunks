@@ -115,9 +115,9 @@ if (ENV.CURSEFORGE_KEY) {
 			mainArtifact(remapJar.archiveFile)
 			relations {
 				requiredDependency 'architectury-api'
-				requiredDependency 'ftb-library-neoforge'
-				requiredDependency 'ftb-teams-neoforge'
-				optionalDependency 'ftb-ranks-neoforge'
+				requiredDependency 'ftb-library-forge'
+				requiredDependency 'ftb-teams-forge'
+				optionalDependency 'ftb-ranks-forge'
 			}
 			changelog = ENV.CHANGELOG  // expected to exist if ENV.CURSEFORGE_KEY does
 			changelogType = 'markdown'

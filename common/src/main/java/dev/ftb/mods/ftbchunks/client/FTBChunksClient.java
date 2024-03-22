@@ -34,14 +34,16 @@ import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
@@ -507,7 +509,7 @@ public enum FTBChunksClient {
 		float scale;
 		if (FTBChunksClientConfig.MINIMAP_PROPORTIONAL.get()) {
 			scale = (float) (4D / guiScale);
-			scale *= (scaledWidth / 10f) / (scale * 64D) * FTBChunksClientConfig.MINIMAP_SCALE.get();
+			scale *= (scaledWidth / 10f) / (scale * 64f) * FTBChunksClientConfig.MINIMAP_SCALE.get().floatValue();
 		} else {
 			scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / guiScale);
 		}

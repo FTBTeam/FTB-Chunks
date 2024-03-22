@@ -23,6 +23,7 @@ import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
+import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
@@ -31,16 +32,18 @@ import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
+import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.config.ui.EditConfigFromStringScreen;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
@@ -145,7 +148,7 @@ public enum FTBChunksClient {
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
 
-	public void init() {
+    public void init() {
 		if (Minecraft.getInstance() == null) {
 			return;
 		}
@@ -362,7 +365,7 @@ public enum FTBChunksClient {
 	public EventResult keyPressed(Minecraft client, Screen screen, int keyCode, int scanCode, int modifiers) {
 		if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers)) {
 			LargeMapScreen gui = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
-			if (gui != null) {
+			if (gui != null && !gui.anyModalPanelOpen()) {
 				gui.closeGui(false);
 				return EventResult.interruptTrue();
 			}
@@ -377,16 +380,9 @@ public enum FTBChunksClient {
 		if (player == null) return EventResult.pass();
 
 		return MapManager.getInstance().map(manager -> {
-			new EditConfigFromStringScreen<>(name, set -> {
-				if (set && !name.getValue().isEmpty()) {
-					MapDimension mapDimension = manager.getDimension(player.level().dimension());
-					WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, player.blockPosition())
-							.setName(name.getValue())
-							.setColor(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F).rgba());
-					mapDimension.getWaypointManager().add(waypoint);
-				}
-				openGui();
-			}).openGuiLater();  // later needed to prevent keypress being passed into gui
+			BaseScreen screen = new WaypointAddScreen(name, player);
+			screen.openGuiLater();
+			// later needed to prevent keypress being passed into gui
 			return EventResult.interruptTrue();
 		}).orElse(EventResult.pass());
 	}
@@ -506,14 +502,14 @@ public enum FTBChunksClient {
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.options.renderDebug || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
+		if (mc.getDebugOverlay().showDebugScreen() || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
 			return;
 		}
 
 		float scale;
 		if (FTBChunksClientConfig.MINIMAP_PROPORTIONAL.get()) {
 			scale = (float) (4D / guiScale);
-			scale *= (scaledWidth / 10f) / (scale * 64D) * FTBChunksClientConfig.MINIMAP_SCALE.get();
+			scale *= (scaledWidth / 10f) / (scale * 64f) * FTBChunksClientConfig.MINIMAP_SCALE.get().floatValue();
 		} else {
 			scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / guiScale);
 		}
@@ -1160,5 +1156,51 @@ public enum FTBChunksClient {
 
 	public int getMinimapTextureId() {
 		return minimapTextureId;
+	}
+
+	public static Waypoint addWaypoint(Player player, String name, BlockPos position, int color) {
+		return FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).map(mgr -> {
+			Waypoint wp = mgr.addWaypointAt(position, name);
+			wp.setColor(color);
+			return wp;
+		}).orElse(null);
+	}
+
+	private static class WaypointAddScreen extends BaseScreen {
+		private final StringConfig name;
+		private final Player player;
+
+		public WaypointAddScreen(StringConfig name, Player player) {
+			super();
+			this.name = name;
+			this.player = player;
+			this.setHeight(35);
+		}
+
+		@Override
+		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+		}
+
+		@Override
+		public void addWidgets() {
+			ColorConfig col = new ColorConfig();
+			col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
+			AddWaypointOverlay overlay = new AddWaypointOverlay(this, name, col, set -> {
+				if (set && !name.getValue().isEmpty()) {
+					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), col.getValue().rgba());
+					Minecraft.getInstance().player.displayClientMessage(
+							Component.translatable("ftbchunks.waypoint_added",
+									Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)
+							), true);
+				}
+			}) {
+				@Override
+				public void onClosed() {
+					closeGui();
+				}
+			};
+			overlay.setWidth(this.width);
+			pushModalPanel(overlay);
+		}
 	}
 }

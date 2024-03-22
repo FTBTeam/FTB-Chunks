@@ -9,7 +9,7 @@ dependencies {
 def ENV = System.getenv()
 
 architectury {
-	common("forge", "fabric")
+	common("forge", "fabric", "neoforge")
 }
 
 configurations {

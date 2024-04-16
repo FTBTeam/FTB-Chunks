@@ -22,6 +22,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
@@ -92,6 +93,7 @@ public class ChunkScreen extends BaseScreen {
 		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
 		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
 
+		chunkButtons.clear();
 		for (int z = 0; z < FTBChunks.TILES; z++) {
 			for (int x = 0; x < FTBChunks.TILES; x++) {
 				ChunkButton button = new ChunkButton(this, XZ.of(startX + x, startZ + z));
@@ -104,9 +106,14 @@ public class ChunkScreen extends BaseScreen {
 		new RequestMapDataPacket(chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
 				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET
 		).sendToServer();
+
 		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
 				(simpleButton, mouseButton) -> LargeMapScreen.openMap()
 		).setPosAndSize(1, 1, 16, 16));
+
+		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
+				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
+		).setPosAndSize(1, 19, 16, 16));
 	}
 
 	@Override
@@ -167,6 +174,17 @@ public class ChunkScreen extends BaseScreen {
 				int count = entry.getValue();
 				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
+		}
+	}
+
+	private static class ChunkMouseReferenceScreen extends KeyReferenceScreen {
+		public ChunkMouseReferenceScreen() {
+			super("ftbchunks.gui.chunk_info.text");
+		}
+
+		@Override
+		public Component getTitle() {
+			return Component.translatable("ftbchunks.gui.chunk_info");
 		}
 	}
 
@@ -258,30 +276,35 @@ public class ChunkScreen extends BaseScreen {
 					int dir = (int) Math.signum(scroll);
 					long now = System.currentTimeMillis();
 					Date expiry = chunk.getForceLoadExpiryDate().orElse(new Date(now));
-					long offset = (expiry.getTime() - now) / 1000L;
-					if (dir == 1) {
-						if (offset < 86400L) {
-							offset = offset + 3600L;  // hour
-						} else if (offset < 604800L) {
-							offset = offset + 86400L;  // day
-						} else {
-							offset = offset + 604800L;  // week
-						}
-					} else if (dir == -1) {
-						if (offset <= 86400L) {
-							offset = Math.max(0L, offset - 3600L);
-						} else if (offset <= 604800L) {
-							offset = Math.max(86400L, offset - 86400L);
-						} else {
-							offset = Math.max(604800L, offset - 604800L);
-						}
-					}
+					long offset = calcOffset(expiry, now, dir);
 					chunk.updateForceLoadExpiryDate(now, offset * 1000L);
 					lastAdjust = now;
 					return true;
 				}
 				return super.mouseScrolled(scroll);
 			}).orElse(super.mouseScrolled(scroll));
+		}
+
+		private static long calcOffset(Date expiry, long now, int dir) {
+			long offset = (expiry.getTime() - now) / 1000L;
+			if (dir == 1) {
+				if (offset < 86400L) {
+					offset = offset + 3600L;  // hour
+				} else if (offset < 604800L) {
+					offset = offset + 86400L;  // day
+				} else {
+					offset = offset + 604800L;  // week
+				}
+			} else if (dir == -1) {
+				if (offset <= 86400L) {
+					offset = Math.max(0L, offset - 3600L);
+				} else if (offset <= 604800L) {
+					offset = Math.max(86400L, offset - 86400L);
+				} else {
+					offset = Math.max(604800L, offset - 604800L);
+				}
+			}
+			return offset;
 		}
 
 		@Override

@@ -89,6 +89,6 @@ public enum LongRangePlayerTracker {
 
         // and player 1 must be able to see player 2 (i.e. player 2's team settings must allow it)
         ChunkTeamDataImpl p2Team = ClaimedChunkManagerImpl.getInstance().getOrCreateData(p2);
-        return p2Team.canPlayerUse(p1, FTBChunksProperties.LOCATION_MODE);
+        return p2Team != null && p2Team.canPlayerUse(p1, FTBChunksProperties.LOCATION_MODE);
     }
 }

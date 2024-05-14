@@ -261,7 +261,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 	@Override
 	public boolean isChunkForceLoaded(ChunkDimPos chunkDimPos) {
-		return getForceLoadedChunks(chunkDimPos.dimension()).containsKey(chunkDimPos.getChunkPos().toLong());
+		return getForceLoadedChunks(chunkDimPos.dimension()).containsKey(chunkDimPos.chunkPos().toLong());
 	}
 
 	public void registerClaim(ChunkDimPos pos, ClaimedChunk chunk) {

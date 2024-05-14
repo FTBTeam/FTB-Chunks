@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -21,7 +22,7 @@ public class StaticMapIcon extends MapIcon.SimpleMapIcon {
 
 	static boolean handleKeypress(MapIcon icon, BaseScreen screen, Key key) {
 		if (screen instanceof LargeMapScreen lms && key.is(GLFW.GLFW_KEY_T)) {
-			new TeleportFromMapPacket(BlockPos.containing(icon.getPos(1F)).above(), false, lms.currentDimension()).sendToServer();
+			NetworkManager.sendToServer(new TeleportFromMapPacket(BlockPos.containing(icon.getPos(1F)).above(), false, lms.currentDimension()));
 			screen.closeGui(false);
 			return true;
 		}

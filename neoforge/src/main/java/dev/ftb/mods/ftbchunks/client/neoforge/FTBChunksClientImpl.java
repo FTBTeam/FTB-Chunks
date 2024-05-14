@@ -2,7 +2,6 @@ package dev.ftb.mods.ftbchunks.client.neoforge;
 
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -16,7 +15,8 @@ public class FTBChunksClientImpl {
 	@SubscribeEvent
 	public static void renderLevelStageForge(RenderLevelStageEvent event) {
 		if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
-			FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getProjectionMatrix(), Minecraft.getInstance().getEntityRenderDispatcher().camera, event.getPartialTick());
+			FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getProjectionMatrix(),
+					event.getModelViewMatrix(), event.getCamera(), event.getPartialTick());
 		}
 	}
 

@@ -1,29 +1,25 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public class RequestBlockColorPacket extends BaseS2CMessage {
-    public RequestBlockColorPacket() {
-    }
+public record RequestBlockColorPacket() implements CustomPacketPayload {
+    public static final Type<RequestBlockColorPacket> TYPE = new Type<>(FTBChunksAPI.rl("request_block_color_packet"));
 
-    public RequestBlockColorPacket(FriendlyByteBuf buf) {
-    }
+    private static final RequestBlockColorPacket INSTANCE = new RequestBlockColorPacket();
 
-    @Override
-    public MessageType getType() {
-        return FTBChunksNet.REQUEST_BLOCK_COLOR;
-    }
+    public static final StreamCodec<FriendlyByteBuf, RequestBlockColorPacket> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 
     @Override
-    public void write(FriendlyByteBuf buf) {
+    public Type<RequestBlockColorPacket> type() {
+        return TYPE;
     }
 
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
-        FTBChunksClient.INSTANCE.handleBlockColorRequest();
+    public static void handle(RequestBlockColorPacket message, NetworkManager.PacketContext context) {
+        context.queue(FTBChunksClient.INSTANCE::handleBlockColorRequest);
     }
 }

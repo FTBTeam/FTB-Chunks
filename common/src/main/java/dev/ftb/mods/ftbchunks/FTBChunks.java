@@ -6,6 +6,7 @@ import dev.architectury.event.CompoundEventResult;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
+import dev.architectury.networking.NetworkManager;
 import dev.architectury.registry.registries.Registrar;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
@@ -205,7 +206,7 @@ public class FTBChunks {
 		SNBTCompoundTag config = new SNBTCompoundTag();
 		FTBChunksWorldConfig.CONFIG.write(config);
 		UUID managerId = FTBTeamsAPI.api().getManager().getId();
-		new LoginDataPacket(managerId, config).sendTo(player);
+		NetworkManager.sendToPlayer(player, new LoginDataPacket(managerId, config));
 		SendGeneralDataPacket.send(data, player);
 		FTBChunks.LOGGER.debug("server config and team data sent to {}", playerId);
 
@@ -214,7 +215,7 @@ public class FTBChunks {
 
 		for (ClaimedChunkImpl chunk : ClaimedChunkManagerImpl.getInstance().getAllClaimedChunks()) {
 			chunksToSend.computeIfAbsent(Pair.of(chunk.getPos().dimension(), chunk.getTeamData().getTeamId()), s -> new ArrayList<>())
-					.add(new SendChunkPacket.SingleChunk(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
+					.add(SendChunkPacket.SingleChunk.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
 		}
 
 		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
@@ -222,7 +223,7 @@ public class FTBChunks {
 				ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
 				if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
 					SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
-					packet.sendTo(player);
+					NetworkManager.sendToPlayer(player, packet);
 				}
 			});
 		});
@@ -414,7 +415,7 @@ public class FTBChunks {
 		if (!wonGame) {
 			newPlayer.getLastDeathLocation().ifPresent(loc -> {
 				int num = newPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-				new PlayerDeathPacket(loc, num).sendTo(newPlayer);
+				NetworkManager.sendToPlayer(newPlayer, new PlayerDeathPacket(loc, num));
 			});
 		}
 	}
@@ -425,7 +426,8 @@ public class FTBChunks {
 		StageHelper.INSTANCE.getProvider().sync(serverPlayer);
 	}
 
-	private void teamConfig(TeamCollectPropertiesEvent event) {
+	@SuppressWarnings("UnreachableCode")
+    private void teamConfig(TeamCollectPropertiesEvent event) {
 		event.add(FTBChunksProperties.ALLOW_EXPLOSIONS);
 		event.add(FTBChunksProperties.ALLOW_MOB_GRIEFING);
 		event.add(FTBChunksProperties.ALLOW_ALL_FAKE_PLAYERS);
@@ -484,7 +486,8 @@ public class FTBChunks {
 		});
 	}
 
-	private void transferClaims(ChunkTeamDataImpl transferFrom, ChunkTeamDataImpl transferTo, Collection<ClaimedChunkImpl> chunksToTransfer) {
+	@SuppressWarnings("UnreachableCode")
+    private void transferClaims(ChunkTeamDataImpl transferFrom, ChunkTeamDataImpl transferTo, Collection<ClaimedChunkImpl> chunksToTransfer) {
 		CommandSourceStack sourceStack = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().createCommandSourceStack();
 
 		String fromName = transferFrom.getTeam().getShortName();
@@ -508,11 +511,11 @@ public class FTBChunks {
 			ChunkDimPos cdp = chunk.getPos();
 			if (total >= transferTo.getMaxClaimChunks()) {
 				chunk.unclaim(sourceStack, false);
-				chunksToUnclaim.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, cdp.x(), cdp.z(), null));
+				chunksToUnclaim.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, cdp.x(), cdp.z(), null));
 				unclaimed++;
 			} else {
 				chunk.setTeamData(transferTo);
-				chunksToSend.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, cdp.x(), cdp.z(), chunk));
+				chunksToSend.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, cdp.x(), cdp.z(), chunk));
 				transferred++;
 			}
 
@@ -542,7 +545,7 @@ public class FTBChunks {
 
 			chunksToUnclaim.forEach((dimension, chunkPackets) -> {
 				if (!chunkPackets.isEmpty()) {
-					new SendManyChunksPacket(dimension, Util.NIL_UUID, chunkPackets).sendToAll(sourceStack.getServer());
+					NetworkManager.sendToPlayers(sourceStack.getServer().getPlayerList().getPlayers(), new SendManyChunksPacket(dimension, Util.NIL_UUID, chunkPackets));
 				}
 			});
 		}

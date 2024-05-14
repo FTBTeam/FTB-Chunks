@@ -1,42 +1,29 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public class PlayerDeathPacket extends BaseS2CMessage {
-	private final GlobalPos pos;
-	private final int number;
+public record PlayerDeathPacket(GlobalPos pos, int number) implements CustomPacketPayload {
+	public static final Type<PlayerDeathPacket> TYPE = new Type<>(FTBChunksAPI.rl("player_death_packet"));
 
-	public PlayerDeathPacket(GlobalPos pos, int num) {
-		this.pos = pos;
-		number = num;
-	}
-
-	PlayerDeathPacket(FriendlyByteBuf buf) {
-		pos = GlobalPos.of(ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation()), buf.readBlockPos());
-		number = buf.readVarInt();
-	}
+	public static final StreamCodec<FriendlyByteBuf, PlayerDeathPacket> STREAM_CODEC = StreamCodec.composite(
+			GlobalPos.STREAM_CODEC, PlayerDeathPacket::pos,
+			ByteBufCodecs.INT, PlayerDeathPacket::number,
+			PlayerDeathPacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.PLAYER_DEATH;
+	public Type<PlayerDeathPacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeResourceLocation(pos.dimension().location());
-		buf.writeBlockPos(pos.pos());
-		buf.writeVarInt(number);
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.INSTANCE.handlePlayerDeath(pos, number);
+	public static void handle(PlayerDeathPacket message, NetworkManager.PacketContext context) {
+		context.queue(() -> FTBChunksClient.INSTANCE.handlePlayerDeath(message.pos, message.number));
 	}
 }

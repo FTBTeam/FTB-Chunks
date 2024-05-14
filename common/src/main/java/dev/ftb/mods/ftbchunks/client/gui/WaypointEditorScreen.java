@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -18,7 +19,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -308,8 +308,7 @@ public class WaypointEditorScreen extends BaseScreen {
                 }
                 if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), PEARL_ICON, btn -> {
-                        BlockPos pos = wp.getPos().above();
-                        new TeleportFromMapPacket(pos, false, wp.getDimension()).sendToServer();
+                        NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));
                         closeGui(false);
                     }));
                 }

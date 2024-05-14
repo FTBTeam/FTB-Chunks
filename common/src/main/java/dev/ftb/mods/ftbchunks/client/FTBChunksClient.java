@@ -87,7 +87,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -759,8 +759,8 @@ public enum FTBChunksClient {
 
 	private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, float tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
 		GuiHelper.setupDrawing();
-		float ww2 = scaledWidth / 2F;
-		float wh2 = scaledHeight / 2F;
+		float scaledWidth2 = scaledWidth / 2F;
+		float scaledHeight2 = scaledHeight / 2F;
 		InWorldMapIcon focusedIcon = null;
 
 		for (MapIcon icon : mapIcons) {
@@ -773,9 +773,9 @@ public enum FTBChunksClient {
 				if (lookAngle > 0) {  // icon in front of the player
 					worldMatrix.transform(v);
 					v.div(v.w());
-					float ix = ww2 + v.x() * ww2;
-					float iy = wh2 - v.y() * wh2;
-					double mouseDist = MathUtils.dist(ix, iy, ww2, wh2);
+					float ix = scaledWidth2 + v.x() * scaledWidth2;
+					float iy = scaledHeight2 - v.y() * scaledHeight2;
+					double mouseDist = MathUtils.dist(ix, iy, scaledWidth2, scaledHeight2);
 					InWorldMapIcon inWorldMapIcon = new InWorldMapIcon(icon, ix, iy, playerDist, mouseDist);
 
 					if (mouseDist <= 5D * FTBChunksClientConfig.WAYPOINT_FOCUS_DISTANCE.get() && (focusedIcon == null || focusedIcon.distanceToMouse() > mouseDist)) {
@@ -813,7 +813,7 @@ public enum FTBChunksClient {
 		inWorldMapIcons.clear();
 	}
 
-	public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Camera camera, float tickDelta) {
+	public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, Camera camera, float tickDelta) {
 		Minecraft mc = Minecraft.getInstance();
 
 		if (mc.options.hideGui || MapManager.getInstance().isEmpty() || mc.level == null || mc.player == null
@@ -822,7 +822,7 @@ public enum FTBChunksClient {
 		}
 
 		worldMatrix = new Matrix4f(projectionMatrix);
-		worldMatrix.mul(poseStack.last().pose());
+		worldMatrix.mul(modelViewMatrix);
 		cameraPos = camera.getPosition();
 
 		if (!FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
@@ -1113,11 +1113,11 @@ public enum FTBChunksClient {
 		});
 	}
 
-	public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos, boolean valid) {
+	public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos) {
 		// called periodically when a player (outside of vanilla entity tracking range) that this client is tracking moves
 		boolean changed = false;
-		if (!valid) {
-			// invalid block pos indicates player should no longer be tracked on this client
+		if (pos == null) {
+			// null block pos indicates player should no longer be tracked on this client
 			// - player is either no longer in this world, or is now within the vanilla tracking range
 			changed = longRangePlayerTracker.remove(profile.getId()) != null;
 		} else {

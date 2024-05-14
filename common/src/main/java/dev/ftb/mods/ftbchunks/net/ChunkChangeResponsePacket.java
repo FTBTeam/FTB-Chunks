@@ -1,56 +1,33 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.api.ClaimResult.StandardProblem;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
+import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.EnumMap;
 
-public class ChunkChangeResponsePacket extends BaseS2CMessage {
-    private final int totalChunks;
-    private final int changedChunks;
-    private final EnumMap<ClaimResult.StandardProblem,Integer> problems;
+public record ChunkChangeResponsePacket(int totalChunks, int changedChunks, EnumMap<StandardProblem,Integer> problems) implements CustomPacketPayload {
+    public static final Type<ChunkChangeResponsePacket> TYPE = new Type<>(FTBChunksAPI.rl("chunk_change_response_packet"));
 
-    public ChunkChangeResponsePacket(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem,Integer> problems) {
-        this.totalChunks = totalChunks;
-        this.changedChunks = changedChunks;
-        this.problems = problems;
-    }
-
-    ChunkChangeResponsePacket(FriendlyByteBuf buf) {
-        totalChunks = buf.readVarInt();
-        changedChunks = buf.readVarInt();
-        problems = new EnumMap<>(ClaimResult.StandardProblem.class);
-
-        int nProblems = buf.readVarInt();
-        for (int i = 0; i < nProblems; i++) {
-            String name = buf.readUtf(Short.MAX_VALUE);
-            int count = buf.readVarInt();
-            ClaimResult.StandardProblem.forName(name).ifPresent(res -> problems.put(res, count));
-        }
-    }
+    public static final StreamCodec<FriendlyByteBuf, ChunkChangeResponsePacket> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT, ChunkChangeResponsePacket::totalChunks,
+            ByteBufCodecs.VAR_INT, ChunkChangeResponsePacket::changedChunks,
+            ByteBufCodecs.map(i -> new EnumMap<>(StandardProblem.class), NetworkHelper.enumStreamCodec(StandardProblem.class), ByteBufCodecs.VAR_INT), ChunkChangeResponsePacket::problems,
+            ChunkChangeResponsePacket::new
+    );
 
     @Override
-    public MessageType getType() {
-        return FTBChunksNet.CHUNK_CHANGE_RESPONSE;
+    public Type<ChunkChangeResponsePacket> type() {
+        return TYPE;
     }
 
-    @Override
-    public void write(FriendlyByteBuf buf) {
-        buf.writeVarInt(totalChunks);
-        buf.writeVarInt(changedChunks);
-        buf.writeVarInt(problems.size());
-        problems.forEach((res, count) -> {
-            buf.writeUtf(res.getResultId());
-            buf.writeVarInt(count);
-        });
-    }
-
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
-        ChunkScreen.notifyChunkUpdates(totalChunks, changedChunks, problems);
+    public static void handle(ChunkChangeResponsePacket message, NetworkManager.PacketContext context) {
+        context.queue(() -> ChunkScreen.notifyChunkUpdates(message.totalChunks, message.changedChunks, message.problems));
     }
 }

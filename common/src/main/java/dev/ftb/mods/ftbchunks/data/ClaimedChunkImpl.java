@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
@@ -113,7 +114,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 			}
 
 			ServerChunkCache cache = level.getChunkSource();
-			ChunkPos chunkPos = pos.getChunkPos();
+			ChunkPos chunkPos = pos.chunkPos();
 
 			if (cache != null) {
 				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
@@ -137,7 +138,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	public void sendUpdateToAll() {
-		SendChunkPacket packet = new SendChunkPacket(pos.dimension(), teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x(), pos.z(), this));
+		SendChunkPacket packet = new SendChunkPacket(pos.dimension(), teamData.getTeamId(), SendChunkPacket.SingleChunk.create(System.currentTimeMillis(), pos.x(), pos.z(), this));
 		ChunkSendingUtils.sendChunkToAll(teamData.getManager().getMinecraftServer(), teamData, packet);
 	}
 
@@ -162,8 +163,8 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		teamData.markDirty();
 
 		if (sync) {
-			SendChunkPacket packet = new SendChunkPacket(pos.dimension(), Util.NIL_UUID, new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x(), pos.z(), null));
-			packet.sendToAll(source.getServer());
+			SendChunkPacket packet = new SendChunkPacket(pos.dimension(), Util.NIL_UUID, SendChunkPacket.SingleChunk.create(System.currentTimeMillis(), pos.x(), pos.z(), null));
+			NetworkManager.sendToPlayers(source.getServer().getPlayerList().getPlayers(), packet);
 		}
 	}
 

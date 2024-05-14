@@ -554,7 +554,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		long now = System.currentTimeMillis();
 		return getClaimedChunks().stream()
 				.collect(Collectors.groupingBy(
-						c -> c.getPos().dimension(), Collectors.mapping(c -> new SendChunkPacket.SingleChunk(now, c.getPos().x(), c.getPos().z(), c), Collectors.toList())
+						c -> c.getPos().dimension(), Collectors.mapping(c -> SendChunkPacket.SingleChunk.create(now, c.getPos().x(), c.getPos().z(), c), Collectors.toList())
 				));
 	}
 

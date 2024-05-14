@@ -1,43 +1,30 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public class AddWaypointPacket extends BaseS2CMessage {
-    private final String name;
-    private final BlockPos position;
-    private final int color;
+public record AddWaypointPacket(String name, BlockPos position, int color) implements CustomPacketPayload {
+    public static final Type<AddWaypointPacket> TYPE = new Type<>(FTBChunksAPI.rl("add_waypoint_packet"));
 
-    public AddWaypointPacket(String name, BlockPos position, int color) {
-        this.name = name;
-        this.position = position;
-        this.color = color;
-    }
-
-    public AddWaypointPacket(FriendlyByteBuf buf) {
-        name = buf.readUtf();
-        position = buf.readBlockPos();
-        color = buf.readInt();
-    }
+    public static final StreamCodec<FriendlyByteBuf, AddWaypointPacket> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.STRING_UTF8, AddWaypointPacket::name,
+            BlockPos.STREAM_CODEC, AddWaypointPacket::position,
+            ByteBufCodecs.INT, AddWaypointPacket::color,
+            AddWaypointPacket::new
+    );
 
     @Override
-    public MessageType getType() {
-        return FTBChunksNet.ADD_WAYPOINT;
+    public Type<AddWaypointPacket> type() {
+        return TYPE;
     }
 
-    @Override
-    public void write(FriendlyByteBuf buf) {
-        buf.writeUtf(name);
-        buf.writeBlockPos(position);
-        buf.writeInt(color);
-    }
-
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
-        FTBChunksClient.addWaypoint(context.getPlayer(), name, position, color);
+    public static void handle(AddWaypointPacket message, NetworkManager.PacketContext context) {
+        context.queue(() -> FTBChunksClient.addWaypoint(context.getPlayer(), message.name, message.position, message.color));
     }
 }

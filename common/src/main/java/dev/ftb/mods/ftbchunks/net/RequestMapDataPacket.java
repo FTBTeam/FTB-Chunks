@@ -1,45 +1,32 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseC2SMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /**
  * @author LatvianModder
  */
-public class RequestMapDataPacket extends BaseC2SMessage {
-	private final int fromX, fromZ, toX, toZ;
+public record RequestMapDataPacket(int fromX, int fromZ, int toX, int toZ) implements CustomPacketPayload {
+	public static final Type<RequestMapDataPacket> TYPE = new Type<>(FTBChunksAPI.rl("request_map_data_packet"));
 
-	public RequestMapDataPacket(int fx, int fz, int tx, int tz) {
-		fromX = fx;
-		fromZ = fz;
-		toX = tx;
-		toZ = tz;
-	}
-
-	RequestMapDataPacket(FriendlyByteBuf buf) {
-		fromX = buf.readVarInt();
-		fromZ = buf.readVarInt();
-		toX = buf.readVarInt();
-		toZ = buf.readVarInt();
-	}
+	public static final StreamCodec<FriendlyByteBuf, RequestMapDataPacket> STREAM_CODEC = StreamCodec.composite(
+			ByteBufCodecs.INT, RequestMapDataPacket::fromX,
+			ByteBufCodecs.INT, RequestMapDataPacket::fromZ,
+			ByteBufCodecs.INT, RequestMapDataPacket::toX,
+			ByteBufCodecs.INT, RequestMapDataPacket::toZ,
+			RequestMapDataPacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.REQUEST_MAP_DATA;
+	public Type<RequestMapDataPacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeVarInt(fromX);
-		buf.writeVarInt(fromZ);
-		buf.writeVarInt(toX);
-		buf.writeVarInt(toZ);
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
+	public static void handle(RequestMapDataPacket message, NetworkManager.PacketContext context) {
 		//FIXME: SendMapDataPacket.send(Objects.requireNonNull(context.get().getSender())));
 	}
 }

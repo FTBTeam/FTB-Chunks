@@ -1,47 +1,31 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public class SyncRXPacket extends BaseS2CMessage {
-	public final RegionSyncKey key;
-	public final int offset;
-	public final int total;
-	public final byte[] data;
+public record SyncRXPacket(RegionSyncKey key, int offset, int total, byte[] data) implements CustomPacketPayload {
+	public static final Type<SyncRXPacket> TYPE = new Type<>(FTBChunksAPI.rl("sync_rx_packet"));
 
-	public SyncRXPacket(RegionSyncKey k, int o, int t, byte[] d) {
-		key = k;
-		offset = o;
-		total = t;
-		data = d;
-	}
-
-	SyncRXPacket(FriendlyByteBuf buf) {
-		key = new RegionSyncKey(buf);
-		offset = buf.readVarInt();
-		total = buf.readVarInt();
-		data = buf.readByteArray(Integer.MAX_VALUE);
-	}
+	public static final StreamCodec<FriendlyByteBuf, SyncRXPacket> STREAM_CODEC = StreamCodec.composite(
+			RegionSyncKey.STREAM_CODEC, SyncRXPacket::key,
+			ByteBufCodecs.VAR_INT, SyncRXPacket::offset,
+			ByteBufCodecs.VAR_INT, SyncRXPacket::total,
+			ByteBufCodecs.BYTE_ARRAY, SyncRXPacket::data,
+			SyncRXPacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.SYNC_RX;
+	public Type<SyncRXPacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		key.write(buf);
-		buf.writeVarInt(offset);
-		buf.writeVarInt(total);
-		buf.writeByteArray(data);
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.INSTANCE.syncRegionFromServer(key, offset, total, data);
+	public static void handle(SyncRXPacket message, NetworkManager.PacketContext context) {
+		context.queue(() -> FTBChunksClient.INSTANCE.syncRegionFromServer(message.key, message.offset, message.total, message.data));
 	}
 }

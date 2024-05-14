@@ -1,15 +1,16 @@
 package dev.ftb.mods.ftbchunks.api;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PotionItem;
-import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.stream.StreamSupport;
 
 @FunctionalInterface
 public interface Protection {
@@ -57,7 +58,7 @@ public interface Protection {
 	Protection RIGHT_CLICK_ITEM = (player, pos, hand, chunk, entity) -> {
 		ItemStack stack = player.getItemInHand(hand);
 
-		if (stack.isEdible() || isBeneficialPotion(stack) || stack.is(FTBChunksTags.Items.RIGHT_CLICK_WHITELIST_TAG)) {
+		if (isFood(stack) || isBeneficialPotion(stack) || stack.is(FTBChunksTags.Items.RIGHT_CLICK_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
 		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.BLOCK_INTERACT_MODE)) {
 			return ProtectionPolicy.ALLOW;
@@ -68,9 +69,17 @@ public interface Protection {
 		return ProtectionPolicy.ALLOW;
 	};
 
+	static boolean isFood(ItemStack stack) {
+        //noinspection DataFlowIssue
+        return stack.has(DataComponents.FOOD) && stack.get(DataComponents.FOOD).nutrition() > 0;
+	}
+
 	static boolean isBeneficialPotion(ItemStack stack) {
-		return stack.getItem() instanceof PotionItem && PotionUtils.getMobEffects(stack).stream()
-				.noneMatch(effect -> effect.getEffect().getCategory() == MobEffectCategory.HARMFUL);
+		if (stack.has(DataComponents.POTION_CONTENTS)) {
+			return StreamSupport.stream(stack.get(DataComponents.POTION_CONTENTS).getAllEffects().spliterator(), false)
+					.noneMatch(effect -> effect.getEffect().value().getCategory() == MobEffectCategory.HARMFUL);
+		}
+		return false;
 	}
 
 	Protection EDIT_FLUID = (player, pos, hand, chunk, entity) -> {

@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
@@ -103,9 +104,10 @@ public class ChunkScreen extends BaseScreen {
 		}
 
 		addAll(chunkButtons);
-		new RequestMapDataPacket(chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
-				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET
-		).sendToServer();
+		NetworkManager.sendToServer(new RequestMapDataPacket(
+				chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
+				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET)
+		);
 
 		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
 				(simpleButton, mouseButton) -> LargeMapScreen.openMap()
@@ -121,7 +123,7 @@ public class ChunkScreen extends BaseScreen {
 		super.mouseReleased(button);
 
 		if (!selectedChunks.isEmpty()) {
-			new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks).sendToServer();
+			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks));
 			selectedChunks.clear();
 			playClickSound();
 		}
@@ -313,7 +315,7 @@ public class ChunkScreen extends BaseScreen {
 
 			if (lastAdjust > 0L && System.currentTimeMillis() - lastAdjust > 1000L) {
 				// send update to server, but not more than once a second - avoid flood of updates while adjusting mouse wheel
-				new UpdateForceLoadExpiryPacket(chunkPos.dim(Minecraft.getInstance().level), chunk.getForceLoadExpiryDate().orElse(null)).sendToServer();
+				NetworkManager.sendToServer(new UpdateForceLoadExpiryPacket(chunkPos.dim(Minecraft.getInstance().level), chunk.getForceLoadExpiryDate().orElse(null)));
 				lastAdjust = 0L;
 			}
 		}

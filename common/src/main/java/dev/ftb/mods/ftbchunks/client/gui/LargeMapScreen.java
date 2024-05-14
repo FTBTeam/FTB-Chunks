@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
@@ -253,7 +254,7 @@ public class LargeMapScreen extends BaseScreen {
 			movedToPlayer = false;
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_T)) {
-			new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension).sendToServer();
+			NetworkManager.sendToServer(new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension));
 			closeGui(false);
 			return true;
 		} else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_F3)) {

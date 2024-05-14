@@ -1,38 +1,29 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.SNBTNet;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public class ServerConfigResponsePacket extends BaseS2CMessage {
-    private final SNBTCompoundTag config;
+public record ServerConfigResponsePacket(SNBTCompoundTag config) implements CustomPacketPayload {
+    public static final Type<ServerConfigResponsePacket> TYPE = new Type<>(FTBChunksAPI.rl("server_config_response_packet"));
 
-    public ServerConfigResponsePacket(SNBTCompoundTag config) {
-        this.config = config;
-    }
-
-    public ServerConfigResponsePacket(FriendlyByteBuf buf) {
-        config = SNBTNet.readCompound(buf);
-    }
-
-    @Override
-    public MessageType getType() {
-        return FTBChunksNet.SERVER_CONFIG_RESPONSE;
-    }
+    public static final StreamCodec<FriendlyByteBuf, ServerConfigResponsePacket> STREAM_CODEC = StreamCodec.composite(
+	    SNBTCompoundTag.STREAM_CODEC, ServerConfigResponsePacket::config,
+	    ServerConfigResponsePacket::new
+    );
 
     @Override
-    public void write(FriendlyByteBuf buf) {
-        SNBTNet.write(buf, config);
+    public Type<ServerConfigResponsePacket> type() {
+        return TYPE;
     }
 
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
+    public static void handle(ServerConfigResponsePacket message, NetworkManager.PacketContext context) {
         FTBChunks.LOGGER.info("Received FTB Chunks server config from server");
-        FTBChunksWorldConfig.CONFIG.read(config);
+        context.queue(() -> FTBChunksWorldConfig.CONFIG.read(message.config));
     }
 }

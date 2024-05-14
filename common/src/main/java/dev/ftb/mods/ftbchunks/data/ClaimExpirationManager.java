@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
@@ -102,18 +103,18 @@ public enum ClaimExpirationManager {
 
     private static void unclaimChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
         c.unclaim(sourceStack, false);
-        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.getPos().x(), c.getPos().z(), null));
+        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, c.getPos().x(), c.getPos().z(), null));
     }
 
     private static void unloadChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
         c.unload(sourceStack);
-        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.getPos().x(), c.getPos().z(), c));
+        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, c.getPos().x(), c.getPos().z(), c));
     }
 
     private static void syncChunks(Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, MinecraftServer server, UUID teamId) {
         toSync.forEach((dimension, chunkPackets) -> {
             if (!chunkPackets.isEmpty()) {
-                new SendManyChunksPacket(dimension, teamId, chunkPackets).sendToAll(server);
+                NetworkManager.sendToPlayers(server.getPlayerList().getPlayers(), new SendManyChunksPacket(dimension, teamId, chunkPackets));
             }
         });
     }

@@ -1,54 +1,47 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseC2SMessage;
-import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Date;
 
-public class UpdateForceLoadExpiryPacket extends BaseC2SMessage {
-    private final ChunkDimPos pos;
-    private final long relativeExpiryTime;
+public record UpdateForceLoadExpiryPacket(ChunkDimPos pos, long relativeExpiryTime) implements CustomPacketPayload {
+    public static final Type<UpdateForceLoadExpiryPacket> TYPE = new Type<>(FTBChunksAPI.rl("update_force_load_expiry_packet"));
+
+    public static final StreamCodec<FriendlyByteBuf, UpdateForceLoadExpiryPacket> STREAM_CODEC = StreamCodec.composite(
+            ChunkDimPos.STREAM_CODEC, UpdateForceLoadExpiryPacket::pos,
+            ByteBufCodecs.VAR_LONG, UpdateForceLoadExpiryPacket::relativeExpiryTime,
+            UpdateForceLoadExpiryPacket::new
+    );
 
     public UpdateForceLoadExpiryPacket(ChunkDimPos pos, Date expiryDate) {
-        this.pos = pos;
-        this.relativeExpiryTime = expiryDate == null ? 0L : Math.max(0L, expiryDate.getTime() - System.currentTimeMillis());
-    }
-
-    public UpdateForceLoadExpiryPacket(FriendlyByteBuf buf) {
-        pos = new ChunkDimPos(ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation()), buf.readInt(), buf.readInt());
-        relativeExpiryTime = buf.readLong();
+        this(pos, expiryDate == null ? 0L : Math.max(0L, expiryDate.getTime() - System.currentTimeMillis()));
     }
 
     @Override
-    public MessageType getType() {
-        return FTBChunksNet.UPDATE_FORCE_LOAD_EXPIRY;
+    public Type<UpdateForceLoadExpiryPacket> type() {
+        return TYPE;
     }
 
-    @Override
-    public void write(FriendlyByteBuf buf) {
-        buf.writeResourceLocation(pos.dimension().location());
-        buf.writeInt(pos.x());
-        buf.writeInt(pos.z());
-        buf.writeLong(relativeExpiryTime);
-    }
+    public static void handle(UpdateForceLoadExpiryPacket message, NetworkManager.PacketContext context) {
+        ChunkDimPos pos = message.pos;
 
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
         if (context.getPlayer() instanceof ServerPlayer sp && sp.level().dimension().equals(pos.dimension())) {
             ClaimedChunk chunk = ClaimedChunkManagerImpl.getInstance().getChunk(pos);
             if (chunk != null && chunk.getTeamData().getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
-                chunk.setForceLoadExpiryTime(relativeExpiryTime == 0L ? 0L : System.currentTimeMillis() + relativeExpiryTime);
+                chunk.setForceLoadExpiryTime(message.relativeExpiryTime == 0L ? 0L : System.currentTimeMillis() + message.relativeExpiryTime);
                 SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.getTeamData().getTeam().getId(),
-                        new SendChunkPacket.SingleChunk(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
-                packet.sendTo(sp);
+                        SingleChunk.create(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
+                NetworkManager.sendToPlayer(sp, packet);
             }
         }
     }

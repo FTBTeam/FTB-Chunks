@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class WaypointEditorScreen extends BaseScreen {
-    public static final Color4I COLOR_BACKGROUND = Color4I.rgba(0x99333333);
+    public static final Color4I COLOR_BACKGROUND = Color4I.rgba(0xC0333333);
     private static final Icon PEARL_ICON = ImageIcon.getIcon(new ResourceLocation("minecraft", "textures/item/ender_pearl.png"));
 
     public static final Theme THEME = new Theme() {
@@ -143,6 +143,7 @@ public class WaypointEditorScreen extends BaseScreen {
 
     @Override
     public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        Color4I.BLACK.withAlpha(128).draw(graphics, 0, 0, w, h);
         COLOR_BACKGROUND.draw(graphics, 0, 0, w, 20);
         theme.drawString(graphics, getTitle(), 6, 6, Theme.SHADOW);
     }
@@ -249,7 +250,7 @@ public class WaypointEditorScreen extends BaseScreen {
             LocalPlayer player = Minecraft.getInstance().player;
             String distStr = player.level().dimension().equals(wp.getDimension()) ?
                     String.format("%.1fm", Math.sqrt(wp.getDistanceSq(player))) : "";
-            add(new TextField(this).setText(distStr).setColor(Color4I.GRAY));
+            add(new TextField(this).setText(distStr).setColor(Color4I.WHITE));
         }
 
         @Override

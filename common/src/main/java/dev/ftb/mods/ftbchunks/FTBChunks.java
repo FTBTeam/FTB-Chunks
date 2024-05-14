@@ -19,6 +19,7 @@ import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.*;
+import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -182,7 +183,7 @@ public class FTBChunks {
 		if (ClaimedChunkManagerImpl.getInstance() != null) {
 			ClaimedChunkManagerImpl.getInstance().initForceLoadedChunks(level);
 		} else {
-			FTBChunks.LOGGER.warn("Level " + level.dimension().location() + " loaded before FTB Chunks manager was initialized! Unable to force-load chunks");
+			FTBChunks.LOGGER.warn("Level {} loaded before FTB Chunks manager was initialized! Unable to force-load chunks", level.dimension().location() );
 		}
 	}
 
@@ -211,11 +212,11 @@ public class FTBChunks {
 		FTBChunks.LOGGER.debug("server config and team data sent to {}", playerId);
 
 		long now = System.currentTimeMillis();
-		Map<Pair<ResourceKey<Level>, UUID>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+		Map<Pair<ResourceKey<Level>, UUID>, List<ChunkSyncInfo>> chunksToSend = new HashMap<>();
 
 		for (ClaimedChunkImpl chunk : ClaimedChunkManagerImpl.getInstance().getAllClaimedChunks()) {
 			chunksToSend.computeIfAbsent(Pair.of(chunk.getPos().dimension(), chunk.getTeamData().getTeamId()), s -> new ArrayList<>())
-					.add(SendChunkPacket.SingleChunk.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
+					.add(ChunkSyncInfo.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
 		}
 
 		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
@@ -498,8 +499,8 @@ public class FTBChunks {
 
 		int nChunks = transferTo.getClaimedChunks().size();
 
-		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
-		Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
+		Map<ResourceKey<Level>, List<ChunkSyncInfo>> chunksToSend = new HashMap<>();
+		Map<ResourceKey<Level>, List<ChunkSyncInfo>> chunksToUnclaim = new HashMap<>();
 		int transferred = 0;
 		int unclaimed = 0;
 		long now = System.currentTimeMillis();
@@ -511,11 +512,11 @@ public class FTBChunks {
 			ChunkDimPos cdp = chunk.getPos();
 			if (total >= transferTo.getMaxClaimChunks()) {
 				chunk.unclaim(sourceStack, false);
-				chunksToUnclaim.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, cdp.x(), cdp.z(), null));
+				chunksToUnclaim.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(ChunkSyncInfo.create(now, cdp.x(), cdp.z(), null));
 				unclaimed++;
 			} else {
 				chunk.setTeamData(transferTo);
-				chunksToSend.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, cdp.x(), cdp.z(), chunk));
+				chunksToSend.computeIfAbsent(cdp.dimension(), s -> new ArrayList<>()).add(ChunkSyncInfo.create(now, cdp.x(), cdp.z(), chunk));
 				transferred++;
 			}
 
@@ -539,7 +540,8 @@ public class FTBChunks {
 		if (transferred > 0 || unclaimed > 0) {
 			chunksToSend.forEach((dimension, chunkPackets) -> {
 				if (!chunkPackets.isEmpty()) {
-					ChunkSendingUtils.sendManyChunksToAll(sourceStack.getServer(), transferTo, new SendManyChunksPacket(dimension, transferTo.getTeamId(), chunkPackets));
+					new SendManyChunksPacket(dimension, transferTo.getTeamId(), chunkPackets)
+							.sendToAll(sourceStack.getServer(), transferTo);
 				}
 			});
 

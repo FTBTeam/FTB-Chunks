@@ -4,7 +4,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
+import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -40,7 +40,7 @@ public record UpdateForceLoadExpiryPacket(ChunkDimPos pos, long relativeExpiryTi
             if (chunk != null && chunk.getTeamData().getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
                 chunk.setForceLoadExpiryTime(message.relativeExpiryTime == 0L ? 0L : System.currentTimeMillis() + message.relativeExpiryTime);
                 SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.getTeamData().getTeam().getId(),
-                        SingleChunk.create(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
+                        ChunkSyncInfo.create(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
                 NetworkManager.sendToPlayer(sp, packet);
             }
         }

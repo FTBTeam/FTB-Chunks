@@ -6,7 +6,6 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbteams.data.ServerTeam;
 import net.minecraft.Util;
@@ -70,7 +69,7 @@ public enum ClaimExpirationManager {
         });
 
         CommandSourceStack sourceStack = server.createCommandSourceStack();
-        Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
+        Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync = new HashMap<>();
 
         if (!expiredForceloads.isEmpty()) {
             expiredForceloads.forEach(cc -> unloadChunk(now, cc, toSync, sourceStack));
@@ -91,7 +90,7 @@ public enum ClaimExpirationManager {
             if (!expired.isEmpty()) {
                 ChunkTeamData teamData = expired.get(0).getTeamData();
                 CommandSourceStack sourceStack = server.createCommandSourceStack();
-                Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync = new HashMap<>();
+                Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync = new HashMap<>();
                 expired.forEach(cc -> {
                     FTBChunks.LOGGER.info("un-forceloading chunk {} - expiry time {} passed", cc, cc.getForceLoadExpiryTime());
                     unloadChunk(now, cc, toSync, sourceStack);
@@ -101,17 +100,17 @@ public enum ClaimExpirationManager {
         });
     }
 
-    private static void unclaimChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
+    private static void unclaimChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync, CommandSourceStack sourceStack) {
         c.unclaim(sourceStack, false);
-        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, c.getPos().x(), c.getPos().z(), null));
+        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), null));
     }
 
-    private static void unloadChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, CommandSourceStack sourceStack) {
+    private static void unloadChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync, CommandSourceStack sourceStack) {
         c.unload(sourceStack);
-        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(SendChunkPacket.SingleChunk.create(now, c.getPos().x(), c.getPos().z(), c));
+        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), c));
     }
 
-    private static void syncChunks(Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> toSync, MinecraftServer server, UUID teamId) {
+    private static void syncChunks(Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync, MinecraftServer server, UUID teamId) {
         toSync.forEach((dimension, chunkPackets) -> {
             if (!chunkPackets.isEmpty()) {
                 NetworkManager.sendToPlayers(server.getPlayerList().getPlayers(), new SendManyChunksPacket(dimension, teamId, chunkPackets));

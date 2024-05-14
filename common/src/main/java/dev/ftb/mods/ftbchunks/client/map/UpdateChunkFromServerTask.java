@@ -1,33 +1,16 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.math.XZ;
 
 import java.util.Date;
 import java.util.UUID;
 
-public class UpdateChunkFromServerTask implements MapTask {
-	private final MapDimension dimension;
-	private final SendChunkPacket.SingleChunk chunk;
-	private final UUID teamId;
-	private final Date now;
-
-	public UpdateChunkFromServerTask(MapDimension d, SendChunkPacket.SingleChunk c, UUID i, Date date) {
-		dimension = d;
-		chunk = c;
-		teamId = i;
-		now = date;
-	}
-
+public record UpdateChunkFromServerTask(MapDimension dimension, ChunkSyncInfo info, UUID teamId, Date date) implements MapTask {
 	@Override
 	public void runMapTask() {
-		dimension.getRegion(XZ.regionFromChunk(chunk.x(), chunk.z()))
-				.getChunkForAbsoluteChunkPos(XZ.of(chunk.x(), chunk.z()))
-				.updateFromServer(now, chunk, teamId);
-	}
-
-	@Override
-	public String toString() {
-		return "UpdateChunkFromServerTask@" + dimension + ":" + chunk.x() + "," + chunk.z();
+		dimension.getRegion(XZ.regionFromChunk(info.x(), info.z()))
+				.getChunkForAbsoluteChunkPos(XZ.of(info.x(), info.z()))
+				.updateFromServer(date, info, teamId);
 	}
 }

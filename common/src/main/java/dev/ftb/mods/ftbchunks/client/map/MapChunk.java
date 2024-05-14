@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -110,7 +110,7 @@ public class MapChunk {
 		return region.dimension.getRegion(XZ.regionFromChunk(pos.x(), pos.z())).getDataBlocking().getChunk(pos);
 	}
 
-	public void updateFromServer(Date now, SendChunkPacket.SingleChunk packet, UUID teamId) {
+	public void updateFromServer(Date now, ChunkSyncInfo packet, UUID teamId) {
 		team = FTBTeamsAPI.api().getClientManager().getTeamByID(teamId).orElse(null);
 		dateInfo = packet.getDateInfo(team != null, now.getTime());
 		region.update(false);

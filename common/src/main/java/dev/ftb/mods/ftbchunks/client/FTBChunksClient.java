@@ -98,7 +98,7 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
-import static dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
+import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 
 public enum FTBChunksClient {
 	INSTANCE;
@@ -243,11 +243,11 @@ public enum FTBChunksClient {
 		generalChunkData = chunkData;
 	}
 
-	public void updateChunksFromServer(ResourceKey<Level> dimId, UUID teamId, Collection<SingleChunk> chunks) {
+	public void updateChunksFromServer(ResourceKey<Level> dimId, UUID teamId, Collection<ChunkSyncInfo> chunkSyncInfoList) {
 		MapManager.getInstance().ifPresent(manager -> {
 			MapDimension dimension = manager.getDimension(dimId);
 			Date now = new Date();
-			chunks.forEach(c -> ClientTaskQueue.queue(new UpdateChunkFromServerTask(dimension, c, teamId, now)));
+			chunkSyncInfoList.forEach(chunkSyncInfo -> ClientTaskQueue.queue(new UpdateChunkFromServerTask(dimension, chunkSyncInfo, teamId, now)));
 		});
 	}
 

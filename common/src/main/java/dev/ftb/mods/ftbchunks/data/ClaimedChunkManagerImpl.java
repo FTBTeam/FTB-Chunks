@@ -203,8 +203,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 
 		boolean isFake = PlayerHooks.isFake(player);
-		if (isFake && FTBChunksWorldConfig.FAKE_PLAYERS.get().isOverride()) {
-			return FTBChunksWorldConfig.FAKE_PLAYERS.get().shouldPreventInteraction();
+		if (isFake && FTBChunksWorldConfig.ALLOW_FAKE_PLAYERS.get().isOverride()) {
+			return FTBChunksWorldConfig.ALLOW_FAKE_PLAYERS.get().shouldPreventInteraction();
 		}
 
 		ClaimedChunkImpl chunk = getChunk(new ChunkDimPos(player.level(), pos));

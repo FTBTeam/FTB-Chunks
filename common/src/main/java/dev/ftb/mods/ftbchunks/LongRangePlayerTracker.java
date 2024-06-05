@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
@@ -39,19 +40,19 @@ public enum LongRangePlayerTracker {
             // 16 blocks in chunk
             int maxDistSq = server.getPlayerList().getViewDistance() * server.getPlayerList().getViewDistance() * 256;
 
-            players.forEach(p1 -> p1.level().players().forEach(p2a -> {
-                if (p2a instanceof ServerPlayer p2) {
-                    if (shouldTrack(p1, p2, maxDistSq)) {
-                        // send a tracking update to p1 IF p2's pos has changed by more than 4 blocks
-                        BlockPos lastPos = trackingMap.get(p1.getUUID(), p2.getUUID());
-                        if (lastPos == null || p2.blockPosition().distSqr(lastPos) > 16) {
-                            new SendPlayerPositionPacket(p2, p2.blockPosition()).sendTo(p1);
-                            trackingMap.put(p1.getUUID(), p2.getUUID(), p2.blockPosition());
+            players.forEach(trackingPlayer -> trackingPlayer.level().players().forEach(p2a -> {
+                if (p2a instanceof ServerPlayer trackedPlayer) {
+                    if (shouldTrack(trackingPlayer, trackedPlayer, maxDistSq)) {
+                        // send a tracking update to p1's client IF p2's pos has changed by more than 4 blocks
+                        BlockPos lastPos = trackingMap.get(trackingPlayer.getUUID(), trackedPlayer.getUUID());
+                        if (lastPos == null || trackedPlayer.blockPosition().distSqr(lastPos) > 16) {
+                            NetworkManager.sendToPlayer(trackingPlayer, SendPlayerPositionPacket.startTracking(trackedPlayer));
+                            trackingMap.put(trackingPlayer.getUUID(), trackedPlayer.getUUID(), trackedPlayer.blockPosition());
                         }
-                    } else if (trackingMap.contains(p1.getUUID(), p2.getUUID())) {
-                        // send an invalid pos to tell p1's client to stop tracking p2
-                        new SendPlayerPositionPacket(p2, null).sendTo(p1);
-                        trackingMap.remove(p1.getUUID(), p2.getUUID());
+                    } else if (trackingMap.contains(trackingPlayer.getUUID(), trackedPlayer.getUUID())) {
+                        // tell p1's client to stop tracking p2
+                        NetworkManager.sendToPlayer(trackingPlayer, SendPlayerPositionPacket.stopTracking(trackedPlayer));
+                        trackingMap.remove(trackingPlayer.getUUID(), trackedPlayer.getUUID());
                     }
                 }
             }));
@@ -73,7 +74,7 @@ public enum LongRangePlayerTracker {
         toRemove.forEach((trackingId, disconnectedId) -> {
             ServerPlayer trackingPlayer = player.getServer().getPlayerList().getPlayer(trackingId);
             if (trackingPlayer != null) {
-                new SendPlayerPositionPacket(player, null).sendTo(trackingPlayer);
+                NetworkManager.sendToPlayer(trackingPlayer, SendPlayerPositionPacket.stopTracking(player));
             }
             trackingMap.remove(trackingId, disconnectedId);
         });

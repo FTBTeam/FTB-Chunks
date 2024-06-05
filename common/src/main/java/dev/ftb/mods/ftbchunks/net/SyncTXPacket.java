@@ -1,58 +1,42 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseC2SMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
-public class SyncTXPacket extends BaseC2SMessage {
-	public final RegionSyncKey key;
-	public final int offset;
-	public final int total;
-	public final byte[] data;
+public record SyncTXPacket(RegionSyncKey key, int offset, int total, byte[] data) implements CustomPacketPayload {
+	public static final Type<SyncTXPacket> TYPE = new Type<>(FTBChunksAPI.rl("sync_tx_packet"));
 
-	public SyncTXPacket(RegionSyncKey k, int o, int t, byte[] d) {
-		key = k;
-		offset = o;
-		total = t;
-		data = d;
-	}
-
-	SyncTXPacket(FriendlyByteBuf buf) {
-		key = new RegionSyncKey(buf);
-		offset = buf.readVarInt();
-		total = buf.readVarInt();
-		data = buf.readByteArray(Integer.MAX_VALUE);
-	}
+	public static final StreamCodec<FriendlyByteBuf, SyncTXPacket> STREAM_CODEC = StreamCodec.composite(
+			RegionSyncKey.STREAM_CODEC, SyncTXPacket::key,
+			ByteBufCodecs.VAR_INT, SyncTXPacket::offset,
+			ByteBufCodecs.VAR_INT, SyncTXPacket::total,
+			ByteBufCodecs.BYTE_ARRAY, SyncTXPacket::data,
+			SyncTXPacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.SYNC_TX;
+	public Type<SyncTXPacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		key.write(buf);
-		buf.writeVarInt(offset);
-		buf.writeVarInt(total);
-		buf.writeByteArray(data);
-	}
+	public static void handle(SyncTXPacket message, NetworkManager.PacketContext context) {
+		context.queue(() -> {
+			ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
+			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
 
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
-		ServerPlayer p = (ServerPlayer) context.getPlayer();
-		ChunkTeamDataImpl pd = ClaimedChunkManagerImpl.getInstance().getOrCreateData(p);
-
-		for (ServerPlayer p1 : p.getServer().getPlayerList().getPlayers()) {
-			if (p1 != p) {
-				if (pd.isAlly(p.getUUID())) {
-					new SyncRXPacket(key, offset, total, data).sendTo(p1);
+			for (ServerPlayer p1 : serverPlayer.getServer().getPlayerList().getPlayers()) {
+				if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
+					NetworkManager.sendToPlayer(p1, message);
 				}
 			}
-		}
+		});
 	}
 }

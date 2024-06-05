@@ -1,42 +1,31 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.SNBTNet;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.UUID;
 
-public class LoginDataPacket extends BaseS2CMessage {
-	private final UUID serverId;
-	private final SNBTCompoundTag config;
+public record LoginDataPacket(UUID serverId, SNBTCompoundTag config) implements CustomPacketPayload {
+	public static final Type<LoginDataPacket> TYPE = new Type<>(FTBChunksAPI.rl("login_data_packet"));
 
-	public LoginDataPacket(UUID serverId, SNBTCompoundTag config) {
-		this.serverId = serverId;
-		this.config = config;
-	}
-
-	LoginDataPacket(FriendlyByteBuf buf) {
-		serverId = buf.readUUID();
-		config = SNBTNet.readCompound(buf);
-	}
+	public static final StreamCodec<FriendlyByteBuf, LoginDataPacket> STREAM_CODEC = StreamCodec.composite(
+			UUIDUtil.STREAM_CODEC, LoginDataPacket::serverId,
+			SNBTCompoundTag.STREAM_CODEC, LoginDataPacket::config,
+			LoginDataPacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.LOGIN_DATA;
+	public Type<LoginDataPacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeUUID(serverId);
-		SNBTNet.write(buf, config);
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
-		FTBChunksClient.INSTANCE.handlePlayerLogin(serverId, config);
+	public static void handle(LoginDataPacket message, NetworkManager.PacketContext context) {
+		context.queue(() -> FTBChunksClient.INSTANCE.handlePlayerLogin(message.serverId, message.config));
 	}
 }

@@ -7,7 +7,6 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.monster.EnderMan;
-import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
@@ -48,7 +47,7 @@ public class FTBChunksForge {
 			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(event.getEntity()));
 
 			if (cc != null && !cc.allowMobGriefing()) {
-				event.setResult(Event.Result.DENY);
+				event.setCanGrief(false);
 			}
 		}
 	}

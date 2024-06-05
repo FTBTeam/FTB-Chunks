@@ -1,14 +1,17 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -16,32 +19,22 @@ import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public class PlayerVisibilityPacket extends BaseS2CMessage {
-	private final List<UUID> uuids;
+public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPayload {
+	public static final Type<PlayerVisibilityPacket> TYPE = new Type<>(FTBChunksAPI.rl("player_visibility_packet"));
 
-	private PlayerVisibilityPacket(List<UUID> uuids) {
-		this.uuids = uuids;
-	}
-
-	PlayerVisibilityPacket(FriendlyByteBuf buf) {
-		uuids = buf.readList(FriendlyByteBuf::readUUID);
-	}
+	public static final StreamCodec<FriendlyByteBuf, PlayerVisibilityPacket> STREAM_CODEC = StreamCodec.composite(
+			UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs.list()), PlayerVisibilityPacket::uuids,
+			PlayerVisibilityPacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.SEND_VISIBLE_PLAYER_LIST;
+	public Type<PlayerVisibilityPacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeCollection(uuids, FriendlyByteBuf::writeUUID);
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
-		VisibleClientPlayers.updatePlayerList(uuids);
+	public static void handle(PlayerVisibilityPacket message, NetworkManager.PacketContext context) {
+		context.queue(() -> VisibleClientPlayers.updatePlayerList(message.uuids));
 	}
 
 	public static void syncToLevel(Level level) {
@@ -62,7 +55,7 @@ public class PlayerVisibilityPacket extends BaseS2CMessage {
 		}
 		playerList = players.stream()
 				.map(player -> new VisiblePlayerItem(player, ClaimedChunkManagerImpl.getInstance().getOrCreateData(player)))
-				.collect(Collectors.toList());
+				.toList();
 
 		boolean override = FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE.get();
 		for (VisiblePlayerItem recipient : playerList) {
@@ -74,7 +67,7 @@ public class PlayerVisibilityPacket extends BaseS2CMessage {
 				}
 			}
 
-			new PlayerVisibilityPacket(playerIds).sendTo(recipient.player);
+			NetworkManager.sendToPlayer(recipient.player, new PlayerVisibilityPacket(playerIds));
 		}
 	}
 

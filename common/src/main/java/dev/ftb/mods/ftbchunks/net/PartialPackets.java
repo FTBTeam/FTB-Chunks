@@ -7,8 +7,8 @@ import dev.ftb.mods.ftbchunks.client.map.SyncRXTask;
 import java.util.*;
 
 public class PartialPackets<Key, Packet> {
-	public static final PartialPackets<RegionSyncKey, SyncTXPacket> REGION
-			= new PartialPackets<>(SyncTXPacket::new, (key, data) -> ClientTaskQueue.queue(new SyncRXTask(key, data)));
+	public static final PartialPackets<RegionSyncKey, SyncRXPacket> REGION
+			= new PartialPackets<>(SyncRXPacket::new, (key, data) -> ClientTaskQueue.queue(new SyncRXTask(key, data)));
 
 	public static class PartialData {
 		private int remaining;

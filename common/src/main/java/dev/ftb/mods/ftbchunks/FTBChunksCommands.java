@@ -8,6 +8,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UndashedUuid;
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
@@ -180,7 +181,7 @@ public class FTBChunksCommands {
 				.then(Commands.literal("block_color")
 //						.requires(source -> source.getServer().isSingleplayer())
 						.executes(context -> {
-							new RequestBlockColorPacket().sendTo(context.getSource().getPlayerOrException());
+							NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), new RequestBlockColorPacket());
 							return 1;
 						})
 				)
@@ -203,8 +204,7 @@ public class FTBChunksCommands {
 
 	private static int addWaypoint(CommandSourceStack source, String name, BlockPos position, ChatFormatting color) throws CommandSyntaxException {
 		if (color.getColor() != null) {
-			ServerPlayer player = source.getPlayerOrException();
-			new AddWaypointPacket(name, position, color.getColor()).sendTo(player);
+			NetworkManager.sendToPlayer(source.getPlayerOrException(), new AddWaypointPacket(name, position, color.getColor()));
 		}
 		return 1;
 	}
@@ -465,13 +465,13 @@ public class FTBChunksCommands {
 		}
 
 		source.sendSuccess(() -> Component.literal(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
-		new LoadedChunkViewPacket(level.dimension(), chunks).sendTo(source.getPlayerOrException());
+		NetworkManager.sendToPlayer(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), chunks));
 
 		return 1;
 	}
 
 	private static int resetLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
-		new LoadedChunkViewPacket(level.dimension(), Long2IntMaps.EMPTY_MAP).sendTo(source.getPlayerOrException());
+		NetworkManager.sendToPlayer(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), Long2IntMaps.EMPTY_MAP));
 		return 1;
 	}
 

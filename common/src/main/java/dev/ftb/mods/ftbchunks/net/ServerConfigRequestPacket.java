@@ -1,64 +1,57 @@
 package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseC2SMessage;
-import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.SNBTNet;
 import dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.nio.file.Path;
 
-public class ServerConfigRequestPacket extends BaseC2SMessage {
-    private final SNBTCompoundTag config;
+public record ServerConfigRequestPacket(SNBTCompoundTag config) implements CustomPacketPayload {
+    public static final Type<ServerConfigRequestPacket> TYPE = new Type<>(FTBChunksAPI.rl("server_config_request_packet"));
 
-    public ServerConfigRequestPacket(SNBTCompoundTag config) {
-        this.config = config;
-    }
-
-    public ServerConfigRequestPacket(FriendlyByteBuf buf) {
-        config = SNBTNet.readCompound(buf);
-    }
+    public static final StreamCodec<FriendlyByteBuf, ServerConfigRequestPacket> STREAM_CODEC = StreamCodec.composite(
+            SNBTCompoundTag.STREAM_CODEC, ServerConfigRequestPacket::config,
+            ServerConfigRequestPacket::new
+    );
 
     @Override
-    public MessageType getType() {
-        return FTBChunksNet.SERVER_CONFIG_REQUEST;
+    public Type<ServerConfigRequestPacket> type() {
+        return TYPE;
     }
 
-    @Override
-    public void write(FriendlyByteBuf buf) {
-        SNBTNet.write(buf, config);
-    }
-
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
+    public static void handle(ServerConfigRequestPacket message, NetworkManager.PacketContext context) {
         if (context.getPlayer() instanceof ServerPlayer sp && sp.hasPermissions(2)) {
-            MinecraftServer server = sp.getServer();
+            context.queue(() -> {
+                MinecraftServer server = sp.getServer();
 
-            FTBChunks.LOGGER.info("FTB Chunks server config updated from client by player {}", sp.getName().getString());
-            FTBChunksWorldConfig.CONFIG.read(config);
+                FTBChunks.LOGGER.info("FTB Chunks server config updated from client by player {}", sp.getName().getString());
+                FTBChunksWorldConfig.CONFIG.read(message.config);
 
-            DimensionFilter.clearMatcherCaches();
+                DimensionFilter.clearMatcherCaches();
 
-            Path file = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR).resolve(FTBChunksWorldConfig.CONFIG.key + ".snbt");
-            FTBChunksWorldConfig.CONFIG.save(file);
+                Path file = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR).resolve(FTBChunksWorldConfig.CONFIG.key + ".snbt");
+                FTBChunksWorldConfig.CONFIG.save(file);
 
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                if (!sp.getUUID().equals(player.getUUID())) {
-                    new ServerConfigResponsePacket(config).sendTo(player);
+                for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                    if (!sp.getUUID().equals(player.getUUID())) {
+                        NetworkManager.sendToPlayer(player, new ServerConfigResponsePacket(message.config));
+                    }
                 }
-            }
 
-            FTBTeamsAPI.api().getManager().getTeams().forEach(team ->
-                    ClaimedChunkManagerImpl.getInstance().getOrCreateData(team).updateLimits());
+                FTBTeamsAPI.api().getManager().getTeams().forEach(team ->
+                        ClaimedChunkManagerImpl.getInstance().getOrCreateData(team).updateLimits());
+            });
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
@@ -111,7 +112,7 @@ public interface FTBChunksClientConfig {
 			if (accepted) {
 				SNBTCompoundTag config = new SNBTCompoundTag();
 				FTBChunksWorldConfig.CONFIG.write(config);
-				new ServerConfigRequestPacket(config).sendToServer();
+				NetworkManager.sendToServer(new ServerConfigRequestPacket(config));
 			}
 			Minecraft.getInstance().setScreen(screen);
 		});

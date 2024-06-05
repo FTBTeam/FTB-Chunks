@@ -11,8 +11,6 @@ import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
-import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
@@ -537,7 +535,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public void syncChunksToPlayer(ServerPlayer recipient) {
 		chunksByDimension().forEach((dimension, chunkPackets) -> {
 			if (!chunkPackets.isEmpty()) {
-				ChunkSendingUtils.sendManyChunksToPlayer(recipient, this, new SendManyChunksPacket(dimension, getTeamId(), chunkPackets));
+				new SendManyChunksPacket(dimension, getTeamId(), chunkPackets).sendToPlayer(recipient, this);
 			}
 		});
 	}
@@ -545,16 +543,16 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public void syncChunksToAll(MinecraftServer server) {
 		chunksByDimension().forEach((dimension, chunkPackets) -> {
 			if (!chunkPackets.isEmpty()) {
-				ChunkSendingUtils.sendManyChunksToAll(server, this, new SendManyChunksPacket(dimension, getTeamId(), chunkPackets));
+				new SendManyChunksPacket(dimension, getTeamId(), chunkPackets).sendToAll(server, this);
 			}
 		});
 	}
 
-	private Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksByDimension() {
+	private Map<ResourceKey<Level>, List<ChunkSyncInfo>> chunksByDimension() {
 		long now = System.currentTimeMillis();
 		return getClaimedChunks().stream()
 				.collect(Collectors.groupingBy(
-						c -> c.getPos().dimension(), Collectors.mapping(c -> new SendChunkPacket.SingleChunk(now, c.getPos().x(), c.getPos().z(), c), Collectors.toList())
+						c -> c.getPos().dimension(), Collectors.mapping(c -> ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), c), Collectors.toList())
 				));
 	}
 

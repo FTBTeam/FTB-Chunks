@@ -1,56 +1,44 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import com.google.common.collect.Sets;
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseC2SMessage;
-import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 
-public class RequestChunkChangePacket extends BaseC2SMessage {
-	private final ChunkChangeOp action;
-	private final Set<XZ> chunks;
+public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks) implements CustomPacketPayload {
+	public static final Type<RequestChunkChangePacket> TYPE = new Type<>(FTBChunksAPI.rl("request_chunk_change_packet"));
 
-	public RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks) {
-		this.action = action;
-		this.chunks = chunks;
-	}
-
-	RequestChunkChangePacket(FriendlyByteBuf buf) {
-		action = buf.readEnum(ChunkChangeOp.class);
-		chunks = buf.readCollection(Sets::newHashSetWithExpectedSize, buf1 -> XZ.of(buf1.readVarInt(), buf1.readVarInt()));
-	}
+	public static final StreamCodec<FriendlyByteBuf, RequestChunkChangePacket> STREAM_CODEC = StreamCodec.composite(
+			NetworkHelper.enumStreamCodec(ChunkChangeOp.class), RequestChunkChangePacket::action,
+			XZ.STREAM_CODEC.apply(ByteBufCodecs.collection(HashSet::new)), RequestChunkChangePacket::chunks,
+			RequestChunkChangePacket::new
+	);
 
 	@Override
-	public MessageType getType() {
-		return FTBChunksNet.REQUEST_CHUNK_CHANGE;
+	public Type<RequestChunkChangePacket> type() {
+		return TYPE;
 	}
 
-	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeEnum(action);
-		buf.writeCollection(chunks, (buf1, xz) -> {
-			buf1.writeVarInt(xz.x());
-			buf1.writeVarInt(xz.z());
-		});
-	}
-
-	@Override
-	public void handle(NetworkManager.PacketContext context) {
+	public static void handle(RequestChunkChangePacket message, NetworkManager.PacketContext context) {
 		ServerPlayer player = (ServerPlayer) context.getPlayer();
 		CommandSourceStack source = player.createCommandSourceStack();
 		ChunkTeamData data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
-		Function<XZ, ClaimResult> consumer = switch (action) {
+		Function<XZ, ClaimResult> consumer = switch (message.action) {
 			case CLAIM -> pos -> data.claim(source, pos.dim(player.level()), false);
 			case UNCLAIM -> pos -> data.unclaim(source, pos.dim(player.level()), false);
 			case LOAD -> pos -> data.forceLoad(source, pos.dim(player.level()), false);
@@ -59,11 +47,11 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 
 		EnumMap<ClaimResult.StandardProblem,Integer> problems = new EnumMap<>(ClaimResult.StandardProblem.class);
 		int changed = 0;
-		for (XZ pos : chunks) {
+		for (XZ pos : message.chunks) {
 			ClaimResult r = consumer.apply(pos);
 			if (!r.isSuccess()) {
 				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(),
-						action.name, player.level().dimension().location(), pos.x(), pos.z(), r));
+						message.action.name, player.level().dimension().location(), pos.x(), pos.z(), r));
 				if (r instanceof ClaimResult.StandardProblem cr) {
 					problems.put(cr, problems.getOrDefault(cr, 0) + 1);
 				}
@@ -72,7 +60,7 @@ public class RequestChunkChangePacket extends BaseC2SMessage {
 			}
 		}
 
-		new ChunkChangeResponsePacket(chunks.size(), changed, problems).sendTo(player);
+		NetworkManager.sendToPlayer(player, new ChunkChangeResponsePacket(message.chunks.size(), changed, problems));
 
 		SendGeneralDataPacket.send(data, player);
 	}

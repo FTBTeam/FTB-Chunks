@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
-import dev.ftb.mods.ftbchunks.net.ChunkSendingUtils;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
@@ -113,7 +113,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 			}
 
 			ServerChunkCache cache = level.getChunkSource();
-			ChunkPos chunkPos = pos.getChunkPos();
+			ChunkPos chunkPos = pos.chunkPos();
 
 			if (cache != null) {
 				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
@@ -137,8 +137,8 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	public void sendUpdateToAll() {
-		SendChunkPacket packet = new SendChunkPacket(pos.dimension(), teamData.getTeamId(), new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x(), pos.z(), this));
-		ChunkSendingUtils.sendChunkToAll(teamData.getManager().getMinecraftServer(), teamData, packet);
+		new SendChunkPacket(pos.dimension(), teamData.getTeamId(), ChunkSyncInfo.create(System.currentTimeMillis(), pos.x(), pos.z(), this))
+				.sendToAll(teamData.getManager().getMinecraftServer(), teamData);
 	}
 
 	@Override
@@ -162,8 +162,8 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		teamData.markDirty();
 
 		if (sync) {
-			SendChunkPacket packet = new SendChunkPacket(pos.dimension(), Util.NIL_UUID, new SendChunkPacket.SingleChunk(System.currentTimeMillis(), pos.x(), pos.z(), null));
-			packet.sendToAll(source.getServer());
+			SendChunkPacket packet = new SendChunkPacket(pos.dimension(), Util.NIL_UUID, ChunkSyncInfo.create(System.currentTimeMillis(), pos.x(), pos.z(), null));
+			NetworkManager.sendToPlayers(source.getServer().getPlayerList().getPlayers(), packet);
 		}
 	}
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * Fixed server crash related to long range player tracking
+* Fixed the sidebar map buttons ignoring any GameStages restrictions in force
 
 ## [2004.1.2]
 

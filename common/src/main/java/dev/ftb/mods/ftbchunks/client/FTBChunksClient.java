@@ -386,14 +386,15 @@ public class FTBChunksClient extends FTBChunksCommon {
 	}
 
 	public EventResult customClick(CustomClickEvent event) {
-		if (event.id().equals(BUTTON_ID_MAP)) {
-			openGui();
-			return EventResult.interruptTrue();
-		} else if (event.id().equals(BUTTON_ID_CLAIM)) {
-			new ChunkScreen().openGui();
-			return EventResult.interruptTrue();
+		if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
+			if (event.id().equals(BUTTON_ID_MAP)) {
+				openGui();
+				return EventResult.interruptTrue();
+			} else if (event.id().equals(BUTTON_ID_CLAIM)) {
+				new ChunkScreen().openGui();
+				return EventResult.interruptTrue();
+			}
 		}
-
 		return EventResult.pass();
 	}
 

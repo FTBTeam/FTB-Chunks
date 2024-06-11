@@ -10,9 +10,9 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.ChunkPos;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,14 +63,14 @@ public class MapRegion implements MapTask {
 		return lastDataAccess;
 	}
 
-	@Nonnull
+	@NotNull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.manager.lock) {
 			return getDataBlockingNoSync();
 		}
 	}
 
-	@Nonnull
+	@NotNull
 	public MapRegionData getDataBlockingNoSync() {
 		if (data == null) {
 			data = new MapRegionData(this);

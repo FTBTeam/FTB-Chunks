@@ -26,9 +26,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -251,7 +251,7 @@ public class ClaimedChunkManager {
 		return forceLoadedChunkCache;
 	}
 
-	@Nonnull
+	@NotNull
 	public Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension) {
 		return getForceLoadedChunks().getOrDefault(dimension, EMPTY_CHUNKS);
 	}

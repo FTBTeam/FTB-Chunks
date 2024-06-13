@@ -1,8 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import dev.ftb.mods.ftblibrary.config.NameMap;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author LatvianModder
@@ -59,7 +58,7 @@ public enum MinimapPosition {
 		public static final NameMap<MinimapOffsetConditional> NAME_MAP = NameMap.of(NONE, values()).baseNameKey("ftbchunks.minimap.position").create();
 
 		@Nullable
-		private MinimapPosition position;
+		private final MinimapPosition position;
 
 		MinimapOffsetConditional(@Nullable MinimapPosition position) {
 			this.position = position;

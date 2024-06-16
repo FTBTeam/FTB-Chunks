@@ -60,7 +60,7 @@ public class MapManager implements MapTask {
 		needsSave = false;
 
 		blockColorIndexMap = new Int2ObjectOpenHashMap<>();
-		blockColorIndexMap.defaultReturnValue(new ResourceLocation("minecraft:air"));
+		blockColorIndexMap.defaultReturnValue(ResourceLocation.fromNamespaceAndPath("minecraft", "air"));
 		blockColorIndexMapReverse = new Object2IntOpenHashMap<>();
 		blockColorIndexMapReverse.defaultReturnValue(0);
 		biomeColorIndexMap = new Int2ObjectOpenHashMap<>();
@@ -78,7 +78,7 @@ public class MapManager implements MapTask {
 					s = s.trim();
 
 					if (s.length() >= 3) {
-						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(s));
+						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(s));
 						dimensions.put(key, new MapDimension(this, key, directory));
 					}
 				}
@@ -95,7 +95,7 @@ public class MapManager implements MapTask {
 					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
-						ResourceLocation loc = new ResourceLocation(s1[1]);
+						ResourceLocation loc = ResourceLocation.tryParse(s1[1]);
 						blockColorIndexMap.put(i, loc);
 						blockColorIndexMapReverse.put(loc, i);
 					}
@@ -113,7 +113,7 @@ public class MapManager implements MapTask {
 					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
-						ResourceLocation loc = new ResourceLocation(s1[1]);
+						ResourceLocation loc = ResourceLocation.tryParse(s1[1]);
 						ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, loc);
 						biomeColorIndexMap.put(i, key);
 					}

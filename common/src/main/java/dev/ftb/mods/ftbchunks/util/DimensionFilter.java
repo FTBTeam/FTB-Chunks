@@ -56,11 +56,12 @@ public class DimensionFilter {
         private final Set<ResourceLocation> reslocs = new ObjectOpenHashSet<>();
 
         public WildcardedRLMatcher(Collection<String> toMatch) {
+            ResourceLocation location;
             for (String s : toMatch) {
                 if (s.endsWith(":*")) {
                     namespaces.add(s.split(":")[0]);
-                } else if (ResourceLocation.isValidResourceLocation(s)) {
-                    reslocs.add(new ResourceLocation(s));
+                } else if ((location = ResourceLocation.tryParse(s)) != null) {
+                    reslocs.add(location);
                 }
             }
         }

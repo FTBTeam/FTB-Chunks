@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client.mapicon;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -39,14 +40,14 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 				continue;
 			}
 
-			ResourceLocation invisible = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".invisible");
+			ResourceLocation invisible = FTBChunksAPI.rl("textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".invisible");
 
 			if (resourceManager.getResource(invisible).isPresent()) {
 				map.put(t, Color4I.empty());
 				continue;
 			}
 
-			ResourceLocation texture = new ResourceLocation("ftbchunks:textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".png");
+			ResourceLocation texture = FTBChunksAPI.rl("textures/faces/" + id.getNamespace() + "/" + id.getPath() + ".png");
 
 			if (resourceManager.getResource(texture).isPresent()) {
 				map.put(t, Icon.getIcon(texture));

@@ -28,7 +28,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			array[i] = i;
 		}
 	});
-	private static final ResourceLocation AIR = new ResourceLocation("minecraft:air");
+	private static final ResourceLocation AIR = ResourceLocation.fromNamespaceAndPath("minecraft", "air");
 	private static long debugLastTime = 0L;
 
 	private MapManager manager;

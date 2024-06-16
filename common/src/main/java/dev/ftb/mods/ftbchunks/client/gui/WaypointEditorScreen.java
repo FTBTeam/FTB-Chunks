@@ -31,7 +31,7 @@ import java.util.Objects;
 
 public class WaypointEditorScreen extends BaseScreen {
     public static final Color4I COLOR_BACKGROUND = Color4I.rgba(0xC0333333);
-    private static final Icon PEARL_ICON = ImageIcon.getIcon(new ResourceLocation("minecraft", "textures/item/ender_pearl.png"));
+    private static final Icon PEARL_ICON = ImageIcon.getIcon(ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/ender_pearl.png"));
 
     public static final Theme THEME = new Theme() {
         @Override

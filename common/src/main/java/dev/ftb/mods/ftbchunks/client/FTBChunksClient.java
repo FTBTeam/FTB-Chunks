@@ -60,6 +60,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.Holder;
@@ -99,6 +101,7 @@ import java.util.*;
 public enum FTBChunksClient {
 	INSTANCE;
 
+	public static final ResourceLocation WAYPOINT_BEAM = FTBChunksAPI.rl("textures/waypoint_beam.png");
 	private static final ResourceLocation BUTTON_ID_MAP = FTBChunksAPI.rl("open_gui");
 	private static final ResourceLocation BUTTON_ID_CLAIM = FTBChunksAPI.rl("open_claim_gui");
 
@@ -843,7 +846,8 @@ public enum FTBChunksClient {
 		poseStack.pushPose();
 		poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
-		VertexConsumer depthBuffer = mc.renderBuffers().bufferSource().getBuffer(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
+		RenderType renderType = RenderType.beaconBeam(WAYPOINT_BEAM, true);
+		VertexConsumer depthBuffer = mc.renderBuffers().bufferSource().getBuffer(renderType);
 
 		float y1 = (float) (cameraPos.y + 30D);
 		float y2 = y1 + 70F;
@@ -856,7 +860,7 @@ public enum FTBChunksClient {
 
 		poseStack.popPose();
 
-		mc.renderBuffers().bufferSource().endBatch(FTBChunksRenderTypes.WAYPOINTS_DEPTH);
+		mc.renderBuffers().bufferSource().endBatch(renderType);
 	}
 
 	private static void drawWaypointBeacon(PoseStack poseStack, Vec3 cameraPos, VertexConsumer depthBuffer, float y1, float y2, int yMin, WaypointIcon waypoint) {
@@ -876,15 +880,23 @@ public enum FTBChunksClient {
 
 		Matrix4f m = poseStack.last().pose();
 
-		depthBuffer.addVertex(m, -s, yMin, s).setColor(r, g, b, alpha).setUv(0F, 1F);
-		depthBuffer.addVertex(m, -s, y1, s).setColor(r, g, b, alpha).setUv(0F, 0F);
-		depthBuffer.addVertex(m, s, y1, -s).setColor(r, g, b, alpha).setUv(1F, 0F);
-		depthBuffer.addVertex(m, s, yMin, -s).setColor(r, g, b, alpha).setUv(1F, 1F);
+		depthBuffer.addVertex(m, -s, yMin, s).setColor(r, g, b, alpha).setUv(0F, 1F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
+		depthBuffer.addVertex(m, -s, y1, s).setColor(r, g, b, alpha).setUv(0F, 0F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
+		depthBuffer.addVertex(m, s, y1, -s).setColor(r, g, b, alpha).setUv(1F, 0F).
+				setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
+		depthBuffer.addVertex(m, s, yMin, -s).setColor(r, g, b, alpha).setUv(1F, 1F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
 
-		depthBuffer.addVertex(m, -s, y1, s).setColor(r, g, b, alpha).setUv(0F, 1F);
-		depthBuffer.addVertex(m, -s, y2, s).setColor(r, g, b, 0).setUv(0F, 0F);
-		depthBuffer.addVertex(m, s, y2, -s).setColor(r, g, b, 0).setUv(1F, 0F);
-		depthBuffer.addVertex(m, s, y1, -s).setColor(r, g, b, alpha).setUv(1F, 1F);
+		depthBuffer.addVertex(m, -s, y1, s).setColor(r, g, b, alpha).setUv(0F, 1F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
+		depthBuffer.addVertex(m, -s, y2, s).setColor(r, g, b, 0).setUv(0F, 0F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
+		depthBuffer.addVertex(m, s, y2, -s).setColor(r, g, b, 0).setUv(1F, 0F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
+		depthBuffer.addVertex(m, s, y1, -s).setColor(r, g, b, alpha).setUv(1F, 1F)
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(poseStack.last(), 0f, 1f, 0f);
 
 		poseStack.popPose();
 	}

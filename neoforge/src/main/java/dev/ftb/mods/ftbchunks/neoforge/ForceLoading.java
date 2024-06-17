@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.neoforge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.bus.api.IEventBus;
@@ -23,7 +23,7 @@ public class ForceLoading {
     }
 
     private static void registerTicketController(RegisterTicketControllersEvent event) {
-        ticketController = new TicketController(new ResourceLocation(FTBChunks.MOD_ID, "default"), ForceLoading::validateLoadedChunks);
+        ticketController = new TicketController(FTBChunksAPI.rl("default"), ForceLoading::validateLoadedChunks);
 
         event.register(ticketController);
     }

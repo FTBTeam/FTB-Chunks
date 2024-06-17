@@ -85,7 +85,7 @@ public class TeamMemberData {
         Set<ChunkDimPos> res = new HashSet<>();
         for (String dimStr : tag.getAllKeys()) {
             try {
-                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(dimStr));
+                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(dimStr));
                 Set<ChunkDimPos> cdpSet = new HashSet<>();
                 tag.getList(dimStr, Tag.TAG_COMPOUND).forEach(el -> {
                     if (el instanceof CompoundTag c) {

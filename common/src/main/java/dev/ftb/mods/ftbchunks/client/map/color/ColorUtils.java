@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.map.color;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 
@@ -40,7 +40,7 @@ public class ColorUtils {
 		if (reducedColorPalette == null) {
 			reducedColorPalette = new Color4I[0];
 
-			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/reduced_color_palette.png")).orElseThrow().open()) {
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(FTBChunksAPI.rl("textures/reduced_color_palette.png")).orElseThrow().open()) {
 				NativeImage image = NativeImage.read(stream);
 				int w = image.getWidth();
 				int h = image.getHeight();
@@ -90,7 +90,7 @@ public class ColorUtils {
 		if (topographyPalette == null) {
 			topographyPalette = new Color4I[0];
 
-			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/topography_palette.png")).orElseThrow().open()) {
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(FTBChunksAPI.rl("textures/topography_palette.png")).orElseThrow().open()) {
 				NativeImage image = NativeImage.read(stream);
 				int w = image.getWidth();
 				int h = image.getHeight();
@@ -116,7 +116,7 @@ public class ColorUtils {
 		if (lightMapPalette == null) {
 			lightMapPalette = new Color4I[0][0];
 
-			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("ftbchunks:textures/lightmap_palette.png")).orElseThrow().open()) {
+			try (InputStream stream = Minecraft.getInstance().getResourceManager().getResource(FTBChunksAPI.rl("textures/lightmap_palette.png")).orElseThrow().open()) {
 				NativeImage image = NativeImage.read(stream);
 				int w = image.getWidth();
 				int h = image.getHeight();

@@ -383,7 +383,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		CompoundTag chunksTag = tag.getCompound("chunks");
 
 		for (String key : chunksTag.getAllKeys()) {
-			ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(key));
+			ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(key));
 			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
 
 			for (int i = 0; i < chunksListTag.size(); i++) {

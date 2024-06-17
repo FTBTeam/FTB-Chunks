@@ -6,6 +6,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
@@ -32,7 +33,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
@@ -42,7 +42,7 @@ import java.util.*;
 import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
 
 public class ChunkScreen extends BaseScreen {
-	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(new ResourceLocation(FTBChunks.MOD_ID, "textures/force_loaded.png"));
+	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.rl("textures/force_loaded.png"));
 
 	private final MapDimension dimension;
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();

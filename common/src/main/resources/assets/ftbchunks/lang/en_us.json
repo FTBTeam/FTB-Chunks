@@ -122,6 +122,8 @@
 	"ftbteamsconfig.ftbchunks.location_mode.tooltip": "Controls who can see you on the map or minimap (outside the normal vanilla tracking range)",
 	"ftbteamsconfig.ftbchunks.claim_visibility": "Claim Visibility",
 	"ftbteamsconfig.ftbchunks.claim_visibility.tooltip": "Controls who can see your claims on the map or minimap",
+	"ftbteamsconfig.ftbchunks.owner_unclaim": "Owner Unclaim",
+	"ftbteamsconfig.ftbchunks.owner_unclaim.tooltip": "When true, only team owners can unclaim chunks",
 	"ftbchunks.fake_players": "Allow Fake Players",
 	"ftbchunks.fake_players.tooltip": "CHECK: check fake player access like any real player\nDENY: never allow fake players\nALLOW: always allow fake players",
 	"ftbchunks.max_claimed_chunks": "Max Claimed Chunks per Player",

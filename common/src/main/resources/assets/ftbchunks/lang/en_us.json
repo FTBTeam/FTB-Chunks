@@ -201,5 +201,9 @@
 	"ftbchunks.need_to_claim_chunk": "You need to claim this chunk to interact with blocks here!",
 	"ftbchunks.label.show": "Show",
 	"ftbchunks.label.hide": "Hide",
-	"ftbchunks.message.no_pvp": "PvP combat is disabled here"
+	"ftbchunks.message.no_pvp": "PvP combat is disabled here",
+	"ftbchunks.game_time": "Game Time: %s",
+	"ftbchunks.real_time": "Real Time: %s",
+	"ftbchunks.fps": "FPS: %d",
+	"ftbchuns.minimap_game_time": "Show Game Time"
 }

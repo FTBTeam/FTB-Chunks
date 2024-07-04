@@ -96,6 +96,9 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
 import java.util.*;
 
 public enum FTBChunksClient {
@@ -745,6 +748,35 @@ public enum FTBChunksClient {
 			);
 		}
 
+		boolean showTimeKey = FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF && FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
+
+		if (FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
+			long time = mc.level.getDayTime() % 24000L;
+			int hours = (int) (time / 1000L);
+			int minutes = (int) ((time % 1000L) * 60L / 1000L);
+
+			String timeString = createTimeString(hours, minutes, FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+			if(showTimeKey) {
+				timeString = "G: " + timeString;
+			}
+			res.add(Component.literal(timeString));
+		}
+
+		if (FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
+			LocalDateTime now = LocalDateTime.now();
+			int hour = now.getHour();
+			int minute = now.getMinute();
+			String timeString = createTimeString(hour, minute, FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+			if(showTimeKey) {
+				timeString = "R: " + timeString;
+			}
+			res.add(Component.literal(timeString));
+		}
+
+		if (FTBChunksClientConfig.SHOW_FPS.get()) {
+			res.add(Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()));
+		}
+
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
 			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
 			long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
@@ -758,6 +790,21 @@ public enum FTBChunksClient {
 		}
 
 		return res;
+	}
+
+	public static String createTimeString(int hours, int minutes, boolean twentyFourFormat) {
+		if(twentyFourFormat) {
+			return String.format("%02d:%02d", hours, minutes);
+		} else {
+			String ampm = hours >= 12 ? "PM" : "AM";
+			if(hours == 0) {
+				hours = 12;
+			} else if(hours > 12) {
+				hours -= 12;
+			}
+			return String.format("%02d:%02d %s", hours, minutes, ampm);
+		}
+
 	}
 
 	private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, DeltaTracker tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {

@@ -50,6 +50,186 @@
 		{
 			"id": "fwaystones:blackstone_brick_waystone",
 			"required": false
+		},
+		{
+			"id": "lightmanscurrency:atm",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:paygate",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:ticket_machine",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_oak",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_birch",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_spruce",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_jungle",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_acacia",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_dark_oak",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_crimson",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:shelf_warped",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:display_case",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:armor_display",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:freezer",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:freezer",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_oak",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_birch",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_spruce",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_jungle",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_acacia",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_dark_oak",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_crimson",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:card_display_warped",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_red",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_blue",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_green",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_pink",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_lightblue",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_lime",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_yellow",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_black",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_red",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_blue",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_green",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_pink",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_lightblue",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_lime",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_yellow",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:vending_machine_large_black",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:item_trader_server_sml",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:item_trader_server_med",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:item_trader_server_lrg",
+			"required": false
+		},
+		{
+			"id": "lightmanscurrency:item_trader_server_xlrg",
+			"required": false
 		}
 	]
 }

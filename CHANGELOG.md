@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 * Added gui button to teleport to way point
+* Added waypoint sharing
 
 ## [2001.3.1]
 

@@ -42,6 +42,11 @@ public interface FTBChunksWorldConfig {
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
 	IntValue MAX_PREVENTED_LOG_AGE = CONFIG.addInt("max_prevented_log_age", 7, 1, Integer.MAX_VALUE).comment("Maximum time in days to keep logs of prevented fakeplayer access to a team's claims.");
 
+	SNBTConfig WAYPOINT_SHARING = CONFIG.addGroup("waypoint_sharing");
+	BooleanValue WAYPOINT_SHARING_SERVER = WAYPOINT_SHARING.addBoolean("waypoint_sharing_server", true).comment("Allow players to share waypoints with the entire server.");
+	BooleanValue WAYPOINT_SHARING_PARTY = WAYPOINT_SHARING.addBoolean("waypoint_sharing_party", true).comment("Allow players to share waypoints with their party.");
+	BooleanValue WAYPOINT_SHARING_TEAM = WAYPOINT_SHARING.addBoolean("waypoint_sharing_players", true).comment("Allow players to share waypoints with other players.");
+
 	static int getMaxClaimedChunks(ChunkTeamData playerData, ServerPlayer player) {
 		if (player != null) {
 			return PermissionsHelper.getMaxClaimedChunks(player, MAX_CLAIMED_CHUNKS.get()) + playerData.getExtraClaimChunks();

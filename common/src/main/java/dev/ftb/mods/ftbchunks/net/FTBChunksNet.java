@@ -8,6 +8,7 @@ public interface FTBChunksNet {
 	SimpleNetworkManager MAIN = SimpleNetworkManager.create(FTBChunks.MOD_ID);
 
 	MessageType REQUEST_MAP_DATA = MAIN.registerC2S("request_map_data", RequestMapDataPacket::new);
+	MessageType SHARE_WAYPOINT = MAIN.registerC2S("share_waypoint", ShareWaypointPacket::new);
 	MessageType SEND_ALL_CHUNKS = MAIN.registerS2C("send_all_chunks", SendManyChunksPacket::new);
 	MessageType LOGIN_DATA = MAIN.registerS2C("login_data", LoginDataPacket::new);
 	MessageType REQUEST_CHUNK_CHANGE = MAIN.registerC2S("request_chunk_change", RequestChunkChangePacket::new);

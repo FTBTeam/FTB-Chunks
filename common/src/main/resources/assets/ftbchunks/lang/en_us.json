@@ -202,6 +202,10 @@
 	"ftbchunks.label.show": "Show",
 	"ftbchunks.label.hide": "Hide",
 	"ftbchunks.message.no_pvp": "PvP combat is disabled here",
+	"ftbchunks.game_time": "Game Time: %s",
+	"ftbchunks.real_time": "Real Time: %s",
+	"ftbchunks.fps": "FPS: %d",
+	"ftbchunks.minimap_game_time": "Show Game Time"
 	"ftbchunks.waypoint.shared": "Has shared %s with you",
 	"ftbchunks.waypoint.share": "Share",
 	"ftbchunks.waypoint.share.server": "Server",

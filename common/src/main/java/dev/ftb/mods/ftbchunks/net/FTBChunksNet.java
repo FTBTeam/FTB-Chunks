@@ -10,6 +10,7 @@ public class FTBChunksNet {
 		NetworkHelper.registerC2S(TeleportFromMapPacket.TYPE, TeleportFromMapPacket.STREAM_CODEC, TeleportFromMapPacket::handle);
 		NetworkHelper.registerC2S(UpdateForceLoadExpiryPacket.TYPE, UpdateForceLoadExpiryPacket.STREAM_CODEC, UpdateForceLoadExpiryPacket::handle);
 		NetworkHelper.registerC2S(SyncTXPacket.TYPE, SyncTXPacket.STREAM_CODEC, SyncTXPacket::handle);
+		NetworkHelper.registerC2S(ShareWaypointPacket.TYPE, ShareWaypointPacket.STREAM_CODEC, ShareWaypointPacket::handle);
 
 		NetworkHelper.registerS2C(AddWaypointPacket.TYPE, AddWaypointPacket.STREAM_CODEC, AddWaypointPacket::handle);
 		NetworkHelper.registerS2C(ChunkChangeResponsePacket.TYPE, ChunkChangeResponsePacket.STREAM_CODEC, ChunkChangeResponsePacket::handle);

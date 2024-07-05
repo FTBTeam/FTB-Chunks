@@ -205,7 +205,9 @@
 	"ftbchunks.game_time": "Game Time: %s",
 	"ftbchunks.real_time": "Real Time: %s",
 	"ftbchunks.fps": "FPS: %d",
-	"ftbchunks.minimap_game_time": "Show Game Time"
+	"ftbchunks.minimap.show_game_time": "Show Game Time",
+	"ftbchunks.minimap.show_fps": "Show FPS",
+	"ftbchunks.minimap.show_real_time": "Show Real Time",
 	"ftbchunks.waypoint.shared": "Has shared %s with you",
 	"ftbchunks.waypoint.share": "Share",
 	"ftbchunks.waypoint.share.server": "Server",

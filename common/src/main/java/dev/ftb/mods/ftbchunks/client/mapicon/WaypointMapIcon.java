@@ -1,14 +1,19 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.architectury.networking.NetworkManager;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
+import dev.ftb.mods.ftbchunks.net.ShareWaypointPacket;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
@@ -17,14 +22,21 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.NordButton;
+import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.client.KnownClientPlayer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Items;
@@ -32,7 +44,10 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 	private final WaypointImpl waypoint;
@@ -104,11 +119,81 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 		contextMenu.add(ContextMenuItem.SEPARATOR);
 
 		LocalPlayer player = Minecraft.getInstance().player;
+		GlobalPos waypointPos = GlobalPos.of(waypoint.getDimension(), waypoint.getPos());
 		if(player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
 			contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), b -> {
 				new TeleportFromMapPacket(waypoint.getPos().above(), false, waypoint.getDimension()).sendToServer();
 				screen.closeGui(false);
 			}));
+		}
+
+		boolean shareServer = FTBChunksWorldConfig.WAYPOINT_SHARING_SERVER.get();
+		boolean shareParty = FTBChunksWorldConfig.WAYPOINT_SHARING_PARTY.get();
+		boolean sharePlayers = FTBChunksWorldConfig.WAYPOINT_SHARING_TEAM.get();
+
+		List<ContextMenuItem> shareMenu = new ArrayList<>();
+		if(shareServer) {
+			shareMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.server"), Icons.BEACON, b -> {
+				new ShareWaypointPacket(waypoint.getName(), waypointPos, ShareWaypointPacket.ShareType.SERVER, Collections.emptyList()).sendToServer();
+				screen.closeGui(false);
+			}));
+		}
+		if(shareParty) {
+			shareMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.party"), Icons.BELL, b -> {
+				new ShareWaypointPacket(waypoint.getName(), waypointPos, ShareWaypointPacket.ShareType.PARTY, Collections.emptyList()).sendToServer();
+				screen.closeGui(false);
+			}));
+		}
+		if(sharePlayers) {
+			shareMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.player"), Icons.PLAYER, b -> {
+				Collection<KnownClientPlayer> knownClientPlayers = FTBTeamsAPI.api().getClientManager().knownClientPlayers();
+				List<GameProfile> list = knownClientPlayers.stream()
+						.filter(KnownClientPlayer::online)
+						.filter(p -> !p.id().equals(player.getGameProfile().getId()))
+						.map(KnownClientPlayer::profile).toList();
+				List<GameProfile> selectedProfiles = new ArrayList<>();
+				new AbstractButtonListScreen() {
+
+					@Override
+					protected void doCancel() {
+						screen.closeGui(true);
+					}
+
+					@Override
+					protected void doAccept() {
+						new ShareWaypointPacket(waypoint.getName(), waypointPos, ShareWaypointPacket.ShareType.PLAYER, selectedProfiles.stream().map(GameProfile::getId).toList()).sendToServer();
+						screen.closeGui(false);
+					}
+
+					@Override
+					public void addButtons(Panel panel) {
+						for (GameProfile gameProfile : list) {
+							Component unchecked = (Component.literal("☐ ")).append(gameProfile.getName());
+							Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.getName());
+							NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile)) {
+								@Override
+								public void onClicked(MouseButton button) {
+									if(selectedProfiles.contains(gameProfile)) {
+										selectedProfiles.remove(gameProfile);
+										title = unchecked;
+									} else {
+										selectedProfiles.add(gameProfile);
+										title = checked;
+									}
+									screen.refreshWidgets();
+									playClickSound();
+								}
+							};
+							panel.add(widget);
+						}
+					}
+				}.openGui();
+
+			}));
+
+		}
+		if(shareServer || shareParty || sharePlayers) {
+			contextMenu.add(ContextMenuItem.subMenu(Component.translatable("ftbchunks.waypoint.share"), Icons.INFO, shareMenu));
 		}
 
 		contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, b -> {

@@ -1207,24 +1207,31 @@ public enum FTBChunksClient {
 		return minimapTextureId;
 	}
 
-	public static Waypoint addWaypoint(Player player, String name, BlockPos position, int color) {
-		return FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).map(mgr -> {
-			Waypoint wp = mgr.addWaypointAt(position, name);
+	public static Waypoint addWaypoint(String name, GlobalPos globalPos, int color) {
+		return FTBChunksAPI.clientApi().getWaypointManager(globalPos.dimension()).map(mgr -> {
+			Waypoint wp = mgr.addWaypointAt(globalPos.pos(), name);
 			wp.setColor(color);
 			return wp;
 		}).orElse(null);
 	}
 
-	private static class WaypointAddScreen extends BaseScreen {
+	public static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;
 		private final Player player;
+		private final GlobalPos waypointLocation;
 
-		public WaypointAddScreen(StringConfig name, Player player) {
+		public WaypointAddScreen(StringConfig name, Player player, GlobalPos waypointLocation) {
 			super();
 			this.name = name;
 			this.player = player;
+			this.waypointLocation = waypointLocation;
 			this.setHeight(35);
 		}
+
+		public WaypointAddScreen(StringConfig name, Player player) {
+			this(name, player, GlobalPos.of(player.level().dimension(), player.blockPosition()));
+		}
+
 
 		@Override
 		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
@@ -1236,7 +1243,7 @@ public enum FTBChunksClient {
 			col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
 			AddWaypointOverlay overlay = new AddWaypointOverlay(this, name, col, set -> {
 				if (set && !name.getValue().isEmpty()) {
-					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), col.getValue().rgba());
+					Waypoint wp = addWaypoint(name.getValue(), waypointLocation, col.getValue().rgba());
 					Minecraft.getInstance().player.displayClientMessage(
 							Component.translatable("ftbchunks.waypoint_added",
 									Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)

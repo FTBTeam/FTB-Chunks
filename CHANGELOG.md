@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added gui button to teleport to way point
 * Add option to show game time, real time and fps under the minimap
 * Added waypoint sharing
+* Fix waypoint add command only working in loaded chunks
+
 
 ## [2100.1.0]
 

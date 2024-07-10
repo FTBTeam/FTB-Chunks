@@ -23,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -227,6 +228,10 @@ public class WaypointEditorScreen extends BaseScreen {
     }
 
     private class RowPanel extends Panel {
+
+        private static final Component DELETE = Component.literal("Delete");
+        private static final Component QUICK_DELETE = Component.literal("Quick Delete");
+
         private final GroupButton groupButton;
         private final WaypointImpl wp;
         private boolean deleted = false;
@@ -251,15 +256,27 @@ public class WaypointEditorScreen extends BaseScreen {
             String distStr = player.level().dimension().equals(wp.getDimension()) ?
                     String.format("%.1fm", Math.sqrt(wp.getDistanceSq(player))) : "";
             add(new TextField(this).setText(distStr).setColor(Color4I.WHITE));
+            add(new SimpleButton(this, DELETE, Icons.BIN, (w, mb) -> deleteWaypoint(!isShiftKeyDown())) {
+
+                @Override
+                public Component getTitle() {
+                    if(isShiftKeyDown()) {
+                        return QUICK_DELETE;
+                    }else {
+                        return DELETE;
+                    }
+                }
+            });
         }
 
         @Override
         public void alignWidgets() {
-            if (widgets.size() == 3) {
+            if (widgets.size() == 4) {
                 int yOff = (this.height - getTheme().getFontHeight()) / 2 + 1;
                 widgets.get(0).setPos(10, 1);
                 widgets.get(1).setPos(30, yOff);
                 widgets.get(2).setPos(maxWidth + 40, yOff);
+                widgets.get(3).setPos(maxWidth + 80, 1);
             }
         }
 
@@ -313,20 +330,37 @@ public class WaypointEditorScreen extends BaseScreen {
                         closeGui(false);
                     }));
                 }
-                list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, btn -> {
-                            getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.getName())
-                                    .withStyle(Style.EMPTY.withColor(wp.getColor()))), Component.empty(), () -> {
-                                wp.removeFromManager();
-                                deleted = true;
-                                getGui().refreshWidgets();
-                            });
-                        })
-                );
+                list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, btn -> deleteWaypoint(true)));
 
                 getGui().openContextMenu(list);
                 return true;
             }
             return super.mousePressed(button);
+        }
+
+        @Override
+        public boolean keyPressed(Key key) {
+            if(key.is(GLFW.GLFW_KEY_DELETE)) {
+                deleteWaypoint(!isShiftKeyDown());
+                return true;
+            }else {
+                return super.keyPressed(key);
+            }
+        }
+
+        private void deleteWaypoint(boolean gui) {
+            if(gui) {
+                getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.getName())
+                        .withStyle(Style.EMPTY.withColor(wp.getColor()))), Component.empty(), () -> {
+                    wp.removeFromManager();
+                    deleted = true;
+                    getGui().refreshWidgets();
+                });
+            }else {
+                wp.removeFromManager();
+                deleted = true;
+                getGui().refreshWidgets();
+            }
         }
 
         private ContextMenuItem makeTitleMenuItem() {

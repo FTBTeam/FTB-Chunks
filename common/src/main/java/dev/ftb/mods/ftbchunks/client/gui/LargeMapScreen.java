@@ -138,7 +138,13 @@ public class LargeMapScreen extends BaseScreen {
 				.append(FTBChunksClient.INSTANCE.waypointManagerKey.getTranslatedKeyMessage())
 				.append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
 		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
-				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
+				(b, m) -> {
+			if(isShiftKeyDown()) {
+				new WaypointEditorScreen().openGui();
+			}else {
+				new UpdatedEditorScreen().openGui();
+			}
+                }, tooltip));
 		add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
 				(b, m) -> new MapKeyReferenceScreen().openGui()));
 

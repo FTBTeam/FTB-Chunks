@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add option to show game time, real time and fps under the minimap
 * Added waypoint sharing
 * Add entity tag `ftb:entity_mob_griefing_blacklist` to block mob griefing in claimed chunks
+* Fix waypoint add command only working in loaded chunks
+* Fix tags not loading
 
 ## [2100.1.0]
 

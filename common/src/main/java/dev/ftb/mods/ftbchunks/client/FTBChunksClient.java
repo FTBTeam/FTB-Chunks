@@ -1099,6 +1099,7 @@ public enum FTBChunksClient {
 
 		if (!event.getMapType().isMinimap()) {
 			event.add(new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile())));
+			event.add(new PointerIcon());
 		}
 	}
 

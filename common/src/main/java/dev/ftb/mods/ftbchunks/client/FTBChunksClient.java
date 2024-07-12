@@ -23,11 +23,7 @@ import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
-import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
-import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
-import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
-import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
-import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
+import dev.ftb.mods.ftbchunks.client.gui.*;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
@@ -97,9 +93,7 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
 import java.util.*;
 
 public enum FTBChunksClient {

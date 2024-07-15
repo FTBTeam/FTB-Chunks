@@ -271,6 +271,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 list.add(makeTitleMenuItem());
                 list.add(ContextMenuItem.SEPARATOR);
 
+                WaypointShareMenu.makeShareMenu(Minecraft.getInstance().player, wp).ifPresent(list::add);
+
                 list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, btn -> {
                     StringConfig config = new StringConfig();
                     config.setDefaultValue("");

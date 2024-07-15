@@ -45,7 +45,7 @@ public interface FTBChunksWorldConfig {
 	SNBTConfig WAYPOINT_SHARING = CONFIG.addGroup("waypoint_sharing");
 	BooleanValue WAYPOINT_SHARING_SERVER = WAYPOINT_SHARING.addBoolean("waypoint_sharing_server", true).comment("Allow players to share waypoints with the entire server.");
 	BooleanValue WAYPOINT_SHARING_PARTY = WAYPOINT_SHARING.addBoolean("waypoint_sharing_party", true).comment("Allow players to share waypoints with their party.");
-	BooleanValue WAYPOINT_SHARING_TEAM = WAYPOINT_SHARING.addBoolean("waypoint_sharing_players", true).comment("Allow players to share waypoints with other players.");
+	BooleanValue WAYPOINT_SHARING_PLAYERS = WAYPOINT_SHARING.addBoolean("waypoint_sharing_players", true).comment("Allow players to share waypoints with other players.");
 
 	static int getMaxClaimedChunks(ChunkTeamData playerData, ServerPlayer player) {
 		if (player != null) {

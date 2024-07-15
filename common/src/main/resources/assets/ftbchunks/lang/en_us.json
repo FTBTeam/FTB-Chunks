@@ -201,7 +201,14 @@
 	"ftbchunks.label.show": "Show",
 	"ftbchunks.label.hide": "Hide",
 	"ftbchunks.message.no_pvp": "PvP combat is disabled here",
-	"ftbchunks.waypoint.shared": "Has shared %s with you",
+	"ftbchunks.game_time": "Game Time: %s",
+	"ftbchunks.real_time": "Real Time: %s",
+	"ftbchunks.fps": "FPS: %d",
+	"ftbchunks.minimap.show_game_time": "Show Game Time",
+	"ftbchunks.minimap.show_fps": "Show FPS",
+	"ftbchunks.minimap.show_real_time": "Show Real Time",
+	"ftbchunks.waypoint.shared": "Has shared waypoint '%s' with you! Click to add",
+	"ftbchunks.waypoint.shared_by_you": "You shared waypoint '%s' !",
 	"ftbchunks.waypoint.share": "Share",
 	"ftbchunks.waypoint.share.server": "Server",
 	"ftbchunks.waypoint.share.party": "Party",
@@ -209,11 +216,5 @@
 	"ftbchunks.waypoint_sharing": "Waypoint Sharing",
 	"ftbchunks.waypoint_sharing.waypoint_sharing_party": "Allow Sharing waypoints with Party",
 	"ftbchunks.waypoint_sharing.waypoint_sharing_server": "Allow Sharing waypoints with Server",
-	"ftbchunks.waypoint_sharing.waypoint_sharing_players": "Allow Sharing waypoints with Players",
-	"ftbchunks.game_time": "Game Time: %s",
-	"ftbchunks.real_time": "Real Time: %s",
-	"ftbchunks.fps": "FPS: %d",
-	"ftbchunks.minimap.show_game_time": "Show Game Time",
-	"ftbchunks.minimap.show_fps": "Show FPS",
-	"ftbchunks.minimap.show_real_time": "Show Real Time"
+	"ftbchunks.waypoint_sharing.waypoint_sharing_players": "Allow Sharing waypoints with Players"
 }

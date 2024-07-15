@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -271,6 +270,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 List<ContextMenuItem> list = new ArrayList<>();
                 list.add(makeTitleMenuItem());
                 list.add(ContextMenuItem.SEPARATOR);
+
+                WaypointShareMenu.makeShareMenu(Minecraft.getInstance().player, wp).ifPresent(list::add);
 
                 list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, btn -> {
                     StringConfig config = new StringConfig();

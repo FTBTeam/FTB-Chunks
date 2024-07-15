@@ -9,6 +9,7 @@ import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
@@ -26,6 +27,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.lwjgl.glfw.GLFW;
 
@@ -269,6 +271,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 list.add(makeTitleMenuItem());
                 list.add(ContextMenuItem.SEPARATOR);
 
+                WaypointShareMenu.makeShareMenu(Minecraft.getInstance().player, wp).ifPresent(list::add);
+
                 list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, btn -> {
                     StringConfig config = new StringConfig();
                     config.setDefaultValue("");
@@ -296,7 +300,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                     }));
                 }
                 if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
-                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), Icons.ART, btn -> {
+                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));
                         closeGui(false);
                     }));

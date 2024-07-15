@@ -6,36 +6,29 @@ import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.OutgoingChatMessage;
-import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.chat.*;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public record ShareWaypointPacket(String name, GlobalPos position, ShareType shareType, Optional<List<UUID>> targets) implements CustomPacketPayload {
+public record ShareWaypointPacket(String name, GlobalPos position, ShareType shareType, List<UUID> targets) implements CustomPacketPayload {
     public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.rl("share_waypoint_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, ShareWaypointPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.STRING_UTF8, ShareWaypointPacket::name,
             GlobalPos.STREAM_CODEC, ShareWaypointPacket::position,
             ShareType.STREAM_CODEC, ShareWaypointPacket::shareType,
-            ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs.list())), ShareWaypointPacket::targets,
+            UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs.list()), ShareWaypointPacket::targets,
             ShareWaypointPacket::new
     );
 
@@ -61,13 +54,14 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
                         yield List.of(serverPlayer);
                     }
                 }
-                case PLAYER -> message.targets.map(list -> list.stream().map(playerList::getPlayer)
-                        .filter(Objects::nonNull).toList()).orElse(Collections.emptyList());
+                case PLAYER -> message.targets.stream()
+                        .map(playerList::getPlayer)
+                        .filter(Objects::nonNull).toList();
             };
             for (ServerPlayer playerListPlayer : playersToSend) {
                 String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
-
                 String dim = message.position.dimension().location().toString();
+
                 Component waypointText = Component.literal(message.name)
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.AQUA)
@@ -76,7 +70,7 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
                 playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
                         .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
                                 .withStyle(style ->
-                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add " + message.name + " " + cords + " " + dim + " white true"))))), false, bound2);
+                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, bound2);
             }
         });
     }

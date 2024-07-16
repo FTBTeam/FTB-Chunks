@@ -240,5 +240,6 @@
 	"ftbchunks.force_load_mode.always": "Always",
 	"ftbchunks.time_mode.off": "Off",
 	"ftbchunks.time_mode.twenty_four": "Twenty Four",
-	"ftbchunks.time_mode.twelve": "Twelve"
+	"ftbchunks.time_mode.twelve": "Twelve",
+	"ftbchunks.time_mode.clock": "Clock"
 }

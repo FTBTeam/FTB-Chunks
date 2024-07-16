@@ -73,7 +73,7 @@ public interface FTBChunksClientConfig {
 	EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.addEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
 	BooleanValue SQUARE_MINIMAP = MINIMAP.addBoolean("square", false).comment("Draw a square minimap instead of a circular one");
 	BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
-	EnumValue<TimeMode> MINIMAP_SHOW_GAME_TIME = MINIMAP.addEnum("show_game_time", TimeMode.NAME_MAP).comment("Show game time under minimap");
+	EnumValue<ClockedTimeMode> MINIMAP_SHOW_GAME_TIME = MINIMAP.addEnum("show_game_time", ClockedTimeMode.NAME_MAP).comment("Show game time under minimap");
 	EnumValue<TimeMode> MINIMAP_SHOW_REAL_TIME = MINIMAP.addEnum("show_real_time", TimeMode.NAME_MAP).comment("Show real time under minimap");
 	BooleanValue SHOW_FPS = MINIMAP.addBoolean("show_fps", false).comment("Show FPS under minimap");
 
@@ -138,5 +138,14 @@ public interface FTBChunksClientConfig {
 		TWELVE;
 
 		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(OFF, values()).baseNameKey("ftbchunks.time_mode").create();
+	}
+
+	public enum ClockedTimeMode {
+		OFF,
+		TWENTY_FOUR,
+		TWELVE,
+		CLOCK;
+
+		public static final NameMap<ClockedTimeMode> NAME_MAP = NameMap.of(OFF, values()).baseNameKey("ftbchunks.time_mode").create();
 	}
 }

@@ -32,7 +32,12 @@ import dev.ftb.mods.ftbchunks.client.gui.*;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
+import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
 import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
 import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
@@ -183,6 +188,12 @@ public enum FTBChunksClient {
 		FTBChunksClientAPI clientApi = FTBChunksAPI.clientApi();
 		clientApi.registerMinimapComponent(new PlayerPosInfoComponent());
 		clientApi.registerMinimapComponent(new ZoneInfoComponent());
+		clientApi.registerMinimapComponent(new BiomeComponent());
+		clientApi.registerMinimapComponent(new GameTimeComponent());
+		clientApi.registerMinimapComponent(new RealTimeComponent());
+		clientApi.registerMinimapComponent(new FPSComponent());
+		clientApi.registerMinimapComponent(new DebugComponent());
+
 
 		ClientLifecycleEvent.CLIENT_STARTED.register(this::clientStarted);
 //
@@ -197,101 +208,8 @@ public enum FTBChunksClient {
 	}
 
 	private void registerMinimapTextInfo(MapInfoEvent event) {
-		ResourceLocation minimapZone = FTBChunksAPI.rl("minimap_zone");
 
-		event.register(FTBChunksAPI.rl("minimap_zone"), () -> new MapInfoEvent.SingleTextInfo() {
-            @Override
-            public Component getText(MapDimension dim) {
-				LocalPlayer player = Minecraft.getInstance().player;
-				MapRegionData data = dim.getRegion(XZ.regionFromChunk(Mth.floor(player.position().x) >> 4, Mth.floor(player.position().z) >> 4)).getData();
-                if (data != null) {
-                    return data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam()
-                            .map(Team::getColoredName)
-                            .orElse(Component.empty());
-                }
-                return Component.empty();
-            }
 
-            @Override
-            public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
-                return FTBChunksClientConfig.MINIMAP_ZONE.get();
-            }
-        });
-
-		event.register(FTBChunksAPI.rl("minimap_xyz"), () -> new MapInfoEvent.SingleTextInfo() {
-            @Override
-            public Component getText(MapDimension dim) {
-				LocalPlayer player = Minecraft.getInstance().player;
-                return Component.literal(Mth.floor(player.position().x) + " " + Mth.floor(player.position().y) + " " + Mth.floor(player.position().z));
-            }
-
-            @Override
-            public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
-                return FTBChunksClientConfig.MINIMAP_XYZ.get();
-            }
-        }, MapInfoEvent.Priority.before(minimapZone));
-
-		event.register(FTBChunksAPI.rl("minimap_biome"), () -> new MapInfoEvent.SingleTextInfo() {
-			@Override
-			public Component getText(MapDimension dim) {
-				Minecraft mc = Minecraft.getInstance();
-				Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
-				return biome.unwrapKey()
-						.map(e -> Component.translatable("biome." + e.location().getNamespace() + "." + e.location().getPath()))
-						.orElse(Component.empty());
-			}
-
-			@Override
-			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
-				return FTBChunksClientConfig.MINIMAP_BIOME.get();
-			}
-		});
-
-		event.register(FTBChunksAPI.rl("minimap_game_time"), () -> new MapInfoEvent.SingleTextInfo() {
-			@Override
-			public Component getText(MapDimension dim) {
-				Minecraft mc = Minecraft.getInstance();
-				long time = mc.level.getDayTime() % 24000L;
-				int hours = (int) (time / 1000L);
-				int minutes = (int) ((time % 1000L) * 60L / 1000L);
-
-				String timeString = createTimeString(hours, minutes, FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
-				return Component.literal(timeString);
-			}
-
-			@Override
-			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
-				return FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
-			}
-		});
-
-		event.register(FTBChunksAPI.rl("minimap_real_time"), () -> new MapInfoEvent.SingleTextInfo() {
-			@Override
-			public Component getText(MapDimension dim) {
-				LocalDateTime now = LocalDateTime.now();
-				int hour = now.getHour();
-				int minute = now.getMinute();
-				String timeString = createTimeString(hour, minute, FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
-				return Component.literal(timeString);
-			}
-
-			@Override
-			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
-				return FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
-			}
-		});
-
-		event.register(FTBChunksAPI.rl("minimap_fps"), () -> new MapInfoEvent.SingleTextInfo() {
-			@Override
-			public Component getText(MapDimension dim) {
-				return Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps());
-			}
-
-			@Override
-			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
-				return FTBChunksClientConfig.SHOW_FPS.get();
-			}
-		});
 
 //		event.register(FTBChunksAPI.rl("minimap_debug"), () -> new MapTextEvent.TextInfo() {
 //			@Override
@@ -900,31 +818,7 @@ public enum FTBChunksClient {
 		List<Component> res = new ArrayList<>();
 
 
-//		for (MapInfoEvent.MapText textEvent : textEvents) {
-//			MapInfoEvent.MapInfo textInfo = textEvent.text().get();
-//			if(textInfo.shouldRender(mc, playerX, playerY, playerZ, dim)) {
-//				res.add(textInfo.getText(mc, playerX, playerY, playerZ, dim));
-//			}
-//		}
-
-//		if (FTBChunksClientConfig.MINIMAP_ZONE.get()) {
-//			MapRegionData data = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getData();
-//			if (data != null) {
-//				data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam()
-//						.ifPresent(team -> res.add(team.getColoredName()));
-//			}
-//		}
 //
-//		if (FTBChunksClientConfig.MINIMAP_XYZ.get()) {
-//			res.add(Component.literal(Mth.floor(playerX) + " " + Mth.floor(playerY) + " " + Mth.floor(playerZ)));
-//		}
-//
-//		if (FTBChunksClientConfig.MINIMAP_BIOME.get()) {
-//			Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
-//			biome.unwrapKey().ifPresent(e ->
-//					res.add(Component.translatable("biome." + e.location().getNamespace() + "." + e.location().getPath()))
-//			);
-//		}
 //
 //		boolean showTimeKey = FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF && FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
 //
@@ -970,20 +864,7 @@ public enum FTBChunksClient {
 		return res;
 	}
 
-	public static String createTimeString(int hours, int minutes, boolean twentyFourFormat) {
-		if(twentyFourFormat) {
-			return String.format("%02d:%02d", hours, minutes);
-		} else {
-			String ampm = hours >= 12 ? "PM" : "AM";
-			if(hours == 0) {
-				hours = 12;
-			} else if(hours > 12) {
-				hours -= 12;
-			}
-			return String.format("%02d:%02d %s", hours, minutes, ampm);
-		}
 
-	}
 
 	private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, DeltaTracker tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
 		GuiHelper.setupDrawing();
@@ -1471,5 +1352,9 @@ public enum FTBChunksClient {
 			overlay.setWidth(this.width);
 			pushModalPanel(overlay);
 		}
+	}
+
+	public int getRenderedDebugCount() {
+		return renderedDebugCount;
 	}
 }

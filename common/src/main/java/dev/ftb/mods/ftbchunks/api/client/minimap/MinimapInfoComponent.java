@@ -25,7 +25,9 @@ public interface MinimapInfoComponent {
         return true;
     }
 
-    int height(MinimapContext context);
+    default int height(MinimapContext context) {
+        return computeLineHeight(context.minecraft(), 1) + 1;
+    }
 
     /**
      * Checked on each render frame to determine if the height for the component should be allocated

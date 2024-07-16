@@ -45,11 +45,6 @@ public class ZoneInfoComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public int height(MinimapContext context) {
-        return computeLineHeight(context.minecraft(), 1);
-    }
-
-    @Override
     public boolean enabled() {
         return FTBChunksClientConfig.MINIMAP_ZONE.get();
     }

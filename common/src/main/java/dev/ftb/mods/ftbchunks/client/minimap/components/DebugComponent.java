@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.ChunkUpdateTask;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -51,5 +52,10 @@ public class DebugComponent implements MinimapInfoComponent {
     @Override
     public int height(MinimapContext context) {
         return computeLineHeight(context.minecraft(), 5) + 1;
+    }
+
+    @Override
+    public boolean enabled() {
+        return FTBChunksClientConfig.DEBUG_INFO.get();
     }
 }

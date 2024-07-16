@@ -19,6 +19,7 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MapInfoEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
@@ -43,8 +44,8 @@ import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
+import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -145,6 +146,8 @@ public enum FTBChunksClient {
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
 
+	private List<MapInfoEvent.MapText> textEvents;
+
     public void init() {
 		if (Minecraft.getInstance() == null) {
 			return;
@@ -170,6 +173,130 @@ public enum FTBChunksClient {
 //		RefreshMinimapIconsEvent.EVENT.register(this::refreshMinimapIcons);
 		ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
 		registerPlatform();
+
+		MapInfoEvent.REGISTER.register(this::registerMinimapTextInfo);
+		MapInfoEvent t = new MapInfoEvent();
+		MapInfoEvent.REGISTER.invoker().accept(t);
+		textEvents = t.computeOrder();
+	}
+
+	private void registerMinimapTextInfo(MapInfoEvent event) {
+		ResourceLocation minimapZone = FTBChunksAPI.rl("minimap_zone");
+
+		event.register(FTBChunksAPI.rl("minimap_zone"), () -> new MapInfoEvent.SingleTextInfo() {
+            @Override
+            public Component getText(MapDimension dim) {
+				LocalPlayer player = Minecraft.getInstance().player;
+				MapRegionData data = dim.getRegion(XZ.regionFromChunk(Mth.floor(player.position().x) >> 4, Mth.floor(player.position().z) >> 4)).getData();
+                if (data != null) {
+                    return data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam()
+                            .map(Team::getColoredName)
+                            .orElse(Component.empty());
+                }
+                return Component.empty();
+            }
+
+            @Override
+            public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+                return FTBChunksClientConfig.MINIMAP_ZONE.get();
+            }
+        });
+
+		event.register(FTBChunksAPI.rl("minimap_xyz"), () -> new MapInfoEvent.SingleTextInfo() {
+            @Override
+            public Component getText(MapDimension dim) {
+				LocalPlayer player = Minecraft.getInstance().player;
+                return Component.literal(Mth.floor(player.position().x) + " " + Mth.floor(player.position().y) + " " + Mth.floor(player.position().z));
+            }
+
+            @Override
+            public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+                return FTBChunksClientConfig.MINIMAP_XYZ.get();
+            }
+        }, MapInfoEvent.Priority.before(minimapZone));
+
+		event.register(FTBChunksAPI.rl("minimap_biome"), () -> new MapInfoEvent.SingleTextInfo() {
+			@Override
+			public Component getText(MapDimension dim) {
+				Minecraft mc = Minecraft.getInstance();
+				Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
+				return biome.unwrapKey()
+						.map(e -> Component.translatable("biome." + e.location().getNamespace() + "." + e.location().getPath()))
+						.orElse(Component.empty());
+			}
+
+			@Override
+			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+				return FTBChunksClientConfig.MINIMAP_BIOME.get();
+			}
+		});
+
+		event.register(FTBChunksAPI.rl("minimap_game_time"), () -> new MapInfoEvent.SingleTextInfo() {
+			@Override
+			public Component getText(MapDimension dim) {
+				Minecraft mc = Minecraft.getInstance();
+				long time = mc.level.getDayTime() % 24000L;
+				int hours = (int) (time / 1000L);
+				int minutes = (int) ((time % 1000L) * 60L / 1000L);
+
+				String timeString = createTimeString(hours, minutes, FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+				return Component.literal(timeString);
+			}
+
+			@Override
+			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+				return FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
+			}
+		});
+
+		event.register(FTBChunksAPI.rl("minimap_real_time"), () -> new MapInfoEvent.SingleTextInfo() {
+			@Override
+			public Component getText(MapDimension dim) {
+				LocalDateTime now = LocalDateTime.now();
+				int hour = now.getHour();
+				int minute = now.getMinute();
+				String timeString = createTimeString(hour, minute, FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+				return Component.literal(timeString);
+			}
+
+			@Override
+			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+				return FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
+			}
+		});
+
+		event.register(FTBChunksAPI.rl("minimap_fps"), () -> new MapInfoEvent.SingleTextInfo() {
+			@Override
+			public Component getText(MapDimension dim) {
+				return Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps());
+			}
+
+			@Override
+			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+				return FTBChunksClientConfig.SHOW_FPS.get();
+			}
+		});
+
+//		event.register(FTBChunksAPI.rl("minimap_debug"), () -> new MapTextEvent.TextInfo() {
+//			@Override
+//			public Component getText(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+//				XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+//				long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
+//				res.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
+//				res.add(Component.literal("Rgn: " + playerXZ).withStyle(ChatFormatting.GRAY));
+//				res.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
+//				res.add(Component.literal("Updates: " + renderedDebugCount).withStyle(ChatFormatting.GRAY));
+//				if(ChunkUpdateTask.getDebugLastTime() > 0L) {
+//					res.add(Component.literal(String.format("Last: %,d ns", ChunkUpdateTask.getDebugLastTime())).withStyle(ChatFormatting.GRAY));
+//				}
+//			}
+//
+//			@Override
+//			public boolean shouldRender(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+//				return FTBChunksClientConfig.DEBUG_INFO.get();
+//			}
+//		});
+
 	}
 
 	private void registerKeys() {
@@ -674,24 +801,31 @@ public enum FTBChunksClient {
 			poseStack.popPose();
 		}
 
-		List<Component> textList = buildMinimapTextData(mc, playerX, playerY, playerZ, dim);
-		if (!textList.isEmpty()) {
-			float fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
-			float textHeight = (mc.font.lineHeight + 2) * textList.size() * fontScale;
-			// draw text below minimap if there's room, above otherwise
-			float yOff = y + size + textHeight >= scaledHeight ? -textHeight : size + 2f;
-			poseStack.pushPose();
-			poseStack.translate(x + halfSizeD, y + yOff, 0D);
-			poseStack.scale(fontScale, fontScale, 1F);
-
-			for (int i = 0; i < textList.size(); i++) {
-				FormattedCharSequence text = textList.get(i).getVisualOrderText();
-				int textWidth = mc.font.width(text);
-				graphics.drawString(mc.font, text, -textWidth / 2, i * (mc.font.lineHeight + 2), 0xFFFFFFFF, true);
+		for (MapInfoEvent.MapText textEvent : textEvents) {
+			MapInfoEvent.MapInfo mapInfo = textEvent.text().get();
+			if(mapInfo.shouldRender(mc, playerX, playerY, playerZ, dim)) {
+				y += mapInfo.render(graphics, x, y, size, scaledHeight, halfSizeD, dim);
 			}
-
-			poseStack.popPose();
 		}
+
+//		List<Component> textList = buildMinimapTextData(mc, playerX, playerY, playerZ, dim);
+//		if (!textList.isEmpty()) {
+//			float fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
+//			float textHeight = (mc.font.lineHeight + 2) * textList.size() * fontScale;
+//			// draw text below minimap if there's room, above otherwise
+//			float yOff = y + size + textHeight >= scaledHeight ? -textHeight : size + 2f;
+//			poseStack.pushPose();
+//			poseStack.translate(x + halfSizeD, y + yOff, 0D);
+//			poseStack.scale(fontScale, fontScale, 1F);
+//
+//			for (int i = 0; i < textList.size(); i++) {
+//				FormattedCharSequence text = textList.get(i).getVisualOrderText();
+//				int textWidth = mc.font.width(text);
+//				graphics.drawString(mc.font, text, -textWidth / 2, i * (mc.font.lineHeight + 2), 0xFFFFFFFF, true);
+//			}
+//
+//			poseStack.popPose();
+//		}
 
 		RenderSystem.enableDepthTest();
 
@@ -722,67 +856,76 @@ public enum FTBChunksClient {
 	}
 
 	private List<Component> buildMinimapTextData(Minecraft mc, double playerX, double playerY, double playerZ, MapDimension dim) {
+
 		List<Component> res = new ArrayList<>();
 
-		if (FTBChunksClientConfig.MINIMAP_ZONE.get()) {
-			MapRegionData data = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getData();
-			if (data != null) {
-				data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam()
-						.ifPresent(team -> res.add(team.getColoredName()));
-			}
-		}
 
-		if (FTBChunksClientConfig.MINIMAP_XYZ.get()) {
-			res.add(Component.literal(Mth.floor(playerX) + " " + Mth.floor(playerY) + " " + Mth.floor(playerZ)));
-		}
+//		for (MapInfoEvent.MapText textEvent : textEvents) {
+//			MapInfoEvent.MapInfo textInfo = textEvent.text().get();
+//			if(textInfo.shouldRender(mc, playerX, playerY, playerZ, dim)) {
+//				res.add(textInfo.getText(mc, playerX, playerY, playerZ, dim));
+//			}
+//		}
 
-		if (FTBChunksClientConfig.MINIMAP_BIOME.get()) {
-			Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
-			biome.unwrapKey().ifPresent(e ->
-					res.add(Component.translatable("biome." + e.location().getNamespace() + "." + e.location().getPath()))
-			);
-		}
-
-		boolean showTimeKey = FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF && FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
-
-		if (FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
-			long time = mc.level.getDayTime() % 24000L;
-			int hours = (int) (time / 1000L);
-			int minutes = (int) ((time % 1000L) * 60L / 1000L);
-
-			String timeString = createTimeString(hours, minutes, FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
-			if(showTimeKey) {
-				timeString = "G: " + timeString;
-			}
-			res.add(Component.literal(timeString));
-		}
-
-		if (FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
-			LocalDateTime now = LocalDateTime.now();
-			int hour = now.getHour();
-			int minute = now.getMinute();
-			String timeString = createTimeString(hour, minute, FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
-			if(showTimeKey) {
-				timeString = "R: " + timeString;
-			}
-			res.add(Component.literal(timeString));
-		}
-
-		if (FTBChunksClientConfig.SHOW_FPS.get()) {
-			res.add(Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()));
-		}
-
-		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
-			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
-			long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
-			res.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
-			res.add(Component.literal("Rgn: " + playerXZ).withStyle(ChatFormatting.GRAY));
-			res.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
-			res.add(Component.literal("Updates: " + renderedDebugCount).withStyle(ChatFormatting.GRAY));
-			if (ChunkUpdateTask.getDebugLastTime() > 0L) {
-				res.add(Component.literal(String.format("Last: %,d ns", ChunkUpdateTask.getDebugLastTime())).withStyle(ChatFormatting.GRAY));
-			}
-		}
+//		if (FTBChunksClientConfig.MINIMAP_ZONE.get()) {
+//			MapRegionData data = dim.getRegion(XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ)).getData();
+//			if (data != null) {
+//				data.getChunk(XZ.of(currentPlayerChunkX, currentPlayerChunkZ)).getTeam()
+//						.ifPresent(team -> res.add(team.getColoredName()));
+//			}
+//		}
+//
+//		if (FTBChunksClientConfig.MINIMAP_XYZ.get()) {
+//			res.add(Component.literal(Mth.floor(playerX) + " " + Mth.floor(playerY) + " " + Mth.floor(playerZ)));
+//		}
+//
+//		if (FTBChunksClientConfig.MINIMAP_BIOME.get()) {
+//			Holder<Biome> biome = mc.level.getBiome(mc.player.blockPosition());
+//			biome.unwrapKey().ifPresent(e ->
+//					res.add(Component.translatable("biome." + e.location().getNamespace() + "." + e.location().getPath()))
+//			);
+//		}
+//
+//		boolean showTimeKey = FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF && FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
+//
+//		if (FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
+//			long time = mc.level.getDayTime() % 24000L;
+//			int hours = (int) (time / 1000L);
+//			int minutes = (int) ((time % 1000L) * 60L / 1000L);
+//
+//			String timeString = createTimeString(hours, minutes, FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+//			if(showTimeKey) {
+//				timeString = "G: " + timeString;
+//			}
+//			res.add(Component.literal(timeString));
+//		}
+//
+//		if (FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
+//			LocalDateTime now = LocalDateTime.now();
+//			int hour = now.getHour();
+//			int minute = now.getMinute();
+//			String timeString = createTimeString(hour, minute, FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+//			if(showTimeKey) {
+//				timeString = "R: " + timeString;
+//			}
+//			res.add(Component.literal(timeString));
+//		}
+//
+//		if (FTBChunksClientConfig.SHOW_FPS.get()) {
+//			res.add(Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()));
+//		}
+//
+//		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
+//			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+//			long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
+//			res.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
+//			res.add(Component.literal("Rgn: " + playerXZ).withStyle(ChatFormatting.GRAY));
+//			res.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
+//			res.add(Component.literal("Updates: " + renderedDebugCount).withStyle(ChatFormatting.GRAY));
+//			if (ChunkUpdateTask.getDebugLastTime() > 0L) {
+//				res.add(Component.literal(String.format("Last: %,d ns", ChunkUpdateTask.getDebugLastTime())).withStyle(ChatFormatting.GRAY));
+//			}
+//		}
 
 		return res;
 	}

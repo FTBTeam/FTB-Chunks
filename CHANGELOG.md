@@ -12,15 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Added a delete button alongside the visibility toggle button on the manager screen
 * Added waypoint sharing; there is now a "Share" option on the context menus for waypoints on the large map, and in the waypoint manager screen
 * Added client config options (in the Minimap section) to show game time, real time and FPS under the minimap
-* Player icon on the large map screen is now combined with a pointer indicating the player's facing directionq
-
-### Fixed
-* Add entity tag `ftb:entity_mob_griefing_blacklist` to block mob griefing in claimed chunks
-* Fixed the `/ftbchunks waypoint add` command only working for loaded chunks
-* Fixed block/item/entity tags not being detected
+* Player icon on the large map screen is now combined with a pointer indicating the player's facing direction
 * Added new entity tag: `ftbchunks:entity_mob_griefing_blacklist`
   * Prevents mob griefing by any entities in this tag if mob griefing protection is enabled in team settings
   * Note: only works on NeoForge at this time (Fabric is limited to Endermen only)
+
+### Fixed
+* Fixed the `/ftbchunks waypoint add` command only working for loaded chunks
+* Fixed block/item/entity tags not being detected
 
 ## [2100.1.0]
 

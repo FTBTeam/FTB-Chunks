@@ -29,11 +29,11 @@ public record AddWaypointPacket(String name, GlobalPos position, int color, bool
 
     public static void handle(AddWaypointPacket message, NetworkManager.PacketContext context) {
         context.queue(() -> {
-            if(message.useGui()) {
+            if (message.useGui()) {
                 StringConfig configName = new StringConfig();
                 configName.setValue(message.name);
                 new FTBChunksClient.WaypointAddScreen(configName, context.getPlayer(), message.position).openGui();
-            }else {
+            } else {
                 FTBChunksClient.addWaypoint(message.name, message.position, message.color);
             }
         });

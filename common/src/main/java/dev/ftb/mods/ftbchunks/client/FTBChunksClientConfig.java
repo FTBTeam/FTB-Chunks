@@ -136,6 +136,6 @@ public interface FTBChunksClientConfig {
 		TWENTY_FOUR,
 		TWELVE;
 
-		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(OFF, values()).create();
+		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(OFF, values()).baseNameKey("ftbchunks.time_mode").create();
 	}
 }

@@ -20,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.HoverEvent;
@@ -299,7 +300,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                         });
                     }));
                 }
-                if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
+                if (Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));
                         closeGui(false);

@@ -96,6 +96,7 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
@@ -744,6 +745,47 @@ public enum FTBChunksClient {
 			);
 		}
 
+		boolean showTimeKey = FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF && FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF;
+
+		if (FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
+			long time = mc.level.getDayTime() % 24000L;
+			int hours = (int) (time / 1000L);
+			int minutes = (int) ((time % 1000L) * 60L / 1000L);
+
+			String timeString = createTimeString(hours, minutes, FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+			if(showTimeKey) {
+				timeString = "G: " + timeString;
+			}
+			res.add(Component.literal(timeString));
+		}
+
+		if (FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() != FTBChunksClientConfig.TimeMode.OFF) {
+			LocalDateTime now = LocalDateTime.now();
+			int hour = now.getHour();
+			int minute = now.getMinute();
+			String timeString = createTimeString(hour, minute, FTBChunksClientConfig.MINIMAP_SHOW_REAL_TIME.get() == FTBChunksClientConfig.TimeMode.TWENTY_FOUR);
+			if(showTimeKey) {
+				timeString = "R: " + timeString;
+			}
+			res.add(Component.literal(timeString));
+		}
+
+		if (FTBChunksClientConfig.SHOW_FPS.get()) {
+			res.add(Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()));
+		}
+
+		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
+			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
+			long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
+			res.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
+			res.add(Component.literal("Rgn: " + playerXZ).withStyle(ChatFormatting.GRAY));
+			res.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
+			res.add(Component.literal("Updates: " + renderedDebugCount).withStyle(ChatFormatting.GRAY));
+			if (ChunkUpdateTask.getDebugLastTime() > 0L) {
+				res.add(Component.literal(String.format("Last: %,d ns", ChunkUpdateTask.getDebugLastTime())).withStyle(ChatFormatting.GRAY));
+			}
+		}
+
 		if (FTBChunksClientConfig.DEBUG_INFO.get()) {
 			XZ playerXZ = XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ);
 			long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
@@ -757,6 +799,22 @@ public enum FTBChunksClient {
 		}
 
 		return res;
+	}
+
+
+	public static String createTimeString(int hours, int minutes, boolean twentyFourFormat) {
+		if(twentyFourFormat) {
+			return String.format("%02d:%02d", hours, minutes);
+		} else {
+			String ampm = hours >= 12 ? "PM" : "AM";
+			if(hours == 0) {
+				hours = 12;
+			} else if(hours > 12) {
+				hours -= 12;
+			}
+			return String.format("%02d:%02d %s", hours, minutes, ampm);
+		}
+
 	}
 
 	private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, float tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
@@ -1160,24 +1218,31 @@ public enum FTBChunksClient {
 		return minimapTextureId;
 	}
 
-	public static Waypoint addWaypoint(Player player, String name, BlockPos position, int color) {
-		return FTBChunksAPI.clientApi().getWaypointManager(player.level().dimension()).map(mgr -> {
-			Waypoint wp = mgr.addWaypointAt(position, name);
+	public static Waypoint addWaypoint(String name, GlobalPos globalPos, int color) {
+		return FTBChunksAPI.clientApi().getWaypointManager(globalPos.dimension()).map(mgr -> {
+			Waypoint wp = mgr.addWaypointAt(globalPos.pos(), name);
 			wp.setColor(color);
 			return wp;
 		}).orElse(null);
 	}
 
-	private static class WaypointAddScreen extends BaseScreen {
+	public static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;
 		private final Player player;
+		private final GlobalPos waypointLocation;
 
-		public WaypointAddScreen(StringConfig name, Player player) {
+		public WaypointAddScreen(StringConfig name, Player player, GlobalPos waypointLocation) {
 			super();
 			this.name = name;
 			this.player = player;
+			this.waypointLocation = waypointLocation;
 			this.setHeight(35);
 		}
+
+		public WaypointAddScreen(StringConfig name, Player player) {
+			this(name, player, GlobalPos.of(player.level().dimension(), player.blockPosition()));
+		}
+
 
 		@Override
 		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
@@ -1189,7 +1254,7 @@ public enum FTBChunksClient {
 			col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
 			AddWaypointOverlay overlay = new AddWaypointOverlay(this, name, col, set -> {
 				if (set && !name.getValue().isEmpty()) {
-					Waypoint wp = addWaypoint(player, name.getValue(), player.blockPosition(), col.getValue().rgba());
+					Waypoint wp = addWaypoint(name.getValue(), waypointLocation, col.getValue().rgba());
 					Minecraft.getInstance().player.displayClientMessage(
 							Component.translatable("ftbchunks.waypoint_added",
 									Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)

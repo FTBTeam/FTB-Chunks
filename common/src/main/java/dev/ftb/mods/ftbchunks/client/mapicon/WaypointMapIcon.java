@@ -1,16 +1,16 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
+import dev.ftb.mods.ftbchunks.client.gui.WaypointShareMenu;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
+import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.ImageIcon;
+import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
@@ -20,8 +20,11 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -96,6 +99,10 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 		contextMenu.add(makeTitleMenuItem());
 		contextMenu.add(ContextMenuItem.SEPARATOR);
 
+		LocalPlayer player = Minecraft.getInstance().player;
+
+		WaypointShareMenu.makeShareMenu(player, waypoint).ifPresent(contextMenu::add);
+
 		contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, b -> {
 			StringConfig config = new StringConfig();
 			config.setValue(waypoint.getName());
@@ -126,6 +133,13 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 			waypoint.setHidden(!waypoint.isHidden());
 			screen.refreshWidgets();
 		}));
+
+		if (player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+			contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), b -> {
+				new TeleportFromMapPacket(waypoint.getPos().above(), false, waypoint.getDimension()).sendToServer();
+				screen.closeGui(false);
+			}));
+		}
 
 		contextMenu.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, b -> {
 			waypoint.removeFromManager();

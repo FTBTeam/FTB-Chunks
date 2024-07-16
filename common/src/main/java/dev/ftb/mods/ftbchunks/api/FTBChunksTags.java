@@ -28,5 +28,7 @@ public class FTBChunksTags {
                 = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(FTBChunks.MOD_ID, "entity_interact_whitelist"));
         public static final TagKey<EntityType<?>> NONLIVING_ENTITY_ATTACK_WHITELIST_TAG
                 = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(FTBChunks.MOD_ID, "nonliving_entity_attack_whitelist"));
+        public static final TagKey<EntityType<?>> ENTITY_MOB_GRIEFING_BLACKLIST_TAG
+                = TagKey.create(Registries.ENTITY_TYPE, FTBChunksAPI.rl("entity_mob_griefing_blacklist"));
     }
 }

@@ -26,6 +26,7 @@ import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
+import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
@@ -1089,6 +1090,7 @@ public enum FTBChunksClient {
 
 		if (!event.getMapType().isMinimap()) {
 			event.add(new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile())));
+			event.add(new PointerIcon());
 		}
 	}
 

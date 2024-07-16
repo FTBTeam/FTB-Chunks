@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.api.client;
 
+import com.google.common.collect.ImmutableList;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -27,4 +29,10 @@ public interface FTBChunksClientAPI {
      * entities...)
      */
     void requestMinimapIconRefresh();
+
+    void registerMinimapComponent(MinimapInfoComponent component);
+
+    void recomputeMinimapComponents();
+
+    ImmutableList<MinimapInfoComponent> getMinimapComponents();
 }

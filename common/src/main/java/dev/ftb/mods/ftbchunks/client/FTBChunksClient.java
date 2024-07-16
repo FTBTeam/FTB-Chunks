@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -18,16 +19,21 @@ import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.MapInfoEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.client.gui.*;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
+import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
@@ -75,7 +81,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobCategory;
@@ -146,6 +151,7 @@ public enum FTBChunksClient {
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
 
+	private List<MinimapInfoComponent> sortedComponents = new LinkedList<>();
 	private List<MapInfoEvent.MapText> textEvents;
 
     public void init() {
@@ -174,10 +180,20 @@ public enum FTBChunksClient {
 		ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
 		registerPlatform();
 
-		MapInfoEvent.REGISTER.register(this::registerMinimapTextInfo);
-		MapInfoEvent t = new MapInfoEvent();
-		MapInfoEvent.REGISTER.invoker().accept(t);
-		textEvents = t.computeOrder();
+		FTBChunksClientAPI clientApi = FTBChunksAPI.clientApi();
+		clientApi.registerMinimapComponent(new PlayerPosInfoComponent());
+		clientApi.registerMinimapComponent(new ZoneInfoComponent());
+
+		ClientLifecycleEvent.CLIENT_STARTED.register(this::clientStarted);
+//
+//		MapInfoEvent.REGISTER.register(this::registerMinimapTextInfo);
+//		MapInfoEvent t = new MapInfoEvent();
+//		MapInfoEvent.REGISTER.invoker().accept(t);
+//		textEvents = t.computeOrder();
+	}
+
+	private void clientStarted(Minecraft minecraft) {
+		this.setupComponents();
 	}
 
 	private void registerMinimapTextInfo(MapInfoEvent event) {
@@ -801,12 +817,36 @@ public enum FTBChunksClient {
 			poseStack.popPose();
 		}
 
-		for (MapInfoEvent.MapText textEvent : textEvents) {
-			MapInfoEvent.MapInfo mapInfo = textEvent.text().get();
-			if(mapInfo.shouldRender(mc, playerX, playerY, playerZ, dim)) {
-				y += mapInfo.render(graphics, x, y, size, scaledHeight, halfSizeD, dim);
+		// The minimap info text
+		var context = new MinimapContext(mc, mc.player, dim, currentPlayerChunkX, currentPlayerChunkZ, playerX, playerY, playerZ);
+		var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
+
+		int yOffset = 0;
+		for (MinimapInfoComponent component : sortedComponents) {
+			if (!component.shouldRender(context)) {
+				continue;
 			}
+
+			var height = component.height(context);
+			var isBottom = y + size + height >= scaledHeight;
+			var yOff = isBottom ? (-height - yOffset) : (size + 2f + yOffset);
+			poseStack.pushPose();
+			poseStack.translate(x + halfSizeD, y + yOff, 0D);
+			poseStack.scale(fontScale, fontScale, 1F);
+
+			component.render(context, graphics, mc.font);
+
+			poseStack.popPose();
+
+			yOffset += height;
 		}
+
+//		for (MapInfoEvent.MapText textEvent : textEvents) {
+//			MapInfoEvent.MapInfo mapInfo = textEvent.text().get();
+//			if(mapInfo.shouldRender(mc, playerX, playerY, playerZ, dim)) {
+//				y += mapInfo.render(graphics, x, y, size, scaledHeight, halfSizeD, dim);
+//			}
+//		}
 
 //		List<Component> textList = buildMinimapTextData(mc, playerX, playerY, playerZ, dim);
 //		if (!textList.isEmpty()) {
@@ -1367,6 +1407,26 @@ public enum FTBChunksClient {
 			wp.setColor(color);
 			return wp;
 		}).orElse(null);
+	}
+
+	public void setupComponents() {
+		this.sortedComponents.clear();
+		this.computeOrderedComponents();
+	}
+
+	/**
+	 * Handles the headache of sorting logic
+	 */
+	private void computeOrderedComponents() {
+		ImmutableList<MinimapInfoComponent> minimapComponents = FTBChunksAPI.clientApi().getMinimapComponents();
+		
+		for (MinimapInfoComponent component : minimapComponents) {
+			if (!component.enabled()) {
+				continue;
+			}
+
+			this.sortedComponents.add(component);
+		}
 	}
 
 	public static class WaypointAddScreen extends BaseScreen {

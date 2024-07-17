@@ -4,7 +4,6 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
-import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,13 +28,12 @@ public class ZoneInfoComponent implements MinimapInfoComponent {
 
     @Override
     public boolean shouldRender(MinimapContext context) {
-        XZ xz = XZ.regionFromChunk(context.mapChunkPosX(), context.mapChunkPosZ());
-        var data = context.mapDimension().getRegion(xz).getData();
+        var data = context.mapDimension().getRegion(context.region()).getData();
         if (data == null) {
             return false;
         }
 
-        Optional<Team> foundTeam = data.getChunk(xz).getTeam();
+        Optional<Team> foundTeam = data.getChunk(context.region()).getTeam();
         if (foundTeam.isEmpty()) {
             return false;
         }

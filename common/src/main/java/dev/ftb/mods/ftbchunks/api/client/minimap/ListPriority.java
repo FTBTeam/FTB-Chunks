@@ -4,6 +4,9 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * TODO: Javadoc
+ */
 public class ListPriority {
     public static final ResourceLocation DEFAULT_ORDER = FTBChunksAPI.rl("default");
 

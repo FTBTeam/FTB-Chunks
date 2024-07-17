@@ -24,7 +24,6 @@ import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
-import dev.ftb.mods.ftbchunks.api.client.minimap.ListPriority;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
@@ -170,10 +169,10 @@ public enum FTBChunksClient {
 		TeamEvent.CLIENT_PROPERTIES_CHANGED.register(this::teamPropertiesChanged);
 		MapIconEvent.LARGE_MAP.register(this::mapIcons);
 		MapIconEvent.MINIMAP.register(this::mapIcons);
-//		RefreshMinimapIconsEvent.EVENT.register(this::refreshMinimapIcons);
 		ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
 		registerPlatform();
 
+		// Register minimap components
 		FTBChunksClientAPI clientApi = FTBChunksAPI.clientApi();
 		clientApi.registerMinimapComponent(new PlayerPosInfoComponent());
 		clientApi.registerMinimapComponent(new ZoneInfoComponent());
@@ -693,7 +692,7 @@ public enum FTBChunksClient {
 		}
 
 		// The minimap info text
-		var context = new MinimapContext(mc, mc.player, dim, currentPlayerChunkX, currentPlayerChunkZ, playerX, playerY, playerZ);
+		var context = new MinimapContext(mc, mc.player, dim, XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ), currentPlayerChunkX, currentPlayerChunkZ, playerX, playerY, playerZ);
 		var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
 		int yOffset = 0;
@@ -1188,53 +1187,7 @@ public enum FTBChunksClient {
 			tmpHolder.add(component);
 		}
 
-		tmpHolder.sort((a, b) -> {
-			var aPriority = a.priority();
-			var bPriority = b.priority();
-
-			var aBefore = aPriority.getBefore();
-			var bBefore = bPriority.getBefore();
-
-			var aAfter = aPriority.getAfter();
-			var bAfter = bPriority.getBefore();
-
-			if (aBefore == null && bBefore == null) {
-				return a.id().compareTo(b.id());
-			}
-
-			if (aBefore == null) {
-				return 1;
-			}
-
-			if (bBefore == null) {
-				return -1;
-			}
-
-			if ((ListPriority.DEFAULT_ORDER.equals(aAfter) && ListPriority.DEFAULT_ORDER.equals(bAfter))
-				|| ListPriority.DEFAULT_ORDER.equals(aAfter)
-				|| ListPriority.DEFAULT_ORDER.equals(bAfter)) {
-				return a.id().compareTo(b.id());
-			}
-
-			if (aAfter != null && aAfter.equals(b.id())) {
-				return -1;
-			}
-
-			if (bAfter != null && bAfter.equals(a.id())) {
-				return 1;
-			}
-
-			if (aBefore.equals(b.id())) {
-				return 1;
-			}
-
-			if (bBefore.equals(a.id())) {
-				return -1;
-			}
-
-
-			return a.id().compareTo(b.id());
-		});
+		// TODO: Add sorting logic here.
 
 		this.sortedComponents.addAll(tmpHolder);
 	}

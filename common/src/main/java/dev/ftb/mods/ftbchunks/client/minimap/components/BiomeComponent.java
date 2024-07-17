@@ -35,6 +35,7 @@ public class BiomeComponent implements MinimapInfoComponent {
             biomeKey = biome.unwrapKey().get();
             return true;
         }
+
         return false;
     }
 

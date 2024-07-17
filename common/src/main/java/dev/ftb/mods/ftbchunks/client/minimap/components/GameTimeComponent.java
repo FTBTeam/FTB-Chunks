@@ -2,16 +2,18 @@ package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 
-public class GameTimeComponent extends AbstractTimeComponent{
+public class GameTimeComponent implements MinimapInfoComponent {
 
     public static final ResourceLocation ID = FTBChunksAPI.rl("game_time");
     private static final Icon CLOCK_ICON = ItemIcon.getItemIcon(Items.CLOCK);
@@ -24,14 +26,17 @@ public class GameTimeComponent extends AbstractTimeComponent{
     @Override
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
         FTBChunksClientConfig.ClockedTimeMode clockedTimeMode = FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get();
-        if(clockedTimeMode == FTBChunksClientConfig.ClockedTimeMode.CLOCK) {
+        if (clockedTimeMode == FTBChunksClientConfig.ClockedTimeMode.CLOCK) {
             CLOCK_ICON.draw(graphics, -8, 0, 16, 16);
-        }else {
-            long time = context.minecraft().level.getDayTime() % 24000L;
-            int hours = (int) (time / 1000L);
-            int minutes = (int) ((time % 1000L) * 60L / 1000L);
-            drawCenteredText(context.minecraft().font, graphics, Component.literal(createTimeString(hours, minutes, clockedTimeMode == FTBChunksClientConfig.ClockedTimeMode.TWENTY_FOUR)), 0);
+            return;
         }
+
+        Minecraft minecraft = context.minecraft();
+
+        long time = minecraft.level.getDayTime() % 24000L;
+        int hours = (int) (time / 1000L);
+        int minutes = (int) ((time % 1000L) * 60L / 1000L);
+        drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hours, minutes, clockedTimeMode == FTBChunksClientConfig.ClockedTimeMode.TWENTY_FOUR)), 0);
     }
 
     @Override
@@ -41,6 +46,6 @@ public class GameTimeComponent extends AbstractTimeComponent{
 
     @Override
     public int height(MinimapContext context) {
-        return FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.ClockedTimeMode.CLOCK ? super.height(context) : 10;
+        return FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.ClockedTimeMode.CLOCK ? MinimapInfoComponent.super.height(context) : 10;
     }
 }

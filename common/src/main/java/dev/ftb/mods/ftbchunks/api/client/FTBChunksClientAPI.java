@@ -30,9 +30,24 @@ public interface FTBChunksClientAPI {
      */
     void requestMinimapIconRefresh();
 
+    /**
+     * Register a custom minimap info component {@link MinimapInfoComponent} to be rendered on the minimap.
+     *
+     * This should be called during mod initialization as this list will be finalized once Minecraft has "started"
+     * per the client lifecycle events
+     *
+     * @param component the component to register
+     */
     void registerMinimapComponent(MinimapInfoComponent component);
 
+    /**
+     * Request the minimap components to be recomputed. This is typically required when a user has changed
+     * a setting that affects the minimap components. Aka. Enabling/disabling a component.
+     */
     void recomputeMinimapComponents();
 
+    /**
+     * Provides an immutable list of all registered minimap components.
+     */
     ImmutableList<MinimapInfoComponent> getMinimapComponents();
 }

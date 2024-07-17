@@ -41,7 +41,18 @@ public class FTBChunksClientAPIImpl implements FTBChunksClientAPI {
     }
 
     @Override
-    public void recomputeMinimapComponents() {
+    public boolean isMinimapComponentEnabled(MinimapInfoComponent component) {
+        return !FTBChunksClientConfig.MINIMAP_INFO_HIDDEN.get().contains(component.id().toString());
+    }
+
+    @Override
+    public void setMinimapComponentEnabled(MinimapInfoComponent component, boolean enabled) {
+        if (enabled) {
+            FTBChunksClientConfig.MINIMAP_INFO_HIDDEN.get().remove(component.id().toString());
+        } else {
+            FTBChunksClientConfig.MINIMAP_INFO_HIDDEN.get().add(component.id().toString());
+        }
+        FTBChunksClientConfig.saveConfig();
         FTBChunksClient.INSTANCE.setupComponents();
     }
 

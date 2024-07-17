@@ -57,7 +57,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 (widget, button) -> toggleAll(true));
     }
 
-    private static FormattedText ellipsize(Font font, FormattedText text, int maxWidth) {
+    public static FormattedText ellipsize(Font font, FormattedText text, int maxWidth) {
         final int strWidth = font.width(text);
         final int ellipsisWidth = font.width(ELLIPSIS);
         if (strWidth > maxWidth) {
@@ -145,7 +145,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
             super(panel);
 
             this.dim = dim;
-            //Todo move the to library or define / get some standard for dim names
+            //Todo move the to library or define / get some standard for dim names - unreal
             //Might need to show more with dim types / level ids
             this.titleText = Component.translatableWithFallback(dim.location().toLanguageKey("dimension"), dim.location().getPath())
                     .withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(dim.location().toString()))));

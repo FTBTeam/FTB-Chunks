@@ -32,7 +32,7 @@ public record AddWaypointPacket(String name, GlobalPos position, int color, bool
             if (message.useGui()) {
                 StringConfig configName = new StringConfig();
                 configName.setValue(message.name);
-                new FTBChunksClient.WaypointAddScreen(configName, context.getPlayer(), message.position).openGui();
+                new FTBChunksClient.WaypointAddScreen(configName, message.position).openGui();
             } else {
                 FTBChunksClient.addWaypoint(message.name, message.position, message.color);
             }

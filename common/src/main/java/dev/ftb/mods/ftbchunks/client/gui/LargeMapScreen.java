@@ -60,6 +60,8 @@ public class LargeMapScreen extends BaseScreen {
 	private Button settingsButton;
 	private Button serverSettingsButton;
 	private Button clearDeathpointsButton;
+	//Todo - UnReal Where to put this
+	private Button infoSortScreen;
 	private boolean needIconRefresh;
 	private final int minZoom;
 
@@ -139,6 +141,9 @@ public class LargeMapScreen extends BaseScreen {
 				.append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
 		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
 				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
+		//Todo - UnReal Where to put this
+		add(infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.stuff"), Icons.COMPASS,
+				(b, m) -> new MinimapInfoSortScreen().openGui(), tooltip));
 		add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
 				(b, m) -> new MapKeyReferenceScreen().openGui()));
 
@@ -195,6 +200,7 @@ public class LargeMapScreen extends BaseScreen {
 		waypointManagerButton.setPosAndSize(1, 19, 16, 16);
 		infoButton.setPosAndSize(1, 37, 16, 16);
 		clearDeathpointsButton.setPosAndSize(1, 55, 16, 16);
+		infoSortScreen.setPosAndSize(1, 70, 16, 16);
 
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);

@@ -40,11 +40,11 @@ public interface FTBChunksClientAPI {
      */
     void registerMinimapComponent(MinimapInfoComponent component);
 
-    /**
-     * Request the minimap components to be recomputed. This is typically required when a user has changed
-     * a setting that affects the minimap components. Aka. Enabling/disabling a component.
-     */
-    void recomputeMinimapComponents();
+    //Todo
+    boolean isMinimapComponentEnabled(MinimapInfoComponent component);
+
+    //Todo
+    void setMinimapComponentEnabled(MinimapInfoComponent component, boolean enabled);
 
     /**
      * Provides an immutable list of all registered minimap components.

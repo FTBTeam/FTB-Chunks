@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.client.minimap.InfoConfigComponent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
@@ -12,11 +13,29 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class GameTimeComponent implements MinimapInfoComponent {
 
     public static final ResourceLocation ID = FTBChunksAPI.rl("game_time");
     private static final Icon CLOCK_ICON = ItemIcon.getItemIcon(Items.CLOCK);
+
+    //Todo make this better - unreal
+    private final Map<InfoConfigComponent, FTBChunksClientConfig.ClockedTimeMode> configComponents;
+    private final Map<FTBChunksClientConfig.ClockedTimeMode, InfoConfigComponent> configComponentsReverse;
+
+    public GameTimeComponent() {
+        this.configComponents = new HashMap<>();
+        this.configComponentsReverse = new HashMap<>();
+        for (FTBChunksClientConfig.ClockedTimeMode value : FTBChunksClientConfig.ClockedTimeMode.values()) {
+            configComponents.put(() -> FTBChunksClientConfig.ClockedTimeMode.NAME_MAP.getDisplayName(value), value);
+            configComponentsReverse.put(value, () -> FTBChunksClientConfig.ClockedTimeMode.NAME_MAP.getDisplayName(value));
+        }
+    }
 
     @Override
     public ResourceLocation id() {
@@ -39,13 +58,25 @@ public class GameTimeComponent implements MinimapInfoComponent {
         drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hours, minutes, clockedTimeMode == FTBChunksClientConfig.ClockedTimeMode.TWENTY_FOUR)), 0);
     }
 
-    @Override
-    public boolean enabled() {
-        return FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.ClockedTimeMode.OFF;
-    }
 
     @Override
     public int height(MinimapContext context) {
         return FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get() != FTBChunksClientConfig.ClockedTimeMode.CLOCK ? MinimapInfoComponent.super.height(context) : 10;
+    }
+
+    @Override
+    public Set<InfoConfigComponent> getConfigComponents() {
+        return configComponents.keySet();
+    }
+
+    @Override
+    @Nullable
+    public InfoConfigComponent getActiveConfigComponent() {
+        return configComponentsReverse.get(FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.get());
+    }
+
+    @Override
+    public void setActiveConfigComponent(InfoConfigComponent component) {
+        FTBChunksClientConfig.MINIMAP_SHOW_GAME_TIME.set(configComponents.get(component));
     }
 }

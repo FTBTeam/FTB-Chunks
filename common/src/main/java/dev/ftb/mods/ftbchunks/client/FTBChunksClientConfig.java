@@ -8,6 +8,11 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
 import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;
@@ -16,6 +21,10 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.Collections;
+import java.util.stream.Stream;
 
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.loadDefaulted;
@@ -76,6 +85,9 @@ public interface FTBChunksClientConfig {
 	EnumValue<ClockedTimeMode> MINIMAP_SHOW_GAME_TIME = MINIMAP.addEnum("show_game_time", ClockedTimeMode.NAME_MAP).comment("Show game time under minimap");
 	EnumValue<TimeMode> MINIMAP_SHOW_REAL_TIME = MINIMAP.addEnum("show_real_time", TimeMode.NAME_MAP).comment("Show real time under minimap");
 	BooleanValue SHOW_FPS = MINIMAP.addBoolean("show_fps", false).comment("Show FPS under minimap");
+	//Todo default order - unreal
+	StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(BiomeComponent.ID, DebugComponent.ID, FPSComponent.ID, GameTimeComponent.ID, PlayerPosInfoComponent.ID).map(ResourceLocation::toString).toList()).comment("Info displayed under minimap");
+	StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Collections.emptyList()).comment("Info hidden under minimap");
 
 	SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
 	BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");
@@ -129,23 +141,20 @@ public interface FTBChunksClientConfig {
 
 	static void saveConfig() {
 		CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
-		FTBChunksAPI.clientApi().recomputeMinimapComponents();
 	}
 
 	public enum TimeMode {
-		OFF,
 		TWENTY_FOUR,
 		TWELVE;
 
-		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(OFF, values()).baseNameKey("ftbchunks.time_mode").create();
+		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(TWENTY_FOUR, values()).baseNameKey("ftbchunks.time_mode").create();
 	}
 
 	public enum ClockedTimeMode {
-		OFF,
 		TWENTY_FOUR,
 		TWELVE,
 		CLOCK;
 
-		public static final NameMap<ClockedTimeMode> NAME_MAP = NameMap.of(OFF, values()).baseNameKey("ftbchunks.time_mode").create();
+		public static final NameMap<ClockedTimeMode> NAME_MAP = NameMap.of(TWENTY_FOUR, values()).baseNameKey("ftbchunks.time_mode").create();
 	}
 }

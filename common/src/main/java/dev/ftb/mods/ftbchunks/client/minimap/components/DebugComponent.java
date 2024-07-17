@@ -9,6 +9,7 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.ChunkUpdateTask;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
@@ -22,6 +23,10 @@ import java.util.List;
 public class DebugComponent implements MinimapInfoComponent {
 
     public static final ResourceLocation ID = FTBChunksAPI.rl("debug");
+
+    public DebugComponent() {
+        super();
+    }
 
     @Override
     public ResourceLocation id() {
@@ -54,8 +59,4 @@ public class DebugComponent implements MinimapInfoComponent {
         return computeLineHeight(context.minecraft(), 5) + 1;
     }
 
-    @Override
-    public boolean enabled() {
-        return FTBChunksClientConfig.DEBUG_INFO.get();
-    }
 }

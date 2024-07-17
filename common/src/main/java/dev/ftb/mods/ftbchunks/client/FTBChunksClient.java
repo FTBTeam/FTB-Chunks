@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -95,6 +94,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public enum FTBChunksClient {
 	INSTANCE;
@@ -1176,37 +1177,31 @@ public enum FTBChunksClient {
 	 * Handles the headache of sorting logic
 	 */
 	private void computeOrderedComponents() {
-		ImmutableList<MinimapInfoComponent> minimapComponents = FTBChunksAPI.clientApi().getMinimapComponents();
+		Map<ResourceLocation, MinimapInfoComponent> componentMap = FTBChunksAPI.clientApi().getMinimapComponents().stream()
+				.collect(Collectors.toMap(MinimapInfoComponent::id, Function.identity()));
+		List<ResourceLocation> order = FTBChunksClientConfig.MINIMAP_INFO_ORDER.get().stream().map(ResourceLocation::parse).toList();
 
-		List<MinimapInfoComponent> tmpHolder = new ArrayList<>();
-		for (MinimapInfoComponent component : minimapComponents) {
-			if (!component.enabled()) {
-				continue;
+		for (ResourceLocation id : order) {
+			MinimapInfoComponent minimapInfoComponent = componentMap.get(id);
+			if(minimapInfoComponent != null && FTBChunksAPI.clientApi().isMinimapComponentEnabled(minimapInfoComponent)) {
+				sortedComponents.add(minimapInfoComponent);
 			}
-
-			tmpHolder.add(component);
 		}
-
-		// TODO: Add sorting logic here.
-
-		this.sortedComponents.addAll(tmpHolder);
 	}
 
 	public static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;
-		private final Player player;
 		private final GlobalPos waypointLocation;
 
-		public WaypointAddScreen(StringConfig name, Player player, GlobalPos waypointLocation) {
+		public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
 			super();
 			this.name = name;
-			this.player = player;
 			this.waypointLocation = waypointLocation;
 			this.setHeight(35);
 		}
 
 		public WaypointAddScreen(StringConfig name, Player player) {
-			this(name, player, new GlobalPos(player.level().dimension(), player.blockPosition()));
+			this(name, new GlobalPos(player.level().dimension(), player.blockPosition()));
 		}
 
 		@Override

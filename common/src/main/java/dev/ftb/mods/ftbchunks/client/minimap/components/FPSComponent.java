@@ -13,6 +13,10 @@ public class FPSComponent implements MinimapInfoComponent {
 
     public static final ResourceLocation ID = FTBChunksAPI.rl("fps");
 
+    public FPSComponent() {
+        super();
+    }
+
     @Override
     public ResourceLocation id() {
         return ID;
@@ -22,4 +26,5 @@ public class FPSComponent implements MinimapInfoComponent {
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
         drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()), 0);
     }
+
 }

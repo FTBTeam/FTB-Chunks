@@ -6,6 +6,12 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * An entry point for developers to create custom minimap info components.
@@ -29,11 +35,31 @@ public interface MinimapInfoComponent {
     void render(MinimapContext context, GuiGraphics graphics, Font font);
 
     /**
-     * Whether this component should be included in the minimap during the minimaps initial setup
+     * Set of Info {@link InfoConfigComponent} that are used to configure options for rendering the waypoint
+     * this is exposed in the right click action of Minimap Info GUI
+     * @return the set of {@link InfoConfigComponent}.
      */
-    default boolean enabled() {
-        return true;
+    default Set<InfoConfigComponent> getConfigComponents() {
+        return Collections.emptySet();
     }
+
+    /**
+     * Sets the active {@link InfoConfigComponent} option should be overridden if {@link #getConfigComponents()} is not empty
+     * @param component The {@link InfoConfigComponent} to set as active config
+     */
+    default void setActiveConfigComponent(InfoConfigComponent component) {
+
+    }
+
+    /**
+     * Gets the active {@link InfoConfigComponent} should be overridden if {@link #getConfigComponents()} is not empty
+     * @return The active {@link InfoConfigComponent} option, should only be null if {@link #getConfigComponents()} is empty
+     */
+    @Nullable
+    default InfoConfigComponent getActiveConfigComponent() {
+        return null;
+    }
+
 
     /**
      * The height of the component is used to allocate the correct space for the component. Failure to return the correct
@@ -54,13 +80,6 @@ public interface MinimapInfoComponent {
     }
 
     /**
-     * Sort order for the component see {@link ListPriority}
-     */
-    default ListPriority priority() {
-        return ListPriority.defaultOrder();
-    }
-
-    /**
      * Helper method to compute the height of a text component whilst taking into account the font scale
      */
     default int computeLineHeight(Minecraft minecraft, int lines) {
@@ -74,5 +93,16 @@ public interface MinimapInfoComponent {
     default void drawCenteredText(Font font, GuiGraphics graphics, Component text, int y) {
         int textWidth = font.width(text.getVisualOrderText());
         graphics.drawString(font, text, -textWidth / 2, y, 0xFFFFFFFF, true);
+    }
+
+
+    //Todo - this good?
+    default Component displayName() {
+        return Component.translatable("minimapinfo." + id().getNamespace() + "." + id().getPath() + ".title");
+    }
+
+    //Todo - this good?
+    default Component description() {
+        return Component.translatable("minimapinfo." + id().getNamespace() + "." + id().getPath() + ".description");
     }
 }

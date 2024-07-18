@@ -1,10 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.InfoConfigComponent;
+import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
@@ -12,7 +14,6 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,6 +37,9 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         setWidth(200);
         FTBChunksClientConfig.MINIMAP_INFO_ORDER.get().forEach(s -> infoSortList.add(ResourceLocation.parse(s)));
         showBottomPanel(false);
+        setRenderBlur(false);
+        //Todo why do I need this? - unreal
+        refreshWidgets();
     }
 
     @Override
@@ -58,6 +62,26 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         return new MinimapInfoSortEntry(this);
     }
 
+    @Override
+    protected Panel createTopPanel() {
+        return new CustomTopPanel();
+    }
+
+    protected class CustomTopPanel extends TopPanel {
+        private final TextField titleLabel = new TextField(this);
+
+        @Override
+        public void addWidgets() {
+            titleLabel.setText(Component.translatable("ftbchunks.gui.sort_minimap_info"));
+            titleLabel.addFlags(Theme.CENTERED_V);
+            add(titleLabel);
+        }
+
+        @Override
+        public void alignWidgets() {
+            titleLabel.setPosAndSize(4, 0, titleLabel.width, height);
+        }
+    }
 
     public class MinimapInfoSortEntry extends Panel {
 
@@ -95,34 +119,28 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         private final SimpleButton hideButton;
         private final TextField field;
         private final MinimapInfoComponent infoComponent;
+        private final SimpleButton configButton;
 
         public InfoEntry(MinimapInfoComponent infoComponent, Panel panel) {
             super(panel);
-            hideButton = new SimpleButton(this, Component.empty(), isComponentDisabled(infoComponent) ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
-                setComponentEnabled(infoComponent, isComponentDisabled(infoComponent));;
-                w.setIcon(isComponentDisabled(infoComponent) ? Icons.REMOVE_GRAY : Icons.ACCEPT);
-            });
-            down = new SimpleButton(InfoEntry.this, List.of(Component.translatable("gui.move_up")), Icons.UP,
-                    (widget, button) -> move(false));
-            up = new SimpleButton(InfoEntry.this, List.of(Component.translatable("gui.move_down")), Icons.DOWN,
-                    (widget, button) -> move(true));
-            field = new TextField(InfoEntry.this) {
-                @Override
-                public boolean mousePressed(MouseButton button) {
-                    if(!infoComponent.getConfigComponents().isEmpty() && button == MouseButton.RIGHT) {
-                        List<ContextMenuItem> items = new ArrayList<>();
-                        for (InfoConfigComponent value : infoComponent.getConfigComponents()) {
-                            ContextMenuItem item = new ContextMenuItem(value.displayName(), infoComponent.getActiveConfigComponent() == value ? Icons.ACCEPT : Icons.REMOVE_GRAY, (button1) -> infoComponent.setActiveConfigComponent(value));
-                            items.add(item);
-                        }
-                        openContextMenu(items);
-                        playClickSound();
-                        return true;
-                    }else {
-                        return super.mousePressed(button);
-                    }
+            hideButton = ToggleVisibilityButton.create(this, !isComponentDisabled(infoComponent), (enabled) -> setComponentEnabled(infoComponent, enabled));
+            down = new SortScreenButton(InfoEntry.this, Component.translatable("ftbchunks.gui.move_up"), Icons.UP, (widget, button) -> move(false, isShiftKeyDown()));
+            up = new SortScreenButton(InfoEntry.this, Component.translatable("ftbchunks.gui.move_down"), Icons.DOWN, (widget, button) -> move(true, isShiftKeyDown()));
+            configButton = new SimpleButton(InfoEntry.this, Component.translatable("gui.settings"), Icons.SETTINGS, (widget, button) -> {
+                List<ContextMenuItem> items = new ArrayList<>();
+                for (TranslatedOption translatedOption : infoComponent.getConfigComponents()) {
+                    ContextMenuItem item = new ContextMenuItem(Component.translatable(translatedOption.translationKey()), isTranslatedOptionEnabled(infoComponent, translatedOption) ? Icons.ACCEPT : Icons.REMOVE_GRAY, (button1) -> setTranslatedOptionEnabled(infoComponent, translatedOption));
+                    items.add(item);
                 }
-
+                openContextMenu(items);
+                playClickSound();
+            }) {
+                @Override
+                public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+                    super.drawIcon(graphics, theme, x, y, 12, 12);
+                }
+            };
+            field = new TextField(InfoEntry.this) {
                 @Override
                 public void addMouseOverText(TooltipList list) {
                     list.add(infoComponent.description());
@@ -132,27 +150,32 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         }
 
 
-
         @Override
         public void addWidgets() {
             int listIndex = infoSortList.indexOf(infoComponent.id());
-            if(listIndex != 0) {
+            if (listIndex != 0) {
                 add(down);
             }
-            if(listIndex != infoSortList.size() - 1) {
+            if (listIndex != infoSortList.size() - 1) {
                 add(up);
             }
             add(hideButton);
             add(field);
+            if(!infoComponent.getConfigComponents().isEmpty()) {
+                add(configButton);
+            }
         }
 
         @Override
         public void alignWidgets() {
-            down.setPosAndSize(2, height / 6, 15, 15);
-            up.setPosAndSize(18, height / 6, 15, 15);
-            hideButton.setPosAndSize(width - 18, height / 6, 16, 16);
-            field.setPosAndSize(37, 8, width - 37, height);
-            field.setText(WaypointEditorScreen.ellipsize(getTheme().getFont(), infoComponent.displayName(),hideButton.getPosX() - 37 - 5).getString());
+            down.setPosAndSize(6, height / 6 + 1, 6, 8);
+            up.setPosAndSize(6, height / 6 + 11, 6, 8);
+            hideButton.setPosAndSize(width - 18, height / 6, 12, 12);
+            field.setPosAndSize(16, 8, width - 37, height);
+            if(!infoComponent.getConfigComponents().isEmpty()) {
+                configButton.setPos(width - 18 - 14, height / 6 + 2);
+            }
+            field.setText(WaypointEditorScreen.ellipsize(getTheme().getFont(), infoComponent.displayName(), hideButton.getPosX() - 14 - 5).getString());
         }
 
         @Override
@@ -164,37 +187,65 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
             super.draw(graphics, theme, x, y, w, h);
         }
 
-        private void move(boolean forward) {
+        /**
+         * moves the current MiniMapInfoComponent in our ordered list and saves the new order for rendering
+         * @param forward true if the current value `down` the list and false if `up` the list
+         * @param end true if the current value is the last value in the list and false if it is not
+         */
+        private void move(boolean forward, boolean end) {
             List<ResourceLocation> list = new LinkedList<>(infoSortList);
-            int index = list.indexOf(infoComponent.id());
-            if (index == -1) {
-                return;
-            }
-            if (forward) {
-                if (index == list.size() - 1) {
-                    return;
+            if (end) {
+                if (forward) {
+                    list.remove(infoComponent.id());
+                    list.add(infoComponent.id());
+                } else {
+                    list.remove(infoComponent.id());
+                    list.addFirst(infoComponent.id());
                 }
-                list.remove(index);
-                list.add(index + 1, infoComponent.id());
             } else {
-                if (index == 0) {
+                int index = list.indexOf(infoComponent.id());
+                if (index == -1) {
                     return;
                 }
-                list.remove(index);
-                list.add(index - 1, infoComponent.id());
+                if (forward) {
+                    if (index == list.size() - 1) {
+                        return;
+                    }
+                    list.remove(index);
+                    list.add(index + 1, infoComponent.id());
+                } else {
+                    if (index == 0) {
+                        return;
+                    }
+                    list.remove(index);
+                    list.add(index - 1, infoComponent.id());
+                }
             }
             infoSortList = list;
             saveConfig();
             parent.refreshWidgets();
         }
-
     }
+
+    public static class SortScreenButton extends SimpleButton {
+
+        public SortScreenButton(Panel panel, Component text, Icon icon, Callback c) {
+            super(panel, text, icon, c);
+        }
+
+        @Override
+        public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            super.drawIcon(graphics, theme, x - 1, y - 2, 6, 8);
+        }
+    }
+
 
     private void saveConfig() {
         List<String> list = new LinkedList<>();
         infoSortList.forEach(resourceLocation -> list.add(resourceLocation.toString()));
         FTBChunksClientConfig.MINIMAP_INFO_ORDER.set(list);
         FTBChunksClientConfig.saveConfig();
+        FTBChunksClient.INSTANCE.setupComponents();
     }
 
     private boolean isComponentDisabled(MinimapInfoComponent component) {
@@ -203,6 +254,21 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
 
     private void setComponentEnabled(MinimapInfoComponent component, boolean enabled) {
         FTBChunksAPI.clientApi().setMinimapComponentEnabled(component, enabled);
+    }
+
+    private boolean isTranslatedOptionEnabled(MinimapInfoComponent component, TranslatedOption option) {
+        Map<String, String> stringStringMap = FTBChunksClientConfig.MINIMAP_SETTINGS.get();
+        if (!stringStringMap.containsKey(component.id().toString())) {
+            stringStringMap.put(component.id().toString(), option.optionName());
+        }
+        return stringStringMap.get(component.id().toString()).equals(option.optionName());
+    }
+
+    private void setTranslatedOptionEnabled(MinimapInfoComponent component, TranslatedOption option) {
+        Map<String, String> stringStringMap = FTBChunksClientConfig.MINIMAP_SETTINGS.get();
+        stringStringMap.put(component.id().toString(), option.optionName());
+        FTBChunksClientConfig.MINIMAP_SETTINGS.set(stringStringMap);
+        FTBChunksClientConfig.saveConfig();
     }
 
 }

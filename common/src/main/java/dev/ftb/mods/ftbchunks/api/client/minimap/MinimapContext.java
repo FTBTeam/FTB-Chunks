@@ -5,6 +5,8 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 
+import java.util.Map;
+
 /**
  * Minimal context for Minimap Info Components
  *
@@ -27,5 +29,11 @@ public record MinimapContext(
    int mapChunkPosZ,
    double mapPlayerX,
    double mapPlayerY,
-   double mapPlayerZ
-) {}
+   double mapPlayerZ,
+   Map<String, String> infoSettings
+) {
+
+    public String getSetting(MinimapInfoComponent infoComponent) {
+        return infoSettings.getOrDefault(infoComponent.id().toString(), "");
+    }
+}

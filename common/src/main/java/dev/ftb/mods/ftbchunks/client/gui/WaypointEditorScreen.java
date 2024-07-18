@@ -189,6 +189,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
         @Override
         public void addMouseOverText(TooltipList list) {
+            list.add(Component.literal(dim.location().toString()));
         }
     }
 
@@ -211,10 +212,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
         @Override
         public void addWidgets() {
-            add(hideButton = new SimpleButton(this, Component.empty(), wp.isHidden() ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
-                wp.setHidden(!wp.isHidden());
-                w.setIcon(wp.isHidden() ? Icons.REMOVE_GRAY : Icons.ACCEPT);
-            }));
+            add(hideButton = ToggleVisibilityButton.create(this, !wp.isHidden(), hidden -> wp.setHidden(!hidden)));
 
             add(nameField = new TextField(this).setTrim().setColor(Color4I.rgb(wp.getColor())).addFlags(Theme.SHADOW));
 
@@ -226,6 +224,11 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 @Override
                 public Component getTitle() {
                     return isShiftKeyDown() ? QUICK_DELETE : DELETE;
+                }
+
+                @Override
+                public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+                    super.drawIcon(graphics, theme, x, y, 12, 12);
                 }
             });
         }
@@ -243,8 +246,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
                 int yOff = (this.height - getTheme().getFontHeight()) / 2 + 1;
 
-                hideButton.setPos(farRight - 8 - 16, 1);
-                deleteButton.setPos(farRight - 8, 1);
+                hideButton.setPosAndSize(farRight - 8 - 16, 1, 12, 12);
+                deleteButton.setPosAndSize(farRight - 8, 1, 12, 12);
 
                 distField.setPos(hideButton.getPosX() - 5 - distField.width, yOff);
 

@@ -693,7 +693,7 @@ public enum FTBChunksClient {
 		}
 
 		// The minimap info text
-		var context = new MinimapContext(mc, mc.player, dim, XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ), currentPlayerChunkX, currentPlayerChunkZ, playerX, playerY, playerZ);
+		var context = new MinimapContext(mc, mc.player, dim, XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ), currentPlayerChunkX, currentPlayerChunkZ, playerX, playerY, playerZ, FTBChunksClientConfig.MINIMAP_SETTINGS.get());
 		var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
 		int yOffset = 0;
@@ -1179,15 +1179,34 @@ public enum FTBChunksClient {
 	private void computeOrderedComponents() {
 		Map<ResourceLocation, MinimapInfoComponent> componentMap = FTBChunksAPI.clientApi().getMinimapComponents().stream()
 				.collect(Collectors.toMap(MinimapInfoComponent::id, Function.identity()));
-		List<ResourceLocation> order = FTBChunksClientConfig.MINIMAP_INFO_ORDER.get().stream().map(ResourceLocation::parse).toList();
+
+		List<ResourceLocation> order = FTBChunksClientConfig.MINIMAP_INFO_ORDER.get()
+				.stream()
+				.map(ResourceLocation::parse)
+				.collect(Collectors.toList());
+
+		// Adds any missing components to the end of the list
+		boolean save = false;
+		for (ResourceLocation location : componentMap.keySet()) {
+			if (!order.contains(location)) {
+				order.add(location);
+				save = true;
+			}
+		}
+
+		if (save) {
+			FTBChunksClientConfig.MINIMAP_INFO_ORDER.set(order.stream().map(ResourceLocation::toString).collect(Collectors.toList()));
+			FTBChunksClientConfig.saveConfig();
+		}
 
 		for (ResourceLocation id : order) {
 			MinimapInfoComponent minimapInfoComponent = componentMap.get(id);
-			if(minimapInfoComponent != null && FTBChunksAPI.clientApi().isMinimapComponentEnabled(minimapInfoComponent)) {
+			if (minimapInfoComponent != null && FTBChunksAPI.clientApi().isMinimapComponentEnabled(minimapInfoComponent)) {
 				sortedComponents.add(minimapInfoComponent);
 			}
 		}
 	}
+
 
 	public static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;

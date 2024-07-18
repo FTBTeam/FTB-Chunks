@@ -6,11 +6,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -35,31 +32,13 @@ public interface MinimapInfoComponent {
     void render(MinimapContext context, GuiGraphics graphics, Font font);
 
     /**
-     * Set of Info {@link InfoConfigComponent} that are used to configure options for rendering the waypoint
+     * Set of Info {@link TranslatedOption} that are used to configure options for rendering the waypoint
      * this is exposed in the right click action of Minimap Info GUI
-     * @return the set of {@link InfoConfigComponent}.
+     * @return the set of {@link TranslatedOption}.
      */
-    default Set<InfoConfigComponent> getConfigComponents() {
+    default Set<TranslatedOption> getConfigComponents() {
         return Collections.emptySet();
     }
-
-    /**
-     * Sets the active {@link InfoConfigComponent} option should be overridden if {@link #getConfigComponents()} is not empty
-     * @param component The {@link InfoConfigComponent} to set as active config
-     */
-    default void setActiveConfigComponent(InfoConfigComponent component) {
-
-    }
-
-    /**
-     * Gets the active {@link InfoConfigComponent} should be overridden if {@link #getConfigComponents()} is not empty
-     * @return The active {@link InfoConfigComponent} option, should only be null if {@link #getConfigComponents()} is empty
-     */
-    @Nullable
-    default InfoConfigComponent getActiveConfigComponent() {
-        return null;
-    }
-
 
     /**
      * The height of the component is used to allocate the correct space for the component. Failure to return the correct
@@ -96,13 +75,17 @@ public interface MinimapInfoComponent {
     }
 
 
-    //Todo - this good?
+    /**
+     * @return display name render in the Minimap Info Settings GUI
+     */
     default Component displayName() {
-        return Component.translatable("minimapinfo." + id().getNamespace() + "." + id().getPath() + ".title");
+        return Component.translatable("minimap.info." + id().getNamespace() + "." + id().getPath() + ".title");
     }
 
-    //Todo - this good?
+    /**
+     * @return hover texted displayed render in the Minimap Info Settings GUI
+     */
     default Component description() {
-        return Component.translatable("minimapinfo." + id().getNamespace() + "." + id().getPath() + ".description");
+        return Component.translatable("minimap.info." + id().getNamespace() + "." + id().getPath() + ".description");
     }
 }

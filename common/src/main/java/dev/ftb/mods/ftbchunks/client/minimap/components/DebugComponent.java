@@ -36,10 +36,9 @@ public class DebugComponent implements MinimapInfoComponent {
     @Override
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
         List<Component> components = new ArrayList<>();
-        XZ playerXZ = XZ.regionFromChunk(context.mapChunkPosX(), context.mapChunkPosZ());
         long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
         components.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
-        components.add(Component.literal("Rgn: " + playerXZ).withStyle(ChatFormatting.GRAY));
+        components.add(Component.literal("Rgn: " + XZ.of(context.mapChunksPosX(), context.mapChunksPosZ())).withStyle(ChatFormatting.GRAY));
         components.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
         components.add(Component.literal("Updates: " + FTBChunksClient.INSTANCE.getRenderedDebugCount()).withStyle(ChatFormatting.GRAY));
         if(ChunkUpdateTask.getDebugLastTime() > 0L) {
@@ -47,7 +46,7 @@ public class DebugComponent implements MinimapInfoComponent {
         }
 
         int y = 0;
-        int lineHeight = computeLineHeight(context.minecraft(), 1) * 2 + 1;
+        int lineHeight = computeLineHeight(context.minecraft(), 1) + font.lineHeight + 1;
         for (Component component : components) {
             drawCenteredText(context.minecraft().font, graphics, component, y);
             y += lineHeight;

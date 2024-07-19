@@ -693,7 +693,7 @@ public enum FTBChunksClient {
 		}
 
 		// The minimap info text
-		var context = new MinimapContext(mc, mc.player, dim, XZ.regionFromChunk(currentPlayerChunkX, currentPlayerChunkZ), currentPlayerChunkX, currentPlayerChunkZ, playerX, playerY, playerZ, FTBChunksClientConfig.MINIMAP_SETTINGS.get());
+		var context = new MinimapContext(mc, mc.player, dim, currentPlayerChunkX, currentPlayerChunkZ, new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
 		var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
 		int yOffset = 0;

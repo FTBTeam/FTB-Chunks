@@ -262,6 +262,8 @@
 	"ftbchunks.gui.sort_minimap_info": "Minimap Info Settings",
 	"ftbchunks.minimap.info_hidden": "Hidden Minimap Info",
 	"ftbchunks.minimap.info_order": "Minimap info order",
+	"ftbchunks.show_wilderness.show_wilderness": "Show Wilderness",
+	"ftbchunks.show_wilderness.just_claimed": "Show only Claimed Chunks",
 	"tag.item.ftbchunks.right_click_blacklist": "Right Click Blacklist",
 	"tag.item.ftbchunks.right_click_whitelist": "Right Click Whitelist"
 }

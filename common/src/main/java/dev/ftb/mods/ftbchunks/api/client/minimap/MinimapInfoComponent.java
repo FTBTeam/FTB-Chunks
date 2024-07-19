@@ -37,7 +37,7 @@ public interface MinimapInfoComponent {
      * @return the set of {@link TranslatedOption}.
      */
     default Set<TranslatedOption> getConfigComponents() {
-        return Collections.emptySet();
+        return Set.of();
     }
 
     /**

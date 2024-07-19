@@ -4,7 +4,7 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import net.minecraft.client.Minecraft;
@@ -31,7 +31,7 @@ public class GameTimeComponent implements MinimapInfoComponent {
     @Override
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
         String setting = context.getSetting(this);
-        if (setting.equals(FTBChunksClientConfig.ClockedTimeMode.CLOCK.name())) {
+        if (setting.equals(ClockedTimeMode.CLOCK.name())) {
             CLOCK_ICON.draw(graphics, -8, 0, 16, 16);
             return;
         }
@@ -41,21 +41,29 @@ public class GameTimeComponent implements MinimapInfoComponent {
         long time = minecraft.level.getDayTime() % 24000L;
         int hours = (int) (time / 1000L);
         int minutes = (int) ((time % 1000L) * 60L / 1000L);
-        drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hours, minutes, setting.equals(FTBChunksClientConfig.ClockedTimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hours, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name()))), 0);
     }
 
 
     @Override
     public int height(MinimapContext context) {
         String setting = context.getSetting(this);
-        return !setting.equals(FTBChunksClientConfig.ClockedTimeMode.CLOCK.name()) ? MinimapInfoComponent.super.height(context) : 10;
+        return !setting.equals(ClockedTimeMode.CLOCK.name()) ? MinimapInfoComponent.super.height(context) : 10;
     }
 
     @Override
     public Set<TranslatedOption> getConfigComponents() {
-        return Arrays.stream(FTBChunksClientConfig.ClockedTimeMode.values())
-                .map(value -> new TranslatedOption(value.name(), "ftbchunks.time_mode." + FTBChunksClientConfig.ClockedTimeMode.NAME_MAP.getName(value)))
+        return Arrays.stream(ClockedTimeMode.values())
+                .map(value -> new TranslatedOption(value.name(), "ftbchunks.time_mode." + ClockedTimeMode.NAME_MAP.getName(value)))
                 .collect(Collectors.toSet());
+    }
+
+    public enum ClockedTimeMode {
+        TWENTY_FOUR,
+        TWELVE,
+        CLOCK;
+
+        public static final NameMap<ClockedTimeMode> NAME_MAP = NameMap.of(TWENTY_FOUR, values()).baseNameKey("ftbchunks.time_mode").create();
     }
 
 }

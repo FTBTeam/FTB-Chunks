@@ -145,7 +145,10 @@ public enum FTBChunksClient {
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
 
-    public void init() {
+	// kludge to move minimap down to avoid rendering over/under vanilla effects in top right of screen
+	private int minimapMobEffectKludge = 0;  // 1 = player has beneficial, 2 = player has harmful effects
+
+	public void init() {
 		if (Minecraft.getInstance() == null) {
 			return;
 		}
@@ -534,6 +537,11 @@ public enum FTBChunksClient {
 		if (offsetConditional.test(minimapPosition)) {
 			x += minimapPosition.posX == 0 ? offsetX : -offsetX;
 			y -= minimapPosition.posY > 1 ? offsetY : -offsetY;
+		}
+
+		// a bit of a kludge here: vanilla renders active mobeffects in the top-right; move the minimap down if necessary to avoid them
+		if (!mc.player.getActiveEffects().isEmpty() && y < 50 && x + size > scaledWidth - 25) {
+			y += 25 * minimapMobEffectKludge;
 		}
 
 		float border = 0F;
@@ -985,6 +993,11 @@ public enum FTBChunksClient {
 
 	private void clientTick(Minecraft mc) {
 		if (mc.level == null) return;
+
+		minimapMobEffectKludge = 0;
+		if (!mc.player.getActiveEffects().isEmpty()) {
+			minimapMobEffectKludge = mc.player.getActiveEffects().stream().anyMatch(e -> !e.getEffect().value().isBeneficial()) ? 2 : 1;
+		}
 
 		MapManager.getInstance().ifPresent(manager -> {
 			if (mc.player != null) {

@@ -4,8 +4,6 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.config.StringMapValue;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
@@ -140,18 +138,4 @@ public interface FTBChunksClientConfig {
 		CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
 
-	public enum TimeMode {
-		TWENTY_FOUR,
-		TWELVE;
-
-		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(TWENTY_FOUR, values()).baseNameKey("ftbchunks.time_mode").create();
-	}
-
-	public enum ClockedTimeMode {
-		TWENTY_FOUR,
-		TWELVE,
-		CLOCK;
-
-		public static final NameMap<ClockedTimeMode> NAME_MAP = NameMap.of(TWENTY_FOUR, values()).baseNameKey("ftbchunks.time_mode").create();
-	}
 }

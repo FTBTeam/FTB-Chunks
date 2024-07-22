@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftblibrary.config.NameMap;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -33,13 +34,13 @@ public class RealTimeComponent implements MinimapInfoComponent {
         LocalDateTime now = LocalDateTime.now();
         int hours = now.getHour();
         int minutes = now.getMinute();
-        drawCenteredText(font, graphics, Component.literal(createTimeString(hours, minutes, setting.equals(FTBChunksClientConfig.TimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(font, graphics, Component.literal(createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name()))), 0);
     }
 
     @Override
     public Set<TranslatedOption> getConfigComponents() {
-        return Arrays.stream(FTBChunksClientConfig.TimeMode.values())
-                .map(value -> new TranslatedOption(value.name(),"ftbchunks.time_mode." + FTBChunksClientConfig.TimeMode.NAME_MAP.getName(value)))
+        return Arrays.stream(TimeMode.values())
+                .map(value -> new TranslatedOption(value.name(),"ftbchunks.time_mode." + TimeMode.NAME_MAP.getName(value)))
                 .collect(Collectors.toSet());
     }
 
@@ -55,6 +56,13 @@ public class RealTimeComponent implements MinimapInfoComponent {
             hours -= 12;
         }
 
-        return String.format("%02d:%02d %s", hours, minutes, ampm);
+        return String.format("%2d:%02d %s", hours, minutes, ampm);
+    }
+
+    public enum TimeMode {
+        TWENTY_FOUR,
+        TWELVE;
+
+        public static final NameMap<TimeMode> NAME_MAP = NameMap.of(TWENTY_FOUR, values()).baseNameKey("ftbchunks.time_mode").create();
     }
 }

@@ -22,7 +22,7 @@ public class PlayerPosInfoComponent implements MinimapInfoComponent {
 
     @Override
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
-        var text = Component.literal(Mth.floor(context.mapPlayerX()) + " " + Mth.floor(context.mapPlayerY()) + " " + Mth.floor(context.mapPlayerZ()));
+        var text = Component.literal(Mth.floor(context.playerPos().x()) + " " + Mth.floor(context.playerPos().y()) + " " + Mth.floor(context.playerPos().z()));
         drawCenteredText(font, graphics, text, 0);
     }
 

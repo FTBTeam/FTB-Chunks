@@ -16,6 +16,7 @@ import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoSortScreen.MinimapInfoSortEntry> {
-
 
     private List<ResourceLocation> infoSortList = new LinkedList<>();
 
@@ -175,7 +175,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
             if(!infoComponent.getConfigComponents().isEmpty()) {
                 configButton.setPos(width - 18 - 14, height / 6 + 2);
             }
-            field.setText(WaypointEditorScreen.ellipsize(getTheme().getFont(), infoComponent.displayName(), hideButton.getPosX() - 14 - 5).getString());
+            field.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), infoComponent.displayName(), hideButton.getPosX() - 14 - 5).getString());
         }
 
         @Override

@@ -4,6 +4,7 @@ import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 
@@ -14,22 +15,15 @@ import java.util.Map;
  * @param player The client player
  * @param mapDimension The dimension of the players location
  * @param region The region of the players location
- * @param mapChunkPosX The chunk X position of the map
- * @param mapChunkPosZ The chunk Z position of the map
- * @param mapPlayerX The player X position on the map
- * @param mapPlayerY The player Y position on the map
- * @param mapPlayerZ The player Z position on the map
+ * @param playerPos the players pos
  */
 public record MinimapContext(
    Minecraft minecraft,
    LocalPlayer player,
    MapDimension mapDimension,
-   XZ region,
-   int mapChunkPosX,
-   int mapChunkPosZ,
-   double mapPlayerX,
-   double mapPlayerY,
-   double mapPlayerZ,
+   int mapChunksPosX,
+   int mapChunksPosZ,
+   Vec3 playerPos,
    Map<String, String> infoSettings
 ) {
 

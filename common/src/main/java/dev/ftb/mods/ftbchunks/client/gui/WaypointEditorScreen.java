@@ -15,6 +15,7 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -55,17 +56,6 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 (widget, button) -> toggleAll(false));
         buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(true));
-    }
-
-    public static FormattedText ellipsize(Font font, FormattedText text, int maxWidth) {
-        final int strWidth = font.width(text);
-        final int ellipsisWidth = font.width(ELLIPSIS);
-        if (strWidth > maxWidth) {
-            return ellipsisWidth >= maxWidth ?
-                    font.substrByWidth(text, maxWidth) :
-                    FormattedText.composite(font.substrByWidth(text, maxWidth - ellipsisWidth), ELLIPSIS);
-        }
-        return text;
     }
 
     private void toggleAll(boolean collapsed) {
@@ -252,7 +242,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 distField.setPos(hideButton.getPosX() - 5 - distField.width, yOff);
 
                 nameField.setPos(5, yOff);
-                nameField.setText(ellipsize(getTheme().getFont(), Component.literal(wp.getName()),distField.getPosX() - 5).getString());
+                nameField.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), Component.literal(wp.getName()),distField.getPosX() - 5).getString());
                 nameField.setHeight(getTheme().getFontHeight() + 2);
             }
         }

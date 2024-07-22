@@ -38,8 +38,6 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         FTBChunksClientConfig.MINIMAP_INFO_ORDER.get().forEach(s -> infoSortList.add(ResourceLocation.parse(s)));
         showBottomPanel(false);
         setRenderBlur(false);
-        //Todo why do I need this? - unreal
-        refreshWidgets();
     }
 
     @Override
@@ -106,6 +104,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
                 InfoEntry infoEntry = entryMap.get(id);
                 if (infoEntry != null) {
                     infoEntry.setPosAndSize(0, height, width, 24);
+                    infoEntry.alignWidgets();
                     height += 24;
                 }
             }

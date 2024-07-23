@@ -42,11 +42,11 @@ public class ZoneInfoComponent implements MinimapInfoComponent {
 
     @Override
     public boolean shouldRender(MinimapContext context) {
-        var data = context.mapDimension().getRegion(XZ.regionFromChunk(context.mapChunksPosX(), context.mapChunksPosZ())).getData();
+        var data = context.mapDimension().getRegion(XZ.regionFromChunk(context.mapChunksPos().x(), context.mapChunksPos().z())).getData();
 
         team = null;
         if (data != null) {
-            Optional<Team> foundTeam = data.getChunk(XZ.of(context.mapChunksPosX(), context.mapChunksPosZ())).getTeam();
+            Optional<Team> foundTeam = data.getChunk(XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).getTeam();
             if (foundTeam.isPresent()) {
                 team = foundTeam.get();
                 return true;

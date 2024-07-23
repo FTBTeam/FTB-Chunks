@@ -21,8 +21,7 @@ public record MinimapContext(
    Minecraft minecraft,
    LocalPlayer player,
    MapDimension mapDimension,
-   int mapChunksPosX,
-   int mapChunksPosZ,
+   XZ mapChunksPos,
    Vec3 playerPos,
    Map<String, String> infoSettings
 ) {

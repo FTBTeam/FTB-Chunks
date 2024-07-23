@@ -38,7 +38,7 @@ public class DebugComponent implements MinimapInfoComponent {
         List<Component> components = new ArrayList<>();
         long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
         components.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
-        components.add(Component.literal("Rgn: " + XZ.of(context.mapChunksPosX(), context.mapChunksPosZ())).withStyle(ChatFormatting.GRAY));
+        components.add(Component.literal("Rgn: " + XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).withStyle(ChatFormatting.GRAY));
         components.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
         components.add(Component.literal("Updates: " + FTBChunksClient.INSTANCE.getRenderedDebugCount()).withStyle(ChatFormatting.GRAY));
         if(ChunkUpdateTask.getDebugLastTime() > 0L) {

@@ -145,10 +145,11 @@ public enum FTBChunksClient {
 
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
-
 	private List<MinimapInfoComponent> sortedComponents = new LinkedList<>();
+	// kludge to move potion effects left to avoid rendering over/under minimap in top right of screen
+	private static double vanillaEffectsOffsetX;
 
-    public void init() {
+	public void init() {
 		if (Minecraft.getInstance() == null) {
 			return;
 		}
@@ -554,6 +555,13 @@ public enum FTBChunksClient {
 			y -= minimapPosition.posY > 1 ? offsetY : -offsetY;
 		}
 
+		// a bit of a kludge here: vanilla renders active mobeffects in the top-right; move the minimap down if necessary to avoid them
+		if (!mc.player.getActiveEffects().isEmpty() && y <= 50 && x + size > scaledWidth - 50) {
+			vanillaEffectsOffsetX = -(scaledWidth - x) - 5;
+		} else {
+			vanillaEffectsOffsetX = 0;
+		}
+
 		float border = 0F;
 		int alpha = FTBChunksClientConfig.MINIMAP_VISIBILITY.get();
 
@@ -928,6 +936,11 @@ public enum FTBChunksClient {
 	private void clientTick(Minecraft mc) {
 		if (mc.level == null) return;
 
+//		minimapMobEffectKludge = 0;
+//		if (!mc.player.getActiveEffects().isEmpty()) {
+//			minimapMobEffectKludge = mc.player.getActiveEffects().stream().anyMatch(e -> !e.getEffect().value().isBeneficial()) ? 2 : 1;
+//		}
+
 		MapManager.getInstance().ifPresent(manager -> {
 			if (mc.player != null) {
 				prevPlayerX = currentPlayerX;
@@ -1207,6 +1220,11 @@ public enum FTBChunksClient {
 		}
 	}
 
+	// See GuiMixin
+	// This moves the vanilla potion effects rendering to the left of the minimap if it's in the top-right
+	public static double getVanillaEffectsOffsetX() {
+		return vanillaEffectsOffsetX;
+	}
 
 	public static class WaypointAddScreen extends BaseScreen {
 		private final StringConfig name;

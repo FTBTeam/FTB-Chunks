@@ -14,8 +14,9 @@ import java.util.Map;
  * @param minecraft The Minecraft instance (Helper)
  * @param player The client player
  * @param mapDimension The dimension of the players location
- * @param region The region of the players location
+ * @param mapChunksPos The chunk for the players location
  * @param playerPos the players pos
+ * @param infoSettings raw settings for this component
  */
 public record MinimapContext(
    Minecraft minecraft,

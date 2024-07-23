@@ -14,14 +14,15 @@ import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
+import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
@@ -34,7 +35,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
 import static dev.ftb.mods.ftblibrary.util.TextComponentUtils.hotkeyTooltip;
-import static net.minecraft.network.chat.CommonComponents.ELLIPSIS;
 
 public class WaypointEditorScreen extends AbstractButtonListScreen {
     private final Map<ResourceKey<Level>, Boolean> collapsed = new HashMap<>();
@@ -54,17 +54,6 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 (widget, button) -> toggleAll(false));
         buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(true));
-    }
-
-    private static FormattedText ellipsize(Font font, FormattedText text, int maxWidth) {
-        final int strWidth = font.width(text);
-        final int ellipsisWidth = font.width(ELLIPSIS);
-        if (strWidth > maxWidth) {
-            return ellipsisWidth >= maxWidth ?
-                    font.substrByWidth(text, maxWidth) :
-                    FormattedText.composite(font.substrByWidth(text, maxWidth - ellipsisWidth), ELLIPSIS);
-        }
-        return text;
     }
 
     private void toggleAll(boolean collapsed) {
@@ -144,9 +133,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
             super(panel);
 
             this.dim = dim;
-            //Todo move the to library or define / get some standard for dim names
-            //Might need to show more with dim types / level ids
-            this.titleText = Component.translatableWithFallback(dim.location().toLanguageKey("dimension"), dim.location().getPath())
+            this.titleText = TextComponentUtils.translatedDimension(dim).copy()
                     .withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(dim.location().toString()))));
             setCollapsed(startCollapsed);
             this.rowPanels = new ArrayList<>();
@@ -188,6 +175,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
         @Override
         public void addMouseOverText(TooltipList list) {
+            list.add(Component.literal(dim.location().toString()));
         }
     }
 
@@ -210,10 +198,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
         @Override
         public void addWidgets() {
-            add(hideButton = new SimpleButton(this, Component.empty(), wp.isHidden() ? Icons.REMOVE_GRAY : Icons.ACCEPT, (w, mb) -> {
-                wp.setHidden(!wp.isHidden());
-                w.setIcon(wp.isHidden() ? Icons.REMOVE_GRAY : Icons.ACCEPT);
-            }));
+            add(hideButton = ToggleVisibilityButton.create(this, !wp.isHidden(), hidden -> wp.setHidden(!hidden)));
 
             add(nameField = new TextField(this).setTrim().setColor(Color4I.rgb(wp.getColor())).addFlags(Theme.SHADOW));
 
@@ -225,6 +210,11 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 @Override
                 public Component getTitle() {
                     return isShiftKeyDown() ? QUICK_DELETE : DELETE;
+                }
+
+                @Override
+                public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+                    super.drawIcon(graphics, theme, x, y, 12, 12);
                 }
             });
         }
@@ -242,13 +232,13 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
                 int yOff = (this.height - getTheme().getFontHeight()) / 2 + 1;
 
-                hideButton.setPos(farRight - 8 - 16, 1);
-                deleteButton.setPos(farRight - 8, 1);
+                hideButton.setPosAndSize(farRight - 8 - 16, 1, 12, 12);
+                deleteButton.setPosAndSize(farRight - 8, 1, 12, 12);
 
                 distField.setPos(hideButton.getPosX() - 5 - distField.width, yOff);
 
                 nameField.setPos(5, yOff);
-                nameField.setText(ellipsize(getTheme().getFont(), Component.literal(wp.getName()),distField.getPosX() - 5).getString());
+                nameField.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), Component.literal(wp.getName()),distField.getPosX() - 5).getString());
                 nameField.setHeight(getTheme().getFontHeight() + 2);
             }
         }
@@ -299,7 +289,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                         });
                     }));
                 }
-                if (Minecraft.getInstance().player.hasPermissions(2)) {  // permissions are checked again on server!
+                if (Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));
                         closeGui(false);

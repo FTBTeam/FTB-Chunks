@@ -59,6 +59,7 @@ public class LargeMapScreen extends BaseScreen {
 	private Button settingsButton;
 	private Button serverSettingsButton;
 	private Button clearDeathpointsButton;
+	private Button infoSortScreen;
 	private boolean needIconRefresh;
 	private final int minZoom;
 
@@ -140,7 +141,8 @@ public class LargeMapScreen extends BaseScreen {
 				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
 		add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
 				(b, m) -> new MapKeyReferenceScreen().openGui()));
-
+		add(infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), Icons.BOOK,
+				(b, m) -> new MinimapInfoSortScreen().openGui(), tooltip));
 		add(clearDeathpointsButton = new ClearDeathPointButton(this));
 
         /*
@@ -193,7 +195,8 @@ public class LargeMapScreen extends BaseScreen {
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		waypointManagerButton.setPosAndSize(1, 19, 16, 16);
 		infoButton.setPosAndSize(1, 37, 16, 16);
-		clearDeathpointsButton.setPosAndSize(1, 55, 16, 16);
+		infoSortScreen.setPosAndSize(1, 55, 16, 16);
+		clearDeathpointsButton.setPosAndSize(1, 73, 16, 16);
 
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);

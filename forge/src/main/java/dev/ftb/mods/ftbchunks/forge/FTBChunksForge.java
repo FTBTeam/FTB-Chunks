@@ -50,7 +50,8 @@ public class FTBChunksForge {
 
 	private void mobGriefing(EntityMobGriefingEvent event) {
 		// we could do this for all mob griefing but that's arguably OP (could trivialize wither fights, for example)
-		// enderman block stealing is the most common annoyance, and this also has parity with the fabric support
+		// expose this as a tag so pack makers can change to what they want (default tag with only enderman)
+		// due to current limitations on fabric this tag will only work on NeoForge, while fabric only supports enderman
 		// Note: explicit check for server-side needed due to Optifine brain-damage
 		if (event.getEntity().getType().is(FTBChunksTags.Entities.ENTITY_MOB_GRIEFING_BLACKLIST_TAG) && !event.getEntity().level().isClientSide()) {
 			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(event.getEntity()));

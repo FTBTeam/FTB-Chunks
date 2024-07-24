@@ -10,7 +10,8 @@
 		"UtilMixin"
 	],
 	"client": [
-		"ClientPacketListenerMixin"
+		"ClientPacketListenerMixin",
+		"GuiMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

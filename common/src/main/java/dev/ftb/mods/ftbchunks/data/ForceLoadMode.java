@@ -7,5 +7,5 @@ public enum ForceLoadMode {
 	ALWAYS,
 	NEVER;
 
-	public static final NameMap<ForceLoadMode> NAME_MAP = NameMap.of(DEFAULT, values()).create();
+	public static final NameMap<ForceLoadMode> NAME_MAP = NameMap.of(DEFAULT, values()).baseNameKey("ftbchunks.force_load_mode").create();
 }

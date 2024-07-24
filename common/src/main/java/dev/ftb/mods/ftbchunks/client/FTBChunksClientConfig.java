@@ -139,11 +139,4 @@ public interface FTBChunksClientConfig {
 		CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
 
-	public enum TimeMode {
-		OFF,
-		TWENTY_FOUR,
-		TWELVE;
-
-		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(OFF, values()).create();
-	}
 }

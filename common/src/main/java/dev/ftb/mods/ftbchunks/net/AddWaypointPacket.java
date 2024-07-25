@@ -48,7 +48,7 @@ public class AddWaypointPacket extends BaseS2CMessage {
             if(useGui) {
                 StringConfig configName = new StringConfig();
                 configName.setValue(name);
-                new FTBChunksClient.WaypointAddScreen(configName, context.getPlayer(), position).openGui();
+                new FTBChunksClient.WaypointAddScreen(configName, position).openGui();
             }else {
                 FTBChunksClient.addWaypoint(name, position, color);
             }

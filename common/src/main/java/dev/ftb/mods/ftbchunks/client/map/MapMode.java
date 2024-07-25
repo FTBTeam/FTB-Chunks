@@ -9,5 +9,6 @@ public enum MapMode {
 	BLOCKS,
 	LIGHT_SOURCES;
 
-	public static final NameMap<MapMode> NAME_MAP = NameMap.of(NONE, values()).create();
+	public static final NameMap<MapMode> NAME_MAP = NameMap.of(NONE, values()).baseNameKey("ftbchunks.map_mode").create();
+
 }

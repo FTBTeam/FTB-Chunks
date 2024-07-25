@@ -6,14 +6,27 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
 import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.config.StringMapValue;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.loadDefaulted;
@@ -60,20 +73,17 @@ public interface FTBChunksClientConfig {
 	BooleanValue MINIMAP_ENTITIES = MINIMAP.addBoolean("entities", true).comment("Show entities on minimap");
 	BooleanValue MINIMAP_ENTITY_HEADS = MINIMAP.addBoolean("entity_heads", true).comment("Show entity heads on minimap");
 	BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.addBoolean("large_entities", false).comment("Entities in minimap will be larger");
-	BooleanValue MINIMAP_XYZ = MINIMAP.addBoolean("xyz", true).comment("Show XYZ under minimap");
-	BooleanValue MINIMAP_BIOME = MINIMAP.addBoolean("biome", true).comment("Show biome under minimap");
 	EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.addEnum("blur_mode", MinimapBlurMode.NAME_MAP).comment("Blurs minimap");
 	BooleanValue MINIMAP_COMPASS = MINIMAP.addBoolean("compass", true).comment("Adds NWSE compass inside minimap");
 	IntValue MINIMAP_VISIBILITY = MINIMAP.addInt("visibility", 255, 0, 255).comment("Minimap visibility");
-	BooleanValue MINIMAP_ZONE = MINIMAP.addBoolean("zone", true).comment("Show zone (claimed chunk or wilderness) under minimap");
 	IntValue MINIMAP_OFFSET_X = MINIMAP.addInt("position_offset_x", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
 	IntValue MINIMAP_OFFSET_Y = MINIMAP.addInt("position_offset_y", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
 	EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.addEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
 	BooleanValue SQUARE_MINIMAP = MINIMAP.addBoolean("square", false).comment("Draw a square minimap instead of a circular one");
 	BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
-	EnumValue<TimeMode> MINIMAP_SHOW_GAME_TIME = MINIMAP.addEnum("show_game_time", TimeMode.NAME_MAP).comment("Show game time under minimap");
-	EnumValue<TimeMode> MINIMAP_SHOW_REAL_TIME = MINIMAP.addEnum("show_real_time", TimeMode.NAME_MAP).comment("Show real time under minimap");
-	BooleanValue SHOW_FPS = MINIMAP.addBoolean("show_fps", false).comment("Show FPS under minimap");
+	StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).comment("Info displayed under minimap");
+	StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", List.of(DebugComponent.ID.toString())).comment("Info hidden under minimap");
+	StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new StringMapValue(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
 
 	SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
 	BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");
@@ -129,11 +139,4 @@ public interface FTBChunksClientConfig {
 		CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
 	}
 
-	public enum TimeMode {
-		OFF,
-		TWENTY_FOUR,
-		TWELVE;
-
-		public static final NameMap<TimeMode> NAME_MAP = NameMap.of(OFF, values()).create();
-	}
 }

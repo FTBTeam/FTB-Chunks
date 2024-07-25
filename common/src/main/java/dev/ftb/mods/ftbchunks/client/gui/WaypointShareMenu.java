@@ -19,11 +19,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class WaypointShareMenu {
     public static Optional<ContextMenuItem> makeShareMenu(Player sharingPlayer, Waypoint waypoint) {

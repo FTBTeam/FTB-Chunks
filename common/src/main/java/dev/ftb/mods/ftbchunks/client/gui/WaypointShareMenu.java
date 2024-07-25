@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.authlib.GameProfile;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.net.ShareWaypointPacket;

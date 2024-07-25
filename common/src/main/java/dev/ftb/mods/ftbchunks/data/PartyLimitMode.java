@@ -8,5 +8,5 @@ public enum PartyLimitMode {
     SUM,
     AVERAGE;
 
-    public static final NameMap<PartyLimitMode> NAME_MAP = NameMap.of(LARGEST, values()).create();
+    public static final NameMap<PartyLimitMode> NAME_MAP = NameMap.of(LARGEST, values()).baseNameKey("ftbchunks.party_limit_mode").create();
 }

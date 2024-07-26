@@ -189,7 +189,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
                     list.add(infoComponent.id());
                 } else {
                     list.remove(infoComponent.id());
-                    list.addFirst(infoComponent.id());
+                    list.add(0, infoComponent.id());
                 }
             } else {
                 int index = list.indexOf(infoComponent.id());

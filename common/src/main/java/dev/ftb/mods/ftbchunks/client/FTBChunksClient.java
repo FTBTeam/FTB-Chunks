@@ -12,6 +12,7 @@ import dev.architectury.event.EventResult;
 import dev.architectury.event.events.client.*;
 import dev.architectury.hooks.client.screen.ScreenAccess;
 import dev.architectury.injectables.annotations.ExpectPlatform;
+import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.ftb.mods.ftbchunks.ColorMapLoader;
@@ -117,6 +118,7 @@ public enum FTBChunksClient {
 	};
 
 	public KeyMapping openMapKey;
+	public KeyMapping toggleMinimapKey;
 	public KeyMapping openClaimManagerKey;
 	public KeyMapping zoomInKey;
 	public KeyMapping zoomOutKey;
@@ -145,7 +147,7 @@ public enum FTBChunksClient {
 
 	private Matrix4f worldMatrix;
 	private Vec3 cameraPos;
-	private List<MinimapInfoComponent> sortedComponents = new LinkedList<>();
+	private final List<MinimapInfoComponent> sortedComponents = new LinkedList<>();
 	// kludge to move potion effects left to avoid rendering over/under minimap in top right of screen
 	private static double vanillaEffectsOffsetX;
 
@@ -195,6 +197,10 @@ public enum FTBChunksClient {
 		// Keybinding to open Large map screen
 		openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.ftbchunks");
 		KeyMappingRegistry.register(openMapKey);
+
+		// Keybinding to toggle the minimap
+		toggleMinimapKey = new KeyMapping("key.ftbchunks.toggle_minimap", InputConstants.Type.KEYSYM, -1, "key.categories.ftbchunks");
+		KeyMappingRegistry.register(toggleMinimapKey);
 
 		// Keybinding to open claim manager screen
 		openClaimManagerKey = new KeyMapping("key.ftbchunks.claim_manager", InputConstants.Type.KEYSYM, -1, "key.categories.ftbchunks");
@@ -353,17 +359,12 @@ public enum FTBChunksClient {
 			return EventResult.pass();
 		}
 		if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers)) {
-			if (Screen.hasControlDown()) {
-				SNBTCompoundTag tag = new SNBTCompoundTag();
-				tag.putBoolean(FTBChunksClientConfig.MINIMAP_ENABLED.key, !FTBChunksClientConfig.MINIMAP_ENABLED.get());
-				FTBChunksClientConfig.MINIMAP_ENABLED.read(tag);
-				FTBChunksClientConfig.saveConfig();
-			} else if (FTBChunksClientConfig.DEBUG_INFO.get() && Screen.hasAltDown()) {
-				ClientTaskQueue.dumpTaskInfo();
-			} else {
-				openGui();
-				return EventResult.interruptTrue();
-			}
+			openGui();
+			return EventResult.interruptTrue();
+		} else if (doesKeybindMatch(toggleMinimapKey, keyCode, scanCode, modifiers)) {
+			FTBChunksClientConfig.MINIMAP_ENABLED.set(!FTBChunksClientConfig.MINIMAP_ENABLED.get());
+			FTBChunksClientConfig.saveConfig();
+			return EventResult.interruptTrue();
 		} else if (doesKeybindMatch(openClaimManagerKey, keyCode, scanCode, modifiers)) {
 			ChunkScreen.openChunkScreen();
 			return EventResult.interruptTrue();
@@ -375,13 +376,15 @@ public enum FTBChunksClient {
 			return addQuickWaypoint();
 		} else if (doesKeybindMatch(waypointManagerKey, keyCode, scanCode, modifiers)) {
 			new WaypointEditorScreen().openGui();
+			return EventResult.interruptTrue();
 		}
 
 		return EventResult.pass();
 	}
 
 	public EventResult keyPressed(Minecraft client, Screen screen, int keyCode, int scanCode, int modifiers) {
-		if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers)) {
+		if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers) && Platform.isFabric()) {
+			// platform specific behaviour :(  why? ¯\_(ツ)_/¯
 			LargeMapScreen gui = ClientUtils.getCurrentGuiAs(LargeMapScreen.class);
 			if (gui != null && !gui.anyModalPanelOpen()) {
 				gui.closeGui(false);

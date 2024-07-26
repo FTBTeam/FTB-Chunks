@@ -522,7 +522,7 @@ public enum FTBChunksClient {
 			currentPlayerChunkZ = cz;
 		}
 
-		if (mc.getDebugOverlay().showDebugScreen() || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
+		if (mc.options.hideGui || mc.getDebugOverlay().showDebugScreen() || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
 			return;
 		}
 

@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
@@ -278,6 +279,10 @@ public class LargeMapScreen extends BaseScreen {
 			return true;
 		} else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key)) {
 			waypointManagerButton.onClicked(MouseButton.LEFT);
+		} else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key) && Platform.isForge()) {
+			// platform specific behaviour :(  why? ¯\_(ツ)_/¯
+			closeGui(false);
+			return true;
 		}
 
 		return false;

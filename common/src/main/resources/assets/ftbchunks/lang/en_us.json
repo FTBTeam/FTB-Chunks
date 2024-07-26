@@ -87,6 +87,7 @@
 	"key.ftbchunks.minimap.zoomOut": "Zoom Out Minimap",
 	"key.ftbchunks.add_waypoint": "Quick Add Waypoint",
 	"key.ftbchunks.waypoint_manager": "Waypoint Manager",
+	"key.ftbchunks.toggle_minimap": "Toggle Minimap",
 	"wilderness": "Wilderness",
 	"ftbchunks.no_server_mod": "FTB Chunks requires mod on server!",
 	"ftbchunks.already_claimed": "Chunk is already claimed by %s",

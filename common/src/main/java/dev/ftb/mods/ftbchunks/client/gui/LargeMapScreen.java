@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
@@ -42,6 +43,7 @@ import java.util.List;
 
 public class LargeMapScreen extends BaseScreen {
 	private static final Color4I BACKGROUND_COLOR = Color4I.rgb(0x202225);
+	private static final Icon MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.rl("textures/minimap_info.png"));
 
 	private final RegionMapPanel regionPanel;
 	private int zoom = 256;
@@ -140,7 +142,7 @@ public class LargeMapScreen extends BaseScreen {
 				.append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
 		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
 				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
-		add(infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), Icons.BOOK,
+		add(infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), MINIMAP_INFO,
 				(b, m) -> new MinimapInfoSortScreen().openGui(), tooltip));
 		add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
 				(b, m) -> new MapKeyReferenceScreen().openGui()));

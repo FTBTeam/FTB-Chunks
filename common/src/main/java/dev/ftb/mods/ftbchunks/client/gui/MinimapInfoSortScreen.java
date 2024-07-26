@@ -171,6 +171,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
             up.setPosAndSize(6, height / 6 + 11, 6, 8);
             hideButton.setPosAndSize(width - 18, height / 6, 12, 12);
             field.setPosAndSize(16, 8, width - 37, height);
+            field.setPosAndSize(16, 8, width - 37, height);
             if(!infoComponent.getConfigComponents().isEmpty()) {
                 configButton.setPos(width - 18 - 14, height / 6 + 2);
             }

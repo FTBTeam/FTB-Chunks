@@ -40,10 +40,18 @@ public interface FTBChunksClientAPI {
      */
     void registerMinimapComponent(MinimapInfoComponent component);
 
-    //Todo
+
+    /**
+     * @param component the component to check if it is enabled
+     * @return is the component enabled and will render under the minimap
+     */
     boolean isMinimapComponentEnabled(MinimapInfoComponent component);
 
-    //Todo
+    /**
+     * Enable or disable a specific minimap component for rendering under the minimap
+     * @param component the component to enable or disable to that shoul
+     * @param enabled  the state to set the component to
+     */
     void setMinimapComponentEnabled(MinimapInfoComponent component, boolean enabled);
 
     /**

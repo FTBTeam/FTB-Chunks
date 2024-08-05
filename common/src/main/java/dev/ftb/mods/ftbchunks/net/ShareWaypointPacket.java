@@ -41,7 +41,6 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
         context.queue(() -> {
             ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
             PlayerList playerList = serverPlayer.getServer().getPlayerList();
-            ChatType.Bound bound2 = ChatType.bind(ChatType.CHAT, serverPlayer).withTargetName(serverPlayer.getDisplayName());
             List<ServerPlayer> playersToSend = switch (message.shareType) {
                 case SERVER -> playerList.getPlayers();
                 case PARTY -> {
@@ -58,6 +57,9 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
                         .map(playerList::getPlayer)
                         .filter(Objects::nonNull).toList();
             };
+
+            ChatType.Bound chatBound = ChatType.bind(ChatType.CHAT, serverPlayer).withTargetName(serverPlayer.getDisplayName());
+
             for (ServerPlayer playerListPlayer : playersToSend) {
                 String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
                 String dim = message.position.dimension().location().toString();
@@ -70,7 +72,7 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
                 playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
                         .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
                                 .withStyle(style ->
-                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, bound2);
+                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
             }
         });
     }

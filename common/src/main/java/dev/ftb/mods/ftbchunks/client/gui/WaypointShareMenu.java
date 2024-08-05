@@ -42,43 +42,7 @@ public class WaypointShareMenu {
                         .filter(p -> !p.id().equals(sharingPlayer.getGameProfile().getId()))
                         .map(KnownClientPlayer::profile).toList();
                 List<GameProfile> selectedProfiles = new ArrayList<>();
-                new AbstractButtonListScreen() {
-                    @Override
-                    protected void doCancel() {
-                        closeGui();
-                    }
-
-                    @Override
-                    protected void doAccept() {
-                        List<UUID> toShare = selectedProfiles.stream().map(GameProfile::getId).toList();
-                        if (!toShare.isEmpty()) {
-                            shareWaypoint(waypoint, ShareWaypointPacket.ShareType.PLAYER, toShare);
-                        }
-                        closeGui();
-                    }
-
-                    @Override
-                    public void addButtons(Panel panel) {
-                        for (GameProfile gameProfile : list) {
-                            Component unchecked = (Component.literal("☐ ")).append(gameProfile.getName());
-                            Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.getName());
-                            NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile)) {
-                                @Override
-                                public void onClicked(MouseButton button) {
-                                    if (selectedProfiles.contains(gameProfile)) {
-                                        selectedProfiles.remove(gameProfile);
-                                        title = unchecked;
-                                    } else {
-                                        selectedProfiles.add(gameProfile);
-                                        title = checked;
-                                    }
-                                    playClickSound();
-                                }
-                            };
-                            panel.add(widget);
-                        }
-                    }
-                }.openGui();
+                new ShareWaypointButtonList(selectedProfiles, waypoint, list).openGui();
             }));
         }
 
@@ -91,5 +55,53 @@ public class WaypointShareMenu {
         GlobalPos waypointPos = new GlobalPos(waypoint.getDimension(), waypoint.getPos());
         NetworkManager.sendToServer(new ShareWaypointPacket(waypoint.getName(), waypointPos, type, targets));
         SimpleToast.info(Component.translatable("ftbchunks.waypoint.shared_by_you", waypoint.getName()), Component.empty());
+    }
+
+    private static class ShareWaypointButtonList extends AbstractButtonListScreen {
+        private final List<GameProfile> selectedProfiles;
+        private final Waypoint waypoint;
+        private final List<GameProfile> gameProfiles;
+
+        public ShareWaypointButtonList(List<GameProfile> selectedProfiles, Waypoint waypoint, List<GameProfile> gameProfiles) {
+            this.selectedProfiles = selectedProfiles;
+            this.waypoint = waypoint;
+            this.gameProfiles = gameProfiles;
+        }
+
+        @Override
+        protected void doCancel() {
+            closeGui();
+        }
+
+        @Override
+        protected void doAccept() {
+            List<UUID> toShare = selectedProfiles.stream().map(GameProfile::getId).toList();
+            if (!toShare.isEmpty()) {
+                shareWaypoint(waypoint, ShareWaypointPacket.ShareType.PLAYER, toShare);
+            }
+            closeGui();
+        }
+
+        @Override
+        public void addButtons(Panel panel) {
+            for (GameProfile gameProfile : gameProfiles) {
+                Component unchecked = (Component.literal("☐ ")).append(gameProfile.getName());
+                Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.getName());
+                NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile)) {
+                    @Override
+                    public void onClicked(MouseButton button) {
+                        if (selectedProfiles.contains(gameProfile)) {
+                            selectedProfiles.remove(gameProfile);
+                            title = unchecked;
+                        } else {
+                            selectedProfiles.add(gameProfile);
+                            title = checked;
+                        }
+                        playClickSound();
+                    }
+                };
+                panel.add(widget);
+            }
+        }
     }
 }

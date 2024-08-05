@@ -249,7 +249,7 @@ public enum FTBChunksClient {
 	}
 
 	public void handlePlayerLogin(UUID serverId, SNBTCompoundTag config) {
-		FTBChunks.LOGGER.info("Loading FTB Chunks client data from world " + serverId);
+        FTBChunks.LOGGER.info("Loading FTB Chunks client data from world {}", serverId);
 		FTBChunksWorldConfig.CONFIG.read(config);
 		MapManager.startUp(serverId);
 		scheduleMinimapUpdate();
@@ -938,11 +938,6 @@ public enum FTBChunksClient {
 
 	private void clientTick(Minecraft mc) {
 		if (mc.level == null) return;
-
-//		minimapMobEffectKludge = 0;
-//		if (!mc.player.getActiveEffects().isEmpty()) {
-//			minimapMobEffectKludge = mc.player.getActiveEffects().stream().anyMatch(e -> !e.getEffect().value().isBeneficial()) ? 2 : 1;
-//		}
 
 		MapManager.getInstance().ifPresent(manager -> {
 			if (mc.player != null) {

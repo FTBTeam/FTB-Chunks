@@ -8,5 +8,5 @@ public enum PvPMode {
     PER_TEAM,
     ;
 
-    public static final NameMap<PvPMode> NAME_MAP = NameMap.of(ALWAYS, values()).create();
+    public static final NameMap<PvPMode> NAME_MAP = NameMap.of(ALWAYS, values()).baseNameKey("ftbchunks.pvp_mode").create();
 }

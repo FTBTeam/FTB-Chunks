@@ -77,7 +77,7 @@ processResources {
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version,
 				"archversion": project.architectury_api_version,
-				"fabricapiversion": project.fabric_api_version,
+				"fabricapiversionrange": project.fabric_api_version_range,
 				"mcversion": project.minecraft_version,
 				"ftblibraryversion": project.ftb_library_version,
 				"ftbteamsversion": project.ftb_teams_version

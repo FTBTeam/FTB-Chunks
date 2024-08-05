@@ -4,10 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.1.1]
+
+### Added
+* The waypoint manager screen has had a facelift
+  * No longer a full-screen GUI
+  * Added a delete button alongside the visibility toggle button on the manager screen
+* Added waypoint sharing; there is now a "Share" option on the context menus for waypoints on the large map, and in the waypoint manager screen
+* Player icon on the large map screen is now combined with a pointer indicating the player's facing direction
+* Added new entity tag: `ftbchunks:entity_mob_griefing_blacklist`
+  * Prevents mob griefing by any entities in this tag if mob griefing protection is enabled in team settings
+  * Note: only works on NeoForge at this time (Fabric remains limited to Endermen only)
+* Info text lines under the minimap are now highly configurable
+  * Configure with the "Minimap Info" icon on the left of the large map screen
+  * Entries can be enabled/disabled/reordered/configured
+  * Added new real time, game time and FPS lines in addition to existing zone/biome/player-pos/debug lines
+
+### Fixed
+* Fixed the `/ftbchunks waypoint add` command only working for loaded chunks
+* Fixed block/item/entity tags not being detected
+* If the minimap is being displayed in top-right of screen (the default), then any potion effect icons are moved to the left of the minimap to avoid overlap
+* Fixed the map keybind (by default 'M') not working to close an open map
+  * In addition, Ctrl + M (or whatever the map key is bound to) no longer toggles minimap by default
+  * This was always a kludge; minimap toggling is now its own keybind (unbound by default)
+
 ## [2100.1.0]
 
 ### Changed
-* Ported to Minecraft 1.20.6. Support for Fabric and NeoForge.
+* Ported to Minecraft 1.21. Support for Fabric and NeoForge.
   * Forge support may be re-added if/when Architectury adds support for Forge
 
 ## [2006.1.1]

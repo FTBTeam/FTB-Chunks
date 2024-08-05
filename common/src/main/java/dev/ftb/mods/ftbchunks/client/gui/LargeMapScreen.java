@@ -3,7 +3,9 @@ package dev.ftb.mods.ftbchunks.client.gui;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.architectury.networking.NetworkManager;
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
@@ -42,6 +44,7 @@ import java.util.List;
 
 public class LargeMapScreen extends BaseScreen {
 	private static final Color4I BACKGROUND_COLOR = Color4I.rgb(0x202225);
+	private static final Icon MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.rl("textures/minimap_info.png"));
 
 	private final RegionMapPanel regionPanel;
 	private int zoom = 256;
@@ -60,6 +63,7 @@ public class LargeMapScreen extends BaseScreen {
 	private Button settingsButton;
 	private Button serverSettingsButton;
 	private Button clearDeathpointsButton;
+	private Button infoSortScreen;
 	private boolean needIconRefresh;
 	private final int minZoom;
 
@@ -139,6 +143,8 @@ public class LargeMapScreen extends BaseScreen {
 				.append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
 		add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
 				(b, m) -> new WaypointEditorScreen().openGui(), tooltip));
+		add(infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), MINIMAP_INFO,
+				(b, m) -> new MinimapInfoSortScreen().openGui(), tooltip));
 		add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
 				(b, m) -> new MapKeyReferenceScreen().openGui()));
 
@@ -194,7 +200,8 @@ public class LargeMapScreen extends BaseScreen {
 		claimChunksButton.setPosAndSize(1, 1, 16, 16);
 		waypointManagerButton.setPosAndSize(1, 19, 16, 16);
 		infoButton.setPosAndSize(1, 37, 16, 16);
-		clearDeathpointsButton.setPosAndSize(1, 55, 16, 16);
+		infoSortScreen.setPosAndSize(1, 55, 16, 16);
+		clearDeathpointsButton.setPosAndSize(1, 73, 16, 16);
 
 		dimensionButton.setPosAndSize(1, height - 36, 16, 16);
 		settingsButton.setPosAndSize(1, height - 18, 16, 16);
@@ -276,6 +283,10 @@ public class LargeMapScreen extends BaseScreen {
 			return true;
 		} else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key)) {
 			waypointManagerButton.onClicked(MouseButton.LEFT);
+		} else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key) && Platform.isForgeLike()) {
+			// platform specific behaviour :(  why? ¯\_(ツ)_/¯
+			closeGui(false);
+			return true;
 		}
 
 		return false;

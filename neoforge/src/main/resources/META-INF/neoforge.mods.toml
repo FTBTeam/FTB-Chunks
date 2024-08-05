@@ -20,7 +20,7 @@ license = "All Rights Reserved"
 [[dependencies.ftbchunks]]
 modId = "neoforge"
 type = "required"
-versionRange = "[${neoforgeversion},)"
+versionRange = "${neoforgeversionrange}"
 ordering = "NONE"
 side = "BOTH"
 

@@ -82,7 +82,7 @@ public interface FTBChunksClientConfig {
 	BooleanValue SQUARE_MINIMAP = MINIMAP.addBoolean("square", false).comment("Draw a square minimap instead of a circular one");
 	BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
 	StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).comment("Info displayed under minimap");
-	StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", List.of(DebugComponent.ID.toString())).comment("Info hidden under minimap");
+	StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).comment("Info hidden under minimap");
 	StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new StringMapValue(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
 
 	SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);

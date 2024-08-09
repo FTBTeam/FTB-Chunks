@@ -1,0 +1,7 @@
+{
+  "icon": "ftblibrary:icons/map; tint=#FF80FFFF",
+  "sort_index": 601,
+  "click": [
+    "ftbchunks:open_claim_gui"
+  ]
+}

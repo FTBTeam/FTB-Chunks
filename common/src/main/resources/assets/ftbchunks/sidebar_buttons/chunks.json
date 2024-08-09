@@ -1,0 +1,7 @@
+{
+  "icon": "ftblibrary:icons/map",
+  "sort_index": 600,
+  "click": [
+    "ftbchunks:open_gui"
+  ]
+}

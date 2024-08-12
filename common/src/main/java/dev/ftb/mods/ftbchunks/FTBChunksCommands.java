@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -18,6 +19,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.net.AddWaypointPacket;
 import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
+import dev.ftb.mods.ftbchunks.net.OpenClaimGUIPacket;
 import dev.ftb.mods.ftbchunks.net.RequestBlockColorPacket;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -35,6 +37,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ColorArgument;
 import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
 import net.minecraft.commands.arguments.coordinates.Coordinates;
@@ -179,6 +182,11 @@ public class FTBChunksCommands {
 										.executes(context -> viewLoadedChunks(context.getSource(), DimensionArgument.getDimension(context, "dimension")))
 								)
 						)
+						.then(Commands.literal("open_claim_gui_as")
+								.then(Commands.argument("team", TeamArgument.create())
+										.executes(FTBChunksCommands::openClaimGuiAs)
+								)
+						)
 				)
 				.then(Commands.literal("block_color")
 //						.requires(source -> source.getServer().isSingleplayer())
@@ -237,6 +245,12 @@ public class FTBChunksCommands {
 		manager.setBypassProtection(player.getUUID(), !manager.getBypassProtection(player.getUUID()));
 		source.sendSuccess(() -> Component.literal("bypass_protection = " + manager.getBypassProtection(player.getUUID())), true);
 		return 1;
+	}
+
+	private static int openClaimGuiAs(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Team team = TeamArgument.get(context, "team");
+		NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), new OpenClaimGUIPacket(team.getTeamId()));
+		return Command.SINGLE_SUCCESS;
 	}
 
 	private interface ChunkCallback {

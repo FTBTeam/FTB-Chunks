@@ -1,7 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.datafixers.util.Either;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
@@ -16,6 +18,8 @@ import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
+import dev.ftb.mods.ftblibrary.FTBLibrary;
+import dev.ftb.mods.ftblibrary.FTBLibraryClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -28,14 +32,18 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -48,21 +56,28 @@ public class ChunkScreen extends BaseScreen {
 	private final MapDimension dimension;
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
 	private final Set<XZ> selectedChunks = new HashSet<>();
+	private final Team openedAs;
 	private ChunkUpdateInfo updateInfo;
+	private boolean isAdminEnabled = false;
 
-	public ChunkScreen(MapDimension dimension) {
+	public ChunkScreen(MapDimension dimension, Team openedAs) {
 		RenderMapImageTask.setAlwaysRenderChunksOnMap(true);
 
 		this.dimension = dimension;
+		this.openedAs = openedAs;
 
 		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
 	}
 
-	public static void openChunkScreen() {
+	public static void openChunkScreen(@Nullable Team openedAs) {
 		MapDimension.getCurrent().ifPresentOrElse(
-				mapDimension -> new ChunkScreen(mapDimension).openGui(),
+				mapDimension -> new ChunkScreen(mapDimension, openedAs).openGui(),
 				() -> FTBChunks.LOGGER.warn("MapDimension data missing?? not opening chunk screen")
 		);
+	}
+
+	public static void openChunkScreen() {
+		openChunkScreen(null);
 	}
 
 
@@ -117,6 +132,15 @@ public class ChunkScreen extends BaseScreen {
 		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
 				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
 		).setPosAndSize(1, 19, 16, 16));
+
+		if(openedAs != null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+			add(new SimpleButton(this, Component.translatable("ftbchunks.gui.admin_mode"), Icons.ACCEPT,
+					(btn, mb) -> {
+						isAdminEnabled = !isAdminEnabled;
+						btn.setIcon(isAdminEnabled ? Icons.ACCEPT : Icons.CANCEL);
+					}
+			).setPosAndSize(1, 37, 16, 16));
+		}
 	}
 
 	@Override
@@ -124,7 +148,7 @@ public class ChunkScreen extends BaseScreen {
 		super.mouseReleased(button);
 
 		if (!selectedChunks.isEmpty()) {
-			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks));
+			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, Optional.ofNullable(openedAs).map(Team::getTeamId)));
 			selectedChunks.clear();
 			playClickSound();
 		}
@@ -181,6 +205,10 @@ public class ChunkScreen extends BaseScreen {
 		}
 	}
 
+	private boolean canChangeAsAdmin() {
+		return Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS) && openedAs != null && isAdminEnabled;
+	}
+
 	private static class ChunkMouseReferenceScreen extends KeyReferenceScreen {
 		public ChunkMouseReferenceScreen() {
 			super("ftbchunks.gui.chunk_info.text");
@@ -224,6 +252,7 @@ public class ChunkScreen extends BaseScreen {
 
 				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT)) {
 					selectedChunks.add(chunkPos);
+//					selectedChunks.add(chunkPos);
 				}
 			}
 		}
@@ -276,7 +305,9 @@ public class ChunkScreen extends BaseScreen {
 		@Override
 		public boolean mouseScrolled(double scroll) {
 			return chunk.getForceLoadedDate().map(forceLoadedDate -> {
-				if (isMouseOver && chunk.isTeamMember(Minecraft.getInstance().player)) {
+				LocalPlayer player = Minecraft.getInstance().player;
+				boolean teamMember = chunk.isTeamMember(player);
+				if (canChangeAsAdmin() || teamMember) {
 					int dir = (int) Math.signum(scroll);
 					long now = System.currentTimeMillis();
 					Date expiry = chunk.getForceLoadExpiryDate().orElse(new Date(now));

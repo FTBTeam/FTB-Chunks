@@ -25,5 +25,6 @@ public class FTBChunksNet {
 		NetworkHelper.registerS2C(SendPlayerPositionPacket.TYPE, SendPlayerPositionPacket.STREAM_CODEC, SendPlayerPositionPacket::handle);
 		NetworkHelper.registerS2C(ServerConfigResponsePacket.TYPE, ServerConfigResponsePacket.STREAM_CODEC, ServerConfigResponsePacket::handle);
 		NetworkHelper.registerS2C(SyncRXPacket.TYPE, SyncRXPacket.STREAM_CODEC, SyncRXPacket::handle);
+		NetworkHelper.registerS2C(OpenClaimGUIPacket.TYPE, OpenClaimGUIPacket.STREAM_CODEC, OpenClaimGUIPacket::handle);
 	}
 }

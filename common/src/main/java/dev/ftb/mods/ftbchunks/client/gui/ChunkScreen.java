@@ -198,7 +198,7 @@ public class ChunkScreen extends BaseScreen {
 			}
 		}
 
-		if(openedAs != null) {
+		if (openedAs != null) {
 			String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();
 			theme.drawString(graphics, openAsMessage, sx + 2, sy + FTBChunks.MINIMAP_SIZE - theme.getFontHeight() - 2, Color4I.WHITE, Theme.SHADOW);
 		}

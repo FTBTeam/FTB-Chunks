@@ -29,7 +29,7 @@ import java.util.function.Function;
 
 public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boolean tryAdminChanges, Optional<UUID> teamId) implements CustomPacketPayload {
 	public static final Type<RequestChunkChangePacket> TYPE = new Type<>(FTBChunksAPI.rl("request_chunk_change_packet"));
-	
+
 	public static final StreamCodec<FriendlyByteBuf, RequestChunkChangePacket> STREAM_CODEC = StreamCodec.composite(
 			NetworkHelper.enumStreamCodec(ChunkChangeOp.class), RequestChunkChangePacket::action,
 			XZ.STREAM_CODEC.apply(ByteBufCodecs.collection(HashSet::new)), RequestChunkChangePacket::chunks,

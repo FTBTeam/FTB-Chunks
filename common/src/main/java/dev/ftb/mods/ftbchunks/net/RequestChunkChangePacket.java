@@ -29,15 +29,13 @@ import java.util.function.Function;
 
 public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boolean tryAdminChanges, Optional<UUID> teamId) implements CustomPacketPayload {
 	public static final Type<RequestChunkChangePacket> TYPE = new Type<>(FTBChunksAPI.rl("request_chunk_change_packet"));
-
-
+	
 	public static final StreamCodec<FriendlyByteBuf, RequestChunkChangePacket> STREAM_CODEC = StreamCodec.composite(
 			NetworkHelper.enumStreamCodec(ChunkChangeOp.class), RequestChunkChangePacket::action,
 			XZ.STREAM_CODEC.apply(ByteBufCodecs.collection(HashSet::new)), RequestChunkChangePacket::chunks,
 			ByteBufCodecs.BOOL, RequestChunkChangePacket::tryAdminChanges,
 			UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs::optional), RequestChunkChangePacket::teamId,
-			RequestChunkChangePacket::new
-	);
+			RequestChunkChangePacket::new);
 
 	@Override
 	public Type<RequestChunkChangePacket> type() {
@@ -49,15 +47,15 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 		CommandSourceStack source = player.createCommandSourceStack();
 
 		ChunkTeamData chunkTeamData = null;
-		if(message.teamId().isPresent()) {
+		if (message.teamId().isPresent()) {
 			Optional<Team> team = FTBTeamsAPI.api().getManager().getTeamByID(message.teamId().get());
-			if(team.isEmpty()) {
+			if (team.isEmpty()) {
 				player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", message.teamId, ChatFormatting.RED));
 				return;
 			}
 			chunkTeamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team.get());
 		}
-		if(chunkTeamData == null) {
+		if (chunkTeamData == null) {
 			chunkTeamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
 		}
 
@@ -70,7 +68,7 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 			case UNLOAD -> pos -> data.unForceLoad(source, pos.dim(player.level()), false, message.tryAdminChanges);
 		};
 
-		EnumMap<ClaimResult.StandardProblem,Integer> problems = new EnumMap<>(ClaimResult.StandardProblem.class);
+		EnumMap<ClaimResult.StandardProblem, Integer> problems = new EnumMap<>(ClaimResult.StandardProblem.class);
 		int changed = 0;
 		for (XZ pos : message.chunks) {
 			ClaimResult r = consumer.apply(pos);
@@ -89,7 +87,7 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 
 		SendGeneralDataPacket.send(data, player);
 
-		if(message.teamId.isPresent()) {
+		if (message.teamId.isPresent()) {
 			SendGeneralDataPacket.send(chunkTeamData, data.getTeam().getOnlineMembers());
 		}
 	}

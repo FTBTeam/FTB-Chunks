@@ -35,7 +35,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -53,13 +52,15 @@ public class ChunkScreen extends BaseScreen {
 	private final MapDimension dimension;
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
 	private final Set<XZ> selectedChunks = new HashSet<>();
+	@Nullable
 	private final Team openedAs;
 	private ChunkUpdateInfo updateInfo;
-	private boolean isAdminEnabled = false;
+	private boolean isAdminEnabled;
 
-	public ChunkScreen(MapDimension dimension, Team openedAs) {
+	public ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
 		RenderMapImageTask.setAlwaysRenderChunksOnMap(true);
 
+		this.isAdminEnabled = Minecraft.getInstance().isSingleplayer();
 		this.dimension = dimension;
 		this.openedAs = openedAs;
 
@@ -130,8 +131,10 @@ public class ChunkScreen extends BaseScreen {
 				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
 		).setPosAndSize(1, 19, 16, 16));
 
-		if(openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
-			add(new AdminButton().setPosAndSize(1, 37, 16, 16));
+		if(!Minecraft.getInstance().isSingleplayer()) {
+			if(openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+				add(new AdminButton().setPosAndSize(1, 37, 16, 16));
+			}
 		}
 	}
 

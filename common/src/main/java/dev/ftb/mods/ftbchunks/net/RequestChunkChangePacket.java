@@ -10,9 +10,11 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -50,6 +52,7 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 		if(message.teamId().isPresent()) {
 			Optional<Team> team = FTBTeamsAPI.api().getManager().getTeamByID(message.teamId().get());
 			if(team.isEmpty()) {
+				player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", message.teamId, ChatFormatting.RED));
 				return;
 			}
 			chunkTeamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team.get());

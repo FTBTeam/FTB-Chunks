@@ -6,6 +6,7 @@ import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -36,7 +37,7 @@ public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {
 
             Optional<Team> teamByID = FTBTeamsAPI.api().getClientManager().getTeamByID(message.teamId);
             if (teamByID.isEmpty()) {
-                player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", message.teamId));
+                player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", message.teamId, ChatFormatting.RED));
                 return;
             }
 

@@ -88,6 +88,10 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 		NetworkManager.sendToPlayer(player, new ChunkChangeResponsePacket(message.chunks.size(), changed, problems));
 
 		SendGeneralDataPacket.send(data, player);
+
+		if(message.teamId.isPresent()) {
+			SendGeneralDataPacket.send(chunkTeamData, data.getTeam().getOnlineMembers());
+		}
 	}
 
 	public enum ChunkChangeOp {

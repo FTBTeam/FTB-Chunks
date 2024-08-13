@@ -131,11 +131,9 @@ public class ChunkScreen extends BaseScreen {
 				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
 		).setPosAndSize(1, 19, 16, 16));
 
-		if(!Minecraft.getInstance().isSingleplayer()) {
-			if(openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
-				add(new AdminButton().setPosAndSize(1, 37, 16, 16));
-			}
-		}
+        if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+            add(new AdminButton().setPosAndSize(1, 37, 16, 16));
+        }
 	}
 
 	@Override

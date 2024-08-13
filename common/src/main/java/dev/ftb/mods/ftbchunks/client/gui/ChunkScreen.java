@@ -305,7 +305,7 @@ public class ChunkScreen extends BaseScreen {
 			return chunk.getForceLoadedDate().map(forceLoadedDate -> {
 				LocalPlayer player = Minecraft.getInstance().player;
 				boolean teamMember = chunk.isTeamMember(player);
-				if (canChangeAsAdmin() || teamMember) {
+				if (isMouseOver && (canChangeAsAdmin() || teamMember)) {
 					int dir = (int) Math.signum(scroll);
 					long now = System.currentTimeMillis();
 					Date expiry = chunk.getForceLoadExpiryDate().orElse(new Date(now));

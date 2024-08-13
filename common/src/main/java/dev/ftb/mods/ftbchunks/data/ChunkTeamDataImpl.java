@@ -25,6 +25,7 @@ import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -185,14 +186,14 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	}
 
 	@Override
-	public ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
+	public ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly, boolean adminOverride) {
 		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
-		} else if (chunk.getTeamData() != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
-			return ClaimResult.StandardProblem.NOT_OWNER;
-		}
+		} else if (chunk.getTeamData() != this && !(adminOverride && source.hasPermission(Commands.LEVEL_GAMEMASTERS)) && !source.getServer().isSingleplayer()) {
+            return ClaimResult.StandardProblem.NOT_OWNER;
+        }
 
 		ClaimResult result = ClaimedChunkEvent.BEFORE_UNCLAIM.invoker().before(source, chunk).object();
 		if (result == null) {
@@ -209,12 +210,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	}
 
 	@Override
-	public ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
+	public ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly, boolean adminOverride) {
 		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
-		} else if (chunk.getTeamData() != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
+		} else if (chunk.getTeamData() != this && !(adminOverride && source.hasPermission(Commands.LEVEL_GAMEMASTERS)) && !source.getServer().isSingleplayer()) {
 			return ClaimResult.StandardProblem.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResult.StandardProblem.ALREADY_LOADED;
@@ -238,13 +239,13 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	}
 
 	@Override
-	public ClaimResult unForceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
+	public ClaimResult unForceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly, boolean adminOverride) {
 		ClaimedChunkImpl chunk = manager.getChunk(pos);
 
 		if (chunk == null) {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
 		} else if (chunk.getTeamData() != this
-				&& !source.hasPermission(2)
+				&& !(adminOverride && source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				&& !source.getServer().isSingleplayer()
 				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(source.getEntity().getUUID()))
 		) {

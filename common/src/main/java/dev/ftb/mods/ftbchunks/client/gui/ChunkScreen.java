@@ -1,9 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.datafixers.util.Either;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
@@ -18,8 +16,6 @@ import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
-import dev.ftb.mods.ftblibrary.FTBLibrary;
-import dev.ftb.mods.ftblibrary.FTBLibraryClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -39,6 +35,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -133,13 +130,8 @@ public class ChunkScreen extends BaseScreen {
 				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
 		).setPosAndSize(1, 19, 16, 16));
 
-		if(openedAs != null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
-			add(new SimpleButton(this, Component.translatable("ftbchunks.gui.admin_mode"), Icons.ACCEPT,
-					(btn, mb) -> {
-						isAdminEnabled = !isAdminEnabled;
-						btn.setIcon(isAdminEnabled ? Icons.ACCEPT : Icons.CANCEL);
-					}
-			).setPosAndSize(1, 37, 16, 16));
+		if(openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+			add(new AdminButton().setPosAndSize(1, 37, 16, 16));
 		}
 	}
 
@@ -148,7 +140,8 @@ public class ChunkScreen extends BaseScreen {
 		super.mouseReleased(button);
 
 		if (!selectedChunks.isEmpty()) {
-			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, Optional.ofNullable(openedAs).map(Team::getTeamId)));
+			Optional<UUID> teamId = Optional.ofNullable(openedAs).map(Team::getTeamId);
+			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
 			playClickSound();
 		}
@@ -203,10 +196,15 @@ public class ChunkScreen extends BaseScreen {
 				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
 		}
+
+		if(openedAs != null) {
+			String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();
+			theme.drawString(graphics, openAsMessage, sx + 2, sy + FTBChunks.MINIMAP_SIZE - theme.getFontHeight() - 2, Color4I.WHITE, Theme.SHADOW);
+		}
 	}
 
 	private boolean canChangeAsAdmin() {
-		return Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS) && openedAs != null && isAdminEnabled;
+		return Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS) && openedAs == null && isAdminEnabled;
 	}
 
 	private static class ChunkMouseReferenceScreen extends KeyReferenceScreen {
@@ -252,7 +250,6 @@ public class ChunkScreen extends BaseScreen {
 
 				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT)) {
 					selectedChunks.add(chunkPos);
-//					selectedChunks.add(chunkPos);
 				}
 			}
 		}
@@ -367,4 +364,24 @@ public class ChunkScreen extends BaseScreen {
 		}
 	}
 
+	private class AdminButton extends SimpleButton {
+
+		private static final Component DISABLED = Component.translatable("ftbchunks.gui.admin_mode_disabled");
+		private static final Component ENABLED = Component.translatable("ftbchunks.gui.admin_mode_enabled");
+		private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info", ChatFormatting.GRAY);
+
+		public AdminButton() {
+			super(ChunkScreen.this, DISABLED, Icons.CANCEL, (btn, mb) -> {
+				ChunkScreen.this.isAdminEnabled = !ChunkScreen.this.isAdminEnabled;
+				btn.setIcon(ChunkScreen.this.isAdminEnabled ? Icons.ACCEPT : Icons.CANCEL);
+				btn.setTitle(ChunkScreen.this.isAdminEnabled ? DISABLED : ENABLED);
+			});
+		}
+
+		@Override
+		public void addMouseOverText(TooltipList list) {
+			super.addMouseOverText(list);
+			list.add(MORE_INFO);
+		}
+	}
 }

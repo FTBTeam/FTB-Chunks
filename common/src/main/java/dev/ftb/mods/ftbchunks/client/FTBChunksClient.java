@@ -346,7 +346,7 @@ public enum FTBChunksClient {
 				openGui();
 				return EventResult.interruptTrue();
 			} else if (event.id().equals(BUTTON_ID_CLAIM)) {
-				ChunkScreen.openChunkScreen();
+				ChunkScreenPanelThing.openChunkScreen();
 				return EventResult.interruptTrue();
 			}
 		}
@@ -366,7 +366,11 @@ public enum FTBChunksClient {
 			FTBChunksClientConfig.saveConfig();
 			return EventResult.interruptTrue();
 		} else if (doesKeybindMatch(openClaimManagerKey, keyCode, scanCode, modifiers)) {
-			ChunkScreen.openChunkScreen();
+			try {
+				ChunkScreenPanelThing.openChunkScreen();
+			}catch (Exception e){
+				e.printStackTrace();
+			}
 			return EventResult.interruptTrue();
 		} else if (doesKeybindMatch(zoomInKey, keyCode, scanCode, modifiers)) {
 			return changeZoom(true);
@@ -1165,6 +1169,10 @@ public enum FTBChunksClient {
 				.withStyle(loaded > maxLoaded ? ChatFormatting.RED : loaded == maxLoaded ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
 
 		return list;
+	}
+
+	public GeneralChunkData getGeneralChunkData() {
+		return generalChunkData;
 	}
 
 	public int getMinimapTextureId() {

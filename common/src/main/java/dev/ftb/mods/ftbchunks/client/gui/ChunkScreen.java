@@ -46,7 +46,7 @@ import java.util.*;
 
 import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
 
-public class ChunkScreen extends BaseScreen {
+public class ChunkScreen extends Panel {
 	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.rl("textures/force_loaded.png"));
 
 	private final MapDimension dimension;
@@ -54,10 +54,12 @@ public class ChunkScreen extends BaseScreen {
 	private final Set<XZ> selectedChunks = new HashSet<>();
 	@Nullable
 	private final Team openedAs;
-	private ChunkUpdateInfo updateInfo;
 	private boolean isAdminEnabled;
+	private AdminButton adminButton;
+	private List<ChunkedPos> chunkedPosList = new ArrayList<>();
 
-	public ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
+	public ChunkScreen(Panel panel, MapDimension dimension, @Nullable Team openedAs) {
+		super(panel);
 		RenderMapImageTask.setAlwaysRenderChunksOnMap(true);
 
 		this.isAdminEnabled = Minecraft.getInstance().isSingleplayer();
@@ -65,30 +67,33 @@ public class ChunkScreen extends BaseScreen {
 		this.openedAs = openedAs;
 
 		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
+
+
 	}
 
-	public static void openChunkScreen(@Nullable Team openedAs) {
-		MapDimension.getCurrent().ifPresentOrElse(
-				mapDimension -> new ChunkScreen(mapDimension, openedAs).openGui(),
-				() -> FTBChunks.LOGGER.warn("MapDimension data missing?? not opening chunk screen")
-		);
-	}
 
-	public static void openChunkScreen() {
-		openChunkScreen(null);
-	}
+//	public static void openChunkScreen(@Nullable Team openedAs) {
+//		MapDimension.getCurrent().ifPresentOrElse(
+//				mapDimension -> new ChunkScreen(mapDimension, openedAs).openGui(),
+//				() -> FTBChunks.LOGGER.warn("MapDimension data missing?? not opening chunk screen")
+//		);
+//	}
+//
+//	public static void openChunkScreen() {
+//		openChunkScreen(null);
+//	}
 
 
 	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
-		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
+		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreenPanelThing cs) {
 			cs.updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
 	}
-
-	@Override
-	public boolean onInit() {
-		return setFullscreen();
-	}
+//
+//	@Override
+//	public boolean onInit() {
+//		return setFullscreen();
+//	}
 
 	@Override
 	public void onClosed() {
@@ -99,10 +104,12 @@ public class ChunkScreen extends BaseScreen {
 		super.onClosed();
 	}
 
+	public record ChunkedPos(ChunkButton button, int x , int y) {}
+
 	@Override
 	public void addWidgets() {
-		int sx = getX() + (width - FTBChunks.MINIMAP_SIZE) / 2;
-		int sy = getY() + (height - FTBChunks.MINIMAP_SIZE) / 2;
+		int sx = 1;
+		int sy = 1;
 		Player player = Minecraft.getInstance().player;
 		ChunkPos chunkPos = player.chunkPosition();
 		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
@@ -113,7 +120,7 @@ public class ChunkScreen extends BaseScreen {
 			for (int x = 0; x < FTBChunks.TILES; x++) {
 				ChunkButton button = new ChunkButton(this, XZ.of(startX + x, startZ + z));
 				chunkButtons.add(button);
-				button.setPos(sx + x * FTBChunks.TILE_SIZE, sy + z * FTBChunks.TILE_SIZE);
+				chunkedPosList.add(new ChunkedPos(button, sx + (x * FTBChunks.TILE_SIZE), sy + (z * FTBChunks.TILE_SIZE)));
 			}
 		}
 
@@ -122,18 +129,28 @@ public class ChunkScreen extends BaseScreen {
 				chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
 				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET)
 		);
+//
+//		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
+//				(simpleButton, mouseButton) -> LargeMapScreen.openMap()
+//		).setPosAndSize(1, 1, 16, 16));
+//
+//		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
+//				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
+//		).setPosAndSize(1, 19, 16, 16));
 
-		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
-				(simpleButton, mouseButton) -> LargeMapScreen.openMap()
-		).setPosAndSize(1, 1, 16, 16));
+		if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+			add(adminButton = new AdminButton());
+		}
+	}
 
-		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
-				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
-		).setPosAndSize(1, 19, 16, 16));
-
-        if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
-            add(new AdminButton().setPosAndSize(1, 37, 16, 16));
-        }
+	@Override
+	public void alignWidgets() {
+		chunkedPosList.forEach(chunkedPos -> {
+            chunkedPos.button.setPos(chunkedPos.x, chunkedPos.y);
+        });
+		if(adminButton != null) {
+			adminButton.setPosAndSize(1, 37, 16, 16);
+		}
 	}
 
 	@Override
@@ -162,18 +179,23 @@ public class ChunkScreen extends BaseScreen {
 	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		Player player = Minecraft.getInstance().player;
 
-		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
-		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
+		int sx = getX() + 1;
+		int sy = getY() + 1;
 
+		int maxWidth = getWidth() - 2;
+		int maxHeight = getHeight() - 2;
+		graphics.pose().pushPose();
+//		graphics.pose().scale(maxWidth / (float) FTBChunks.MINIMAP_SIZE, maxHeight / (float) FTBChunks.MINIMAP_SIZE, 0);
+//		graphics.pose().translate(sx, sy, 0);
 		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
-		GuiHelper.drawTexturedRect(graphics, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
+		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				graphics.hLine(sx, sx + FTBChunks.MINIMAP_SIZE, sy +  gy * FTBChunks.TILE_SIZE, 0x64464646);
+				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * FTBChunks.TILE_SIZE, 0x64464646);
 			}
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				graphics.vLine(sx + gx * FTBChunks.TILE_SIZE, sy, sy + FTBChunks.MINIMAP_SIZE, 0x64464646);
+				graphics.vLine(sx + gx * FTBChunks.TILE_SIZE, sy - 1, sy + maxHeight, 0x64464646);
 			}
 		}
 
@@ -182,21 +204,23 @@ public class ChunkScreen extends BaseScreen {
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
 		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
-		List<Component> list = FTBChunksClient.INSTANCE.getChunkSummary();
-		int fh = theme.getFontHeight() + 1;
-		for (int i = 0; i < list.size(); i++) {
-			theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
-		}
+		graphics.pose().popPose();
 
-		if (updateInfo != null && updateInfo.shouldDisplay()) {
-			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
-			int line = 1;
-			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
-				ClaimResult.StandardProblem problem = entry.getKey();
-				int count = entry.getValue();
-				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
-			}
-		}
+//		List<Component> list = FTBChunksClient.INSTANCE.getChunkSummary();
+//		int fh = theme.getFontHeight() + 1;
+//		for (int i = 0; i < list.size(); i++) {
+//			theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
+//		}
+//
+//		if (updateInfo != null && updateInfo.shouldDisplay()) {
+//			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
+//			int line = 1;
+//			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
+//				ClaimResult.StandardProblem problem = entry.getKey();
+//				int count = entry.getValue();
+//				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
+//			}
+//		}
 
 		if (openedAs != null) {
 			String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();
@@ -243,7 +267,7 @@ public class ChunkScreen extends BaseScreen {
 					Color4I teamColor = team.getProperties().get(TeamProperties.COLOR);
 					float[] hsb = Color4I.RGBtoHSB(teamColor.redi(), teamColor.greeni(), teamColor.bluei(), null);
 					hsb[0] = (hsb[0] + 0.5f) % 1f;
-					FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])).draw(matrixStack, x, y, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
+					FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])).draw(matrixStack, x, y, w, h);
 				});
 			}
 			if (isMouseOver() || selectedChunks.contains(chunkPos)) {
@@ -352,7 +376,7 @@ public class ChunkScreen extends BaseScreen {
 		}
 	}
 
-	private record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems, long timestamp) {
+	public record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems, long timestamp) {
 		public boolean shouldDisplay() {
 			// display for 3 seconds + 1 second per line of problem data
 			long timeout = 60L + 20L * problems.size();
@@ -372,10 +396,10 @@ public class ChunkScreen extends BaseScreen {
 		private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info", ChatFormatting.GRAY);
 
 		public AdminButton() {
-			super(ChunkScreen.this, DISABLED, Icons.CANCEL, (btn, mb) -> {
+			super(ChunkScreen.this, DISABLED, Icons.LOCK, (btn, mb) -> {
 				ChunkScreen.this.isAdminEnabled = !ChunkScreen.this.isAdminEnabled;
-				btn.setIcon(ChunkScreen.this.isAdminEnabled ? Icons.ACCEPT : Icons.CANCEL);
-				btn.setTitle(ChunkScreen.this.isAdminEnabled ? DISABLED : ENABLED);
+				btn.setIcon(ChunkScreen.this.isAdminEnabled ? Icons.LOCK_OPEN : Icons.LOCK);
+				btn.setTitle(ChunkScreen.this.isAdminEnabled ? ENABLED : DISABLED);
 			});
 		}
 

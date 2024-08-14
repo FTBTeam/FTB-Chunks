@@ -53,9 +53,9 @@ public class ChunkScreen extends Panel {
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
 	private final Set<XZ> selectedChunks = new HashSet<>();
 	@Nullable
-	private final Team openedAs;
-	private boolean isAdminEnabled;
-	private AdminButton adminButton;
+	public final Team openedAs;
+	public boolean isAdminEnabled;
+	private ChunkScreen.ChunkUpdateInfo updateInfo;
 	private List<ChunkedPos> chunkedPosList = new ArrayList<>();
 
 	public ChunkScreen(Panel panel, MapDimension dimension, @Nullable Team openedAs) {
@@ -86,7 +86,7 @@ public class ChunkScreen extends Panel {
 
 	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreenPanelThing cs) {
-			cs.updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
+			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
 	}
 //
@@ -138,9 +138,6 @@ public class ChunkScreen extends Panel {
 //				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
 //		).setPosAndSize(1, 19, 16, 16));
 
-		if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
-			add(adminButton = new AdminButton());
-		}
 	}
 
 	@Override
@@ -148,9 +145,6 @@ public class ChunkScreen extends Panel {
 		chunkedPosList.forEach(chunkedPos -> {
             chunkedPos.button.setPos(chunkedPos.x, chunkedPos.y);
         });
-		if(adminButton != null) {
-			adminButton.setPosAndSize(1, 37, 16, 16);
-		}
 	}
 
 	@Override
@@ -205,22 +199,6 @@ public class ChunkScreen extends Panel {
 		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
 		graphics.pose().popPose();
-
-//		List<Component> list = FTBChunksClient.INSTANCE.getChunkSummary();
-//		int fh = theme.getFontHeight() + 1;
-//		for (int i = 0; i < list.size(); i++) {
-//			theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
-//		}
-//
-//		if (updateInfo != null && updateInfo.shouldDisplay()) {
-//			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
-//			int line = 1;
-//			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
-//				ClaimResult.StandardProblem problem = entry.getKey();
-//				int count = entry.getValue();
-//				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
-//			}
-//		}
 
 		if (openedAs != null) {
 			String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();
@@ -389,24 +367,5 @@ public class ChunkScreen extends Panel {
 		}
 	}
 
-	private class AdminButton extends SimpleButton {
 
-		private static final Component DISABLED = Component.translatable("ftbchunks.gui.admin_mode_disabled");
-		private static final Component ENABLED = Component.translatable("ftbchunks.gui.admin_mode_enabled");
-		private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info", ChatFormatting.GRAY);
-
-		public AdminButton() {
-			super(ChunkScreen.this, DISABLED, Icons.LOCK, (btn, mb) -> {
-				ChunkScreen.this.isAdminEnabled = !ChunkScreen.this.isAdminEnabled;
-				btn.setIcon(ChunkScreen.this.isAdminEnabled ? Icons.LOCK_OPEN : Icons.LOCK);
-				btn.setTitle(ChunkScreen.this.isAdminEnabled ? ENABLED : DISABLED);
-			});
-		}
-
-		@Override
-		public void addMouseOverText(TooltipList list) {
-			super.addMouseOverText(list);
-			list.add(MORE_INFO);
-		}
-	}
 }

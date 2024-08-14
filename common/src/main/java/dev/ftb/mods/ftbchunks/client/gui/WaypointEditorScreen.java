@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
@@ -51,12 +52,17 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         }
 
         buttonExpandAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.expand_all"), hotkeyTooltip("="), hotkeyTooltip("+")), Icons.UP,
-                (widget, button) -> toggleAll(false));
-        buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(true));
+        buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
+                (widget, button) -> toggleAll(false));
     }
 
     private void toggleAll(boolean collapsed) {
+        boolean allOpen = this.collapsed.values().stream().noneMatch(b -> b);
+        //Don't try and re-render if everything is already open
+        if (allOpen && !collapsed) {
+            return;
+        }
         this.collapsed.keySet().forEach(levelResourceKey -> this.collapsed.put(levelResourceKey, collapsed));
         scrollBar.setValue(0);
         getGui().refreshWidgets();
@@ -76,6 +82,19 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         setHeight(getScreen().getGuiScaledHeight() * 4 / 5);
         return true;
     }
+
+    @Override
+    public boolean keyPressed(Key key) {
+        if (super.keyPressed(key)) {
+            return true;
+        } else if (key.is(InputConstants.KEY_ADD) || key.is(InputConstants.KEY_EQUALS)) {
+            toggleAll(false);
+        } else if (key.is(InputConstants.KEY_MINUS) || key.is(GLFW.GLFW_KEY_KP_SUBTRACT)) {
+            toggleAll(true);
+        }
+        return false;
+    }
+
 
     @Override
     protected int getTopPanelHeight() {
@@ -238,7 +257,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 distField.setPos(hideButton.getPosX() - 5 - distField.width, yOff);
 
                 nameField.setPos(5, yOff);
-                nameField.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), Component.literal(wp.getName()),distField.getPosX() - 5).getString());
+                nameField.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), Component.literal(wp.getName()), distField.getPosX() - 5).getString());
                 nameField.setHeight(getTheme().getFontHeight() + 2);
             }
         }

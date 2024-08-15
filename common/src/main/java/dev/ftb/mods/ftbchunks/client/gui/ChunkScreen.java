@@ -57,6 +57,7 @@ public class ChunkScreen extends Panel {
 	public boolean isAdminEnabled;
 	private ChunkScreen.ChunkUpdateInfo updateInfo;
 	private List<ChunkedPos> chunkedPosList = new ArrayList<>();
+	private int tileSize = 16;
 
 	public ChunkScreen(Panel panel, MapDimension dimension, @Nullable Team openedAs) {
 		super(panel);
@@ -68,9 +69,9 @@ public class ChunkScreen extends Panel {
 
 		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
 
+		alignWidgets();
 
 	}
-
 
 //	public static void openChunkScreen(@Nullable Team openedAs) {
 //		MapDimension.getCurrent().ifPresentOrElse(
@@ -120,7 +121,7 @@ public class ChunkScreen extends Panel {
 			for (int x = 0; x < FTBChunks.TILES; x++) {
 				ChunkButton button = new ChunkButton(this, XZ.of(startX + x, startZ + z));
 				chunkButtons.add(button);
-				chunkedPosList.add(new ChunkedPos(button, sx + (x * FTBChunks.TILE_SIZE), sy + (z * FTBChunks.TILE_SIZE)));
+				chunkedPosList.add(new ChunkedPos(button, x , z));
 			}
 		}
 
@@ -129,6 +130,8 @@ public class ChunkScreen extends Panel {
 				chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
 				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET)
 		);
+
+
 //
 //		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
 //				(simpleButton, mouseButton) -> LargeMapScreen.openMap()
@@ -142,8 +145,12 @@ public class ChunkScreen extends Panel {
 
 	@Override
 	public void alignWidgets() {
+		int maxWidth = getWidth();
+		int maxHeight = getHeight();
+		this.tileSize = maxWidth / FTBChunks.TILES;
 		chunkedPosList.forEach(chunkedPos -> {
-            chunkedPos.button.setPos(chunkedPos.x, chunkedPos.y);
+            chunkedPos.button.setPos(tileSize * chunkedPos.x + 1, tileSize * chunkedPos.y + 1);
+			chunkedPos.button.setSize(tileSize, tileSize);
         });
 	}
 
@@ -174,31 +181,28 @@ public class ChunkScreen extends Panel {
 		Player player = Minecraft.getInstance().player;
 
 		int sx = getX() + 1;
-		int sy = getY() + 1;
+		int sy = getY() + 0;
 
 		int maxWidth = getWidth() - 2;
 		int maxHeight = getHeight() - 2;
-		graphics.pose().pushPose();
-//		graphics.pose().scale(maxWidth / (float) FTBChunks.MINIMAP_SIZE, maxHeight / (float) FTBChunks.MINIMAP_SIZE, 0);
-//		graphics.pose().translate(sx, sy, 0);
 		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
 		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
+
+
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * FTBChunks.TILE_SIZE, 0x64464646);
+				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSize, 0x64464646);
 			}
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				graphics.vLine(sx + gx * FTBChunks.TILE_SIZE, sy - 1, sy + maxHeight, 0x64464646);
+				graphics.vLine(sx + gx * tileSize, sy - 1, sy + maxHeight, 0x64464646);
 			}
 		}
 
-		double hx = sx + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
-		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
+		double hx = sx + tileSize * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
+		double hy = sy + tileSize * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
 		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
-
-		graphics.pose().popPose();
 
 		if (openedAs != null) {
 			String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();

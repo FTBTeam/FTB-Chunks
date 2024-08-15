@@ -35,7 +35,6 @@ public class ChunkScreenPanelThing extends AbstractThreePanelScreen<ChunkScreen>
     private ChunkScreenPanelThing() {
         showCloseButton(true);
         showScrollBar(false);
-
     }
 
     @Override
@@ -50,9 +49,13 @@ public class ChunkScreenPanelThing extends AbstractThreePanelScreen<ChunkScreen>
 
     @Override
     public boolean onInit() {
-        setWidth(FTBChunks.MINIMAP_SIZE + 2);
-        int extraHeight = getTopPanelHeight() + BOTTOM_PANEL_H;
-        setHeight(FTBChunks.MINIMAP_SIZE + 2 + extraHeight);
+        int size = (int) (getScreen().getGuiScaledHeight() * 0.85f);
+//        make sure size is a multiple of 16 rounded down
+        size = size - (size % 16);
+
+        setWidth(Math.min(size + 2, getScreen().getGuiScaledWidth() - 2));
+        setHeight(Math.min(size + getTopPanelHeight() + BOTTOM_PANEL_H, getScreen().getGuiScaledHeight() - 2));
+
         return true;
     }
 

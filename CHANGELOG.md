@@ -8,9 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * Minecraft 1.21.1 is now required; this no longer supports Minecraft 1.21
+* Vanilla Cherry Trees now show up pink on the map
 
 ### Added
 * Sidebar buttons for this and other FTB mods can now be enabled/disabled/rearranged (new functionality in FTB Library 2101.1.0)
+
+### Fixed
+* Fixed expand/collapse buttons on waypoint editor screen being flipped
+* New minimap info components (TPS/game time/real time) are now hidden by default
+  * Can be toggled on via info settings on the large map screen
 
 ## [2100.1.1]
 

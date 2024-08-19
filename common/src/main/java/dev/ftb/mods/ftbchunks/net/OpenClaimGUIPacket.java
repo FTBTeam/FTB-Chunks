@@ -3,8 +3,6 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
-import dev.ftb.mods.ftbchunks.client.gui.ChunkScreenPanelThing;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
@@ -42,7 +40,7 @@ public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {
                 return;
             }
 
-            ChunkScreenPanelThing.openChunkScreen(teamByID.get());
+            ChunkScreen.openChunkScreen(teamByID.get());
         });
     }
 

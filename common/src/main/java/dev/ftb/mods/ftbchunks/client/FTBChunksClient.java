@@ -346,7 +346,7 @@ public enum FTBChunksClient {
 				openGui();
 				return EventResult.interruptTrue();
 			} else if (event.id().equals(BUTTON_ID_CLAIM)) {
-				ChunkScreenPanelThing.openChunkScreen();
+				ChunkScreen.openChunkScreen();
 				return EventResult.interruptTrue();
 			}
 		}
@@ -367,7 +367,7 @@ public enum FTBChunksClient {
 			return EventResult.interruptTrue();
 		} else if (doesKeybindMatch(openClaimManagerKey, keyCode, scanCode, modifiers)) {
 			try {
-				ChunkScreenPanelThing.openChunkScreen();
+				ChunkScreen.openChunkScreen();
 			}catch (Exception e){
 				e.printStackTrace();
 			}

@@ -135,7 +135,7 @@ public class LargeMapScreen extends BaseScreen {
 		add(regionPanel);
 
 		add(claimChunksButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.claimed_chunks"), Icons.MAP,
-				(b, m) -> ChunkScreenPanelThing.openChunkScreen(),
+				(b, m) -> ChunkScreen.openChunkScreen(),
 				Component.literal("[C]").withStyle(ChatFormatting.GRAY)));
 
 		Component tooltip = Component.literal("[")

@@ -1,0 +1,11 @@
+{
+  "values": [
+    "minecraft:bucket",
+    "minecraft:water_bucket",
+    "minecraft:lava_bucket",
+    "minecraft:lead",
+    "minecraft:name_tag",
+    "minecraft:splash_potion",
+    "minecraft:lingering_potion"
+  ]
+}

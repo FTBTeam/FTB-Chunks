@@ -1,0 +1,23 @@
+{
+  "values": [
+    "minecraft:crafting_table",
+    "minecraft:smithing_table",
+    "minecraft:bell",
+    {
+      "id": "#tombstone:graves",
+      "required": false
+    },
+    {
+      "id": "#waystones:waystones",
+      "required": false
+    },
+    {
+      "id": "#waystones:sharestones",
+      "required": false
+    },
+    {
+      "id": "#fwaystones:waystones",
+      "required": false
+    }
+  ]
+}

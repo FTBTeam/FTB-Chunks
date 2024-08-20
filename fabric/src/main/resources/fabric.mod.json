@@ -18,6 +18,9 @@
 		],
 		"client": [
 			"dev.ftb.mods.ftbchunks.fabric.FTBChunksFabricClient"
+		],
+		"fabric-datagen": [
+			"dev.ftb.mods.ftbchunks.datagen.FTBChunksDataGen"
 		]
 	},
 	"mixins": [

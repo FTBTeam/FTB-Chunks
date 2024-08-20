@@ -16,11 +16,21 @@ configurations {
 	dev
 }
 
+def generatedResourcesCommon = project(":common").file("src/generated/resources")
 def generatedResources = file("src/generated/resources")
 def accessWidenerFile = project(":common").file("src/main/resources/ftbchunks.accesswidener")
 
 loom {
 	accessWidenerPath = accessWidenerFile
+
+}
+
+fabricApi {
+	configureDataGeneration(dataSettings -> {
+		dataSettings.modId = "${mod_id}"
+		dataSettings.outputDirectory = generatedResourcesCommon
+		dataSettings.createSourceSet = true
+	})
 }
 
 sourceSets {

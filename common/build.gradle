@@ -10,6 +10,14 @@ architectury {
 	common(/* "forge", */ "fabric", "neoforge")
 }
 
+def generatedResources = file("src/generated")
+
+sourceSets {
+	main {
+		resources.srcDir generatedResources
+	}
+}
+
 configurations {
 	dev
 }

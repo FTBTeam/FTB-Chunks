@@ -1,0 +1,3 @@
+// 1.21.1	2024-08-20T11:45:55.5310546	FTB Chunks/Tags for minecraft:item
+5cd2eded88a21f9dee36923d2018a60e2426de22 data\ftbchunks\tags\item\right_click_whitelist.json
+1806bf10f901dc9a56ee840ae0b2922ccc61dfe4 data\ftbchunks\tags\item\right_click_blacklist.json

@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import com.mojang.datafixers.util.Pair;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
@@ -26,12 +27,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
-    private static MapDimension dimension;
-    private static Team openedAs;
-    private static ChunkScreenPanel chunkScreen;
+    private final MapDimension dimension;
+    private final Team openedAs;
+    private ChunkScreenPanel chunkScreenPanel;
     private SimpleButton largeMapButton;
 
-    private ChunkScreen() {
+    private ChunkScreen(MapDimension dimension, Team openedAs) {
+        this.dimension = dimension;
+        this.openedAs = openedAs;
         showCloseButton(true);
         showScrollBar(false);
     }
@@ -75,12 +78,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     public static void openChunkScreen(@Nullable Team openedAs) {
         MapDimension.getCurrent().ifPresentOrElse(
-                mapDimension -> {
-                    //Todo this better
-                    ChunkScreen.dimension = mapDimension;
-                    ChunkScreen.openedAs = openedAs;
-                    new ChunkScreen().openGui();
-                },
+                mapDimension -> new ChunkScreen(mapDimension, openedAs).openGui(),
                 () -> FTBChunks.LOGGER.warn("MapDimension data missing?? not opening chunk screen")
         );
     }
@@ -90,12 +88,12 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     }
 
     public ChunkScreenPanel getChunkScreen() {
-        return chunkScreen;
+        return chunkScreenPanel;
     }
 
     @Override
     protected void doCancel() {
-
+        closeGui();
     }
 
     @Override
@@ -109,14 +107,27 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     }
 
     @Override
+    protected int getBottomPanelHeight() {
+        return openedAs == null ? super.getBottomPanelHeight() - 8 : super.getBottomPanelHeight();
+    }
+
+    @Override
     protected ChunkScreenPanel createMainPanel() {
-        chunkScreen = new ChunkScreenPanel(this, dimension, openedAs);
-        return chunkScreen;
+        chunkScreenPanel = new ChunkScreenPanel(this);
+        return chunkScreenPanel;
     }
 
     @Override
     protected Panel createTopPanel() {
         return new CustomTopPanel();
+    }
+
+    public Team getOpenedAs() {
+        return openedAs;
+    }
+
+    public MapDimension getDimension() {
+        return dimension;
     }
 
     protected class CustomTopPanel extends Panel {
@@ -137,7 +148,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                     .setForceButtonSize(false);
 
             removeAllClaims = new SimpleButton(this, Component.translatable("ftbchunks.gui.unclaim_all"), Icons.BIN,
-                    (btn, mb) -> chunkScreen.removeAllClaims())
+                    (btn, mb) -> chunkScreenPanel.removeAllClaims())
                     .setForceButtonSize(false);
 
 
@@ -148,7 +159,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         public void addWidgets() {
             add(closeButton);
             add(removeAllClaims);
-            if (!Minecraft.getInstance().isSingleplayer() && ChunkScreen.this.getChunkScreen().openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+            if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
                 add(adminButton);
             }
             add(mouseReferenceButton);
@@ -203,7 +214,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         }
     }
 
-
     private class CustomBottomPanel extends Panel {
 
         public CustomBottomPanel() {
@@ -222,31 +232,32 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         @Override
         public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawPanelBackground(graphics, x, y, w, h);
+
             Color4I.GRAY.withAlpha(64).draw(graphics, x, y, w, 1);
             SendGeneralDataPacket.GeneralChunkData generalChunkData = FTBChunksClient.INSTANCE.getGeneralChunkData();
 
             int claimed = generalChunkData.claimed();
             int maxClaim = generalChunkData.maxClaimChunks();
 
-            MutableComponent append1 = Component.translatable("ftbchunks.gui.claimed").append(Component.literal(": ")
+            MutableComponent claimedComponent = Component.translatable("ftbchunks.gui.claimed").append(Component.literal(": ")
                     .append(Component.literal(claimed + " / " + maxClaim)
                             .withStyle(claimed > maxClaim ? ChatFormatting.RED : claimed == maxClaim ? ChatFormatting.YELLOW : ChatFormatting.GREEN)));
-            theme.drawString(graphics, append1, x + 4, y + 4);
+            theme.drawString(graphics, claimedComponent, x + 4, y + 4);
 
             int loaded = generalChunkData.loaded();
             int maxLoaded = generalChunkData.maxForceLoadChunks();
-            MutableComponent append = Component.translatable("ftbchunks.gui.force_loaded").append(Component.literal(": "))
+
+            MutableComponent forceLoadComponent = Component.translatable("ftbchunks.gui.force_loaded").append(Component.literal(": "))
                     .append(Component.literal(loaded + " / " + maxLoaded)
                                     .withStyle(loaded > maxLoaded ? ChatFormatting.RED : loaded == maxLoaded ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
-
-            theme.drawString(graphics, append, x + 4, y + 6 + Minecraft.getInstance().font.lineHeight);
+            String forceLoadText = forceLoadComponent.getString();
+            int forceLoadX = x + w - theme.getStringWidth(forceLoadText) - 2;
+            theme.drawString(graphics, forceLoadComponent, forceLoadX, y + 4);
 
             if (openedAs != null) {
                 String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();
-                //from right side
-                int sx = x + w - theme.getStringWidth(openAsMessage) - 4;
-                theme.drawString(graphics, openAsMessage, sx, y + h - theme.getFontHeight() - 2, Color4I.WHITE, Theme.SHADOW);
-//                theme.drawString(graphics, openAsMessage, sx + 2, sy + FTBChunks.MINIMAP_SIZE - theme.getFontHeight() - 2, Color4I.WHITE, Theme.SHADOW);
+                int openAsX = x + w - theme.getStringWidth(openAsMessage) - 2;
+                theme.drawString(graphics, openAsMessage, openAsX, y + h - theme.getFontHeight(), Color4I.WHITE, Theme.SHADOW);
             }
         }
     }

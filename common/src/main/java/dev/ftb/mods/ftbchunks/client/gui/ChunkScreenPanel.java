@@ -47,24 +47,23 @@ import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
 
 public class ChunkScreenPanel extends Panel {
 	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.rl("textures/force_loaded.png"));
+	private static final ImageIcon CHECKERED_ICON = new ImageIcon(FTBChunksAPI.rl("textures/checkered.png"));
 
-	private final MapDimension dimension;
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
 	private final Set<XZ> selectedChunks = new HashSet<>();
-	@Nullable
-	public final Team openedAs;
+	private final List<ChunkButtonPos> chunkedPosList = new ArrayList<>();
 	public boolean isAdminEnabled;
 	private ChunkScreenPanel.ChunkUpdateInfo updateInfo;
-	private List<ChunkButtonPos> chunkedPosList = new ArrayList<>();
 	public int tileSize = 16;
+	private final ChunkScreen chunkScreen;
 
-	public ChunkScreenPanel(Panel panel, MapDimension dimension, @Nullable Team openedAs) {
+	public ChunkScreenPanel(ChunkScreen panel) {
 		super(panel);
+		this.chunkScreen = panel;
 		RenderMapImageTask.setAlwaysRenderChunksOnMap(true);
 
 		this.isAdminEnabled = Minecraft.getInstance().isSingleplayer();
-		this.dimension = dimension;
-		this.openedAs = openedAs;
+
 
 		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
 
@@ -131,7 +130,7 @@ public class ChunkScreenPanel extends Panel {
 		super.mouseReleased(button);
 
 		if (!selectedChunks.isEmpty()) {
-			Optional<UUID> teamId = Optional.ofNullable(openedAs).map(Team::getTeamId);
+			Optional<UUID> teamId = Optional.ofNullable(chunkScreen.getOpenedAs()).map(Team::getTeamId);
 			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
 			playClickSound();
@@ -139,7 +138,7 @@ public class ChunkScreenPanel extends Panel {
 	}
 
 	public void removeAllClaims() {
-		Optional<UUID> teamId = Optional.ofNullable(openedAs).map(Team::getTeamId);
+		Optional<UUID> teamId = Optional.ofNullable(chunkScreen.getOpenedAs()).map(Team::getTeamId);
 		Set<XZ> allChunks = chunkedPosList.stream()
 						.map(ChunkButtonPos::button)
 						.map(ChunkButton::getChunkPos)
@@ -161,6 +160,7 @@ public class ChunkScreenPanel extends Panel {
 	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		Player player = Minecraft.getInstance().player;
 
+		// make sure the window is a multiple of the tile amount
 		int maxWidth = getWidth() / FTBChunks.TILES * FTBChunks.TILES;
 		int maxHeight = getHeight() / FTBChunks.TILES * FTBChunks.TILES;
 		int xPos = (getWidth() - maxWidth) / 2;
@@ -183,6 +183,7 @@ public class ChunkScreenPanel extends Panel {
 
 		double hx = sx + tileSize * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
 		double hy = sy + tileSize * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
+
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
 		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
@@ -195,12 +196,10 @@ public class ChunkScreenPanel extends Panel {
 				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
 		}
-
-
 	}
 
 	private boolean canChangeAsAdmin() {
-		return Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS) && openedAs == null && isAdminEnabled;
+		return Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS) && chunkScreen.getOpenedAs() == null && isAdminEnabled;
 	}
 
 	private class ChunkButton extends Button {
@@ -212,7 +211,7 @@ public class ChunkScreenPanel extends Panel {
 			super(panel, Component.empty(), Color4I.empty());
 			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
 			chunkPos = xz;
-			chunk = dimension.getRegion(XZ.regionFromChunk(chunkPos.x(), chunkPos.z())).getDataBlocking().getChunk(chunkPos);
+			chunk = chunkScreen.getDimension().getRegion(XZ.regionFromChunk(chunkPos.x(), chunkPos.z())).getDataBlocking().getChunk(chunkPos);
 		}
 
 		@Override
@@ -232,12 +231,12 @@ public class ChunkScreenPanel extends Panel {
 			}
 			if (isMouseOver() || selectedChunks.contains(chunkPos)) {
 				Color4I.WHITE.withAlpha(100).draw(graphics, x, y, w, h);
+				CHECKERED_ICON.withColor(Color4I.GRAY.withAlpha(150)).draw(graphics, x, y, w, h);
 
 				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT)) {
 					selectedChunks.add(chunkPos);
 				}
 			}
-
 		}
 
 		@Override

@@ -233,10 +233,15 @@ public class ChunkScreenPanel extends Panel {
 				Color4I.WHITE.withAlpha(100).draw(graphics, x, y, w, h);
 				CHECKERED_ICON.withColor(Color4I.GRAY.withAlpha(150)).draw(graphics, x, y, w, h);
 
-				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT)) {
-					selectedChunks.add(chunkPos);
-				}
 			}
+		}
+
+		@Override
+		public boolean mouseDragged(int button, double dragX, double dragY) {
+            if (isMouseOver() && (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))) {
+                selectedChunks.add(chunkPos);
+            }
+			return super.mouseDragged(button, dragX, dragY);
 		}
 
 		@Override

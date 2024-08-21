@@ -1,11 +1,37 @@
 package dev.ftb.mods.ftbchunks.datagen;
 
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.api.FTBChunksTags;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.client.MinimapBlurMode;
+import dev.ftb.mods.ftbchunks.client.MinimapPosition;
+import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
+import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
+import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
+import dev.ftb.mods.ftbchunks.data.AllyMode;
+import dev.ftb.mods.ftbchunks.data.ForceLoadMode;
+import dev.ftb.mods.ftbchunks.data.PartyLimitMode;
+import dev.ftb.mods.ftbchunks.data.PvPMode;
+import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.snbt.config.BaseValue;
+import dev.ftb.mods.ftbteams.api.property.TeamProperty;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class LangGenerator extends FabricLanguageProvider {
 
@@ -16,86 +42,68 @@ public class LangGenerator extends FabricLanguageProvider {
     @Override
     public void generateTranslations(HolderLookup.Provider registryLookup, TranslationBuilder builder) {
         builder.add("ftbchunks", "FTB Chunks");
+
         builder.add("ftbchunks.zoom_warning", "Max zoom-out limited due to memory constraints");
-        builder.add("ftbchunks.appearance", "Appearance");
-        builder.add("ftbchunks.appearance.noise", "Noise");
-        builder.add("ftbchunks.appearance.shadows", "Shadows");
-        builder.add("ftbchunks.appearance.chunk_grid", "Chunk grid");
-        builder.add("ftbchunks.appearance.reduced_color_palette", "Reduced color palette");
-        builder.add("ftbchunks.appearance.saturation", "Saturation");
-        builder.add("ftbchunks.appearance.claimed_chunks_on_map", "Show claimed chunks on map");
-        builder.add("ftbchunks.appearance.own_claimed_chunks_on_map", "Show your own claimed chunks on map");
-        builder.add("ftbchunks.appearance.map_mode", "Map mode");
-        builder.add("ftbchunks.appearance.biome_blend", "Biome blend");
-        builder.add("ftbchunks.biome_blend.none", "None (Fastest)");
-        builder.add("ftbchunks.biome_blend.blend_3x3", "Blend 3x3");
-        builder.add("ftbchunks.biome_blend.blend_5x5", "Blend 5x5");
-        builder.add("ftbchunks.biome_blend.blend_7x7", "Blend 7x7");
-        builder.add("ftbchunks.biome_blend.blend_9x9", "Blend 9x9");
-        builder.add("ftbchunks.biome_blend.blend_11x11", "Blend 11x11");
-        builder.add("ftbchunks.biome_blend.blend_13x13", "Blend 13x13");
-        builder.add("ftbchunks.biome_blend.blend_15x15", "Blend 15x15 (Slowest)");
-        builder.add("ftbchunks.appearance.water_height_factor", "Water height factor");
-        builder.add("ftbchunks.appearance.only_surface_entities", "Only surface entities");
-        builder.add("ftbchunks.advanced", "Advanced Settings");
-        builder.add("ftbchunks.advanced.debug_info", "Debug info");
-        builder.add("ftbchunks.waypoints", "Waypoints");
-        builder.add("ftbchunks.waypoints.in_world_waypoints", "Show waypoints in world");
-        builder.add("ftbchunks.waypoints.death_waypoints", "Create death waypoints on death");
-        builder.add("ftbchunks.waypoints.death_waypoint_autoremove_distance", "Auto-remove deathpoint distance");
-        builder.add("ftbchunks.waypoints.death_waypoint_autoremove_distance.tooltip", "If > 0, the closest deathpoint will be auto-removed if it is closer than this distance from you");
-        builder.add("ftbchunks.waypoints.waypoint_fade_distance", "Min beacon fade distance");
-        builder.add("ftbchunks.waypoints.waypoint_dot_fade_distance", "Min dot fade distance");
-        builder.add("ftbchunks.waypoints.waypoint_max_distance", "Max waypoint draw distance");
-        builder.add("ftbchunks.waypoints.waypoint_focus_distance", "Focused waypoint distance");
-        builder.add("ftbchunks.waypoints.waypoint_focus_distance.tooltip", "How close does the player crosshair need to be to a waypoint to display its name?");
-        builder.add("ftbchunks.waypoints.waypoint_focus_scale", "Focused waypoint scaling");
-        builder.add("ftbchunks.waypoints.waypoint_focus_scale.tooltip", "How big do focused waypoints grow?");
-        builder.add("ftbchunks.advanced.memory", "Memory Usage");
-        builder.add("ftbchunks.advanced.memory.region_release_time", "Idle region release timeout");
-        builder.add("ftbchunks.advanced.memory.region_release_time.tooltip", "Timeout in seconds to release data for 512x512 regions which haven't been accessed recently\nSmaller values mean less memory usage, but more disk access as released regions are reloaded\nSet to 0 to disable releasing of region data.");
-        builder.add("ftbchunks.advanced.memory.autorelease_on_map_close", "Autorelease regions on map close");
-        builder.add("ftbchunks.advanced.memory.autorelease_on_map_close.tooltip", "When the large map is closed, auto-release region data down to this number.\nSmaller values mean less memory usage, but more disk access as released regions are reloaded\nSet to 0 to disable releasing of region data.");
-        builder.add("ftbchunks.advanced.memory.max_zoom_constraint", "Constrain map zoom-out");
-        builder.add("ftbchunks.advanced.memory.max_zoom_constraint.tooltip", "When true, max map zoom-out is limited by the number of explored regions and amount of available memory.\nIf this is bothersome, set this to false.");
-        builder.add("ftbchunks.minimap", "Minimap");
-        builder.add("ftbchunks.minimap.enabled", "Enabled");
-        builder.add("ftbchunks.minimap.position", "Position");
-        builder.add("ftbchunks.minimap.position_offset_x", "Position Offset X");
-        builder.add("ftbchunks.minimap.position_offset_y", "Position Offset Y");
-        builder.add("ftbchunks.minimap.position_offset_condition", "Position Offset condition");
-        builder.add("ftbchunks.minimap.position.none", "None");
-        builder.add("ftbchunks.minimap.position.bottom_left", "Bottom Left");
-        builder.add("ftbchunks.minimap.position.left", "Left");
-        builder.add("ftbchunks.minimap.position.top_left", "Top Left");
-        builder.add("ftbchunks.minimap.position.top_right", "Top Right");
-        builder.add("ftbchunks.minimap.position.right", "Right");
-        builder.add("ftbchunks.minimap.position.bottom_right", "Bottom Right");
-        builder.add("ftbchunks.minimap.scale", "Scale");
-        builder.add("ftbchunks.minimap.locked_north", "Locked north");
-        builder.add("ftbchunks.minimap.show_player_when_unlocked", "Show player when not locked north");
-        builder.add("ftbchunks.minimap.waypoints", "Waypoints");
-        builder.add("ftbchunks.minimap.entities", "Entities");
-        builder.add("ftbchunks.minimap.entity_heads", "Entity heads");
-        builder.add("ftbchunks.minimap.player_heads", "Player heads");
-        builder.add("ftbchunks.minimap.large_entities", "Large entities");
-        builder.add("ftbchunks.minimap.zoom", "Zoom");
-        builder.add("ftbchunks.minimap.xyz", "XYZ");
-        builder.add("ftbchunks.minimap.biome", "Biome");
-        builder.add("ftbchunks.minimap.blur_mode", "Blur mode");
-        builder.add("ftbchunks.minimap.blur_mode.auto", "Auto");
-        builder.add("ftbchunks.minimap.blur_mode.on", "On");
-        builder.add("ftbchunks.minimap.blur_mode.off", "Off");
-        builder.add("ftbchunks.minimap.compass", "Compass");
-        builder.add("ftbchunks.minimap.visibility", "Visibility");
-        builder.add("ftbchunks.minimap.zone", "Zone");
-        builder.add("ftbchunks.minimap.square", "Square Minimap");
-        builder.add("ftbchunks.minimap.font_scale", "Font Scaling");
-        builder.add("ftbchunks.minimap.font_scale.tooltip", "Recommended to keep this to a multiple of 0.5");
-        builder.add("ftbchunks.minimap.proportional", "Proportional sizing");
-        builder.add("ftbchunks.minimap.proportional.tooltip", "When true, minimap size is proportional to 10%% of the screen width (modifiable by the Scale setting)\nWhen false, it is a fixed size regardless of screen resolution");
+
+        // Client Configs
+        addConfig(builder, FTBChunksClientConfig.APPEARANCE, "Appearance");
+        addConfig(builder, FTBChunksClientConfig.NOISE, "Noise");
+        addConfig(builder, FTBChunksClientConfig.SHADOWS, "Shadows");
+        addConfig(builder, FTBChunksClientConfig.CHUNK_GRID, "Chunk grid");
+        addConfig(builder, FTBChunksClientConfig.REDUCED_COLOR_PALETTE, "Reduced color palette");
+        addConfig(builder, FTBChunksClientConfig.SATURATION, "Saturation");
+        addConfig(builder, FTBChunksClientConfig.CLAIMED_CHUNKS_ON_MAP, "Show claimed chunks on map");
+        addConfig(builder, FTBChunksClientConfig.OWN_CLAIMED_CHUNKS_ON_MAP, "Show your own claimed chunks on map");
+        addConfig(builder, FTBChunksClientConfig.MAP_MODE, "Map mode");
+        addConfig(builder, FTBChunksClientConfig.BIOME_BLEND, "Biome blend");
+        addConfig(builder, FTBChunksClientConfig.WATER_HEIGHT_FACTOR, "Water height factor");
+        addConfig(builder, FTBChunksClientConfig.ONLY_SURFACE_ENTITIES, "Only surface entities");
+
+        addConfig(builder, FTBChunksClientConfig.ADVANCED, "Advanced Settings");
+        addConfig(builder, FTBChunksClientConfig.DEBUG_INFO, "Debug info");
+
+        addConfig(builder, FTBChunksClientConfig.WAYPOINTS, "Waypoints");
+        addConfig(builder, FTBChunksClientConfig.IN_WORLD_WAYPOINTS, "Show waypoints in world");
+        addConfig(builder, FTBChunksClientConfig.DEATH_WAYPOINTS, "Create death waypoints on death");
+        addConfig(builder, FTBChunksClientConfig.IN_WORLD_WAYPOINTS, "Show waypoints in world");
+        addConfig(builder, FTBChunksClientConfig.DEATH_WAYPOINTS, "Create death waypoints on death");
+        addConfig(builder, FTBChunksClientConfig.DEATH_WAYPOINT_AUTOREMOVE_DISTANCE, "Auto-remove deathpoint distance", "If > 0, the closest deathpoint will be auto-removed if it is closer than this distance from you");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINT_BEACON_FADE_DISTANCE, "Min beacon fade distance");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINT_DOT_FADE_DISTANCE, "Min dot fade distance");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINT_MAX_DISTANCE, "Max waypoint draw distance");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINT_FOCUS_DISTANCE, "Focused waypoint distance", "How close does the player crosshair need to be to a waypoint to display its name?");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINT_FOCUS_SCALE, "Focused waypoint scaling", "How big do focused waypoints grow?");
+
+        addConfig(builder, FTBChunksClientConfig.MEMORY, "Memory Usage");
+        addConfig(builder, FTBChunksClientConfig.REGION_RELEASE_TIME, "Idle region release timeout", "Timeout in seconds to release data for 512x512 regions which haven't been accessed recently\nSmaller values mean less memory usage, but more disk access as released regions are reloaded\nSet to 0 to disable releasing of region data.");
+        addConfig(builder, FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE, "Autorelease regions on map close", "When the large map is closed, auto-release region data down to this number.\nSmaller values mean less memory usage, but more disk access as released regions are reloaded\nSet to 0 to disable releasing of region data.");
+        addConfig(builder, FTBChunksClientConfig.MAX_ZOOM_CONSTRAINT, "Constrain map zoom-out", "When true, max map zoom-out is limited by the number of explored regions and amount of available memory.\nIf this is bothersome, set this to false.");
+
+        addConfig(builder, FTBChunksClientConfig.MINIMAP, "Minimap");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_ENABLED, "Enabled");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_POSITION, "Position");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_SCALE, "Scale");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_LOCKED_NORTH, "Locked north");
+        addConfig(builder, FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED, "Show player when not locked north");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINTS, "Waypoints");
+        addConfig(builder, FTBChunksClientConfig.ONLY_SURFACE_ENTITIES, "Waypoints");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_ENTITIES, "Entities");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_ENTITY_HEADS, "Entity heads");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_PLAYER_HEADS, "Player heads");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_LARGE_ENTITIES, "Large entities");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_BLUR_MODE, "Blur mode");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_ZOOM, "Zoom");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_COMPASS, "Compass");
+
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_POSITION_OFFSET_CONDITION, "Position Offset condition");
+        addConfig(builder, FTBChunksClientConfig.SQUARE_MINIMAP, "Square minimap");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_VISIBILITY, "Visibility");
+        addConfig(builder, FTBChunksClientConfig.WAYPOINTS, "Waypoints");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_FONT_SCALE, "Font Scaling", "Recommended to keep this to a multiple of 0.5");
+        addConfig(builder, FTBChunksClientConfig.MINIMAP_PROPORTIONAL, "Proportional sizing", "When true, minimap size is proportional to 10% of the screen width (modifiable by the Scale setting)\nWhen false, it is a fixed size regardless of screen resolution");
         builder.add("sidebar_button.ftbchunks.chunks", "FTB Chunks: Map");
         builder.add("sidebar_button.ftbchunks.claim_chunks", "FTB Chunks: Claim Manager");
+
         builder.add("key.categories.ftbchunks", "FTB Chunks");
         builder.add("key.ftbchunks.map", "Open Map");
         builder.add("key.ftbchunks.claim_manager", "Open Claim Manager");
@@ -104,7 +112,9 @@ public class LangGenerator extends FabricLanguageProvider {
         builder.add("key.ftbchunks.add_waypoint", "Quick Add Waypoint");
         builder.add("key.ftbchunks.waypoint_manager", "Waypoint Manager");
         builder.add("key.ftbchunks.toggle_minimap", "Toggle Minimap");
+
         builder.add("wilderness", "Wilderness");
+
         builder.add("ftbchunks.no_server_mod", "FTB Chunks requires mod on server!");
         builder.add("ftbchunks.already_claimed", "Chunk is already claimed by %s");
         builder.add("ftbchunks.waypoint_added", "Waypoint '%s' added");
@@ -135,98 +145,68 @@ public class LangGenerator extends FabricLanguageProvider {
         builder.add("ftbchunks.gui.delete", "Delete");
         builder.add("ftbchunks.gui.quick_delete", "Quick Delete");
         builder.add("ftbteamsconfig.ftbchunks", "FTB Chunks Properties");
-        builder.add("ftbteamsconfig.ftbchunks.allow_fake_players", "Allow All Fake Players");
-        builder.add("ftbteamsconfig.ftbchunks.allow_fake_players.tooltip", "Treat ALL fake players as allies of the team.\nWARNING: Setting this to true could allow hostile players to access your claims via any fake player. Set this to false if you're unsure.");
-        builder.add("ftbteamsconfig.ftbchunks.allow_named_fake_players", "Allied Fake Player Names/IDs");
-        builder.add("ftbteamsconfig.ftbchunks.allow_named_fake_players.tooltip", "Treat these fake players as allies of the team.\nWARNING: Adding entries here could allow hostile players to access your claims via those fake players. Leave this empty if you're unsure.");
-        builder.add("ftbteamsconfig.ftbchunks.allow_fake_players_by_id", "Allow Fake Players by Player ID");
-        builder.add("ftbteamsconfig.ftbchunks.allow_fake_players_by_id.tooltip", "Allows fake players which have the ID of a real player access to your claims, IF that real player would be permitted, either as ally or team member. Set this to true if you're unsure.");
-        builder.add("ftbteamsconfig.ftbchunks.allow_explosions", "Allow Explosion Damage");
-        builder.add("ftbteamsconfig.ftbchunks.allow_explosions.tooltip", "Should explosions be able to damage blocks in claimed areas?");
-        builder.add("ftbteamsconfig.ftbchunks.allow_pvp", "Allow PvP Combat");
-        builder.add("ftbteamsconfig.ftbchunks.allow_pvp.tooltip", "Should player-vs-player combat be allowed in claimed areas?\nServer config setting 'Allow PvP Combat' must be 'per_team' for this to function\nNot guaranteed to protect against 100%% of indirect attacks; requires that damage sources can be attributed to a player");
-        builder.add("ftbteamsconfig.ftbchunks.allow_mob_griefing", "Allow Mob Griefing Actions");
-        builder.add("ftbteamsconfig.ftbchunks.allow_mob_griefing.tooltip", "Should mobs be allowed to damage blocks in claimed areas?\nNote: currently Endermen only; may include other mobs in future\nCreeper explosions are protected against via \"Allow Explosions\"");
-        builder.add("ftbteamsconfig.ftbchunks.block_edit_and_interact_mode", "Block Edit/Interact Mode");
-        builder.add("ftbteamsconfig.ftbchunks.block_edit_and_interact_mode.tooltip", "Used when blocks are being placed, broken, or interacted with");
-        builder.add("ftbteamsconfig.ftbchunks.block_edit_mode", "Block Edit Mode");
-        builder.add("ftbteamsconfig.ftbchunks.block_edit_mode.tooltip", "Used when blocks are being placed or broken");
-        builder.add("ftbteamsconfig.ftbchunks.block_interact_mode", "Block Interact Mode");
-        builder.add("ftbteamsconfig.ftbchunks.block_interact_mode.tooltip", "Used when blocks are right-clicked, e.g. opening a chest or flipping a lever");
-        builder.add("ftbteamsconfig.ftbchunks.entity_interact_mode", "Entity Interact Mode");
-        builder.add("ftbteamsconfig.ftbchunks.entity_interact_mode.tooltip", "Used when entities are right-clicked");
-        builder.add("ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode", "Non-living Entity Attack Mode");
-        builder.add("ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode.tooltip", "Used when non-living entities (paintings, item frames etc.) are left-clicked");
+
+        addConfig(builder, FTBChunksWorldConfig.ALLOW_FAKE_PLAYERS, "Allow All Fake Players", "Treat ALL fake players as allies of the team.\\nWARNING: Setting this to true could allow hostile players to access your claims via any fake player. Set this to false if you're unsure.");
+        addTeamProperty(builder, FTBChunksProperties.ALLOW_NAMED_FAKE_PLAYERS, "Allow Named Fake Players", "Treat these fake players as allies of the team.\nWARNING: Adding entries here could allow hostile players to access your claims via those fake players. Leave this empty if you're unsure.");
+        addTeamProperty(builder, FTBChunksProperties.ALLOW_FAKE_PLAYERS_BY_ID, "Allow Fake Players by Player ID", "Allows fake players which have the ID of a real player access to your claims, IF that real player would be permitted, either as ally or team member. Set this to true if you're unsure.");
+        addTeamProperty(builder, FTBChunksProperties.ALLOW_EXPLOSIONS, "Allow Explosion Damage", "Should explosions be able to damage blocks in claimed areas?");
+        addTeamProperty(builder, FTBChunksProperties.ALLOW_PVP, "Allow PvP Combat", "Should player-vs-player combat be allowed in claimed areas?\nServer config setting 'Allow PvP Combat' must be 'per_team' for this to function\nNot guaranteed to protect against 100% of indirect attacks; requires that damage sources can be attributed to a player");
+        addTeamProperty(builder, FTBChunksProperties.ALLOW_MOB_GRIEFING, "Allow Mob Griefing Actions", "Should mobs be allowed to damage blocks in claimed areas?\nNote: currently Endermen only; may include other mobs in future\nCreeper explosions are protected against via \"Allow Explosions\"");
+        addTeamProperty(builder, FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE, "Block Edit/Interact Mode", "Used when blocks are being placed, broken, or interacted with");
+        addTeamProperty(builder, FTBChunksProperties.BLOCK_EDIT_MODE, "Block Edit Mode", "Used when blocks are being placed or broken");
+        addTeamProperty(builder, FTBChunksProperties.BLOCK_INTERACT_MODE, "Block Interact Mode", "Used when blocks are right-clicked, e.g. opening a chest or flipping a lever");
+        addTeamProperty(builder, FTBChunksProperties.ENTITY_INTERACT_MODE, "Entity Interact Mode", "Used when entities are right-clicked");
+        addTeamProperty(builder, FTBChunksProperties.NONLIVING_ENTITY_ATTACK_MODE, "Non-living Entity Attack Mode", "Used when non-living entities (paintings, item frames etc.) are left-clicked");
+        addTeamProperty(builder, FTBChunksProperties.CLAIM_VISIBILITY, "Claim Visibility", "Controls who can see your claims on the map or minimap");
+        addTeamProperty(builder, FTBChunksProperties.LOCATION_MODE, "Location Visibility", "Controls who can see you on the map or minimap (outside the normal vanilla tracking range)");
+
         builder.add("ftbteamsconfig.ftbchunks.minimap_mode", "Minimap Mode");
-        builder.add("ftbteamsconfig.ftbchunks.location_mode", "Location Visibility");
-        builder.add("ftbteamsconfig.ftbchunks.location_mode.tooltip", "Controls who can see you on the map or minimap (outside the normal vanilla tracking range)");
-        builder.add("ftbteamsconfig.ftbchunks.claim_visibility", "Claim Visibility");
-        builder.add("ftbteamsconfig.ftbchunks.claim_visibility.tooltip", "Controls who can see your claims on the map or minimap");
         builder.add("ftbchunks.fake_players", "Fake Players");
         builder.add("ftbchunks.claiming", "Chunk Claiming");
         builder.add("ftbchunks.force_loading", "Force-Loading");
-        builder.add("ftbchunks.fake_players.fake_players", "Allow Fake Players");
-        builder.add("ftbchunks.fake_players.fake_players.tooltip", "CHECK: check fake player access like any real player\nDENY: never allow fake players\nALLOW: always allow fake players");
-        builder.add("ftbchunks.claiming.max_claimed_chunks", "Max Claimed Chunks per Player");
-        builder.add("ftbchunks.claiming.max_claimed_chunks.tooltip", "This default can be overridden by the FTB Ranks 'ftbchunks.max_claimed` permission node.");
-        builder.add("ftbchunks.force_loading.max_force_loaded_chunks", "Max Forcedloaded Chunks per Player");
-        builder.add("ftbchunks.force_loading.max_force_loaded_chunks.tooltip", "This default can be overridden by the FTB Ranks 'ftbchunks.max_force_loaded` permission node.");
-        builder.add("ftbchunks.force_loading.force_load_mode", "Offline Forceloading Mode");
-        builder.add("ftbchunks.force_loading.force_load_mode.tooltip", "NEVER: only allow chunk force-loading if the owning team has at least one online player\nALWAYS: always allow force-loading, even if no players are online\nDEFAULT: allow force-loading IF the team has at least one player with the FTB Ranks 'ftbchunks.chunk_load_offline' permission");
-        builder.add("ftbchunks.disable_protection", "Disable Claim Protection");
-        builder.add("ftbchunks.disable_protection.tooltip", "Useful for private servers where everyone is trusted, and claims are only used for force-loading");
-        builder.add("ftbchunks.pvp_mode", "Allow PvP Combat in Claimed Chunks");
-        builder.add("ftbchunks.pvp_mode.tooltip", "ALWAYS: allow PvP combat in all claimed chunks\nNEVER: prevent PvP in all claimed chunks\nPER_TEAM: teams can decide if PvP is allowed in their claims via team property");
-        builder.add("ftbchunks.ally_mode", "Allow Player to Change Ally Settings");
-        builder.add("ftbchunks.ally_mode.tooltip", "DEFAULT: FTB Teams ally status is checked to decide if players are allied\nFORCED_ALL: all players are always considered to be allied\nFORCED_NONE: no players are ever considered to be allied");
-        builder.add("ftbchunks.claiming.claim_dimension_blacklist", "Dimension Blacklist");
-        builder.add("ftbchunks.claiming.claim_dimension_blacklist.tooltip", "Blacklist for dimension ID's where chunks may not be claimed.\nE.g. add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End\nWildcards are allowed, e.g. \"othermod:*\" matches all dimensions added by \"othermod\"");
-        builder.add("ftbchunks.claiming.claim_dimension_whitelist", "Dimension Whitelist");
-        builder.add("ftbchunks.claiming.claim_dimension_whitelist.tooltip", "Whitelist for dimension ID's where chunks may be claimed. If non-empty, dimension *must* be in this list (and also not in \"Dimension Blacklist\".\nSame syntax as for \"Dimension Blacklist\"");
-        builder.add("ftbchunks.no_wilderness", "Protect Unclaimed Regions");
-        builder.add("ftbchunks.no_wilderness.tooltip", "If true, chunks must be claimed before they can be built on");
-        builder.add("ftbchunks.no_wilderness_dimensions", "Protect Unclaimed Regions Per-Dimension");
-        builder.add("ftbchunks.no_wilderness_dimensions.tooltip", "List of dimension ID's where chunks must be claimed before modifying.\nE.g. add \"minecraft:the_nether\" to require chunks to be claimed in the Nether.\nWildcards are allowed, e.g. \"othermod:*\" matches all dimensions added by \"othermod\"");
-        builder.add("ftbchunks.force_disable_minimap", "Disable Minimap for Clients");
-        builder.add("ftbchunks.claiming.max_idle_days_before_unclaim", "Max Idle Days Before Unclaim");
-        builder.add("ftbchunks.claiming.max_idle_days_before_unclaim.tooltip", "If no team member logs in for this many days, the team's claims will be released.\nSetting this to 0 disables auto-unclaiming.");
-        builder.add("ftbchunks.force_loading.max_idle_days_before_unforce", "Max Idle Days Before Unforceload");
-        builder.add("ftbchunks.force_loading.max_idle_days_before_unforce.tooltip", "If no team member logs in for this many days, any force-loaded chunks will no longer be force-loaded.\nSetting this to 0 disables auto-unforceloading.");
-        builder.add("ftbchunks.long_range_tracker_interval", "Long Range Player Tracker Interval");
-        builder.add("ftbchunks.long_range_tracker_interval.tooltip", "Interval in ticks to send updates to clients with long-range player tracking data.\nLower values mean more frequent updates but more server load and network traffic; be careful with this, especially on busy servers.\nSetting this to 0 disables long-range tracking.");
-        builder.add("ftbchunks.protect_unknown_explosions", "Prevent Explosions from Unknown Sources");
-        builder.add("ftbchunks.protect_unknown_explosions.tooltip", "Some explosion sources (e.g. Ghasts) can't be determined in code.\nIf this setting is true, damage from these explosion is prevented in protected chunks.");
-        builder.add("ftbchunks.claiming.hard_team_claim_limit", "Hard Max Team Claim Limit");
-        builder.add("ftbchunks.claiming.hard_team_claim_limit.tooltip", "Hard claim limit for party teams, regardless of member count or Party Limit Calculation mode.\nDefault of 0 means no hard limit.");
-        builder.add("ftbchunks.force_loading.hard_team_force_limit", "Hard Max Team Forceload Limit");
-        builder.add("ftbchunks.force_loading.hard_team_force_limit.tooltip", "Hard force-load limit for party teams, regardless of member count or Party Limit Calculation mode.\nDefault of 0 means no hard limit.");
-        builder.add("ftbchunks.claiming.party_limit_mode", "Party Limit Calculation Mode");
-        builder.add("ftbchunks.claiming.party_limit_mode.tooltip", "Method by which party claim & force-load limits are calculated.\nLARGEST: use the limits of the member with the largest limits\nSUM: add up all the members' limits\nOWNER: use the party owner's limits only\nAVERAGE: use the average of all members' limits.");
-        builder.add("ftbchunks.require_game_stage", "Require Game Stage for Mapping");
-        builder.add("ftbchunks.require_game_stage.tooltip", "If true, players must have the 'ftbchunks_mapping' game stage (KubeJS and/or Gamestages required) to be able to open the map or see the minimap");
-        builder.add("ftbchunks.location_mode_override", "Override Team \"Location Visibility\"");
-        builder.add("ftbchunks.location_mode_override.tooltip", "If true, team \"Location Visibility\" settings are ignored, and all players can see each other anywhere on the map");
-        builder.add("ftbchunks.fake_players.max_prevented_log_age", "Fake Player Prevented Access Log Age");
-        builder.add("ftbchunks.fake_players.max_prevented_log_age.tooltip", "Age in days to keep logs of prevented fake player access\nNote: not fully implemented feature; will be used in future to display & control access by fake players to your claims");
+
+        addConfig(builder, FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS, "Max Claimed Chunks per Player", "This default can be overridden by the FTB Ranks 'ftbchunks.max_claimed` permission node.");
+        addConfig(builder, FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS, "Max Forcedloaded Chunks per Player", "This default can be overridden by the FTB Ranks 'ftbchunks.max_force_loaded` permission node.");
+        addConfig(builder, FTBChunksWorldConfig.FORCE_LOAD_MODE, "Offline Forceloading Mode", "NEVER: only allow chunk force-loading if the owning team has at least one online player\nALWAYS: always allow force-loading, even if no players are online\nDEFAULT: allow force-loading IF the team has at least one player with the FTB Ranks 'ftbchunks.chunk_load_offline' permission");
+        addConfig(builder, FTBChunksWorldConfig.DISABLE_PROTECTION, "Disable Claim Protection", "Useful for private servers where everyone is trusted, and claims are only used for force-loading");
+        addConfig(builder, FTBChunksWorldConfig.PVP_MODE, "Allow PvP Combat in Claimed Chunks", "ALWAYS: allow PvP combat in all claimed chunks\nNEVER: prevent PvP in all claimed chunks\nPER_TEAM: teams can decide if PvP is allowed in their claims via team property");
+        addConfig(builder, FTBChunksWorldConfig.ALLY_MODE, "Allow Player to Change Ally Settings", "DEFAULT: FTB Teams ally status is checked to decide if players are allied\nFORCED_ALL: all players are always considered to be allied\nFORCED_NONE: no players are ever considered to be allied");
+        addConfig(builder, FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST, "Dimension Blacklist", "Blacklist for dimension ID's where chunks may not be claimed.\nE.g. add \"minecraft:the_end\" to this list if you want to disable chunk claiming in The End\nWildcards are allowed, e.g. \"othermod:*\" matches all dimensions added by \"othermod\"");
+        addConfig(builder, FTBChunksWorldConfig.CLAIM_DIMENSION_WHITELIST, "Dimension Whitelist", "Whitelist for dimension ID's where chunks may be claimed. If non-empty, dimension *must* be in this list (and also not in \"Dimension Blacklist\".\nSame syntax as for \"Dimension Blacklist\"");
+        addConfig(builder, FTBChunksWorldConfig.NO_WILDERNESS, "Protect Unclaimed Regions", "If true, chunks must be claimed before they can be built on");
+        addConfig(builder, FTBChunksWorldConfig.NO_WILDERNESS_DIMENSIONS, "Protect Unclaimed Regions Per-Dimension", "List of dimension ID's where chunks must be claimed before modifying.\nE.g. add \"minecraft:the_nether\" to require chunks to be claimed in the Nether.\nWildcards are allowed, e.g. \"othermod:*\" matches all dimensions added by \"othermod\"");
+
+        addConfig(builder, FTBChunksWorldConfig.FORCE_DISABLE_MINIMAP, "Disable Minimap for Clients");
+        addConfig(builder, FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNCLAIM, "Max Idle Days Before Unclaim", "If no team member logs in for this many days, the team's claims will be released.\nSetting this to 0 disables auto-unclaiming.");
+        addConfig(builder, FTBChunksWorldConfig.MAX_IDLE_DAYS_BEFORE_UNFORCE, "Max Idle Days Before Unforceload", "If no team member logs in for this many days, any force-loaded chunks will no longer be force-loaded.\nSetting this to 0 disables auto-unforceloading.");
+        addConfig(builder, FTBChunksWorldConfig.LONG_RANGE_TRACKER_INTERVAL, "Long Range Player Tracker Interval", "Interval in ticks to send updates to clients with long-range player tracking data.\nLower values mean more frequent updates but more server load and network traffic; be careful with this, especially on busy servers.\nSetting this to 0 disables long-range tracking.");
+        addConfig(builder, FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS, "Prevent Explosions from Unknown Sources", "Some explosion sources (e.g. Ghasts) can't be determined in code.\nIf this setting is true, damage from these explosion is prevented in protected chunks.");
+        addConfig(builder, FTBChunksWorldConfig.HARD_TEAM_CLAIM_LIMIT, "Hard Max Team Claim Limit", "Hard claim limit for party teams, regardless of member count or Party Limit Calculation mode.\nDefault of 0 means no hard limit.");
+        addConfig(builder, FTBChunksWorldConfig.HARD_TEAM_FORCE_LIMIT, "Hard Max Team Forceload Limit", "Hard force-load limit for party teams, regardless of member count or Party Limit Calculation mode.\nDefault of 0 means no hard limit.");
+        addConfig(builder, FTBChunksWorldConfig.PARTY_LIMIT_MODE, "Party Limit Calculation Mode", "Method by which party claim & force-load limits are calculated.\nLARGEST: use the limits of the member with the largest limits\nSUM: add up all the members' limits\nOWNER: use the party owner's limits only\nAVERAGE: use the average of all members' limits.");
+        addConfig(builder, FTBChunksWorldConfig.REQUIRE_GAME_STAGE, "Require Game Stage for Mapping", "If true, players must have the 'ftbchunks_mapping' game stage (KubeJS and/or Gamestages required) to be able to open the map or see the minimap");
+        addConfig(builder, FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE, "Override Team \"Location Visibility\"", "If true, team \"Location Visibility\" settings are ignored, and all players can see each other anywhere on the map");
+        addConfig(builder, FTBChunksWorldConfig.MAX_PREVENTED_LOG_AGE, "Fake Player Prevented Access Log Age", "Age in days to keep logs of prevented fake player access\nNote: not fully implemented feature; will be used in future to display & control access by fake players to your claims");
+
         builder.add("ftbchunks.claim_result", "Chunks modified: %d / %d");
         builder.add("ftbchunks.claim_result.other", "Unknown issues");
-        builder.add("ftbchunks.claim_result.not_owner", "Not the chunk owner");
-        builder.add("ftbchunks.claim_result.not_enough_power", "Chunk limit reached");
-        builder.add("ftbchunks.claim_result.already_claimed", "Chunk already claimed");
-        builder.add("ftbchunks.claim_result.dimension_forbidden", "Claiming forbidden in this dimension");
-        builder.add("ftbchunks.claim_result.not_claimed", "Chunk not claimed");
-        builder.add("ftbchunks.claim_result.already_loaded", "Chunk already loaded");
-        builder.add("ftbchunks.claim_result.not_loaded", "Chunk not loaded");
+        addNameMap(builder, ClaimResult.StandardProblem.NAME_MAP, standardProblem -> switch (standardProblem) {
+            case NOT_OWNER -> "Not the chunk owner";
+            case NOT_ENOUGH_POWER -> "Chunk limit reached";
+            case ALREADY_CLAIMED -> "Chunk already claimed";
+            case DIMENSION_FORBIDDEN -> "Claiming forbidden in this dimension";
+            case NOT_CLAIMED -> "Chunk not claimed";
+            case ALREADY_LOADED -> "Chunk already loaded";
+            case NOT_LOADED -> "Chunk not loaded";
+        });
         builder.add("ftbchunks.need_to_claim_chunk", "You need to claim this chunk to interact with blocks here!");
+
         builder.add("ftbchunks.label.show", "Show");
         builder.add("ftbchunks.label.hide", "Hide");
         builder.add("ftbchunks.message.no_pvp", "PvP combat is disabled here");
         builder.add("ftbchunks.game_time", "Game Time: %s");
         builder.add("ftbchunks.real_time", "Real Time: %s");
         builder.add("ftbchunks.fps", "FPS: %d");
-        builder.add("ftbchunks.minimap.show_game_time", "Show Game Time");
-        builder.add("ftbchunks.minimap.show_fps", "Show FPS");
-        builder.add("ftbchunks.minimap.show_real_time", "Show Real Time");
         builder.add("ftbchunks.waypoint.shared", "Has shared waypoint '%s' with you! Click to add");
         builder.add("ftbchunks.waypoint.shared_by_you", "You shared waypoint '%s' !");
         builder.add("ftbchunks.waypoint.share", "Share");
@@ -237,36 +217,8 @@ public class LangGenerator extends FabricLanguageProvider {
         builder.add("ftbchunks.waypoint_sharing.waypoint_sharing_party", "Allow Sharing waypoints with Party");
         builder.add("ftbchunks.waypoint_sharing.waypoint_sharing_server", "Allow Sharing waypoints with Server");
         builder.add("ftbchunks.waypoint_sharing.waypoint_sharing_players", "Allow Sharing waypoints with Players");
-        builder.add("ftbchunks.map_mode.none", "None");
-        builder.add("ftbchunks.map_mode.night", "Night");
-        builder.add("ftbchunks.map_mode.topography", "Topography");
-        builder.add("ftbchunks.map_mode.blocks", "Blocks");
-        builder.add("ftbchunks.map_mode.light_sources", "Light Sources");
-        builder.add("ftbchunks.ally_mode.default", "Default");
-        builder.add("ftbchunks.ally_mode.forced_all", "Forced All");
-        builder.add("ftbchunks.ally_mode.forced_none", "Forced None");
-        builder.add("ftbchunks.pvp_mode.always", "Always");
-        builder.add("ftbchunks.pvp_mode.never", "Never");
-        builder.add("ftbchunks.pvp_mode.per_team", "Per Team");
-        builder.add("ftbchunks.party_limit_mode.largest", "Largest");
-        builder.add("ftbchunks.party_limit_mode.owner", "Owner");
-        builder.add("ftbchunks.party_limit_mode.sum", "Sum");
-        builder.add("ftbchunks.party_limit_mode.average", "Average");
-        builder.add("ftbchunks.force_load_mode.default", "Default");
-        builder.add("ftbchunks.force_load_mode.never", "Never");
-        builder.add("ftbchunks.force_load_mode.always", "Always");
-        builder.add("ftbchunks.time_mode.twenty_four", "Twenty Four");
-        builder.add("ftbchunks.time_mode.twelve", "Twelve");
-        builder.add("ftbchunks.time_mode.clock", "Clock");
         builder.add("ftbchunks.gui.move_up", "Move Up");
         builder.add("ftbchunks.gui.move_down", "Move Down");
-        addMinimapInfo(builder, "biome", "Biome", "Render Biome");
-        addMinimapInfo(builder, "fps", "FPS", "Render FPS");
-        addMinimapInfo(builder, "game_time", "Game Time", "Render Game Time");
-        addMinimapInfo(builder, "debug", "Debug", "Render Debug");
-        addMinimapInfo(builder, "player_pos", "Player Pos", "Render Player Pos");
-        addMinimapInfo(builder, "real_time", "Real Time", "Render Real Time");
-        addMinimapInfo(builder, "zone", "Zone", "Render Zone");
         builder.add("ftbchunks.gui.toggle_visibility_off", "Toggle Visibility - Off");
         builder.add("ftbchunks.gui.toggle_visibility_on", "Toggle Visibility - On");
         builder.add("ftbchunks.gui.sort_minimap_info", "Minimap Info Settings");
@@ -275,12 +227,81 @@ public class LangGenerator extends FabricLanguageProvider {
         builder.add("ftbchunks.show_wilderness.show_wilderness", "Show Wilderness");
         builder.add("ftbchunks.show_wilderness.just_claimed", "Show only Claimed Chunks");
 
+        addNameMap(builder, BiomeBlendMode.NAME_MAP, biomeBlendMode -> switch (biomeBlendMode) {
+            case NONE -> "None (Fastest)";
+            case BLEND_15X15 -> "Blend 15x15 (Slowest)";
+            default -> capitalizeEnum(biomeBlendMode.name());
+        });
+        addNameMap(builder, MapMode.NAME_MAP, mapMode -> capitalizeEnum(mapMode.name()));
+        addNameMap(builder, AllyMode.NAME_MAP, allyMode -> capitalizeEnum(allyMode.name()));
+        addNameMap(builder, PvPMode.NAME_MAP, pvpMode -> capitalizeEnum(pvpMode.name()));
+        addNameMap(builder, PartyLimitMode.NAME_MAP, partyLimitMode -> capitalizeEnum(partyLimitMode.name()));
+        addNameMap(builder, ForceLoadMode.NAME_MAP, forceLoadMode -> capitalizeEnum(forceLoadMode.name()));
+        addNameMap(builder, RealTimeComponent.TimeMode.NAME_MAP, timeMode -> capitalizeEnum(timeMode.name()));
+        addNameMap(builder, MinimapBlurMode.NAME_MAP, minimapBlurMode -> capitalizeEnum(minimapBlurMode.name()));
+        addNameMap(builder, MinimapPosition.NAME_MAP, minimapPosition -> capitalizeEnum(minimapPosition.name()));
+        addNameMap(builder, MinimapPosition.MinimapOffsetConditional.NAME_MAP, minimapOffsetConditional -> capitalizeEnum(minimapOffsetConditional.name()));
+
+        addMinimapInfo(builder, BiomeComponent.ID, "Biome", "Render Biome");
+        addMinimapInfo(builder, FPSComponent.ID, "FPS", "Render FPS");
+        addMinimapInfo(builder, GameTimeComponent.ID, "Game Time", "Render Game Time");
+        addMinimapInfo(builder, DebugComponent.ID, "Debug", "Render Debug");
+        addMinimapInfo(builder, PlayerPosInfoComponent.ID, "Player Pos", "Render Player Pos");
+        addMinimapInfo(builder, RealTimeComponent.ID, "Real Time", "Render Real Time");
+        addMinimapInfo(builder, ZoneInfoComponent.ID, "Zone", "Render Zone");
+
         builder.add(FTBChunksTags.Items.RIGHT_CLICK_BLACKLIST_TAG, "Right Click Blacklist");
         builder.add(FTBChunksTags.Items.RIGHT_CLICK_WHITELIST_TAG, "Right Click Whitelist");
     }
 
-    public void addMinimapInfo(TranslationBuilder builder, String id, String title, String description) {
-        builder.add("minimap.info.ftbchunks." + id + ".title", title);
-        builder.add("minimap.info.ftbchunks." + id + ".description", description);
+    public void addTeamProperty(TranslationBuilder builder, TeamProperty<?> property, String value, String tooltip) {
+        addWithTooltip(builder, property.getTranslationKey("ftbteamsconfig"), value, tooltip);
+    }
+
+    public void addWithTooltip(TranslationBuilder builder, String key, String value, String tooltip) {
+        tryAdd(builder, key, value);
+        tryAdd(builder, key + ".tooltip", tooltip);
+    }
+
+    public void addMinimapInfo(TranslationBuilder builder, ResourceLocation id, String title, String description) {
+        tryAdd(builder, "minimap.info." + id.getNamespace() + "." + id.getPath() + ".title", title);
+        tryAdd(builder, "minimap.info." + id.getNamespace() + "." + id.getPath() + ".description", description);
+    }
+
+    public <T> void addConfig(TranslationBuilder builder, BaseValue<T> config, String value) {
+        tryAdd(builder, config.toString().replace("/", ".").replace("-client", "").replace("-world", ""), value);
+    }
+
+    public <T> void addConfig(TranslationBuilder builder, BaseValue<T> config, String value, String tooltip) {
+        String key = config.toString().replace("/", ".").replace("-client", "").replace("-world", "");
+        builder.add(key, value);
+        if(tooltip != null) {
+            tryAdd(builder, key + ".tooltip", tooltip);
+        }
+    }
+
+    public <E> void addNameMap(TranslationBuilder builder, NameMap<E> nameMap, Function<E, String> value) throws IllegalStateException {
+        for (E e : nameMap.values) {
+            Component displayName1 = nameMap.getDisplayName(e);
+            if (displayName1.getContents() instanceof TranslatableContents contents) {
+                tryAdd(builder, contents.getKey(), value.apply(e));
+            }
+        }
+    }
+
+    public void tryAdd(TranslationBuilder builder, String key, String value) {
+        try {
+            builder.add(key, value);
+        }catch (RuntimeException ignored) {
+
+        }
+    }
+
+    public String capitalizeEnum(String name) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : name.split("_")) {
+            sb.append(s.substring(0, 1).toUpperCase()).append(s.substring(1).toLowerCase()).append(" ");
+        }
+        return sb.toString().trim();
     }
 }

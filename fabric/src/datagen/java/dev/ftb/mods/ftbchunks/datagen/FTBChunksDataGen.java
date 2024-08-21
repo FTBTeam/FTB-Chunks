@@ -19,5 +19,6 @@ public class FTBChunksDataGen implements DataGeneratorEntrypoint {
         pack.addProvider(BlockTagGenerator::new);
         pack.addProvider(EntityTagGenerator::new);
         pack.addProvider(ItemTagGenerator::new);
+        pack.addProvider(LangGenerator::new);
     }
 }

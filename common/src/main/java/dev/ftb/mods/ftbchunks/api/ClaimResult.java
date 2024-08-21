@@ -72,7 +72,7 @@ public interface ClaimResult {
 		NOT_LOADED("not_loaded"),
 		;
 
-		public static final NameMap<StandardProblem> NAME_MAP = NameMap.of(NOT_OWNER, values()).baseNameKey("ftbchunks.standard_problem").create();
+		public static final NameMap<StandardProblem> NAME_MAP = NameMap.of(NOT_OWNER, values()).baseNameKey("ftbchunks.claim_result").create();
 
 		private final String resultName;
 

@@ -123,7 +123,7 @@
 	"ftbchunks.gui.admin_mode_enabled": "Admin Mode: Enabled",
 	"ftbchunks.gui.admin_mode_info": "When enabled you can modify chunks, regardless of ownership",
 	"ftbchunks.gui.unclaim_all": "Unclaim All",
-	"ftbchunks.gui.unclaim_all.description": "Uncliam all chunks visible on the map",
+	"ftbchunks.gui.unclaim_all.description": "Unclaim all chunks visible on the map?",
 	"ftbteamsconfig.ftbchunks": "FTB Chunks Properties",
 	"ftbteamsconfig.ftbchunks.allow_fake_players": "Allow All Fake Players",
 	"ftbteamsconfig.ftbchunks.allow_fake_players.tooltip": "Treat ALL fake players as allies of the team.\nWARNING: Setting this to true could allow hostile players to access your claims via any fake player. Set this to false if you're unsure.",

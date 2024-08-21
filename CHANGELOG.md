@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.1]
+
+### Added
+* Added `/ftbchunks admin open_claim_gui_as` command
+  * Allows server admins to open the chunk claim gui as any player
+  * Offline players are also supported (but names of offline players aren't suggested in command completion)
+
+### Changed
+* Reworked the chunk claim GUI for a more polished visual appearance
+  * Added an "Unclaim All" button (trash can button, top-left) to reset all claims
+
 ## [2101.1.0]
 
 ### Changed

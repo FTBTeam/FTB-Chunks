@@ -1,12 +1,10 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import com.mojang.datafixers.util.Pair;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -148,9 +146,16 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                     .setForceButtonSize(false);
 
             removeAllClaims = new SimpleButton(this, Component.translatable("ftbchunks.gui.unclaim_all"), Icons.BIN,
-                    (btn, mb) -> chunkScreenPanel.removeAllClaims())
+                    (btn, mb) -> {
+                        if (isShiftKeyDown()) {
+                            chunkScreenPanel.removeAllClaims();
+                        } else {
+                            getGui().openYesNo(Component.translatable("ftbchunks.gui.unclaim_all"), Component.translatable("ftbchunks.gui.unclaim_all.description"), () -> {
+                                chunkScreenPanel.removeAllClaims();
+                            });
+                        }
+                    })
                     .setForceButtonSize(false);
-
 
             adminButton = new AdminButton().setForceButtonSize(false);
         }

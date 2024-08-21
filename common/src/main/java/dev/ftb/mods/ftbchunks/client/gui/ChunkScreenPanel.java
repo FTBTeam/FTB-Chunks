@@ -10,7 +10,6 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
@@ -37,7 +36,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -54,7 +52,8 @@ public class ChunkScreenPanel extends Panel {
 	private final List<ChunkButtonPos> chunkedPosList = new ArrayList<>();
 	public boolean isAdminEnabled;
 	private ChunkScreenPanel.ChunkUpdateInfo updateInfo;
-	public int tileSize = 16;
+	public int tileSizeX = 16;
+	public int tileSizeY = 16;
 	private final ChunkScreen chunkScreen;
 
 	public ChunkScreenPanel(ChunkScreen panel) {
@@ -118,10 +117,11 @@ public class ChunkScreenPanel extends Panel {
 		int xPos = (getWidth() - maxWidth) / 2;
 		int yPos = (getHeight() - maxHeight) / 2;
 
-		this.tileSize = maxWidth / FTBChunks.TILES;
+		this.tileSizeX = maxWidth / FTBChunks.TILES;
+		this.tileSizeY = maxHeight / FTBChunks.TILES;
         for (ChunkButtonPos chunkedPos : chunkedPosList) {
-            chunkedPos.button.setPos(xPos + tileSize * chunkedPos.x, yPos + tileSize * chunkedPos.y);
-            chunkedPos.button.setSize(tileSize, tileSize);
+            chunkedPos.button.setPos(xPos + tileSizeX * chunkedPos.x, yPos + tileSizeY * chunkedPos.y);
+            chunkedPos.button.setSize(tileSizeX, tileSizeY);
         }
     }
 
@@ -174,15 +174,15 @@ public class ChunkScreenPanel extends Panel {
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSize, 0x64464646);
+				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSizeY, 0x64464646);
 			}
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				graphics.vLine(sx + gx * tileSize, sy - 1, sy + maxHeight, 0x64464646);
+				graphics.vLine(sx + gx * tileSizeX, sy - 1, sy + maxHeight, 0x64464646);
 			}
 		}
 
-		double hx = sx + tileSize * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
-		double hy = sy + tileSize * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
+		double hx = sx + tileSizeX * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
+		double hy = sy + tileSizeY * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
 
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
 		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);

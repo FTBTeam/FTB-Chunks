@@ -185,7 +185,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
             private static final Component DISABLED = Component.translatable("ftbchunks.gui.admin_mode_disabled");
             private static final Component ENABLED = Component.translatable("ftbchunks.gui.admin_mode_enabled");
-            private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info", ChatFormatting.GRAY);
+            private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info").withStyle(ChatFormatting.GRAY);
 
             public AdminButton() {
                 super(CustomTopPanel.this, false, Icons.LOCK_OPEN, Icons.LOCK, (btn, newState) -> {

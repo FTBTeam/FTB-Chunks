@@ -9,6 +9,7 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
+import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
@@ -16,6 +17,7 @@ import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.*;
@@ -32,7 +34,9 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
@@ -64,6 +68,7 @@ public class LargeMapScreen extends BaseScreen {
 	private Button serverSettingsButton;
 	private Button clearDeathpointsButton;
 	private Button infoSortScreen;
+	private Button entityIconButton;
 	private boolean needIconRefresh;
 	private final int minZoom;
 
@@ -165,6 +170,10 @@ public class LargeMapScreen extends BaseScreen {
 				Component.literal("[S]").withStyle(ChatFormatting.GRAY))
 		);
 
+		add(entityIconButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.entity_icon"), Icons.ART,
+				(b, m) -> new EntityIconSettingsScreen().openGui(),
+				Component.literal("[S]").withStyle(ChatFormatting.GRAY)));
+
 		if (Minecraft.getInstance().player.hasPermissions(2)) {
 			add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
 					Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
@@ -208,6 +217,8 @@ public class LargeMapScreen extends BaseScreen {
 		if (serverSettingsButton != null) {
 			serverSettingsButton.setPosAndSize(width - 18, height - 18, 16, 16);
 		}
+
+		entityIconButton.setPosAndSize(width - 18, height - 36, 16, 16);
 	}
 
 	@Override
@@ -406,6 +417,10 @@ public class LargeMapScreen extends BaseScreen {
 			theme.drawString(graphics, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
 			poseStack.popPose();
 		}
+
+		EntityIcons.getIcon(EntityType.PANDA).ifPresent(icon -> {
+			icon.draw(graphics, x + 64, y + 64, 16, 16);
+		});
 	}
 
 	public static void refreshIconsIfOpen() {

@@ -1,0 +1,12 @@
+{
+  "values": [
+    "minecraft:chest_boat",
+    "minecraft:chest_minecart",
+    "minecraft:furnace_minecart",
+    "minecraft:hopper_minecart",
+    "minecraft:iron_golem",
+    "minecraft:minecart",
+    "minecraft:snow_golem",
+    "minecraft:villager"
+  ]
+}

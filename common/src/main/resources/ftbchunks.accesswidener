@@ -9,3 +9,5 @@ accessible field net/minecraft/server/level/ChunkMap entityMap Lit/unimi/dsi/fas
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket positions [S
 accessible field net/minecraft/world/level/Explosion source Lnet/minecraft/world/entity/Entity;
+
+accessible class net/minecraft/client/renderer/texture/SimpleTexture$TextureImage

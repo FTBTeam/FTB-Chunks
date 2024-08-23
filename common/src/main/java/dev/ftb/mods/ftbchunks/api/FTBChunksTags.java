@@ -28,5 +28,7 @@ public class FTBChunksTags {
                 = TagKey.create(Registries.ENTITY_TYPE, FTBChunksAPI.rl("nonliving_entity_attack_whitelist"));
         public static final TagKey<EntityType<?>> ENTITY_MOB_GRIEFING_BLACKLIST_TAG
                 = TagKey.create(Registries.ENTITY_TYPE, FTBChunksAPI.rl("entity_mob_griefing_blacklist"));
+        public static final TagKey<EntityType<?>> MINIMAP_ALLOWED_MISC_MOBS
+                = TagKey.create(Registries.ENTITY_TYPE, FTBChunksAPI.rl("minimap_allowed_misc_mobs"));
     }
 }

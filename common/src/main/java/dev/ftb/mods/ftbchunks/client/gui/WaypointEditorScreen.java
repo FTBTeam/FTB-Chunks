@@ -55,6 +55,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 (widget, button) -> toggleAll(true));
         buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(false));
+
+        alignWidgets();
     }
 
     private void toggleAll(boolean collapsed) {

@@ -24,6 +24,16 @@ artifacts {
 	dev(jar)
 }
 
+def generatedResourcesCommon = project(":common").file("src/generated/resources")
+
+sourceSets {
+	main {
+		resources {
+			srcDir generatedResourcesCommon
+		}
+	}
+}
+
 
 repositories {
 	maven {

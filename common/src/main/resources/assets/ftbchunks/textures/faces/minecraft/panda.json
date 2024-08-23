@@ -1,0 +1,29 @@
+{
+  "texture": "minecraft:textures/entity/panda/panda.png",
+  "use_mob_texture": true,
+  "icon": [
+    {
+      "texture": "minecraft:textures/entity/panda/panda.png",
+      "slice": {
+        "x": 47,
+        "y": 18,
+        "width": 7,
+        "height": 5
+      },
+      "offset": {
+        "x": 3,
+        "y": 5
+      }
+    },
+    {
+      "texture": "minecraft:textures/entity/panda/panda.png",
+      "slice": {
+        "x": 9,
+        "y": 15,
+        "width": 13,
+        "height": 10
+      }
+    }
+  ],
+  "scale": 1.0
+}

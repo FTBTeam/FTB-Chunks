@@ -4,6 +4,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.StringBoolMapValue;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
@@ -16,7 +17,6 @@ import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
 import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
 import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
@@ -25,7 +25,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
@@ -84,6 +83,7 @@ public interface FTBChunksClientConfig {
 	StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).comment("Info displayed under minimap");
 	StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).comment("Info hidden under minimap");
 	StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new StringMapValue(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
+	StringBoolMapValue ENTITY_ICON = MINIMAP.add(new StringBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
 
 	SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
 	BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");

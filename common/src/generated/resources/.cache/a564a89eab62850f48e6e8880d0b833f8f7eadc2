@@ -1,3 +1,4 @@
-// 1.21.1	2024-08-20T11:45:55.5295528	FTB Chunks/Tags for minecraft:entity_type
+// 1.21.1	2024-08-22T10:24:40.1040372	FTB Chunks/Tags for minecraft:entity_type
 1564da4d5e31cdc291569fb4b256a0e674aaacbc data\ftbchunks\tags\entity_type\entity_interact_whitelist.json
 da9ec5f7ed64a0d225e00ee60b8e6d6408b431fb data\ftbchunks\tags\entity_type\entity_mob_griefing_blacklist.json
+c6c9df3f3108c7301f695095bbca7aa55d431e36 data\ftbchunks\tags\entity_type\minimap_allowed_misc_mobs.json

@@ -1,0 +1,10 @@
+{
+  "texture": "mekanism:textures/entity/robit/robit.png",
+  "slice": {
+    "x": 0,
+    "y": 3,
+    "width": 7,
+    "height": 5
+  },
+  "scale": 1.0
+}

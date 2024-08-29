@@ -1,0 +1,11 @@
+{
+  "texture": "minecraft:textures/entity/bear/polarbear.png",
+  "image_offset": {
+    "texture_width": 128,
+    "texture_height": 64,
+    "u0": 7,
+    "u1": 7,
+    "v0": 7,
+    "v1": 7
+  }
+}

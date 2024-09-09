@@ -45,7 +45,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
     private final Map<ResourceKey<Level>, Boolean> collapsed = new HashMap<>();
     private final Map<ResourceKey<Level>, List<WaypointImpl>> waypoints = new HashMap<>();
     private final Button buttonCollapseAll, buttonExpandAll;
-    private int widestWp = 0;
+    private int widestWaypoint = 0;
 
     public WaypointEditorScreen() {
         showBottomPanel(false);
@@ -56,7 +56,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
             waypoints.put(resourceKeyListEntry.getKey(), new ArrayList<>(resourceKeyListEntry.getValue()));
         }
 
-        calcWidestWpText();
+        computeWaypointTextWidth();
 
         buttonExpandAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.expand_all"), hotkeyTooltip("="), hotkeyTooltip("+")), Icons.UP,
                 (widget, button) -> toggleAll(true));
@@ -64,11 +64,11 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 (widget, button) -> toggleAll(false));
     }
 
-    private void calcWidestWpText() {
-        widestWp = 0;
+    private void computeWaypointTextWidth() {
+        widestWaypoint = 0;
         for (var dimKey : waypoints.entrySet()) {
             for (var wp : dimKey.getValue()) {
-                widestWp = Math.max(widestWp, getTheme().getStringWidth(wp.getName()));
+                widestWaypoint = Math.max(widestWaypoint, getTheme().getStringWidth(wp.getName()));
             }
         }
     }
@@ -94,7 +94,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
     @Override
     public boolean onInit() {
-        setWidth(Mth.clamp(widestWp + 80, 220, getScreen().getGuiScaledWidth() * 4 / 5));
+        setWidth(Mth.clamp(widestWaypoint + 80, 220, getScreen().getGuiScaledWidth() * 4 / 5));
         setHeight(getScreen().getGuiScaledHeight() * 4 / 5);
         return true;
     }
@@ -306,7 +306,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                         if (accepted) {
                             wp.setName(config.getValue());
                         }
-                        calcWidestWpText();
+                        computeWaypointTextWidth();
                         openGui();
                     });
                 }));

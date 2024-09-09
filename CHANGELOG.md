@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Added `/ftbchunks admin open_claim_gui_as` command
   * Allows server admins to open the chunk claim gui as any player
-  * Offline players are also supported (but names of offline players aren't suggested in command completion)
+  * Offline players are also supported, but names of offline players aren't suggested in command tab-completion
+* Added team property defaults in server config (see "Team Property Defaults" section)
+  * Properties for newly-created teams are now taken from these defaults
 
 ### Changed
 * Reworked the chunk claim GUI for a more polished visual appearance

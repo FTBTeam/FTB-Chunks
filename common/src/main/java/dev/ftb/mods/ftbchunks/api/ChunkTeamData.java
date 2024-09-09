@@ -69,10 +69,36 @@ public interface ChunkTeamData {
      * @param source the command source (player or console) unclaiming the chunk
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the unclaim
+     * @param adminOverride if true, admins can unclaim regardless chunk ownership
      *
      * @return the result of the attempt
      */
-    ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
+    ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly, boolean adminOverride);
+
+    /**
+     * Try to release any claim on the given chunk for this team.
+     *
+     * @param source the command source (player or console) unclaiming the chunk
+     * @param pos the combined dimension and chunk pos
+     * @param checkOnly true if just simulating the unclaim
+     *
+     * @return the result of the attempt
+     */
+    default ClaimResult unclaim(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
+        return unclaim(source, pos, checkOnly, true);
+    }
+
+    /**
+     * Try to force-load the given chunk for this team.
+     *
+     * @param source the command source (player or console) force-loading the chunk
+     * @param pos the combined dimension and chunk pos
+     * @param checkOnly true if just simulating the force-load
+     * @param adminOverride if true, admins can force-load regardless chunk ownership
+     *
+     * @return the result of the attempt
+     */
+    ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly, boolean adminOverride);
 
     /**
      * Try to force-load the given chunk for this team.
@@ -83,7 +109,21 @@ public interface ChunkTeamData {
      *
      * @return the result of the attempt
      */
-    ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
+    default ClaimResult forceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
+        return forceLoad(source, pos, checkOnly, true);
+    }
+
+    /**
+     * Try to cancel any force-load this team has for the given chunk.
+     *
+     * @param source the command source (player or console) un-force-loading the chunk
+     * @param pos the combined dimension and chunk pos
+     * @param checkOnly true if just simulating the un-force-load
+     * @param adminOverride if true, admins can un-force regardless chunk ownership
+     *
+     * @return the un-force-load result
+     */
+    ClaimResult unForceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly, boolean adminOverride);
 
     /**
      * Try to cancel any force-load this team has for the given chunk.
@@ -94,7 +134,9 @@ public interface ChunkTeamData {
      *
      * @return the un-force-load result
      */
-    ClaimResult unForceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly);
+    default ClaimResult unForceLoad(CommandSourceStack source, ChunkDimPos pos, boolean checkOnly) {
+        return unForceLoad(source, pos, checkOnly, true);
+    }
 
     /**
      * Convenience method to check if the given player ID is a member of this team

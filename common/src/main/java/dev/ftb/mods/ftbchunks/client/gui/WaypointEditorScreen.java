@@ -28,19 +28,24 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 import static dev.ftb.mods.ftblibrary.util.TextComponentUtils.hotkeyTooltip;
 
 public class WaypointEditorScreen extends AbstractButtonListScreen {
+    private static final Logger log = LoggerFactory.getLogger(WaypointEditorScreen.class);
     private final Map<ResourceKey<Level>, Boolean> collapsed = new HashMap<>();
     private final Map<ResourceKey<Level>, List<WaypointImpl>> waypoints = new HashMap<>();
     private final Button buttonCollapseAll, buttonExpandAll;
+    private int widestWaypoint = 0;
 
     public WaypointEditorScreen() {
         showBottomPanel(false);
@@ -51,10 +56,21 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
             waypoints.put(resourceKeyListEntry.getKey(), new ArrayList<>(resourceKeyListEntry.getValue()));
         }
 
+        computeWaypointTextWidth();
+
         buttonExpandAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.expand_all"), hotkeyTooltip("="), hotkeyTooltip("+")), Icons.UP,
                 (widget, button) -> toggleAll(true));
         buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(false));
+    }
+
+    private void computeWaypointTextWidth() {
+        widestWaypoint = 0;
+        for (var dimKey : waypoints.entrySet()) {
+            for (var wp : dimKey.getValue()) {
+                widestWaypoint = Math.max(widestWaypoint, getTheme().getStringWidth(wp.getName()));
+            }
+        }
     }
 
     private void toggleAll(boolean collapsed) {
@@ -78,7 +94,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
     @Override
     public boolean onInit() {
-        setWidth(220);
+        setWidth(Mth.clamp(widestWaypoint + 80, 220, getScreen().getGuiScaledWidth() * 4 / 5));
         setHeight(getScreen().getGuiScaledHeight() * 4 / 5);
         return true;
     }
@@ -290,6 +306,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                         if (accepted) {
                             wp.setName(config.getValue());
                         }
+                        computeWaypointTextWidth();
                         openGui();
                     });
                 }));

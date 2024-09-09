@@ -1,339 +1,269 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
-import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
-import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
-import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
+import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.ImageIcon;
-import dev.ftb.mods.ftblibrary.math.MathUtils;
-import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.SimpleButton;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
+import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
-import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import dev.ftb.mods.ftbteams.api.property.TeamProperties;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.ChunkPos;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.network.chat.MutableComponent;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
-import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
+    private final MapDimension dimension;
+    private final Team openedAs;
+    private ChunkScreenPanel chunkScreenPanel;
+    private SimpleButton largeMapButton;
 
-public class ChunkScreen extends BaseScreen {
-	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.rl("textures/force_loaded.png"));
+    private ChunkScreen(MapDimension dimension, Team openedAs) {
+        this.dimension = dimension;
+        this.openedAs = openedAs;
+        showCloseButton(true);
+        showScrollBar(false);
+    }
 
-	private final MapDimension dimension;
-	private final List<ChunkButton> chunkButtons = new ArrayList<>();
-	private final Set<XZ> selectedChunks = new HashSet<>();
-	private ChunkUpdateInfo updateInfo;
+    @Override
+    protected Panel createBottomPanel() {
+        return new CustomBottomPanel();
+    }
 
-	public ChunkScreen(MapDimension dimension) {
-		RenderMapImageTask.setAlwaysRenderChunksOnMap(true);
+    @Override
+    protected int getScrollbarWidth() {
+        return -1;
+    }
 
-		this.dimension = dimension;
+    @Override
+    public boolean onInit() {
+        int size = (int) (getScreen().getGuiScaledHeight() * 0.85f);
 
-		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
-	}
+        setWidth(Math.min(size + 2, getScreen().getGuiScaledWidth() - 2));
+        setHeight(Math.min(size + getTopPanelHeight() + getBottomPanelHeight(), getScreen().getGuiScaledHeight() - 2));
 
-	public static void openChunkScreen() {
-		MapDimension.getCurrent().ifPresentOrElse(
-				mapDimension -> new ChunkScreen(mapDimension).openGui(),
-				() -> FTBChunks.LOGGER.warn("MapDimension data missing?? not opening chunk screen")
-		);
-	}
+        return true;
+    }
 
 
-	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
-		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
-			cs.updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
-		}
-	}
+    @Override
+    public void addWidgets() {
+        super.addWidgets();
 
-	@Override
-	public boolean onInit() {
-		return setFullscreen();
-	}
+        add(largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
+                (simpleButton, mouseButton) -> LargeMapScreen.openMap()
+        ));
+    }
 
-	@Override
-	public void onClosed() {
-		RenderMapImageTask.setAlwaysRenderChunksOnMap(false);
+    @Override
+    public void alignWidgets() {
+        super.alignWidgets();
 
-		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
+        largeMapButton.setPosAndSize(-getX() + 2, -getY() + 2, 16, 16);
+    }
 
-		super.onClosed();
-	}
+    public static void openChunkScreen(@Nullable Team openedAs) {
+        MapDimension.getCurrent().ifPresentOrElse(
+                mapDimension -> new ChunkScreen(mapDimension, openedAs).openGui(),
+                () -> FTBChunks.LOGGER.warn("MapDimension data missing?? not opening chunk screen")
+        );
+    }
 
-	@Override
-	public void addWidgets() {
-		int sx = getX() + (width - FTBChunks.MINIMAP_SIZE) / 2;
-		int sy = getY() + (height - FTBChunks.MINIMAP_SIZE) / 2;
-		Player player = Minecraft.getInstance().player;
-		ChunkPos chunkPos = player.chunkPosition();
-		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
-		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
+    public static void openChunkScreen() {
+        openChunkScreen(null);
+    }
 
-		chunkButtons.clear();
-		for (int z = 0; z < FTBChunks.TILES; z++) {
-			for (int x = 0; x < FTBChunks.TILES; x++) {
-				ChunkButton button = new ChunkButton(this, XZ.of(startX + x, startZ + z));
-				chunkButtons.add(button);
-				button.setPos(sx + x * FTBChunks.TILE_SIZE, sy + z * FTBChunks.TILE_SIZE);
-			}
-		}
+    public ChunkScreenPanel getChunkScreen() {
+        return chunkScreenPanel;
+    }
 
-		addAll(chunkButtons);
-		NetworkManager.sendToServer(new RequestMapDataPacket(
-				chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
-				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET)
-		);
+    @Override
+    protected void doCancel() {
+        closeGui();
+    }
 
-		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
-				(simpleButton, mouseButton) -> LargeMapScreen.openMap()
-		).setPosAndSize(1, 1, 16, 16));
+    @Override
+    protected void doAccept() {
 
-		add(new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
-				(btn, mb) -> new ChunkMouseReferenceScreen().openGui()
-		).setPosAndSize(1, 19, 16, 16));
-	}
+    }
 
-	@Override
-	public void mouseReleased(MouseButton button) {
-		super.mouseReleased(button);
+    @Override
+    protected int getTopPanelHeight() {
+        return 16;
+    }
 
-		if (!selectedChunks.isEmpty()) {
-			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks));
-			selectedChunks.clear();
-			playClickSound();
-		}
-	}
+    @Override
+    protected int getBottomPanelHeight() {
+        return openedAs == null ? super.getBottomPanelHeight() - 8 : super.getBottomPanelHeight();
+    }
 
-	@Override
-	public boolean keyPressed(Key key) {
-		if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player) && (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C))) {
-			LargeMapScreen.openMap();
-			return true;
-		}
+    @Override
+    protected ChunkScreenPanel createMainPanel() {
+        chunkScreenPanel = new ChunkScreenPanel(this);
+        return chunkScreenPanel;
+    }
 
-		return super.keyPressed(key);
-	}
+    @Override
+    protected Panel createTopPanel() {
+        return new CustomTopPanel();
+    }
 
-	@Override
-	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-		Player player = Minecraft.getInstance().player;
+    public Team getOpenedAs() {
+        return openedAs;
+    }
 
-		int sx = x + (w - FTBChunks.MINIMAP_SIZE) / 2;
-		int sy = y + (h - FTBChunks.MINIMAP_SIZE) / 2;
+    public MapDimension getDimension() {
+        return dimension;
+    }
 
-		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
-		GuiHelper.drawTexturedRect(graphics, sx, sy, FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE, Color4I.WHITE, 0F, 0F, 1F, 1F);
+    protected class CustomTopPanel extends Panel {
+        private final Button closeButton;
+        private final Button removeAllClaims;
+        private final Button adminButton;
+        private final Button mouseReferenceButton;
 
-		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
-			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				graphics.hLine(sx, sx + FTBChunks.MINIMAP_SIZE, sy +  gy * FTBChunks.TILE_SIZE, 0x64464646);
-			}
-			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				graphics.vLine(sx + gx * FTBChunks.TILE_SIZE, sy, sy + FTBChunks.MINIMAP_SIZE, 0x64464646);
-			}
-		}
+        public CustomTopPanel() {
+            super(ChunkScreen.this);
 
-		double hx = sx + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
-		double hy = sy + FTBChunks.TILE_SIZE * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
-		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
-		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
+            closeButton = new SimpleButton(this, Component.translatable("gui.close"), Icons.CLOSE,
+                    (btn, mb) -> doCancel())
+                    .setForceButtonSize(false);
 
-		List<Component> list = FTBChunksClient.INSTANCE.getChunkSummary();
-		int fh = theme.getFontHeight() + 1;
-		for (int i = 0; i < list.size(); i++) {
-			theme.drawString(graphics, list.get(i), 3, getScreen().getGuiScaledHeight() - fh * (list.size() - i) - 1, Color4I.WHITE, Theme.SHADOW);
-		}
+            mouseReferenceButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
+                    (btn, mb) -> new ChunkMouseReferenceScreen().openGui())
+                    .setForceButtonSize(false);
 
-		if (updateInfo != null && updateInfo.shouldDisplay()) {
-			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
-			int line = 1;
-			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
-				ClaimResult.StandardProblem problem = entry.getKey();
-				int count = entry.getValue();
-				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
-			}
-		}
-	}
+            removeAllClaims = new SimpleButton(this, Component.translatable("ftbchunks.gui.unclaim_all"), Icons.BIN,
+                    (btn, mb) -> {
+                        if (isShiftKeyDown()) {
+                            chunkScreenPanel.removeAllClaims();
+                        } else {
+                            getGui().openYesNo(Component.translatable("ftbchunks.gui.unclaim_all"), Component.translatable("ftbchunks.gui.unclaim_all.description"), () -> {
+                                chunkScreenPanel.removeAllClaims();
+                            });
+                        }
+                    })
+                    .setForceButtonSize(false);
 
-	private static class ChunkMouseReferenceScreen extends KeyReferenceScreen {
-		public ChunkMouseReferenceScreen() {
-			super("ftbchunks.gui.chunk_info.text");
-		}
+            adminButton = new AdminButton().setForceButtonSize(false);
+        }
 
-		@Override
-		public Component getTitle() {
-			return Component.translatable("ftbchunks.gui.chunk_info");
-		}
-	}
+        @Override
+        public void addWidgets() {
+            add(closeButton);
+            add(removeAllClaims);
+            if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+                add(adminButton);
+            }
+            add(mouseReferenceButton);
+        }
 
-	private class ChunkButton extends Button {
-		private final XZ chunkPos;
-		private final MapChunk chunk;
-		private long lastAdjust = 0L;
+        @Override
+        public void alignWidgets() {
+            removeAllClaims.setPosAndSize(2, 2, 12, 12);
+            adminButton.setPosAndSize(18, 2, 12, 12);
 
-		public ChunkButton(Panel panel, XZ xz) {
-			super(panel, Component.empty(), Color4I.empty());
-			setSize(FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
-			chunkPos = xz;
-			chunk = dimension.getRegion(XZ.regionFromChunk(chunkPos.x(), chunkPos.z())).getDataBlocking().getChunk(chunkPos);
-		}
+            closeButton.setPosAndSize(width - 16, 2, 12, 12);
+            mouseReferenceButton.setPosAndSize(width - 32, 2, 12, 12);
 
-		@Override
-		public void onClicked(MouseButton mouseButton) {
-			selectedChunks.add(chunkPos);
-		}
+        }
 
-		@Override
-		public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-			if (chunk.getForceLoadedDate().isPresent() && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
-				chunk.getTeam().ifPresent(team -> {
-					Color4I teamColor = team.getProperties().get(TeamProperties.COLOR);
-					float[] hsb = Color4I.RGBtoHSB(teamColor.redi(), teamColor.greeni(), teamColor.bluei(), null);
-					hsb[0] = (hsb[0] + 0.5f) % 1f;
-					FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])).draw(matrixStack, x, y, FTBChunks.TILE_SIZE, FTBChunks.TILE_SIZE);
-				});
-			}
-			if (isMouseOver() || selectedChunks.contains(chunkPos)) {
-				Color4I.WHITE.withAlpha(100).draw(matrixStack, x, y, w, h);
+        @Override
+        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            theme.drawPanelBackground(graphics, x, y, w, h);
+            Color4I.BLACK.withAlpha(80).draw(graphics, x, y + h - 1, w, 1);
+        }
 
-				if (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT)) {
-					selectedChunks.add(chunkPos);
-				}
-			}
-		}
+        private class AdminButton extends ToggleableButton {
 
-		@Override
-		@SuppressWarnings("deprecation")
-		public void addMouseOverText(TooltipList list) {
-			if (chunk == null) {
-				return;
-			}
-			chunk.getTeam().ifPresent(team -> {
-				list.add(team.getName().copy().withStyle(ChatFormatting.WHITE));
+            private static final Component DISABLED = Component.translatable("ftbchunks.gui.admin_mode_disabled");
+            private static final Component ENABLED = Component.translatable("ftbchunks.gui.admin_mode_enabled");
+            private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info").withStyle(ChatFormatting.GRAY);
 
-				Date date = new Date();
+            public AdminButton() {
+                super(CustomTopPanel.this, false, Icons.LOCK_OPEN, Icons.LOCK, (btn, newState) -> {
+                    ChunkScreen.this.getChunkScreen().isAdminEnabled = newState;
+                });
+                setEnabledText(ENABLED);
+                setDisabledText(DISABLED);
+            }
 
-				chunk.getClaimedDate().ifPresent(claimedDate -> {
-					if (Screen.hasAltDown()) {
-						list.add(Component.literal(claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
-					} else {
-						list.add(Component.literal(TimeUtils.prettyTimeString((date.getTime() - claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
-					}
-				});
+            @Override
+            public void addMouseOverText(TooltipList list) {
+                super.addMouseOverText(list);
+                list.add(MORE_INFO);
+            }
+        }
+    }
 
-				chunk.getForceLoadedDate().ifPresent(forceLoadedDate -> {
-					list.add(Component.translatable("ftbchunks.gui.force_loaded").withStyle(ChatFormatting.YELLOW));
+    private static class ChunkMouseReferenceScreen extends KeyReferenceScreen {
+        public ChunkMouseReferenceScreen() {
+            super("ftbchunks.gui.chunk_info.text");
+        }
 
-					String loadStr = Screen.hasAltDown() ?
-							"  " + forceLoadedDate.toLocaleString() :
-							"  " + TimeUtils.prettyTimeString((date.getTime() - forceLoadedDate.getTime()) / 1000L) + " ago";
-					list.add(Component.literal(loadStr).withStyle(ChatFormatting.GRAY));
+        @Override
+        public Component getTitle() {
+            return Component.translatable("ftbchunks.gui.chunk_info");
+        }
+    }
 
-					chunk.getForceLoadExpiryDate().ifPresent(expiryDate -> {
-						list.add(Component.translatable("ftbchunks.gui.force_load_expires").withStyle(ChatFormatting.GOLD));
-						String expireStr = Screen.hasAltDown() ?
-								"  " + expiryDate.toLocaleString() :
-								"  " + TimeUtils.prettyTimeString((expiryDate.getTime() - date.getTime()) / 1000L) + " from now";
-						list.add(Component.literal(expireStr).withStyle(ChatFormatting.GRAY));
-					});
+    private class CustomBottomPanel extends Panel {
 
-					if (!Screen.hasAltDown()) {
-						list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
-					}
-					if (team.getRankForPlayer(Minecraft.getInstance().player.getUUID()).isMemberOrBetter()){
-						list.add(Component.translatable("ftbchunks.gui.mouse_wheel_expiry").withStyle(ChatFormatting.DARK_GRAY));
-					}
-				});
-			});
-		}
+        public CustomBottomPanel() {
+            super(ChunkScreen.this);
+        }
 
-		@Override
-		public boolean mouseScrolled(double scroll) {
-			return chunk.getForceLoadedDate().map(forceLoadedDate -> {
-				if (isMouseOver && chunk.isTeamMember(Minecraft.getInstance().player)) {
-					int dir = (int) Math.signum(scroll);
-					long now = System.currentTimeMillis();
-					Date expiry = chunk.getForceLoadExpiryDate().orElse(new Date(now));
-					long offset = calcOffset(expiry, now, dir);
-					chunk.updateForceLoadExpiryDate(now, offset * 1000L);
-					lastAdjust = now;
-					return true;
-				}
-				return super.mouseScrolled(scroll);
-			}).orElse(super.mouseScrolled(scroll));
-		}
+        @Override
+        public void addWidgets() {
+        }
 
-		private static long calcOffset(Date expiry, long now, int dir) {
-			long offset = (expiry.getTime() - now) / 1000L;
-			if (dir == 1) {
-				if (offset < 86400L) {
-					offset = offset + 3600L;  // hour
-				} else if (offset < 604800L) {
-					offset = offset + 86400L;  // day
-				} else {
-					offset = offset + 604800L;  // week
-				}
-			} else if (dir == -1) {
-				if (offset <= 86400L) {
-					offset = Math.max(0L, offset - 3600L);
-				} else if (offset <= 604800L) {
-					offset = Math.max(86400L, offset - 86400L);
-				} else {
-					offset = Math.max(604800L, offset - 604800L);
-				}
-			}
-			return offset;
-		}
+        @Override
+        public void alignWidgets() {
 
-		@Override
-		public void tick() {
-			super.tick();
+        }
 
-			if (lastAdjust > 0L && System.currentTimeMillis() - lastAdjust > 1000L) {
-				// send update to server, but not more than once a second - avoid flood of updates while adjusting mouse wheel
-				NetworkManager.sendToServer(new UpdateForceLoadExpiryPacket(chunkPos.dim(Minecraft.getInstance().level), chunk.getForceLoadExpiryDate().orElse(null)));
-				lastAdjust = 0L;
-			}
-		}
-	}
+        @Override
+        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            theme.drawPanelBackground(graphics, x, y, w, h);
 
-	private record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems, long timestamp) {
-		public boolean shouldDisplay() {
-			// display for 3 seconds + 1 second per line of problem data
-			long timeout = 60L + 20L * problems.size();
-			return Minecraft.getInstance().level.getGameTime() - timestamp < timeout;
-		}
+            Color4I.GRAY.withAlpha(64).draw(graphics, x, y, w, 1);
+            SendGeneralDataPacket.GeneralChunkData generalChunkData = FTBChunksClient.INSTANCE.getGeneralChunkData();
 
-		public Component summary() {
-			ChatFormatting color = changedChunks == 0 ? ChatFormatting.RED : (changedChunks < totalChunks ? ChatFormatting.YELLOW : ChatFormatting.GREEN);
-			return Component.translatable("ftbchunks.claim_result", changedChunks, totalChunks).withStyle(ChatFormatting.UNDERLINE, color);
-		}
-	}
+            int claimed = generalChunkData.claimed();
+            int maxClaim = generalChunkData.maxClaimChunks();
 
+            MutableComponent claimedComponent = Component.translatable("ftbchunks.gui.claimed").append(Component.literal(": ")
+                    .append(Component.literal(claimed + " / " + maxClaim)
+                            .withStyle(claimed > maxClaim ? ChatFormatting.RED : claimed == maxClaim ? ChatFormatting.YELLOW : ChatFormatting.GREEN)));
+            theme.drawString(graphics, claimedComponent, x + 4, y + 4);
+
+            int loaded = generalChunkData.loaded();
+            int maxLoaded = generalChunkData.maxForceLoadChunks();
+
+            MutableComponent forceLoadComponent = Component.translatable("ftbchunks.gui.force_loaded").append(Component.literal(": "))
+                    .append(Component.literal(loaded + " / " + maxLoaded)
+                                    .withStyle(loaded > maxLoaded ? ChatFormatting.RED : loaded == maxLoaded ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+            String forceLoadText = forceLoadComponent.getString();
+            int forceLoadX = x + w - theme.getStringWidth(forceLoadText) - 2;
+            theme.drawString(graphics, forceLoadComponent, forceLoadX, y + 4);
+
+            if (openedAs != null) {
+                String openAsMessage = Component.translatable("ftbchunks.gui.opened_as", openedAs.getName()).getString();
+                int openAsX = x + w - theme.getStringWidth(openAsMessage) - 2;
+                theme.drawString(graphics, openAsMessage, openAsX, y + h - theme.getFontHeight(), Color4I.WHITE, Theme.SHADOW);
+            }
+        }
+    }
 }

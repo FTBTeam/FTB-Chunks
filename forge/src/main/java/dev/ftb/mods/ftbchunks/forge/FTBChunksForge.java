@@ -14,6 +14,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.entity.EntityMobGriefingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -58,7 +59,7 @@ public class FTBChunksForge {
 			ClaimedChunk cc = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(event.getEntity()));
 
 			if (cc != null && !cc.allowMobGriefing()) {
-				event.setCanceled(true);
+				event.setResult(Event.Result.DENY);
 			}
 		}
 	}

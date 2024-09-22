@@ -573,6 +573,9 @@ public class FTBChunks {
 
 		if (event.getPreviousProperties().get(FTBChunksProperties.CLAIM_VISIBILITY) != event.getTeam().getProperty(FTBChunksProperties.CLAIM_VISIBILITY)) {
 			// team is showing or hiding claims; sync all their claims to all players
+			if(FTBChunksWorldConfig.CLAIM_VISIBILITY_OVERRIDE.get()) {
+				event.getTeam().setProperty(FTBChunksProperties.CLAIM_VISIBILITY, event.getPreviousProperties().get(FTBChunksProperties.CLAIM_VISIBILITY));
+			}
 			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.getTeam());
 			teamData.syncChunksToAll(server);
 		}

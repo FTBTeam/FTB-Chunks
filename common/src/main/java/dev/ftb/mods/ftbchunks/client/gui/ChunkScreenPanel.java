@@ -63,11 +63,9 @@ public class ChunkScreenPanel extends Panel {
 
 		this.isAdminEnabled = Minecraft.getInstance().isSingleplayer();
 
-
 		MapManager.getInstance().ifPresent(m -> m.updateAllRegions(false));
 
 		alignWidgets();
-
 	}
 
 	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {

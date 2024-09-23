@@ -9,6 +9,7 @@ import dev.ftb.mods.ftblibrary.snbt.config.BaseValue;
 import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -31,7 +32,7 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
         SNBTCompoundTag mapTag = new SNBTCompoundTag();
 
         for (Map.Entry<ResourceKey<EntityType<?>>, Boolean> entry : map.entrySet()) {
-            mapTag.putBoolean(entry.getKey().registryKey().toString(), entry.getValue());
+            mapTag.putBoolean(entry.getKey().location().toString(), entry.getValue());
         }
 
         tag.put(key, mapTag);
@@ -64,9 +65,18 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
         @Override
         public Component getStringForGUI(@Nullable Map<ResourceKey<EntityType<?>>, Boolean> v) {
             if (v != null) {
-                int size = v.size();
-                long enabled = v.values().stream().filter(b -> b).count();
-                int disabled = size - (int) enabled;
+                int enabled = 0;
+                int disabled = 0;
+                for (ResourceKey<EntityType<?>> entityTypeResourceKey : v.keySet()) {
+                    EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(entityTypeResourceKey);
+                    if (entityType != null) {
+                        if (v.get(entityTypeResourceKey)) {
+                            enabled++;
+                        } else {
+                            disabled++;
+                        }
+                    }
+                }
                 return Component.translatable("ftbchunks.gui.enabled_disabled_count", enabled, disabled);
             }
             return super.getStringForGUI(null);

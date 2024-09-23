@@ -68,7 +68,6 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
             EntityIconSettings entityIconSettings = null;
 
             if (resourceManager.getResource(invisible).isPresent()) {
-                //Todo Docs?
                 LOGGER.error("Entity {} is using legacy invisible texture, please update it to use the new system!", id);
 
                 entityIconSettings = EntityIconSettings.OLD_HIDDEN;
@@ -84,8 +83,6 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
                 Optional<Resource> pic = resourceManager.getResource(rl);
                 if (pic.isPresent()) {
                     entityIconSettings = new EntityIconSettings(false, Optional.of(rl), Optional.empty(), List.of(), WidthHeight.DEFAULT, 1D, true);
-                    //Todo Docs?
-                    LOGGER.error("{} is just supply a picture please also supply a json", registryName);
                 }
             }
 

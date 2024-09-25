@@ -75,20 +75,6 @@ public class EntityMapIcon implements MapIcon {
 
     @Override
     public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-//		if (icon instanceof ImageIcon) {
-//			var manager = Minecraft.getInstance().getTextureManager();
-//			var tex = manager.getTexture(((ImageIcon) icon).texture);
-//
-//			if (tex == null) {
-//				tex = new SimpleTexture(((ImageIcon) icon).texture);
-//				manager.register(((ImageIcon) icon).texture, tex);
-//			}
-//
-////			RenderSystem.bindTextureForSetup(tex.getId());
-//        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, w > 4 ? GL11.GL_NEAREST : GL11.GL_LINEAR);
-//        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, w > 4 ? GL11.GL_NEAREST : GL11.GL_LINEAR);
-//		}
-
         if (!(entity instanceof AbstractClientPlayer) || mapType.isMinimap() || w < 4 || icon == EntityIcons.NORMAL || icon == EntityIcons.HOSTILE) {
             icon.draw(graphics, x, y, w, h);
         } else {

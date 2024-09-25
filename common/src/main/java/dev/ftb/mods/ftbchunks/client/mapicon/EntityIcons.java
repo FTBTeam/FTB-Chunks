@@ -49,7 +49,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 
     private static final Map<EntityType<?>, EntityIconSettings> ENTITY_SETTINGS = new HashMap<>();
 
-    public static final Map<EntityType<?>, Boolean> USE_NEW_TEXT = new HashMap<>();
+    public static final Map<EntityType<?>, Boolean> IS_USING_NEW_JSON = new HashMap<>();
 
     @Override
     protected Map<EntityType<?>, EntityIconSettings> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
@@ -77,7 +77,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
 
             if (resource.isPresent()) {
                 entityIconSettings = getEntitySetting(id, resource.get());
-                USE_NEW_TEXT.put(entityType, true);
+                IS_USING_NEW_JSON.put(entityType, true);
             } else {
                 ResourceLocation rl = FTBChunksAPI.rl(basePath + ".png");
                 Optional<Resource> pic = resourceManager.getResource(rl);
@@ -173,15 +173,6 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
         ENTITY_SETTINGS.clear();
 
         ENTITY_SETTINGS.putAll(entityIconDataMap);
-
-//        Minecraft.getInstance().submit(() -> {
-//            for (Map.Entry<EntityType<?>, EntityIconSettings> entry : entityIconDataMap.entrySet()) {
-//                getIcon(entry.getKey());
-//                // Todo What did these do lol
-////					RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-////					RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-//            }
-//        });
     }
 
     public record EntityIconSettings(
@@ -213,7 +204,6 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
         });
 
     }
-
 
     public record WidthHeight(int width, int height) {
 

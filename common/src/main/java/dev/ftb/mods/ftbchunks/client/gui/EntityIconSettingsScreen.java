@@ -74,7 +74,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
             }));
 
             if (showCreationButton) {
-                boolean isDynamicTexture = EntityIcons.USE_NEW_TEXT.getOrDefault(value, false);
+                boolean isDynamicTexture = EntityIcons.IS_USING_NEW_JSON.getOrDefault(value, false);
                 Icon icon = isDynamicTexture ? Icons.BOOK_RED : Icons.BOOK;
                 add(createButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.open_creation_gui"), icon, (widget, button) -> new SliceCreationGUI(value).openGui()));
             }

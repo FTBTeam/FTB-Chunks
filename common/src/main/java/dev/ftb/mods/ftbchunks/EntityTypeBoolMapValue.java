@@ -42,8 +42,9 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
     public void read(SNBTCompoundTag tag) {
         Map<ResourceKey<EntityType<?>>, Boolean> map = new HashMap<>();
 
-        for (String key : tag.getAllKeys()) {
-            map.put(ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse(key)), tag.getBoolean(key));
+        SNBTCompoundTag compound = tag.getCompound(key);
+        for (String key : compound.getAllKeys()) {
+            map.put(ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse(key)), compound.getBoolean(key));
         }
 
         set(map);

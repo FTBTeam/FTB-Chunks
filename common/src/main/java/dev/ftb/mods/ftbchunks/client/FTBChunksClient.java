@@ -479,16 +479,13 @@ public enum FTBChunksClient {
         return EventResult.interruptTrue();
     }
 
-    private static long clamp(long val, long min, long max) {
-        return Math.min(Math.max(val, min), max);
-    }
 
     public float getZoom() {
         double z = FTBChunksClientConfig.MINIMAP_ZOOM.get();
 
         if (prevZoom != z) {
             long max = (long) (400D / z);
-            long t = clamp(System.currentTimeMillis() - lastZoomTime, 0L, max);
+            long t = Mth.clamp(System.currentTimeMillis() - lastZoomTime, 0L, max);
 
             if (t == max) {
                 lastZoomTime = 0L;

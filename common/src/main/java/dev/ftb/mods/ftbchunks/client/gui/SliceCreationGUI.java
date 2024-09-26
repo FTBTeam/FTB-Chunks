@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import com.mojang.datafixers.util.Pair;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.JsonOps;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
@@ -24,6 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,10 +35,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// Not the most perfect gui but allows creation of the json files for image icons
+// Uses the entity texture to render the entity icon
+// Can create multiple slices and move them around.
 public class SliceCreationGUI extends BaseScreen {
 
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final EntityType<?> entityType;
-    private final Entity entity;
+    private final int textureWidth;
+    private final int textureHeight;
     private final ResourceLocation texture;
     private final SliceControlBox sliceControlBox;
     private final SimpleButton exportButton;
@@ -51,48 +60,25 @@ public class SliceCreationGUI extends BaseScreen {
 
     public SliceCreationGUI(EntityType<?> entityType) {
         super();
+        this.entityType = entityType;
         this.sliceControlBoxes = new ArrayList<>();
         this.imageSizeX = new IntTextBox(this);
         this.imageSizeY = new IntTextBox(this);
         this.imageSizeX.setAmount(16);
         this.imageSizeY.setAmount(16);
-        this.entityType = entityType;
-        this.entity = entityType.create(Minecraft.getInstance().level);
+        Entity entity = entityType.create(Minecraft.getInstance().level);
         this.texture = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity).getTextureLocation(entity);
-        SimpleTexture.TextureImage textureImage = SimpleTexture.TextureImage.load(Minecraft.getInstance().getResourceManager(), texture);
-        int imageWidth;
-        int imageHeight;
-        try {
-            imageWidth = textureImage.getImage().getWidth();
-            imageHeight = textureImage.getImage().getHeight();
-            this.sliceControlBox = new SliceControlBox(this, texture, imageWidth, imageHeight, false);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        this.exportButton = new SimpleButton(this, Component.literal("Export"), Icons.STAR, (button, mouseButton) -> {
-            SliceCreationGUI bu = (SliceCreationGUI) button.getGui();
-            EntityIcons.EntityIconSettings entityIconSettings = new EntityIcons.EntityIconSettings(true, Optional.empty(), Optional.of(
-                    bu.sliceControlBox.createSlice()
-            ), bu.sliceControlBoxes.stream().map(box -> new EntityImageIcon.ChildIconData(Optional.empty(), box.createSlice(), Optional.of(new EntityImageIcon.Offset(box.offsetXText.getIntValue(), box.offsetYText.getIntValue())))).toList(), EntityIcons.WidthHeight.DEFAULT, 1, true);
 
-            EntityIcons.EntityIconSettings.CODEC.encodeStart(JsonOps.INSTANCE, entityIconSettings).result().ifPresent(jsonElement -> {
-                Path path = Platform.getGameFolder().resolve("export");
-                try {
-                    ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
-                    String path1 = key.getNamespace() + "/" + key.getPath();
-                    Path resolve = path.resolve(path1 + ".json");
-                    if (!Files.exists(resolve.getParent())) {
-                        Files.createDirectories(resolve.getParent());
-                    }
-                    Files.write(resolve, jsonElement.toString().getBytes());
-                    SimpleToast.info(Component.literal("Saved File"), Component.empty());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        });
+        this.exportButton = createExportButton();
+
+        Pair<Integer, Integer> textureSize = getTextureSize();
+        this.textureWidth = textureSize.getFirst();
+        this.textureHeight = textureSize.getSecond();
+        this.sliceControlBox = new SliceControlBox(this, texture, textureWidth, textureHeight, false);
+
+        // Create the button to move, create or remove slices
         this.addSlice = new SimpleButton(this, Component.literal("Add Slice"), Icons.ADD, (button1, mouseButton1) -> {
-            SliceControlBox sliceControlBox = new SliceControlBox(this, texture, imageWidth, imageHeight, true);
+            SliceControlBox sliceControlBox = new SliceControlBox(this, texture, textureWidth, textureHeight, true);
             sliceControlBoxes.add(sliceControlBox);
             currentSlice = sliceControlBoxes.size() - 1;
             activeSlice = sliceControlBox;
@@ -121,29 +107,8 @@ public class SliceCreationGUI extends BaseScreen {
             }
         });
 
-        EntityIcons.getSettings(entityType).ifPresent(settings -> {
-            settings.mainSlice().ifPresent(slice -> {
-                sliceControlBox.xText.setAmount(slice.x());
-                sliceControlBox.yText.setAmount(slice.y());
-                sliceControlBox.wText.setAmount(slice.width());
-                sliceControlBox.hText.setAmount(slice.height());
-            });
-            settings.children().forEach(child -> {
-                SliceControlBox sliceControlBox = new SliceControlBox(this, texture, imageWidth, imageHeight, true);
-                EntityImageIcon.Slice slice1 = child.slice();
-                sliceControlBox.xText.setAmount(slice1.x());
-                sliceControlBox.yText.setAmount(slice1.y());
-                sliceControlBox.wText.setAmount(slice1.width());
-                sliceControlBox.hText.setAmount(slice1.height());
-                child.offset().ifPresent(offset -> {
-                    sliceControlBox.offsetXText.setAmount(offset.x());
-                    sliceControlBox.offsetYText.setAmount(offset.y());
-                });
-                sliceControlBoxes.add(sliceControlBox);
-                activeSlice = sliceControlBox;
-            });
-        });
 
+        loadExistingSettings();
     }
 
     @Override
@@ -185,29 +150,25 @@ public class SliceCreationGUI extends BaseScreen {
     @Override
     public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
         super.drawBackground(graphics, theme, x, y, w, h);
-        try {
-            int oneFourth = w / 4;
-            Color4I.BLACK.draw(graphics, oneFourth, y, 4, h);
-            theme.drawHorizontalTab(graphics, x + 20, y, w, h, false);
-            graphics.pose().pushPose();
-            graphics.pose().scale(2, 2, 0);
+        int oneFourth = w / 4;
+        Color4I.BLACK.draw(graphics, oneFourth, y, 4, h);
+        theme.drawHorizontalTab(graphics, x + 20, y, w, h, false);
+        graphics.pose().pushPose();
+        graphics.pose().scale(2, 2, 0);
 
-            sliceControlBox.drawMainTexture(graphics, oneFourth + 5, y);
-            sliceControlBox.drawOverlay(graphics, oneFourth + 5, y);
+        sliceControlBox.drawMainTexture(graphics, oneFourth + 5, y);
+        sliceControlBox.drawOverlay(graphics, oneFourth + 5, y);
 
-            for (SliceControlBox controlBox : sliceControlBoxes) {
-                controlBox.drawOverlay(graphics, oneFourth + 5, y);
-            }
-
-            graphics.pose().popPose();
-            List<EntityImageIcon.ChildIconData> slices = new ArrayList<>();
-            for (SliceControlBox controlBox : sliceControlBoxes) {
-                slices.add(new EntityImageIcon.ChildIconData(Optional.empty(), controlBox.createSlice(), Optional.of(new EntityImageIcon.Offset(controlBox.offsetXText.getIntValue(), controlBox.offsetYText.getIntValue()))));
-            }
-            new EntityImageIcon(sliceControlBox.texture, sliceControlBox.createSlice(), slices).draw(graphics, x + 2, y + 2, imageSizeX.getIntValue(), imageSizeY.getIntValue());
-        } catch (Exception ignored) {
-
+        for (SliceControlBox controlBox : sliceControlBoxes) {
+            controlBox.drawOverlay(graphics, oneFourth + 5, y);
         }
+
+        graphics.pose().popPose();
+        List<EntityImageIcon.ChildIconData> slices = new ArrayList<>();
+        for (SliceControlBox controlBox : sliceControlBoxes) {
+            slices.add(new EntityImageIcon.ChildIconData(Optional.empty(), controlBox.createSlice(), Optional.of(new EntityImageIcon.Offset(controlBox.offsetXText.getIntValue(), controlBox.offsetYText.getIntValue()))));
+        }
+        new EntityImageIcon(sliceControlBox.texture, sliceControlBox.createSlice(), slices).draw(graphics, x + 2, y + 2, imageSizeX.getIntValue(), imageSizeY.getIntValue());
     }
 
     @Override
@@ -215,8 +176,8 @@ public class SliceCreationGUI extends BaseScreen {
         super.drawForeground(graphics, theme, x, y, w, h);
     }
 
-
-    public class SliceControlBox extends Panel {
+    // a "Control Box" that allows to create the overlays for the slices and move them around
+    public static class SliceControlBox extends Panel {
 
         private final ImageIcon mainIcon;
         private final ResourceLocation texture;
@@ -319,10 +280,6 @@ public class SliceCreationGUI extends BaseScreen {
             return new EntityImageIcon.Slice(xText.getIntValue(), yText.getIntValue(), wText.getIntValue(), hText.getIntValue());
         }
 
-        public EntityImageIcon entityImageIcon() {
-            return new EntityImageIcon(texture, createSlice(), List.of());
-        }
-
         public int getW() {
             return wText.getIntValue();
         }
@@ -358,5 +315,78 @@ public class SliceCreationGUI extends BaseScreen {
             color4I.draw(graphics, x + 3, y + 3, 10, 10);
         }
 
+    }
+
+    private SimpleButton createExportButton() {
+        return new SimpleButton(this, Component.literal("Export"), Icons.STAR, (button, mouseButton) -> {
+            SliceCreationGUI bu = (SliceCreationGUI) button.getGui();
+            EntityIcons.EntityIconSettings entityIconSettings = new EntityIcons.EntityIconSettings(
+                    true,
+                    Optional.empty(),
+                    Optional.of(bu.sliceControlBox.createSlice()),
+                    bu.sliceControlBoxes.stream().map(box -> new EntityImageIcon.ChildIconData(
+                            Optional.empty(),
+                            box.createSlice(),
+                            Optional.of(new EntityImageIcon.Offset(box.offsetXText.getIntValue(), box.offsetYText.getIntValue())))).toList(),
+                    EntityIcons.WidthHeight.DEFAULT,
+                    1,
+                    true);
+
+            EntityIcons.EntityIconSettings.CODEC.encodeStart(JsonOps.INSTANCE, entityIconSettings).result().ifPresent(jsonElement -> {
+                Path path = Platform.getGameFolder().resolve("export");
+                try {
+                    ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+                    String path1 = key.getNamespace() + "/" + key.getPath();
+                    Path resolve = path.resolve(path1 + ".json");
+                    if (!Files.exists(resolve.getParent())) {
+                        Files.createDirectories(resolve.getParent());
+                    }
+                    Files.write(resolve, jsonElement.toString().getBytes());
+                    SimpleToast.info(Component.literal("Saved File"), Component.empty());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        });
+    }
+
+    private void loadExistingSettings() {
+        EntityIcons.getSettings(entityType).ifPresent(settings -> {
+            settings.mainSlice().ifPresent(slice -> {
+                sliceControlBox.xText.setAmount(slice.x());
+                sliceControlBox.yText.setAmount(slice.y());
+                sliceControlBox.wText.setAmount(slice.width());
+                sliceControlBox.hText.setAmount(slice.height());
+            });
+            settings.children().forEach(child -> {
+                SliceControlBox sliceControlBox = new SliceControlBox(this, texture, textureWidth, textureHeight, true);
+                EntityImageIcon.Slice slice1 = child.slice();
+                sliceControlBox.xText.setAmount(slice1.x());
+                sliceControlBox.yText.setAmount(slice1.y());
+                sliceControlBox.wText.setAmount(slice1.width());
+                sliceControlBox.hText.setAmount(slice1.height());
+                child.offset().ifPresent(offset -> {
+                    sliceControlBox.offsetXText.setAmount(offset.x());
+                    sliceControlBox.offsetYText.setAmount(offset.y());
+                });
+                sliceControlBoxes.add(sliceControlBox);
+                activeSlice = sliceControlBox;
+            });
+        });
+
+    }
+
+    private Pair<Integer, Integer> getTextureSize() {
+        SimpleTexture.TextureImage textureImage = SimpleTexture.TextureImage.load(Minecraft.getInstance().getResourceManager(), texture);
+        int imageWidth;
+        int imageHeight;
+        try {
+            imageWidth = textureImage.getImage().getWidth();
+            imageHeight = textureImage.getImage().getHeight();
+            return Pair.of(imageWidth, imageHeight);
+        } catch (Exception e) {
+            LOGGER.error("Failed to get texture size for {}", texture, e);
+            throw new RuntimeException(e);
+        }
     }
 }

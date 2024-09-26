@@ -108,23 +108,24 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
         public void setWidth(int newWidth) {
             super.setWidth(newWidth);
 
-            if (newWidth > 0) {
-                int farRight = newWidth - 8;
-
-                int yOff = (this.height - getTheme().getFontHeight()) / 2 + 1;
-
-                double size = 16;
-                hideButton.setForceButtonSize(false);
-                hideButton.setPosAndSize(farRight - 8, 1, (int) size, (int) size);
-
-                if (showCreationButton) {
-                    createButton.setPosAndSize(farRight - 8 - (int) size, 1, (int) size, (int) size);
-                }
-
-                nameField.setPos(5 + 12, yOff);
-                nameField.setText(Component.translatable(value.getDescriptionId()));
-                nameField.setHeight(getTheme().getFontHeight() + 2);
+            if (newWidth <= 0) {
+                return;
             }
+            int farRight = newWidth - 8;
+
+            int yOff = (this.height - getTheme().getFontHeight()) / 2 + 1;
+
+            double size = 16;
+            hideButton.setForceButtonSize(false);
+            hideButton.setPosAndSize(farRight - 8, 1, (int) size, (int) size);
+
+            if (showCreationButton) {
+                createButton.setPosAndSize(farRight - 8 - (int) size, 1, (int) size, (int) size);
+            }
+
+            nameField.setPos(5 + 12, yOff);
+            nameField.setText(Component.translatable(value.getDescriptionId()));
+            nameField.setHeight(getTheme().getFontHeight() + 2);
         }
     }
 }

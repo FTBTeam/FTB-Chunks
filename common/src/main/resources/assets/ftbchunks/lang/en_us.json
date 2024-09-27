@@ -219,6 +219,7 @@
   "ftbchunks.minimap.show_game_time": "Show Game Time",
   "ftbchunks.minimap.show_fps": "Show FPS",
   "ftbchunks.minimap.show_real_time": "Show Real Time",
+  "ftbchunks.minimap.entity_icon": "Entity Icon Visibility",
   "ftbchunks.waypoint.shared": "Has shared waypoint '%s' with you! Click to add",
   "ftbchunks.waypoint.shared_by_you": "You shared waypoint '%s' !",
   "ftbchunks.waypoint.share": "Share",

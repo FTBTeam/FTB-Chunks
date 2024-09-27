@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+// Handles loading of Entity Icon Json or Image file
+// Loads all entity types expect for misc, where then it will only show on the map if a json / image exists
 public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?>, EntityIcons.EntityIconSettings>> {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -125,8 +127,11 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
             return false;
         }
 
-        ResourceLocation registryName = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-        return FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(registryName.toString(), true);
+        Optional<ResourceKey<EntityType<?>>> registryName = BuiltInRegistries.ENTITY_TYPE.getResourceKey(entity.getType());
+        if (registryName.isEmpty()) {
+            return false;
+        }
+        return FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(registryName.get(), true);
     }
 
     private static String getBasePath(ResourceLocation id) {

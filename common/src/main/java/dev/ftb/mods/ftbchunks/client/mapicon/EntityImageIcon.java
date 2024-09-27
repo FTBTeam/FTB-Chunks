@@ -75,10 +75,11 @@ public class EntityImageIcon extends Icon {
             int height) {
 
         public static final Codec<Slice> CODEC = RecordCodecBuilder.create(builder -> builder.group(
-                Offset.CODEC.fieldOf("offset").forGetter(s -> new Offset(s.x, s.y)),
+                Codec.INT.fieldOf("x").forGetter(o -> o.x),
+                Codec.INT.fieldOf("y").forGetter(o -> o.y),
                 Codec.INT.fieldOf("width").forGetter(s -> s.width),
                 Codec.INT.fieldOf("height").forGetter(s -> s.height)
-        ).apply(builder, (offset, width, height) -> new Slice(offset.x(), offset.y(), width, height)));
+        ).apply(builder, Slice::new));
     }
 
     public record ChildIconData(

@@ -1,0 +1,9 @@
+{
+  "use_mob_texture": true,
+  "slice": {
+    "x": 4,
+    "y": 5,
+    "width": 7,
+    "height": 5
+  }
+}

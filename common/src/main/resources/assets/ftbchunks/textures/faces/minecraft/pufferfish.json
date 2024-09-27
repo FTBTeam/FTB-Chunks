@@ -1,4 +1,5 @@
 {
+  "default_enabled": false,
   "use_mob_texture": true,
   "slice": {
     "x": 8,

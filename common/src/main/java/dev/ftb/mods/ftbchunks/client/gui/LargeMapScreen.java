@@ -27,6 +27,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.DropDownMenu;
 import dev.ftb.mods.ftblibrary.ui.NordTheme;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
@@ -36,6 +37,7 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
+import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -43,6 +45,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
@@ -169,9 +172,18 @@ public class LargeMapScreen extends BaseScreen {
 		}));
 		 */
 
-        Component dimName = Component.literal(dimension.dimension.location().getPath().replace('_', ' '));
+        Component dimName = TextComponentUtils.translatedDimension(dimension.dimension);
+        List<ContextMenuItem> dimItems = AddWaypointOverlay.createDimContextItems(key -> {
+            dimension = dimension.getManager().getDimension(key);
+            refreshWidgets();
+            movedToPlayer = false;
+        });
+
         add(dimensionButton = new SimpleButton(this, dimName, Icons.GLOBE,
-                (b, m) -> cycleVisibleDimension(m)));
+                (b, m) -> {
+                    DropDownMenu dropDownMenu = getGui().openDropdownMenu(dimItems);
+                    dropDownMenu.setPos(dimensionButton.getX() + dimensionButton.width, dimensionButton.getY() + dimensionButton.height - dropDownMenu.height);
+                }));
 
         add(settingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
                 (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this)),
@@ -240,18 +252,22 @@ public class LargeMapScreen extends BaseScreen {
             return true;
         } else if (button.isRight()) {
             final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
+            GlobalPos globalPos = GlobalPos.of(dimension.dimension, pos);
             List<ContextMenuItem> list = new ArrayList<>();
             list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, btn -> {
                 StringConfig name = new StringConfig();
                 name.setValue("");
                 ColorConfig col = new ColorConfig();
                 col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
-                var overlay = new AddWaypointOverlay(getGui(), name, col, accepted -> {
+                AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
+                globalPosConfig.setValue(globalPos);
+                var overlay = new AddWaypointOverlay(getGui(), globalPosConfig, name, col, accepted -> {
                     if (accepted) {
-                        WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, dimension, pos)
+                        MapDimension mapDimension = MapManager.getInstance().orElseThrow().getDimension(globalPosConfig.getValue().dimension());
+                        WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, globalPosConfig.getValue().pos())
                                 .setName(name.getValue())
                                 .setColor(col.getValue().rgba());
-                        dimension.getWaypointManager().add(waypoint);
+                        mapDimension.getWaypointManager().add(waypoint);
                         refreshWidgets();
                     }
                 }).atMousePosition();

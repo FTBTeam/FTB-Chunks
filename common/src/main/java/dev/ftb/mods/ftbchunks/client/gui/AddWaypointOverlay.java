@@ -78,10 +78,6 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
                 theme.drawButton(graphics, x, y, w, h, getWidgetType());
             }
         };
-//        this.dropDownButton = SimpleTextButton.create(this, Component.empty(), Icons.DROPDOWN_OUT, (mouseButton) -> {
-//            DropDownMenu dropDownMenu = getGui().openDropdownMenu(contextMenuItems);
-//            dropDownMenu.setPos(dimension.getX(), dimension.getY() + dimension.getHeight());
-//        });
         this.x = new AddWaypointIntBox(this);
         this.y = new AddWaypointIntBox(this);
         this.z = new AddWaypointIntBox(this);
@@ -175,7 +171,6 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     public void alignWidgets() {
         super.alignWidgets();
 
-
         int widgetH = getGui().getTheme().getFontHeight() + 4;
         textBox.setPos(2, widgetH + 6);
         textBox.setWidth(width - widgetH - 4 - 4);
@@ -189,14 +184,12 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         y.setPosAndSize(2 + w, xyzHeight, w - 2, widgetH);
         z.setPosAndSize(2 + w * 2, xyzHeight, w - 2, widgetH);
 
-
         int buttonW = w + w / 2;
         int buttonHeight = x.posY + x.getHeight() + 2;
         buttonAccept.setPosAndSize(width - buttonW * 2 - 2, buttonHeight, buttonW, widgetH + 1);
         buttonCancel.setPosAndSize(width - buttonW, buttonHeight, buttonW - 3, widgetH + 1);
 
         height += 28 + 14 + 20;
-
     }
 
     @Override

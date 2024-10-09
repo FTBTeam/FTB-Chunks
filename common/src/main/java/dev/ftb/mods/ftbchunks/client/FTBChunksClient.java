@@ -1305,10 +1305,12 @@ public enum FTBChunksClient {
         @Override
         public void addWidgets() {
             ColorConfig col = new ColorConfig();
+            AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
+            globalPosConfig.setValue(waypointLocation);
             col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
-            AddWaypointOverlay overlay = new AddWaypointOverlay(this, name, col, set -> {
+            AddWaypointOverlay overlay = new AddWaypointOverlay(this, globalPosConfig, name, col, set -> {
                 if (set && !name.getValue().isEmpty()) {
-                    Waypoint wp = addWaypoint(name.getValue(), waypointLocation, col.getValue().rgba());
+                    Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), col.getValue().rgba());
                     Minecraft.getInstance().player.displayClientMessage(
                             Component.translatable("ftbchunks.waypoint_added",
                                     Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)

@@ -137,6 +137,10 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
     @Override
     public void addButtons(Panel panel) {
+        if (waypoints.isEmpty()) {
+            panel.add(new NoWayPoints(panel, Component.empty(), Icons.REMOVE));
+        }
+
         waypoints.forEach((key, value) -> {
             boolean startCollapsed = collapsed.get(key);
             GroupButton groupButton = new GroupButton(panel, key, startCollapsed, value);
@@ -145,6 +149,28 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 panel.addAll(groupButton.collectPanels());
             }
         });
+    }
+
+    protected static class NoWayPoints extends Button {
+
+        private static final Component NO_WAYPOINTS = Component.translatable("ftbchunks.gui.no_waypoints");
+
+        public NoWayPoints(Panel panel, Component t, Icon i) {
+            super(panel);
+        }
+
+        @Override
+        public void onClicked(MouseButton button) {
+
+        }
+
+        @Override
+        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            super.drawBackground(graphics, theme, x, y, w, h);
+
+            int stringWidth = theme.getStringWidth(NO_WAYPOINTS.getString());
+            theme.drawString(graphics, NO_WAYPOINTS, x + (w - stringWidth) / 2, y + (h - theme.getFontHeight()) / 2 + 1);
+        }
     }
 
     protected class CustomTopPanel extends TopPanel {

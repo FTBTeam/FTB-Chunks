@@ -15,6 +15,7 @@ import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.gui.EntityIconSettingsScreen;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
@@ -100,7 +101,7 @@ public class FTBChunksCommands {
                                 )
                         )
                         .then(Commands.literal("admin")
-                                .requires(source -> source.hasPermission(2))
+                                .requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
                                 .then(Commands.literal("bypass_protection")
                                         .executes(context -> bypassProtection(context.getSource()))
                                 )
@@ -169,6 +170,12 @@ public class FTBChunksCommands {
                                 .then(Commands.literal("unclaim_everything")
                                         .executes(context -> unclaimEverything(context.getSource()))
                                 )
+                                .then(Commands.literal("unclaim_dimension")
+                                        .executes(context -> unclaimDimension(context.getSource()))
+                                        .then(Commands.argument("dimension", DimensionArgument.dimension())
+                                                .executes(context -> unclaimDimension(context.getSource(), DimensionArgument.getDimension(context, "dimension").dimension()))
+                                        )
+                                )
                                 .then(Commands.literal("unload_everything")
                                         .executes(context -> unloadEverything(context.getSource()))
                                 )
@@ -194,7 +201,7 @@ public class FTBChunksCommands {
 //						.requires(source -> source.getServer().isSingleplayer())
                                         .executes(context -> {
                                             NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), new RequestBlockColorPacket());
-                                            return 1;
+                                            return Command.SINGLE_SUCCESS;
                                         })
                         )
                         .then(Commands.literal("waypoint")
@@ -234,8 +241,9 @@ public class FTBChunksCommands {
     private static int addWaypoint(CommandSourceStack source, String name, ServerLevel level, BlockPos position, ChatFormatting color, boolean useGui) throws CommandSyntaxException {
         if (color.getColor() != null) {
             NetworkManager.sendToPlayer(source.getPlayerOrException(), new AddWaypointPacket(name, new GlobalPos(level.dimension(), position), color.getColor(), useGui));
+            source.sendSuccess(() -> Component.translatable("ftbchunks.command.waypoint_added", name), true);
         }
-        return 1;
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int addWaypoint(CommandSourceStack source, String name, ServerLevel level, BlockPos position, ChatFormatting color) throws CommandSyntaxException {
@@ -256,8 +264,11 @@ public class FTBChunksCommands {
         ServerPlayer player = source.getPlayerOrException();
         ClaimedChunkManagerImpl manager = claimManager();
         manager.setBypassProtection(player.getUUID(), !manager.getBypassProtection(player.getUUID()));
-        source.sendSuccess(() -> Component.literal("bypass_protection = " + manager.getBypassProtection(player.getUUID())), true);
-        return 1;
+        source.sendSuccess(() -> {
+            boolean bypassProtection = manager.getBypassProtection(player.getUUID());
+            return Component.translatable("ftbchunks.command.bypass_protection_" + (bypassProtection ? "enabled" : "disabled"));
+        }, true);
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int openClaimGuiAs(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -311,7 +322,7 @@ public class FTBChunksCommands {
             }
         });
 
-        source.sendSuccess(() -> Component.literal("Claimed " + success[0] + " chunks!"), false);
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.claimed", success[0]), false);
 
         ChunkDimPos origin = new ChunkDimPos(level.dimension(), anchor.x() >> 4, anchor.z() >> 4);
         FTBChunks.LOGGER.info(source.getTextName() + " claimed " + success[0] + " chunks around " + origin + "for team " + team.getShortName());
@@ -332,7 +343,7 @@ public class FTBChunksCommands {
             }
         });
 
-        source.sendSuccess(() -> Component.literal("Unclaimed " + success[0] + " chunks!"), false);
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.unclaimed", success[0]), false);
 
         ChunkDimPos origin = new ChunkDimPos(level.dimension(), anchor.x() >> 4, anchor.z() >> 4);
         FTBChunks.LOGGER.info(source.getTextName() + " unclaimed " + success[0] + " chunks around " + origin + "for team " + team.getShortName());
@@ -350,7 +361,7 @@ public class FTBChunksCommands {
             }
         });
 
-        source.sendSuccess(() -> Component.literal("Loaded " + success[0] + " chunks!"), false);
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.force_loaded", success[0]), false);
         FTBChunks.LOGGER.info(source.getTextName() + " loaded " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
         return success[0];
     }
@@ -364,7 +375,7 @@ public class FTBChunksCommands {
             }
         });
 
-        source.sendSuccess(() -> Component.literal("Unloaded " + success[0] + " chunks!"), false);
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.unloaded", success[0]), false);
         FTBChunks.LOGGER.info(source.getTextName() + " unloaded " + success[0] + " chunks at " + new ChunkDimPos(source.getPlayerOrException()));
         return success[0];
     }
@@ -372,60 +383,81 @@ public class FTBChunksCommands {
     private static int unclaimAll(CommandSourceStack source, Team team) {
         ChunkTeamDataImpl data = claimManager().getOrCreateData(team);
 
+        int unclaimed = 0;
         for (ClaimedChunkImpl c : new ArrayList<>(data.getClaimedChunks())) {
-            data.unclaim(source, c.getPos(), false);
+            ClaimResult unclaim = data.unclaim(source, c.getPos(), false);
+            if (unclaim.isSuccess()) {
+                unclaimed++;
+            }
         }
         data.markDirty();
-
-        return 1;
+        int finalUnclaimed = unclaimed;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.unclaimed", finalUnclaimed), true);
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int unloadAll(CommandSourceStack source, Team team) {
         ChunkTeamDataImpl data = claimManager().getOrCreateData(team);
 
+        int unloaded = 0;
         for (ClaimedChunk c : new ArrayList<>(data.getClaimedChunks())) {
-            data.unForceLoad(source, c.getPos(), false);
+            ClaimResult claimResult = data.unForceLoad(source, c.getPos(), false);
+            if (claimResult.isSuccess()) {
+                unloaded++;
+            }
         }
         data.markDirty();
-
-        return 1;
+        int finalUnloaded = unloaded;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.unloaded", finalUnloaded), true);
+        return Command.SINGLE_SUCCESS;
     }
 
-    private static int info(CommandSourceStack source, ChunkDimPos pos) {
-        source.sendSuccess(() -> Component.literal("Location: " + pos), true);
+    private static int info(CommandSourceStack source, ChunkDimPos pos) throws CommandSyntaxException {
 
         ClaimedChunk chunk = claimManager().getChunk(pos);
 
-        if (chunk == null) {
-            source.sendSuccess(() -> Component.literal("Chunk not claimed!"), true);
-            return 0;
+        boolean canKnowChunkStatus = source.hasPermission(Commands.LEVEL_GAMEMASTERS) || (source.isPlayer() || (chunk != null && chunk.getTeamData().canPlayerUse(source.getPlayerOrException(), FTBChunksProperties.CLAIM_VISIBILITY)));
+
+        if (canKnowChunkStatus) {
+            if (chunk == null) {
+                source.sendSuccess(() -> Component.translatable("ftbchunks.commands.not_claimed"), false);
+                return Command.SINGLE_SUCCESS;
+            }
+
+            source.sendSuccess(() -> {
+                Component owner = chunk.getTeamData().getTeam().getColoredName().copy().append(" / " + UndashedUuid.toString(chunk.getTeamData().getTeam().getId()));
+                String location = pos.dimension().location().toString() + " [" + pos.x() + ", " + pos.z() + "]";
+                return Component.translatable("ftbchunks.commands.location", location)
+                        .append(Component.literal("\n"))
+                        .append(Component.translatable("ftbchunks.commands.owner").append(owner.getString()))
+                        .append(Component.literal("\n"))
+                        .append(Component.translatable("ftbchunks.commands.is_force_loaded", chunk.isForceLoaded()));
+            }, true);
+
+            return Command.SINGLE_SUCCESS;
         }
 
-        source.sendSuccess(() -> Component.literal("Owner: ").append(chunk.getTeamData().getTeam().getColoredName()).append(" / " + UndashedUuid.toString(chunk.getTeamData().getTeam().getId())), true);
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.cant_determined"), false);
 
-        if (source.hasPermission(2)) {
-            source.sendSuccess(() -> Component.literal("Force Loaded: " + chunk.isForceLoaded()), true);
-        }
-
-        return 1;
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int getExtraClaimChunks(CommandSourceStack source, ServerPlayer player) {
         ChunkTeamData personalData = claimManager().getPersonalData(player.getUUID());
         if (personalData == null) {
-            source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+            source.sendFailure(Component.translatable("ftbchunks.commands.no_personal_info", player.getDisplayName()));
             return 0;
         }
 
-        source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.getExtraClaimChunks()), false);
-        return 1;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.extra_chunks_claimed", player.getDisplayName(), personalData.getExtraClaimChunks()), true);
+        return personalData.getExtraClaimChunks();
     }
 
     private static int setExtraClaimChunks(CommandSourceStack source, ServerPlayer player, int extra, boolean adding) {
         // limit is added to player's *personal* data, even if they're in a party
         ChunkTeamDataImpl personalData = claimManager().getPersonalData(player.getUUID());
         if (personalData == null) {
-            source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+            source.sendFailure(Component.translatable("ftbchunks.commands.no_personal_info", player.getDisplayName()));
             return 0;
         }
         personalData.setExtraClaimChunks(Math.max(0, extra + (adding ? personalData.getExtraClaimChunks() : 0)));
@@ -436,26 +468,26 @@ public class FTBChunksCommands {
         teamData.updateLimits();
         SendGeneralDataPacket.send(teamData, player);
 
-        source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_claim_chunks = " + personalData.getExtraClaimChunks()), false);
-        return 1;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.set_extra_chunks_claimed", personalData.getExtraClaimChunks(), player.getDisplayName()), true);
+        return personalData.getExtraClaimChunks();
     }
 
     private static int getExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player) {
         ChunkTeamData personalData = claimManager().getPersonalData(player.getUUID());
         if (personalData == null) {
-            source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+            source.sendFailure(Component.translatable("ftbchunks.commands.no_personal_info", player.getDisplayName()));
             return 0;
         }
 
-        source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.getExtraForceLoadChunks()), false);
-        return 1;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.extra_forceload_chunks", player.getDisplayName(), personalData.getExtraForceLoadChunks()), true);
+        return personalData.getExtraForceLoadChunks();
     }
 
     private static int setExtraForceLoadChunks(CommandSourceStack source, ServerPlayer player, int extra, boolean adding) {
         // limit is added to player's *personal* data, even if they're in a party
         ChunkTeamDataImpl personalData = claimManager().getPersonalData(player.getUUID());
         if (personalData == null) {
-            source.sendFailure(Component.literal("can't get personal team data for ").append(player.getDisplayName()));
+            source.sendFailure(Component.translatable("ftbchunks.commands.no_personal_info", player.getDisplayName()));
             return 0;
         }
         personalData.setExtraForceLoadChunks(Math.max(0, extra + (adding ? personalData.getExtraForceLoadChunks() : 0)));
@@ -466,26 +498,50 @@ public class FTBChunksCommands {
         teamData.updateLimits();
         SendGeneralDataPacket.send(teamData, player);
 
-        source.sendSuccess(() -> player.getDisplayName().copy().append("/extra_force_load_chunks = " + personalData.getExtraForceLoadChunks()), false);
-        return 1;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.set_extra_forceload_chunks", personalData.getExtraForceLoadChunks(), player.getDisplayName()), true);
+        return personalData.getExtraForceLoadChunks();
     }
 
     private static int unclaimEverything(CommandSourceStack source) {
+        int claimedChunks = 0;
         for (ClaimedChunkImpl c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
             c.getTeamData().unclaim(source, c.getPos(), false);
             c.getTeamData().markDirty();
+            claimedChunks++;
         }
+        int finalClaimedChunks = claimedChunks;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.unclaimed", finalClaimedChunks), true);
+        return Command.SINGLE_SUCCESS;
+    }
 
-        return 1;
+    private static int unclaimDimension(CommandSourceStack source, ResourceKey<Level> dim) {
+        int claimedChunks = 0;
+        for (ClaimedChunkImpl c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
+            if (source.getLevel().dimension().equals(dim)) {
+                c.getTeamData().unclaim(source, c.getPos(), false);
+                c.getTeamData().markDirty();
+                claimedChunks++;
+            }
+        }
+        int finalClaimedChunks = claimedChunks;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.unclaimed", finalClaimedChunks), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int unclaimDimension(CommandSourceStack source) {
+        return unclaimDimension(source, source.getLevel().dimension());
     }
 
     private static int unloadEverything(CommandSourceStack source) {
+        int unloadedChunks = 0;
         for (ClaimedChunkImpl c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
             c.getTeamData().unForceLoad(source, c.getPos(), false);
             c.getTeamData().markDirty();
+            unloadedChunks++;
         }
-
-        return 1;
+        int finalUnloadedChunks = unloadedChunks;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.unloaded", finalUnloadedChunks), true);
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int viewLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
@@ -508,15 +564,15 @@ public class FTBChunksCommands {
             }
         }
 
-        source.sendSuccess(() -> Component.literal(String.format("Chunks Loaded: %d. Check the map to see loaded chunks", chunks.size())), false);
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.view_loaded", chunks.size()), false);
         NetworkManager.sendToPlayer(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), chunks));
 
-        return 1;
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int resetLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
         NetworkManager.sendToPlayer(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), Long2IntMaps.EMPTY_MAP));
-        return 1;
+        return Command.SINGLE_SUCCESS;
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, Integer> radiusArg() {
@@ -545,7 +601,7 @@ public class FTBChunksCommands {
 
     private static RequiredArgumentBuilder<CommandSourceStack, TeamArgumentProvider> forTeam(ToIntBiFunction<CommandSourceStack, Team> callback) {
         return Commands.argument("team", TeamArgument.create())
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(context -> callback.applyAsInt(context.getSource(), TeamArgument.get(context, "team")));
     }
 

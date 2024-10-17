@@ -14,6 +14,7 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
@@ -122,7 +123,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
 
         public InfoEntry(MinimapInfoComponent infoComponent, Panel panel) {
             super(panel);
-            hideButton = ToggleVisibilityButton.create(this, !isComponentDisabled(infoComponent), (enabled) -> setComponentEnabled(infoComponent, enabled));
+            hideButton = new ToggleableButton(this, !isComponentDisabled(infoComponent), Icons.VISIBILITY_SHOW, Icons.VISIBILITY_HIDE, (widget, newState) -> setComponentEnabled(infoComponent, newState));
             down = new SortScreenButton(InfoEntry.this, Component.translatable("ftbchunks.gui.move_up"), Icons.UP, (widget, button) -> move(false, isShiftKeyDown()));
             up = new SortScreenButton(InfoEntry.this, Component.translatable("ftbchunks.gui.move_down"), Icons.DOWN, (widget, button) -> move(true, isShiftKeyDown()));
             configButton = new SimpleButton(InfoEntry.this, Component.translatable("gui.settings"), Icons.SETTINGS, (widget, button) -> {
@@ -169,7 +170,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         public void alignWidgets() {
             down.setPosAndSize(6, height / 6 + 1, 6, 8);
             up.setPosAndSize(6, height / 6 + 11, 6, 8);
-            hideButton.setPosAndSize(width - 18, height / 6, 12, 12);
+            hideButton.setPosAndSize(width - 18, height / 6 + 2, 12, 12);
             field.setPosAndSize(16, 8, width - 37, height);
             field.setPosAndSize(16, 8, width - 37, height);
             if(!infoComponent.getConfigComponents().isEmpty()) {

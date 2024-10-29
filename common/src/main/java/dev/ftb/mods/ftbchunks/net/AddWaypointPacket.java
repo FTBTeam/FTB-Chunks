@@ -4,24 +4,28 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.simple.BaseS2CMessage;
 import dev.architectury.networking.simple.MessageType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import net.minecraft.core.BlockPos;
+import dev.ftb.mods.ftblibrary.config.StringConfig;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.FriendlyByteBuf;
 
 public class AddWaypointPacket extends BaseS2CMessage {
     private final String name;
-    private final BlockPos position;
+    private final GlobalPos position;
     private final int color;
+    private final boolean useGui;
 
-    public AddWaypointPacket(String name, BlockPos position, int color) {
+    public AddWaypointPacket(String name, GlobalPos position, int color, boolean useGui) {
         this.name = name;
         this.position = position;
         this.color = color;
+        this.useGui = useGui;
     }
 
     public AddWaypointPacket(FriendlyByteBuf buf) {
         name = buf.readUtf();
-        position = buf.readBlockPos();
+        position = buf.readGlobalPos();
         color = buf.readInt();
+        useGui = buf.readBoolean();
     }
 
     @Override
@@ -32,12 +36,21 @@ public class AddWaypointPacket extends BaseS2CMessage {
     @Override
     public void write(FriendlyByteBuf buf) {
         buf.writeUtf(name);
-        buf.writeBlockPos(position);
+        buf.writeGlobalPos(position);
         buf.writeInt(color);
+        buf.writeBoolean(useGui);
     }
 
     @Override
     public void handle(NetworkManager.PacketContext context) {
-        FTBChunksClient.addWaypoint(context.getPlayer(), name, position, color);
+        context.queue(() -> {
+            if(useGui) {
+                StringConfig configName = new StringConfig();
+                configName.setValue(name);
+                new FTBChunksClient.WaypointAddScreen(configName, position).openGui();
+            }else {
+                FTBChunksClient.addWaypoint(name, position, color);
+            }
+        });
     }
 }

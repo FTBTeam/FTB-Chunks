@@ -251,7 +251,7 @@ public enum FTBChunksClient {
 	}
 
 	public void handlePlayerLogin(UUID serverId, SNBTCompoundTag config) {
-		FTBChunks.LOGGER.info("Loading FTB Chunks client data from world " + serverId);
+        FTBChunks.LOGGER.info("Loading FTB Chunks client data from world {}", serverId);
 		FTBChunksWorldConfig.CONFIG.read(config);
 		MapManager.startUp(serverId);
 		scheduleMinimapUpdate();

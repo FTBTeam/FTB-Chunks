@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed the `/ftbchunks waypoint add` command only working for loaded chunks
 * Fixed block/item/entity tags not being detected
 * If the minimap is being displayed in top-right of screen (the default), then any potion effect icons are moved to the left of the minimap to avoid overlap
+* Possible fix for occasional problem where some regions just don't render on the map or minimap
+  * Can't be sure, the problem is very hard to reproduce
 
 ## [2001.3.1]
 

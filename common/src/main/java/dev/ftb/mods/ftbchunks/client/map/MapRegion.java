@@ -202,13 +202,13 @@ public class MapRegion implements MapTask {
 
 	public void setRenderedMapImageRGBA(int x, int z, int col) {
 		synchronized (dimension.getManager().lock) {
-			renderedMapImage.setPixelRGBA(x, z, col);
+			getRenderedMapImage().setPixelRGBA(x, z, col);
 		}
 	}
 
 	private void uploadRenderedMapImage() {
 		synchronized (dimension.getManager().lock) {
-			renderedMapImage.upload(0, 0, 0, false);
+			getRenderedMapImage().upload(0, 0, 0, false);
 		}
 	}
 

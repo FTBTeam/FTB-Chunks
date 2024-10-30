@@ -1,0 +1,24 @@
+{
+  "use_mob_texture": true,
+  "slice": {
+    "x": 9,
+    "y": 15,
+    "width": 13,
+    "height": 10
+  },
+  "children": [
+    {
+      "slice": {
+        "x": 47,
+        "y": 18,
+        "width": 7,
+        "height": 5
+      },
+      "offset": {
+        "x": 3,
+        "y": 5
+      }
+    }
+  ],
+  "scale": 1.0
+}

@@ -11,7 +11,13 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
+import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.SimpleButton;
+import dev.ftb.mods.ftblibrary.ui.TextField;
+import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
@@ -36,7 +42,12 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static dev.ftb.mods.ftblibrary.util.TextComponentUtils.hotkeyTooltip;
 
@@ -62,6 +73,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 (widget, button) -> toggleAll(true));
         buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(false));
+
+        alignWidgets();
     }
 
     private void computeWaypointTextWidth() {
@@ -124,6 +137,10 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
     @Override
     public void addButtons(Panel panel) {
+        if (waypoints.isEmpty()) {
+            panel.add(new NoWayPoints(panel, Component.empty(), Icons.REMOVE));
+        }
+
         waypoints.forEach((key, value) -> {
             boolean startCollapsed = collapsed.get(key);
             GroupButton groupButton = new GroupButton(panel, key, startCollapsed, value);
@@ -132,6 +149,28 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 panel.addAll(groupButton.collectPanels());
             }
         });
+    }
+
+    protected static class NoWayPoints extends Button {
+
+        private static final Component NO_WAYPOINTS = Component.translatable("ftbchunks.gui.no_waypoints");
+
+        public NoWayPoints(Panel panel, Component t, Icon i) {
+            super(panel);
+        }
+
+        @Override
+        public void onClicked(MouseButton button) {
+
+        }
+
+        @Override
+        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            super.drawBackground(graphics, theme, x, y, w, h);
+
+            int stringWidth = theme.getStringWidth(NO_WAYPOINTS.getString());
+            theme.drawString(graphics, NO_WAYPOINTS, x + (w - stringWidth) / 2, y + (h - theme.getFontHeight()) / 2 + 1);
+        }
     }
 
     protected class CustomTopPanel extends TopPanel {

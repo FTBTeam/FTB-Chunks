@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.2]
+
+### Added
+* Added many more entity face map icons and improved several existing ones
+  * Also added a config option in client config (Minimap section) to toggle individual entity types on & off
+* New & improved waypoint addition screen
+
+### Fixed
+* Possible fix for occasional problem where some regions just don't render on the map or minimap
+  * Can't be sure, the problem is very hard to reproduce
+
 ## [2101.1.1]
 
 ### Added

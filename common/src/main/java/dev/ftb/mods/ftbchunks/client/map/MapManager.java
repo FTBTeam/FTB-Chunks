@@ -131,6 +131,10 @@ public class MapManager implements MapTask {
 	}
 
 	public static void startUp(UUID serverId) {
+		// Ensure if existing manager instance is cleaned up first
+		// Necessary if player is switching servers, e.g. with Velocity proxy or similar
+		shutdown();
+
 		Path dir = Platform.getGameFolder().resolve("local/ftbchunks/data/" + serverId);
 		if (Files.notExists(dir)) {
 			try {

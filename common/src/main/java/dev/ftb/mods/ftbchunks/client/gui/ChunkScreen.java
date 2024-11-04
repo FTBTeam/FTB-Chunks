@@ -173,7 +173,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         @Override
         public void alignWidgets() {
             removeAllClaims.setPosAndSize(2, 2, 12, 12);
-            adminButton.setPosAndSize(18, 2, 12, 12);
+            adminButton.setPosAndSize(18, 1, 12, 12);
 
             closeButton.setPosAndSize(width - 16, 2, 12, 12);
             mouseReferenceButton.setPosAndSize(width - 32, 2, 12, 12);

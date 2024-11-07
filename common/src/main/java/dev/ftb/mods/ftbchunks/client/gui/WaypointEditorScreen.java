@@ -18,6 +18,7 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
@@ -88,7 +89,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
     private void toggleAll(boolean collapsed) {
         boolean allOpen = this.collapsed.values().stream().noneMatch(b -> b);
-        //Don't try and re-render if everything is already open
+        // Don't try and re-render if everything is already open
         if (allOpen && !collapsed) {
             return;
         }
@@ -272,7 +273,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
         @Override
         public void addWidgets() {
-            add(hideButton = ToggleVisibilityButton.create(this, !wp.isHidden(), hidden -> wp.setHidden(!hidden)));
+            add(hideButton = new ToggleableButton(this, !wp.isHidden(), (widget, newState) -> wp.setHidden(!newState)));
 
             add(nameField = new TextField(this).setTrim().setColor(Color4I.rgb(wp.getColor())).addFlags(Theme.SHADOW));
 
@@ -306,8 +307,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
                 int yOff = (this.height - getTheme().getFontHeight()) / 2 + 1;
 
-                hideButton.setPosAndSize(farRight - 8 - 16, 1, 12, 12);
-                deleteButton.setPosAndSize(farRight - 8, 1, 12, 12);
+                hideButton.setPosAndSize(farRight - 8 - 16, 3, 12, 12);
+                deleteButton.setPosAndSize(farRight - 8, 3, 12, 12);
 
                 distField.setPos(hideButton.getPosX() - 5 - distField.width, yOff);
 

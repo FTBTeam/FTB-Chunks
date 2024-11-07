@@ -66,6 +66,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 						|| block instanceof FireBlock
 						|| block instanceof ButtonBlock
 						|| block instanceof TorchBlock && !(block instanceof RedstoneTorchBlock)
+						|| block instanceof StainedGlassPaneBlock
 				) {
 					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.IGNORED);
 				} else if (block instanceof GrassBlock) {

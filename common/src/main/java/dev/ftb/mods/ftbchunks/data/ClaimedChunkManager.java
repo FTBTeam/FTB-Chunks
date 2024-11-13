@@ -267,4 +267,8 @@ public class ClaimedChunkManager {
 	public void unregisterClaim(ChunkDimPos pos) {
 		claimedChunks.remove(pos);
 	}
+
+	public Collection<FTBChunksTeamData> getAllTeamData() {
+		return teamData.values();
+	}
 }

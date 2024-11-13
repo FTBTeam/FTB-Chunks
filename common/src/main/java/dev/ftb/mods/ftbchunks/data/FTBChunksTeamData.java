@@ -698,6 +698,11 @@ public class FTBChunksTeamData {
 		}
 	}
 
+	public void resetBrokenBlocksCounter() {
+		brokenBlocksCounter.reset();
+		save();
+	}
+
 	public static final Style WARNING_STYLE = Style.EMPTY.withColor(0xFFFF55);
 	public static final int HOUR_TICKS = 60 * 60 * 20;
 
@@ -745,6 +750,9 @@ public class FTBChunksTeamData {
 			for (int i = 0; i < groups.size(); ++i)
 				if (groups.get(i).isOutdated(time))
 					groups.remove(i--);
+		}
+		public void reset() {
+			groups.clear();
 		}
 		public SNBTCompoundTag serializeNBT() {
 			SNBTCompoundTag tag = new SNBTCompoundTag();

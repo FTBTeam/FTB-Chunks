@@ -29,6 +29,10 @@ public class FTBChunksExpectedImpl {
     }
 
     public static Protection getBlockBreakProtection() {
-        return Protection.EDIT_BLOCK;
+        return Protection.BREAK_BLOCK;
+    }
+
+    public static Protection getBlockLeftClickProtection() {
+        return Protection.LEFT_CLICK_BLOCK;
     }
 }

@@ -36,6 +36,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -118,10 +119,11 @@ public class FTBChunks {
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
-		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
+		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackNonLivingEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
+		EntityEvent.LIVING_HURT.register(this::livingEntityHurt);
 
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
@@ -137,11 +139,27 @@ public class FTBChunks {
 		}
 	}
 
-	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
+	private EventResult playerAttackNonLivingEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
 		// note: intentionally does not prevent attacking living entities;
 		// this is for preventing griefing of entities like paintings & item frames
 		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
 			return EventResult.interruptFalse();
+		}
+
+		return EventResult.pass();
+	}
+
+	private EventResult livingEntityHurt(LivingEntity livingEntity, DamageSource damageSource, float damage) {
+		if (livingEntity.level.isClientSide || !FTBChunksAPI.isManagerLoaded()) return EventResult.pass();
+		if (damageSource.getEntity() instanceof ServerPlayer player) {
+			if (FTBChunksAPI.getManager().protect(player, player.swingingArm, livingEntity.blockPosition(), Protection.ATTACK_LIVING_ENTITY, livingEntity)) {
+				return EventResult.interruptFalse();
+			}
+		} else if (livingEntity.getType().is(FTBChunksAPI.LIVING_ENTITY_ATTACK_BLACKLIST_TAG)) { // this block protects the entities from unknown sources
+			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(livingEntity.level, livingEntity.blockPosition()));
+			if (chunk != null) {
+				return EventResult.interruptFalse();
+			}
 		}
 
 		return EventResult.pass();
@@ -234,6 +252,8 @@ public class FTBChunks {
 			// last player on the team to log out; unforce chunks if the team can't do offline chunk-loading
 			data.updateChunkTickets(false);
 		}
+
+		data.setLastLogoffTime(System.currentTimeMillis());
 	}
 
 	private void teamCreated(TeamCreatedEvent teamEvent) {
@@ -251,10 +271,9 @@ public class FTBChunks {
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockLeftClickProtection(), null)) {
 			return EventResult.interruptFalse();
 		}
-
 		return EventResult.pass();
 	}
 
@@ -291,7 +310,6 @@ public class FTBChunks {
 		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
 			return EventResult.interruptFalse();
 		}
-
 		return EventResult.pass();
 	}
 
@@ -436,6 +454,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);
+		event.add(FTBChunksTeamData.ALLOW_ATTACK_BLACKLISTED_ENTITIES);
 
 		// block edit/interact properties vary on forge & fabric
 		FTBChunksExpected.getPlatformSpecificProperties(event);

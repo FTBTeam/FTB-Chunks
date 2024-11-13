@@ -32,15 +32,11 @@ public interface Protection {
 	Protection BREAK_BLOCK = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 
-		if (blockState.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) {
-			return ProtectionOverride.CHECK;
-		}
-
 		if (blockState.is(FTBChunksAPI.EDIT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
-		System.out.println("BREAK_BLOCK "+player);
-		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_MODE, false)) {
+
+		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_MODE, false, blockState)) {
 			return ProtectionOverride.ALLOW;
 		}
 
@@ -50,15 +46,11 @@ public interface Protection {
 	Protection LEFT_CLICK_BLOCK = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 
-		if (blockState.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) {
-			return ProtectionOverride.CHECK;
-		}
-
 		if (blockState.is(FTBChunksAPI.EDIT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
 
-		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_MODE, true)) {
+		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_MODE, true, blockState)) {
 			return ProtectionOverride.ALLOW;
 		}
 
@@ -134,10 +126,6 @@ public interface Protection {
     Protection EDIT_AND_INTERACT_BLOCK = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 
-		if (blockState.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) {
-			return ProtectionOverride.CHECK;
-		}
-
 		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
@@ -152,15 +140,11 @@ public interface Protection {
 	Protection BREAK_BLOCK_FABRIC = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 
-		if (blockState.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) {
-			return ProtectionOverride.CHECK;
-		}
-
 		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
 
-		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_AND_INTERACT_MODE, false)) {
+		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_AND_INTERACT_MODE, false, blockState)) {
 			return ProtectionOverride.ALLOW;
 		}
 
@@ -170,15 +154,11 @@ public interface Protection {
 	Protection LEFT_CLICK_BLOCK_FABRIC = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 
-		if (blockState.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) {
-			return ProtectionOverride.CHECK;
-		}
-
 		if (blockState.is(FTBChunksAPI.INTERACT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}
 
-		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_AND_INTERACT_MODE, true)) {
+		if (chunk != null && chunk.teamData.canBreak(player, FTBChunksTeamData.BLOCK_EDIT_AND_INTERACT_MODE, true, blockState)) {
 			return ProtectionOverride.ALLOW;
 		}
 

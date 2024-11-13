@@ -37,6 +37,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -329,9 +330,10 @@ public class FTBChunksTeamData {
         return FTBChunksWorldConfig.PROTECT_ENTITIES_OFFLINE_ONLY.get() && canUseOffline();
     }
 
-	public boolean canBreak(ServerPlayer p, PrivacyProperty property, boolean leftClick) {
+	public boolean canBreak(ServerPlayer p, PrivacyProperty property, boolean leftClick, BlockState state) {
 		if (baseUseCheck(p, property, false)) return true;
 		if (FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY.get() && !canUseOffline()) return false;
+		if (state.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) return false;
 		if (brokenBlocksCounter.canBreakBlock(p, leftClick)) {
 			if (!leftClick) save();
 			return true;

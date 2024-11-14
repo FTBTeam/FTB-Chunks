@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.FTBCUtils;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -114,7 +115,8 @@ public interface Protection {
 	};
 
 	Protection ATTACK_LIVING_ENTITY = (player, pos, hand, chunk, entity) -> {
-		if (entity != null && entity.getType().is(FTBChunksAPI.LIVING_ENTITY_ATTACK_BLACKLIST_TAG)
+		if (entity != null && (entity.getType().is(FTBChunksAPI.LIVING_ENTITY_ATTACK_BLACKLIST_TAG)
+				|| (FTBChunksWorldConfig.PROTECT_NAMED_ENTITIES.get() && entity.hasCustomName()))
 				&& chunk != null && !chunk.teamData.canAttackBlackListedEntity(player, FTBChunksTeamData.ALLOW_ATTACK_BLACKLISTED_ENTITIES)) {
 			return ProtectionOverride.CHECK;
 		}

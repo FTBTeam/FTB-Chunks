@@ -43,6 +43,7 @@ public interface FTBChunksWorldConfig {
 	IntValue MAX_DESTROY_BLOCKS_PER_HOUR = CONFIG.getInt("max_destroy_blocks_per_hour", 0).comment("If disable_protection = false, this many blocks can still be destroyed per hour be enemy players. 0 disables this.");
 	IntValue DESTROY_BLOCKS_COUNT_PERIOD = CONFIG.getInt("destroy_blocks_count_period", 300).comment("If max_destroy_blocks_per_hour > 0, the groups of time in seconds where the number of blocks broken are counted. Groups younger than an hour contribute to the total blocks broken. Groups older than an hour are removed.");
 	BooleanValue PROTECT_ENTITIES_OFFLINE_ONLY = CONFIG.getBoolean("protect_entities_offline_only", true).comment("Only protect the living entities listed in the living_entity_attack_blacklist tag when all team members are offline.");
+	BooleanValue PROTECT_NAMED_ENTITIES = CONFIG.getBoolean("protect_named_entities", false).comment("Protect entities that have a name tag.");
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {

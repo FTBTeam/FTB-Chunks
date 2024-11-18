@@ -60,14 +60,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
-	public static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
 	public static FTBChunks instance;
 

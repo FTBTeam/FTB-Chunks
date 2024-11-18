@@ -234,7 +234,7 @@ public class MapManager implements MapTask {
 				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
 				.collect(Collectors.toList());
 
-		FTBChunks.EXECUTOR.execute(() -> {
+		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
 			try {
 				Files.write(directory.resolve("dimensions.txt"), dimensionsList);
 				Files.write(directory.resolve("block_map.txt"), blockColorIndexMapList);

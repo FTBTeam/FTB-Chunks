@@ -95,6 +95,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -103,6 +105,7 @@ import static dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 public enum FTBChunksClient {
 	INSTANCE;
 
+	public static final ExecutorService MAP_EXECUTOR = Executors.newSingleThreadExecutor();
 	private static final ResourceLocation BUTTON_ID_MAP = new ResourceLocation("ftbchunks:open_gui");
 	private static final ResourceLocation BUTTON_ID_CLAIM = new ResourceLocation("ftbchunks:open_claim_gui");
 
@@ -1089,7 +1092,7 @@ public enum FTBChunksClient {
 
 	public void queueOrExecute(MapTask task) {
 		// Implement this config later
-		FTBChunks.EXECUTOR.execute(task);
+		MAP_EXECUTOR.execute(task);
 	}
 
 	public void handlePacket(ClientboundBlockUpdatePacket p) {

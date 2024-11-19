@@ -130,6 +130,10 @@ public class MapManager implements MapTask {
 	}
 
 	public static void startUp(UUID serverId) {
+		// Ensure if existing manager instance is cleaned up first
+		// Necessary if player is switching servers, e.g. with Velocity proxy or similar
+		shutdown();
+
 		Path dir = Platform.getGameFolder().resolve("local/ftbchunks/data/" + serverId);
 		if (Files.notExists(dir)) {
 			try {
@@ -234,7 +238,7 @@ public class MapManager implements MapTask {
 				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
 				.collect(Collectors.toList());
 
-		FTBChunks.EXECUTOR.execute(() -> {
+		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
 			try {
 				Files.write(directory.resolve("dimensions.txt"), dimensionsList);
 				Files.write(directory.resolve("block_map.txt"), blockColorIndexMapList);

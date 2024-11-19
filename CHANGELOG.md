@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.3.3]
+
+### Fixed
+* Do some extra client-side map init checks which should resolve some issues with clients switching server, using technologies like Velocity proxy
+* Possibly fixed an issue leading to hangs on server shutdown (hard to know for certain; the issue is difficult to reproduce)
+
 ## [2001.3.2]
 
 ### Added

@@ -6,12 +6,12 @@
 		"ArmorStandMixin",
 		"BiomeMixin",
 		"BlockStateMixin",
-		"ChunkMapMixin",
-		"UtilMixin"
+		"ChunkMapMixin"
 	],
 	"client": [
 		"ClientPacketListenerMixin",
-		"GuiMixin"
+		"GuiMixin",
+		"UtilMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

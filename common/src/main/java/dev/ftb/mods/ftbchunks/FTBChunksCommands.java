@@ -41,6 +41,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -171,6 +172,14 @@ public class FTBChunksCommands {
 								)
 								.then(Commands.argument("dimension", DimensionArgument.dimension())
 										.executes(context -> viewLoadedChunks(context.getSource(), DimensionArgument.getDimension(context, "dimension")))
+								)
+						)
+						.then(Commands.literal("reset_block_break_counter")
+								.then(Commands.literal("all")
+										.executes(context -> resetBlockBreakCounter(context.getSource(), null))
+								)
+								.then(Commands.argument("team", TeamArgument.create())
+										.executes(context -> resetBlockBreakCounter(context.getSource(), TeamArgument.get(context, "team")))
 								)
 						)
 				)
@@ -504,5 +513,15 @@ public class FTBChunksCommands {
 
 	private static Team selfTeam(CommandSourceStack source) throws CommandSyntaxException {
 		return FTBTeamsAPI.getPlayerTeam(source.getPlayerOrException());
+	}
+
+	private static int resetBlockBreakCounter(CommandSourceStack source, @Nullable Team team) {
+		if (team == null) {
+			FTBChunksAPI.getManager().getAllTeamData().forEach(FTBChunksTeamData::resetBrokenBlocksCounter);
+		} else {
+			FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
+			data.resetBrokenBlocksCounter();
+		}
+		return 1;
 	}
 }

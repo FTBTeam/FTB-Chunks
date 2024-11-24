@@ -122,6 +122,8 @@
 	"ftbteamsconfig.ftbchunks.location_mode.tooltip": "Controls who can see you on the map or minimap (outside the normal vanilla tracking range)",
 	"ftbteamsconfig.ftbchunks.claim_visibility": "Claim Visibility",
 	"ftbteamsconfig.ftbchunks.claim_visibility.tooltip": "Controls who can see your claims on the map or minimap",
+	"ftbteamsconfig.ftbchunks.allow_attack_blacklisted_entities": "Allow Attack Black Listed Entities",
+	"ftbteamsconfig.ftbchunks.allow_attack_blacklisted_entities.tooltip": "Allow enemy players to attack living entities the server owner gave protection too. Server owner must enable this setting and modify the entity_attack_blacklist tag.",
 	"ftbchunks.fake_players": "Allow Fake Players",
 	"ftbchunks.fake_players.tooltip": "CHECK: check fake player access like any real player\nDENY: never allow fake players\nALLOW: always allow fake players",
 	"ftbchunks.max_claimed_chunks": "Max Claimed Chunks per Player",
@@ -177,5 +179,7 @@
 	"ftbchunks.claim_result.dimension_forbidden": "Claiming forbidden in this dimension",
 	"ftbchunks.claim_result.not_claimed": "Chunk not claimed",
 	"ftbchunks.claim_result.already_loaded": "Chunk already loaded",
-	"ftbchunks.claim_result.not_loaded": "Chunk not loaded"
+	"ftbchunks.claim_result.not_loaded": "Chunk not loaded",
+	"ftbchunks.cant_break_offline": "You can't break this block while this team is offline!",
+	"ftbchunks.block_break_limit_reached": "The blocks broken per hour limit for this territory has been reached!"
 }

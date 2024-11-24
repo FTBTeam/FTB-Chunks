@@ -194,6 +194,24 @@ public class ClaimedChunkManager {
 	 * @return true to prevent the interaction, false to permit it
 	 */
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
+		return protect(entity, hand, pos, protection, targetEntity, false);
+	}
+
+	/**
+	 * Check if the intended interaction should be prevented from occurring.
+	 *
+	 * @param entity the entity performing the interaction
+	 * @param hand the actor's hand
+	 * @param pos the block position at which the action will be performed
+	 * @param protection the type of protection being checked for
+	 * @param targetEntity the entity being acted upon, if any (e.g. a painting, armor stand etc.)
+	 * @param protectIfNullEntity if true, and entity = null, will return true
+	 * @return true to prevent the interaction, false to permit it
+	 */
+	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity, boolean protectIfNullEntity) {
+		if (protectIfNullEntity && entity == null && FTBChunksWorldConfig.PROTECT_UNKNOWN_BLOCK_BREAKER.get()) {
+			return true;
+		}
 		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level == null) {
 			return false;
 		}

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.4]
+
+### Added
+* Added protection for pistons moving blocks, including large block structure (e.g. vanilla-style flying machines)
+  * Enabled by default; can be disabled via 'piston_protection' server setting
+  * When enabled, pistons cannot push blocks from the chunk the piston is in to another chunk if the new chunk is owned by a different team, and that team does not have public block-edit permissions
+  * Similar restrictions apply to blocks which would be destroyed by piston moving
+
 ## [2101.1.3]
 
 ### Changed

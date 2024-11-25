@@ -38,6 +38,8 @@ dependencies {
 	forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 	modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
+	implementation(include("io.github.llamalad7:mixinextras-forge:0.4.1"))
+
 	modImplementation("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}") { transitive = false }
 

@@ -41,6 +41,8 @@ public interface FTBChunksWorldConfig {
 	BooleanValue REQUIRE_GAME_STAGE = CONFIG.addBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
 	IntValue MAX_PREVENTED_LOG_AGE = CONFIG.addInt("max_prevented_log_age", 7, 1, Integer.MAX_VALUE).comment("Maximum time in days to keep logs of prevented fakeplayer access to a team's claims.");
+	BooleanValue PISTON_PROTECTION = CONFIG.addBoolean("piston_protection", true)
+			.comment("If true, pistons are prevented from pushing/pulling blocks across claims owned by different teams (unless the target claim has public 'edit block' permissions defined). If 'disable_protection' is set to true, this setting is ignored.");
 
 	SNBTConfig WAYPOINT_SHARING = CONFIG.addGroup("waypoint_sharing");
 	BooleanValue WAYPOINT_SHARING_SERVER = WAYPOINT_SHARING.addBoolean("waypoint_sharing_server", true).comment("Allow players to share waypoints with the entire server.");

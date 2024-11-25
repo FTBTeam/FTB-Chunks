@@ -6,7 +6,8 @@
 		"ArmorStandMixin",
 		"BiomeMixin",
 		"BlockStateMixin",
-		"ChunkMapMixin"
+		"ChunkMapMixin",
+		"PistonBaseBlockMixin"
 	],
 	"client": [
 		"ClientPacketListenerMixin",

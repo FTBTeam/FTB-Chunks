@@ -2,12 +2,13 @@ package dev.ftb.mods.ftbchunks.client;
 
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
+import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
 import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
 import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
@@ -19,7 +20,13 @@ import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.config.*;
+import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
+import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
+import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
+import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
+import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
+import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
+import dev.ftb.mods.ftblibrary.snbt.config.StringMapValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
@@ -82,7 +89,7 @@ public interface FTBChunksClientConfig {
     BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
     StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).excluded().comment("Info displayed under minimap");
     StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).excluded().comment("Info hidden under minimap");
-    StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new StringMapValue(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
+    StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new MinimapComponentConfig(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
     EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
 
     SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);

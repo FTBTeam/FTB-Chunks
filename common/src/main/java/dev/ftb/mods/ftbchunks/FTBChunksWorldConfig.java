@@ -41,6 +41,8 @@ public interface FTBChunksWorldConfig {
 			.comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false)
 			.comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
+	BooleanValue PISTON_PROTECTION = CONFIG.addBoolean("piston_protection", true)
+			.comment("If true, pistons are prevented from pushing/pulling blocks across claims owned by different teams (unless the target claim has public 'edit block' permissions defined). If 'disable_protection' is set to true, this setting is ignored.");
 
 	SNBTConfig FAKE_PLAYERS = CONFIG.addGroup("fake_players");
 	EnumValue<ProtectionPolicy> ALLOW_FAKE_PLAYERS = FAKE_PLAYERS.addEnum("fake_players", NameMap.of(ProtectionPolicy.CHECK, ProtectionPolicy.values()).create())

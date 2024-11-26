@@ -144,11 +144,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum FTBChunksClient {
     INSTANCE;
+
+    public static final ExecutorService MAP_EXECUTOR = Executors.newSingleThreadExecutor();
 
     public static final ResourceLocation WAYPOINT_BEAM = FTBChunksAPI.rl("textures/waypoint_beam.png");
     private static final ResourceLocation BUTTON_ID_MAP = FTBChunksAPI.rl("open_gui");
@@ -1158,7 +1162,7 @@ public enum FTBChunksClient {
 
     public void queueOrExecute(MapTask task) {
         // Implement this config later
-        FTBChunks.EXECUTOR.execute(task);
+        MAP_EXECUTOR.execute(task);
     }
 
     public void handlePacket(ClientboundBlockUpdatePacket p) {

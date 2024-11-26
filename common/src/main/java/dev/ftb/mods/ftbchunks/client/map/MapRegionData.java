@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 
@@ -160,7 +161,7 @@ public class MapRegionData {
 			}
 		}
 
-		FTBChunks.EXECUTOR.execute(() -> {
+		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
 			try {
 				writeData(chunkList, dataImage, foliageImage, grassImage, waterImage, blocksImage);
 			} catch (Exception ex) {

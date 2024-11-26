@@ -504,9 +504,8 @@ public class FTBChunksCommands {
 
     private static int unclaimEverything(CommandSourceStack source) {
         int claimedChunks = 0;
-        for (ClaimedChunkImpl c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
+        for (ClaimedChunk c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
             c.getTeamData().unclaim(source, c.getPos(), false);
-            c.getTeamData().markDirty();
             claimedChunks++;
         }
         int finalClaimedChunks = claimedChunks;
@@ -516,10 +515,9 @@ public class FTBChunksCommands {
 
     private static int unclaimDimension(CommandSourceStack source, ResourceKey<Level> dim) {
         int claimedChunks = 0;
-        for (ClaimedChunkImpl c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
+        for (ClaimedChunk c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
             if (source.getLevel().dimension().equals(dim)) {
                 c.getTeamData().unclaim(source, c.getPos(), false);
-                c.getTeamData().markDirty();
                 claimedChunks++;
             }
         }
@@ -534,13 +532,17 @@ public class FTBChunksCommands {
 
     private static int unloadEverything(CommandSourceStack source) {
         int unloadedChunks = 0;
-        for (ClaimedChunkImpl c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
-            c.getTeamData().unForceLoad(source, c.getPos(), false);
-            c.getTeamData().markDirty();
-            unloadedChunks++;
+        int totalChunks = 0;
+        for (ClaimedChunk c : claimManager().getAllClaimedChunks()) {
+            if (c.isForceLoaded()) {
+                c.getTeamData().unForceLoad(source, c.getPos(), false);
+                unloadedChunks++;
+            }
+            totalChunks++;
         }
-        int finalUnloadedChunks = unloadedChunks;
-        source.sendSuccess(() -> Component.translatable("ftbchunks.command.unloaded", finalUnloadedChunks), true);
+        final int finalUnloadedChunks = unloadedChunks;
+        final int finalTotalChunks = totalChunks;
+        source.sendSuccess(() -> Component.translatable("ftbchunks.commands.unloaded", finalUnloadedChunks, finalTotalChunks), true);
         return Command.SINGLE_SUCCESS;
     }
 

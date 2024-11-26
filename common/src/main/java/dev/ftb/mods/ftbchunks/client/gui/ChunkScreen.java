@@ -137,7 +137,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         public CustomTopPanel() {
             super(ChunkScreen.this);
 
-            closeButton = new SimpleButton(this, Component.translatable("gui.close"), Icons.CLOSE,
+            closeButton = new SimpleButton(this, Component.translatable("gui.close"), Icons.CANCEL,
                     (btn, mb) -> doCancel())
                     .setForceButtonSize(false);
 

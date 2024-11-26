@@ -507,7 +507,7 @@ public class LargeMapScreen extends BaseScreen {
 
     private class ClearDeathPointButton extends SimpleButton {
         public ClearDeathPointButton(Panel panel) {
-            super(panel, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CLOSE, (b, m) -> {
+            super(panel, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CANCEL, (b, m) -> {
                 if (getWaypointManager().removeIf(wp -> wp.getType() == WaypointType.DEATH)) {
                     refreshWidgets();
                 }

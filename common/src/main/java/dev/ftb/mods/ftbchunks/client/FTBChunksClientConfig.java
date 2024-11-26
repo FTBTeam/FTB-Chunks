@@ -84,6 +84,7 @@ public interface FTBChunksClientConfig {
     StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(ResourceLocation::toString).toList()).excluded().comment("Info hidden under minimap");
     StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new StringMapValue(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
     EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
+    EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on full screen minimap");
 
     SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");

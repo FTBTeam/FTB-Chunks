@@ -1110,8 +1110,15 @@ public enum FTBChunksClient {
         }
 
         if (!event.getMapType().isMinimap()) {
-            event.add(new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile())));
-            event.add(new PointerIcon());
+            PointerIconMode pointerIconMode = FTBChunksClientConfig.POINTER_ICON_MODE.get();
+
+            if (pointerIconMode.showFace()) {
+                event.add(new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile())));
+            }
+
+            if (pointerIconMode.showPointer()) {
+                event.add(new PointerIcon());
+            }
         }
     }
 

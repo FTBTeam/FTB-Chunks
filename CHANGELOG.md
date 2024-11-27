@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Enabled by default; can be disabled via 'piston_protection' server setting
   * When enabled, pistons cannot push blocks from the chunk the piston is in to another chunk if the new chunk is owned by a different team, and that team does not have public block-edit permissions
   * Similar restrictions apply to blocks which would be destroyed by piston moving
+* Add client config setting "Pointer Icon Mode" to control the appearance of the player pointer icon on maps
+  * Can display the player face, a heading arrow, or both
+* Displayed component values for the minimap can now be configured via the client config screen
+
+### Fixed
+* Possibly fixed an issue leading to hangs on server shutdown (hard to know for certain; the issue is difficult to reproduce)
+* Fixed output of `/ftbchunks admin unload_everything` being misleading
+  * The command ran correctly, un-forceloading all forceloaded chunks, but reported the number of _all_ claimed chunks, not just the forceloaded ones
+* Fixed colouring for some blocks (primarily redstone-related) on the map/minimap leading to an ugly-looking artifacts on the map
 
 ## [2101.1.3]
 

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed output of `/ftbchunks admin unload_everything` being misleading
   * The command ran correctly, un-forceloading all forceloaded chunks, but reported the number of _all_ claimed chunks, not just the forceloaded ones
 * Fixed colouring for some blocks (primarily redstone-related) on the map/minimap leading to an ugly-looking artifacts on the map
+* Integrated Dynamics Menril Leaves now show up as light blue on the map instead of the default green
 
 ## [2101.1.3]
 

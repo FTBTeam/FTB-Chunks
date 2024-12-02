@@ -92,7 +92,7 @@ public class MapRegion implements MapTask {
 	public MapRegionData getData() {
 		if (data == null && !isLoadingData) {
 			isLoadingData = true;
-			FTBChunks.EXECUTOR.execute(this::getDataBlocking);
+			FTBChunksClient.MAP_EXECUTOR.execute(this::getDataBlocking);
 		}
 
 		if (data != null) {
@@ -115,7 +115,7 @@ public class MapRegion implements MapTask {
 			updateRenderedMapImage = false;
 			mapImageLoaded = false;
 			renderingMapImage = true;
-			FTBChunks.EXECUTOR.execute(new RenderMapImageTask(this));
+			FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this));
 		}
 
 		return renderedMapImage;

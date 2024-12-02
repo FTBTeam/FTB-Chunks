@@ -12,10 +12,7 @@ import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
-import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.api.*;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.*;
@@ -62,14 +59,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
-	public static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
 	public static FTBChunks instance;
 
@@ -600,4 +594,5 @@ public class FTBChunks {
 		ClaimExpirationManager.INSTANCE.tick(minecraftServer);
 		LongRangePlayerTracker.INSTANCE.tick(minecraftServer);
 	}
+
 }

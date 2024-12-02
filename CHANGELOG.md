@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.4]
+
+### Added
+* Added protection for pistons moving blocks, including large block structure (e.g. vanilla-style flying machines)
+  * Enabled by default; can be disabled via 'piston_protection' server setting
+  * When enabled, pistons cannot push blocks from the chunk the piston is in to another chunk if the new chunk is owned by a different team, and that team does not have public block-edit permissions
+  * Similar restrictions apply to blocks which would be destroyed by piston moving
+* Add client config setting "Pointer Icon Mode" to control the appearance of the player pointer icon on maps
+  * Can display the player face, a heading arrow, or both
+* Displayed component values for the minimap can now be configured via the client config screen
+
+### Fixed
+* Possibly fixed an issue leading to hangs on server shutdown (hard to know for certain; the issue is difficult to reproduce)
+* Fixed output of `/ftbchunks admin unload_everything` being misleading
+  * The command ran correctly, un-forceloading all forceloaded chunks, but reported the number of _all_ claimed chunks, not just the forceloaded ones
+* Fixed colouring for some blocks (primarily redstone-related) on the map/minimap leading to an ugly-looking artifacts on the map
+* Integrated Dynamics Menril Leaves now show up as light blue on the map instead of the default green
+
 ## [2101.1.3]
 
 ### Changed

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
@@ -169,7 +170,7 @@ public class MapDimension implements MapTask {
 		List<MapRegion> regionList = ImmutableList.copyOf(getRegions().values());
 
 		if (!waypoints.isEmpty() || !regionList.isEmpty()) {
-			FTBChunks.EXECUTOR.execute(() -> {
+			FTBChunksClient.MAP_EXECUTOR.execute(() -> {
 				try {
 					writeData(waypoints, regionList);
 				} catch (Exception ex) {

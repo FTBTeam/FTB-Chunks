@@ -31,7 +31,7 @@ public class WaypointShareMenu {
                     b -> shareWaypoint(waypoint, ShareWaypointPacket.ShareType.SERVER, List.of())));
         }
         if (FTBChunksWorldConfig.WAYPOINT_SHARING_PARTY.get()) {
-            items.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.party"), Icons.BELL,
+            items.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.party"), Icons.FRIENDS_GROUP,
                     b -> shareWaypoint(waypoint, ShareWaypointPacket.ShareType.PARTY, List.of())));
         }
         if (FTBChunksWorldConfig.WAYPOINT_SHARING_PLAYERS.get()) {

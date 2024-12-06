@@ -32,7 +32,7 @@ public class PistonHelper {
      * @return true if the piston should be prevented from moving, false to let it move
      */
     public static boolean shouldPreventPistonMovement(Level level, BlockPos pistonPos, PistonStructureResolver resolver) {
-        if (FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
+        if (!level.isClientSide && FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
             PrivacyProperty editProp = Platform.isFabric() ?
                     FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
                     FTBChunksProperties.BLOCK_EDIT_MODE;

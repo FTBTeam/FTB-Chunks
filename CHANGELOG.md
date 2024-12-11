@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.3.5]
+
+### Fixed
+
+* Several vanilla blocks are now invisible on the map/minimap (previously showed as ugly black spots)
+  * Comparators, Repeaters, End Rods, Glass Panes, Levers, Chains, Barrier Blocks
+* Vanilla Cherry Trees now show as pink on the map
+* Integrated Dynamics Menril trees now sho as light blue on the map
+
 ## [2001.3.4]
 
 ### Fixed

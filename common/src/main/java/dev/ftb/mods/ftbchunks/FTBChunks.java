@@ -455,6 +455,7 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);
 		event.add(FTBChunksTeamData.ALLOW_ATTACK_BLACKLISTED_ENTITIES);
+		event.add(FTBChunksTeamData.ALLOW_ANY_FAKE_PLAYER_BREAK_IF_FORCE_LOADED);
 
 		// block edit/interact properties vary on forge & fabric
 		FTBChunksExpected.getPlatformSpecificProperties(event);

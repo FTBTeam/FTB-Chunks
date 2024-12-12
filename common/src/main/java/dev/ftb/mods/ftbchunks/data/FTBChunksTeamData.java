@@ -28,6 +28,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -35,6 +37,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -59,6 +62,9 @@ public class FTBChunksTeamData {
 	public static final BooleanProperty ALLOW_MOB_GRIEFING = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_mob_griefing"), false);
 	public static final PrivacyProperty CLAIM_VISIBILITY = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "claim_visibility"), PrivacyMode.PUBLIC);
 
+	public static final PrivacyProperty ALLOW_ATTACK_BLACKLISTED_ENTITIES = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_attack_blacklisted_entities"), PrivacyMode.ALLIES);
+	public static final BooleanProperty ALLOW_ANY_FAKE_PLAYER_BREAK_IF_FORCE_LOADED = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_any_fake_player_break_if_force_loaded"), true);
+
 	//	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
 
 	public static final PrivacyProperty LOCATION_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "location_mode"), PrivacyMode.ALLIES);
@@ -76,7 +82,9 @@ public class FTBChunksTeamData {
 	public int prevChunkX = Integer.MAX_VALUE, prevChunkZ = Integer.MAX_VALUE;
 	public String lastChunkID = "";
 	private long lastLoginTime;
+	private long lastLogoffTime;
 	private Set<String> fakePlayerNameCache;
+	private final BrokenBlocksCounter brokenBlocksCounter;
 
 	public FTBChunksTeamData(ClaimedChunkManager m, Path f, Team t) {
 		manager = m;
@@ -88,7 +96,9 @@ public class FTBChunksTeamData {
 		extraClaimChunks = 0;
 		extraForceLoadChunks = 0;
 		lastLoginTime = 0L;
+		lastLogoffTime = 0L;
 		memberData = new HashMap<>();
+		brokenBlocksCounter = new BrokenBlocksCounter();
 	}
 
 	@Override
@@ -282,7 +292,7 @@ public class FTBChunksTeamData {
 		return team.isAlly(p);
 	}
 
-	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
+	protected boolean baseUseCheck(ServerPlayer p, PrivacyProperty property, boolean offlineCheck, boolean forceLoadedChunk) {
 		PrivacyMode mode = team.getProperty(property);
 
 		if (mode == PrivacyMode.PUBLIC) {
@@ -290,17 +300,54 @@ public class FTBChunksTeamData {
 		}
 
 		if (PlayerHooks.isFake(p)) {
-			return canFakePlayerUse(p, mode);
+			return canFakePlayerUse(p, mode, forceLoadedChunk);
 		} else if (mode == PrivacyMode.ALLIES) {
 			return isAlly(p.getUUID());
 		} else {
-			return team.isMember(p.getUUID());
+			if (team.isMember(p.getUUID())) return true;
+			if (offlineCheck && FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY.get()) {
+				return canUseOffline();
+			}
+			return false;
 		}
 	}
 
-	private boolean canFakePlayerUse(Player player, PrivacyMode mode) {
+	public boolean canUseOffline() {
+		if (!team.getOnlineMembers().isEmpty()) {
+			return true;
+		}
+		long buffer = FTBChunksWorldConfig.OFFLINE_PROTECTION_BUFFER.get();
+		long now = System.currentTimeMillis();
+		long timeDiff = now - getLastLogoffTime();
+		return timeDiff < buffer * 1000;
+	}
+
+	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
+		return baseUseCheck(p, property, true, false);
+	}
+
+	public boolean canAttackBlackListedEntity(ServerPlayer p, PrivacyProperty property) {
+		if (baseUseCheck(p, property, true, false)) return true;
+        return FTBChunksWorldConfig.PROTECT_ENTITIES_OFFLINE_ONLY.get() && canUseOffline();
+    }
+
+	public boolean canBreak(ServerPlayer p, PrivacyProperty property, boolean leftClick, BlockState state, boolean forceLoadedChunk) {
+		if (baseUseCheck(p, property, false, forceLoadedChunk)) return true;
+		if (FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY.get() && !canUseOffline()) return false;
+		if (state.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) return false;
+		if (brokenBlocksCounter.canBreakBlock(p, leftClick)) {
+			if (!leftClick) save();
+			return true;
+		}
+		return false;
+	}
+
+	private boolean canFakePlayerUse(Player player, PrivacyMode mode, boolean forceLoadedChunk) {
 		if (team.getProperty(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS)) {
 			return mode == PrivacyMode.ALLIES;
+		}
+		if (forceLoadedChunk && team.getProperty(FTBChunksTeamData.ALLOW_ANY_FAKE_PLAYER_BREAK_IF_FORCE_LOADED)) {
+			return true;
 		}
 
 		boolean checkById = team.getProperty(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID) && player.getUUID() != null;
@@ -338,6 +385,7 @@ public class FTBChunksTeamData {
 		if (extraClaimChunks > 0 && !(team instanceof PartyTeam)) tag.putInt("extra_claim_chunks", extraClaimChunks);
 		if (extraForceLoadChunks > 0 && !(team instanceof PartyTeam)) tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
 		tag.putLong("last_login_time", lastLoginTime);
+		tag.putLong("last_logoff_time", lastLogoffTime);
 
 		CompoundTag chunksTag = new CompoundTag();
 		for (ClaimedChunk chunk : getClaimedChunks()) {
@@ -356,6 +404,8 @@ public class FTBChunksTeamData {
 			tag.put("member_data", memberTag);
 		}
 
+		tag.put("broken_blocks_counter", brokenBlocksCounter.serializeNBT());
+
 		return tag;
 	}
 
@@ -365,6 +415,7 @@ public class FTBChunksTeamData {
 		extraClaimChunks = tag.getInt("extra_claim_chunks");
 		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
 		lastLoginTime = tag.getLong("last_login_time");
+		lastLogoffTime = tag.getLong("last_logoff_time");
 		canForceLoadChunks = null;
 
 		CompoundTag chunksTag = tag.getCompound("chunks");
@@ -391,6 +442,8 @@ public class FTBChunksTeamData {
 				e.printStackTrace();
 			}
 		}
+
+		brokenBlocksCounter.deserializeNBT(tag.getCompound("broken_blocks_counter"));
 	}
 
 	public int getExtraClaimChunks() {
@@ -492,6 +545,15 @@ public class FTBChunksTeamData {
 			setLastLoginTime(System.currentTimeMillis());
 		}
 		return lastLoginTime;
+	}
+
+	public long getLastLogoffTime() {
+		return lastLogoffTime;
+	}
+
+	public void setLastLogoffTime(long when) {
+		this.lastLogoffTime = when;
+		save();
 	}
 
 	public boolean shouldHideClaims() {
@@ -639,6 +701,120 @@ public class FTBChunksTeamData {
 	public void deleteMemberData(UUID playerId) {
 		if (memberData.remove(playerId) != null) {
 			save();
+		}
+	}
+
+	public void resetBrokenBlocksCounter() {
+		brokenBlocksCounter.reset();
+		save();
+	}
+
+	public static final Style WARNING_STYLE = Style.EMPTY.withColor(0xFFFF55);
+	public static final int HOUR_TICKS = 60 * 60 * 20;
+
+	public static class BrokenBlocksCounter {
+		private final List<BrokenBlocksGroup> groups = new ArrayList<>();
+		public BrokenBlocksCounter() {}
+		public boolean canBreakBlock(ServerPlayer p, boolean leftClick) {
+			long time = p.getLevel().getGameTime();
+			int blocks_per_hour = FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR.get();
+			if (blocks_per_hour == -1)
+				return true;
+			int total = getTotalBrokenBlocks(time);
+			if (total >= blocks_per_hour)
+				return false;
+			if (!leftClick) {
+				int group_period_tick = FTBChunksWorldConfig.DESTROY_BLOCKS_COUNT_PERIOD.get() * 20;
+				BrokenBlocksGroup group = getCurrentGroup(time, group_period_tick);
+				group.addBrokenBlock();
+				if (total+1 >= blocks_per_hour) {
+					p.sendSystemMessage(Component.translatable("ftbchunks.block_break_limit_reached")
+							.setStyle(WARNING_STYLE));
+				}
+			}
+			return true;
+		}
+		public int getTotalBrokenBlocks(long time) {
+			removeOldGroups(time);
+			int total = 0;
+			for (BrokenBlocksGroup group : groups)
+				total += group.getBrokenBlocks();
+			return total;
+		}
+		private BrokenBlocksGroup getCurrentGroup(long time, int length) {
+			if (groups.isEmpty()) return addGroup(time, length);
+			BrokenBlocksGroup group = groups.get(0);
+			if (!group.isCurrentGroup(time)) return addGroup(time, length);
+			return group;
+		}
+		private BrokenBlocksGroup addGroup(long time, int length) {
+			BrokenBlocksGroup group = new BrokenBlocksGroup(time, length);
+			groups.add(0, group);
+			return group;
+		}
+		private void removeOldGroups(long time) {
+			for (int i = 0; i < groups.size(); ++i)
+				if (groups.get(i).isOutdated(time))
+					groups.remove(i--);
+		}
+		public void reset() {
+			groups.clear();
+		}
+		public SNBTCompoundTag serializeNBT() {
+			SNBTCompoundTag tag = new SNBTCompoundTag();
+			ListTag list = new ListTag();
+            for (BrokenBlocksGroup group : groups) list.add(group.serializeNBT());
+			tag.put("groups", list);
+			return tag;
+		}
+		public void deserializeNBT(CompoundTag tag) {
+			ListTag list = tag.getList("groups", 10);
+			for (int i = 0; i < list.size(); ++i){
+				CompoundTag groupNBT = list.getCompound(i);
+				BrokenBlocksGroup group = new BrokenBlocksGroup();
+				group.deserializeNBT(groupNBT);
+				groups.add(group);
+			}
+		}
+	}
+
+	public static class BrokenBlocksGroup {
+		private long startTime;
+		private int brokenBlocks, length;
+		private BrokenBlocksGroup() {}
+		public BrokenBlocksGroup(long startTime, int length) {
+            this.startTime = startTime;
+			this.length = length;
+        }
+		public long getStartTime() {
+			return startTime;
+		}
+		public int getBrokenBlocks() {
+			return brokenBlocks;
+		}
+		public void addBrokenBlock() {
+			++brokenBlocks;
+		}
+		public int getLength() {
+			return length;
+		}
+		public boolean isOutdated(long time) {
+			return time - (getStartTime() + getLength()) > HOUR_TICKS;
+		}
+		public boolean isCurrentGroup(long time) {
+			return getStartTime() + getLength() > time;
+		}
+        public SNBTCompoundTag serializeNBT() {
+			SNBTCompoundTag tag = new SNBTCompoundTag();
+			tag.putLong("start_time", startTime);
+			tag.putInt("broken_blocks", brokenBlocks);
+			tag.putInt("length", length);
+			return tag;
+		}
+		public void deserializeNBT(CompoundTag tag) {
+			startTime = tag.getLong("start_time");
+			brokenBlocks = tag.getInt("broken_blocks");
+			length = tag.getInt("length");
 		}
 	}
 }

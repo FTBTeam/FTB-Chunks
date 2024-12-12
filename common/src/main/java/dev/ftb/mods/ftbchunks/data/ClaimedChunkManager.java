@@ -210,6 +210,8 @@ public class ClaimedChunkManager {
 	 */
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity,
 			boolean protectIfNullEntity, @Nullable Level level) {
+		// this block may not be needed if create uses fake players instead
+		// ********
 		if (protectIfNullEntity && entity == null && level != null && FTBChunksWorldConfig.PROTECT_UNKNOWN_BLOCK_BREAKER.get()) {
 			ClaimedChunk chunk = getChunk(new ChunkDimPos(level, pos));
 			if (chunk == null) {
@@ -220,6 +222,7 @@ public class ClaimedChunkManager {
 			}
 			return true;
 		}
+		// ********
 		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level == null) {
 			return false;
 		}

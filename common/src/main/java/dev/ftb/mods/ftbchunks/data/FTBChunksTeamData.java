@@ -63,6 +63,7 @@ public class FTBChunksTeamData {
 	public static final PrivacyProperty CLAIM_VISIBILITY = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "claim_visibility"), PrivacyMode.PUBLIC);
 
 	public static final PrivacyProperty ALLOW_ATTACK_BLACKLISTED_ENTITIES = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_attack_blacklisted_entities"), PrivacyMode.ALLIES);
+	public static final BooleanProperty ALLOW_ANY_FAKE_PLAYER_BREAK_IF_FORCE_LOADED = new BooleanProperty(new ResourceLocation(FTBChunks.MOD_ID, "allow_any_fake_player_break_if_force_loaded"), true);
 
 	//	public static final PrivacyProperty MINIMAP_MODE = new PrivacyProperty(new ResourceLocation(FTBChunks.MOD_ID, "minimap_mode"), PrivacyMode.ALLIES);
 
@@ -291,7 +292,7 @@ public class FTBChunksTeamData {
 		return team.isAlly(p);
 	}
 
-	protected boolean baseUseCheck(ServerPlayer p, PrivacyProperty property, boolean offlineCheck) {
+	protected boolean baseUseCheck(ServerPlayer p, PrivacyProperty property, boolean offlineCheck, boolean forceLoadedChunk) {
 		PrivacyMode mode = team.getProperty(property);
 
 		if (mode == PrivacyMode.PUBLIC) {
@@ -299,7 +300,7 @@ public class FTBChunksTeamData {
 		}
 
 		if (PlayerHooks.isFake(p)) {
-			return canFakePlayerUse(p, mode);
+			return canFakePlayerUse(p, mode, forceLoadedChunk);
 		} else if (mode == PrivacyMode.ALLIES) {
 			return isAlly(p.getUUID());
 		} else {
@@ -322,16 +323,16 @@ public class FTBChunksTeamData {
 	}
 
 	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
-		return baseUseCheck(p, property, true);
+		return baseUseCheck(p, property, true, false);
 	}
 
 	public boolean canAttackBlackListedEntity(ServerPlayer p, PrivacyProperty property) {
-		if (baseUseCheck(p, property, true)) return true;
+		if (baseUseCheck(p, property, true, false)) return true;
         return FTBChunksWorldConfig.PROTECT_ENTITIES_OFFLINE_ONLY.get() && canUseOffline();
     }
 
-	public boolean canBreak(ServerPlayer p, PrivacyProperty property, boolean leftClick, BlockState state) {
-		if (baseUseCheck(p, property, false)) return true;
+	public boolean canBreak(ServerPlayer p, PrivacyProperty property, boolean leftClick, BlockState state, boolean forceLoadedChunk) {
+		if (baseUseCheck(p, property, false, forceLoadedChunk)) return true;
 		if (FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY.get() && !canUseOffline()) return false;
 		if (state.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) return false;
 		if (brokenBlocksCounter.canBreakBlock(p, leftClick)) {
@@ -341,9 +342,12 @@ public class FTBChunksTeamData {
 		return false;
 	}
 
-	private boolean canFakePlayerUse(Player player, PrivacyMode mode) {
+	private boolean canFakePlayerUse(Player player, PrivacyMode mode, boolean forceLoadedChunk) {
 		if (team.getProperty(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS)) {
 			return mode == PrivacyMode.ALLIES;
+		}
+		if (forceLoadedChunk && team.getProperty(FTBChunksTeamData.ALLOW_ANY_FAKE_PLAYER_BREAK_IF_FORCE_LOADED)) {
+			return true;
 		}
 
 		boolean checkById = team.getProperty(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID) && player.getUUID() != null;

@@ -307,7 +307,7 @@ public class FTBChunks {
 	}
 
 	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
-		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null, true)) {
+		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null, true, level)) {
 			return EventResult.interruptFalse();
 		}
 		return EventResult.pass();

@@ -194,7 +194,7 @@ public class ClaimedChunkManager {
 	 * @return true to prevent the interaction, false to permit it
 	 */
 	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
-		return protect(entity, hand, pos, protection, targetEntity, false);
+		return protect(entity, hand, pos, protection, targetEntity, false, null);
 	}
 
 	/**
@@ -208,8 +208,16 @@ public class ClaimedChunkManager {
 	 * @param protectIfNullEntity if true, and entity = null, will return true
 	 * @return true to prevent the interaction, false to permit it
 	 */
-	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity, boolean protectIfNullEntity) {
-		if (protectIfNullEntity && entity == null && FTBChunksWorldConfig.PROTECT_UNKNOWN_BLOCK_BREAKER.get()) {
+	public boolean protect(@Nullable Entity entity, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity,
+			boolean protectIfNullEntity, @Nullable Level level) {
+		if (protectIfNullEntity && entity == null && level != null && FTBChunksWorldConfig.PROTECT_UNKNOWN_BLOCK_BREAKER.get()) {
+			ClaimedChunk chunk = getChunk(new ChunkDimPos(level, pos));
+			if (chunk == null) {
+				return false;
+			}
+			if (FTBChunksWorldConfig.ALLOW_UNKNOWN_BREAKS_IN_FORCE_LOADS.get()) {
+				return !chunk.isActuallyForceLoaded();
+			}
 			return true;
 		}
 		if (!(entity instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level == null) {

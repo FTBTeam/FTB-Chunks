@@ -11,7 +11,12 @@ import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
-import dev.ftb.mods.ftblibrary.snbt.config.*;
+import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
+import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
+import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
+import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
+import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
+import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -112,6 +117,11 @@ public interface FTBChunksWorldConfig {
 			.comment("Default long-range player visibility on map");
 	BooleanValue DEF_PVP = TEAM_PROP_DEFAULTS.addBoolean("def_pvp", true)
 			.comment("Default PvP setting in claimed chunks");
+
+	SNBTConfig DEV = CONFIG.addGroup("dev");
+	BooleanValue DEV_COMMANDS = DEV.addBoolean("commands", false)
+			.excluded()
+			.comment("Enable dev commands");
 
 	static int getMaxClaimedChunks(ChunkTeamData playerData, ServerPlayer player) {
 		if (player != null) {

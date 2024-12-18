@@ -89,6 +89,9 @@ public class FTBChunksCommands {
 								)
 						)
 				)
+				.then(Commands.literal("query_block_breaks")
+						.executes(context -> infoBlockBreaks(context.getSource(), new ChunkDimPos(context.getSource().getLevel(), new BlockPos(context.getSource().getPosition()))))
+				)
 				.then(Commands.literal("admin")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("bypass_protection")
@@ -364,6 +367,20 @@ public class FTBChunksCommands {
 		if (source.hasPermission(2)) {
 			source.sendSuccess(Component.literal("Force Loaded: " + chunk.isForceLoaded()), true);
 		}
+
+		return 1;
+	}
+
+	private static int infoBlockBreaks(CommandSourceStack source, ChunkDimPos pos) {
+		ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(pos);
+
+		if (chunk == null) {
+			source.sendSuccess(Component.literal("Chunk not claimed!"), true);
+			return 0;
+		}
+
+		int remain = chunk.getTeamData().getRemainingBreakableBlocksNum(source.getLevel());
+		source.sendSuccess(Component.literal("Enemy players are currently able to break "+remain+" blocks!"), true);
 
 		return 1;
 	}

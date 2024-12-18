@@ -709,6 +709,13 @@ public class FTBChunksTeamData {
 		save();
 	}
 
+	public int getRemainingBreakableBlocksNum(Level level) {
+		long time = level.getGameTime();
+		int blocks_per_hour = FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR.get();
+		int total = brokenBlocksCounter.getTotalBrokenBlocks(time);
+		return blocks_per_hour - total;
+	}
+
 	public static final Style WARNING_STYLE = Style.EMPTY.withColor(0xFFFF55);
 	public static final int HOUR_TICKS = 60 * 60 * 20;
 

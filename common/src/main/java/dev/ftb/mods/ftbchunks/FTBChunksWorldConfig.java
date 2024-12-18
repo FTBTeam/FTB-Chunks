@@ -46,6 +46,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue PROTECT_NAMED_ENTITIES = CONFIG.getBoolean("protect_named_entities", false).comment("Protect entities that have a name tag.");
 	BooleanValue PROTECT_UNKNOWN_BLOCK_BREAKER = CONFIG.getBoolean("protect_unknown_block_breaker", true).comment("Protect blocks if the owner of the block breaker is not defined.");
 	BooleanValue ALLOW_UNKNOWN_BREAKS_IN_FORCE_LOADS = CONFIG.getBoolean("allow_unknown_breaks_in_force_loads", true).comment("Allow blocks to be broken by unknown (null) players in force loaded chunks.");
+	BooleanValue ALLOW_EXPLODE_BREAK_COUNT = CONFIG.getBoolean("allow_explode_break_count", false).comment("Allow blocks to be broken by known explosions and contribute to max_destroy_blocks_per_hour.");
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {

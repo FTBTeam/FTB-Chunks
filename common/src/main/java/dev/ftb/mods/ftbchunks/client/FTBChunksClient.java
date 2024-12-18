@@ -746,6 +746,7 @@ public enum FTBChunksClient {
             poseStack.scale(size / 16F, size / 16F, 1F);
             m = poseStack.last().pose();
 
+
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             buffer.addVertex(m, -1, -1, 0).setColor(255, 255, 255, 200).setUv(0F, 0F);
@@ -754,6 +755,9 @@ public enum FTBChunksClient {
             buffer.addVertex(m, 1, -1, 0).setColor(255, 255, 255, 200).setUv(1F, 0F);
             BufferUploader.drawWithShader(buffer.buildOrThrow());
 
+            // Todo render in the center and use FTBChunksClientConfig.POINTER_ICON_MODE_MINIMAP config
+            new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile()))
+                    .draw(MapType.MINIMAP, graphics, 0, 0, 1, 1, false, 255);
             poseStack.popPose();
         }
 
@@ -1120,6 +1124,7 @@ public enum FTBChunksClient {
                 event.add(new PointerIcon());
             }
         }
+
     }
 
     void refreshMinimapIcons() {

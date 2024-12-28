@@ -323,7 +323,7 @@ public class FTBChunksTeamData {
 	}
 
 	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
-		return baseUseCheck(p, property, true, false);
+		return baseUseCheck(p, property, false, false);
 	}
 
 	public boolean canAttackBlackListedEntity(ServerPlayer p, PrivacyProperty property) {

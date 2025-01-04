@@ -302,12 +302,12 @@ public class FTBChunksTeamData {
 		if (PlayerHooks.isFake(p)) {
 			return canFakePlayerUse(p, mode, forceLoadedChunk);
 		} else if (mode == PrivacyMode.ALLIES) {
-			return isAlly(p.getUUID());
+			if (isAlly(p.getUUID())) return true;
+			if (offlineCheck) return canUseOffline();
+			return false;
 		} else {
 			if (team.isMember(p.getUUID())) return true;
-			if (offlineCheck && FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY.get()) {
-				return canUseOffline();
-			}
+			if (offlineCheck) return canUseOffline();
 			return false;
 		}
 	}
@@ -323,23 +323,27 @@ public class FTBChunksTeamData {
 	}
 
 	public boolean canUse(ServerPlayer p, PrivacyProperty property) {
-		return baseUseCheck(p, property, false, false);
+		return baseUseCheck(p, property, FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY_ALL.get(), false);
 	}
 
 	public boolean canAttackBlackListedEntity(ServerPlayer p, PrivacyProperty property) {
-		if (baseUseCheck(p, property, true, false)) return true;
+		if (baseUseCheck(p, property, FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY_ALL.get(), false)) return true;
         return FTBChunksWorldConfig.PROTECT_ENTITIES_OFFLINE_ONLY.get() && canUseOffline();
     }
 
 	public boolean canBreak(ServerPlayer p, PrivacyProperty property, boolean leftClick, BlockState state, boolean forceLoadedChunk) {
 		if (baseUseCheck(p, property, false, forceLoadedChunk)) return true;
-		if (FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY.get() && !canUseOffline()) return false;
+		if (isOnlineBlockProtectionDisabled() && !canUseOffline()) return false;
 		if (state.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) return false;
 		if (brokenBlocksCounter.canBreakBlock(p, leftClick)) {
 			if (!leftClick) save();
 			return true;
 		}
 		return false;
+	}
+
+	private boolean isOnlineBlockProtectionDisabled() {
+		return FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY_BLOCKS.get() || FTBChunksWorldConfig.OFFLINE_PROTECTION_ONLY_ALL.get();
 	}
 
 	private boolean canFakePlayerUse(Player player, PrivacyMode mode, boolean forceLoadedChunk) {

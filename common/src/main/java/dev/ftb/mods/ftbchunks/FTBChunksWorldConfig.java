@@ -38,7 +38,8 @@ public interface FTBChunksWorldConfig {
 	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CONFIG.getEnum("party_limit_mode", PartyLimitMode.NAME_MAP).comment("Method by which party claim & force-load limits are calculated.","LARGEST: use the limits of the member with the largest limits","SUM: add up all the members' limits","OWNER: use the party owner's limits only","AVERAGE: use the average of all members' limits.");
 	BooleanValue REQUIRE_GAME_STAGE = CONFIG.getBoolean("require_game_stage", false).comment("If true, the player must have the 'ftbchunks_mapping' Game stage to be able to use the map and minimap.\nRequires KubeJS and/or Gamestages to be installed.");
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.getBoolean("location_mode_override", false).comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
-	BooleanValue OFFLINE_PROTECTION_ONLY = CONFIG.getBoolean("offline_protection_only", false).comment("If enabled and disable_protection = false enemy players will ONLY be able to damage your claimed chunks if you or your team mates are online.");
+	BooleanValue OFFLINE_PROTECTION_ONLY_ALL = CONFIG.getBoolean("offline_protection_only_all", false).comment("If enabled and disable_protection = false all protections will be disabled when the team is online.");
+	BooleanValue OFFLINE_PROTECTION_ONLY_BLOCKS = CONFIG.getBoolean("offline_protection_only_blocks", false).comment("If enabled and disable_protection = false block protection ONLY will be disabled when a team is online.");
 	IntValue OFFLINE_PROTECTION_BUFFER = CONFIG.getInt("offline_protection_buffer", 30).comment("If offline_protection_only = true, the time in SECONDS after all members of a team log off, before chunk protection turns on. This setting is meant to discourage combat logging. Set to 0 to disable. Set to -1 for unlimited block breaking if offline_protection_only = true.");
 	IntValue MAX_DESTROY_BLOCKS_PER_HOUR = CONFIG.getInt("max_destroy_blocks_per_hour", 0).comment("If disable_protection = false, this many blocks can still be destroyed per hour be enemy players. 0 disables this.");
 	IntValue DESTROY_BLOCKS_COUNT_PERIOD = CONFIG.getInt("destroy_blocks_count_period", 300).comment("If max_destroy_blocks_per_hour > 0, the groups of time in seconds where the number of blocks broken are counted. Groups younger than an hour contribute to the total blocks broken. Groups older than an hour are removed.");
@@ -47,6 +48,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue PROTECT_UNKNOWN_BLOCK_BREAKER = CONFIG.getBoolean("protect_unknown_block_breaker", true).comment("Protect blocks if the owner of the block breaker is not defined.");
 	BooleanValue ALLOW_UNKNOWN_BREAKS_IN_FORCE_LOADS = CONFIG.getBoolean("allow_unknown_breaks_in_force_loads", true).comment("Allow blocks to be broken by unknown (null) players in force loaded chunks.");
 	BooleanValue ALLOW_EXPLODE_BREAK_COUNT = CONFIG.getBoolean("allow_explode_break_count", false).comment("Allow blocks to be broken by known explosions and contribute to max_destroy_blocks_per_hour.");
+	//BooleanValue DISABLE_PROTECTION_IN_COMBAT = CONFIG.getBoolean("disable_protection_in_combat", false).comment("If enabled, protection will be removed if players from both factions attack each other.");
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {

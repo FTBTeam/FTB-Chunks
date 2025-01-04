@@ -415,7 +415,7 @@ public class FTBChunks {
 
 		List<BlockPos> list = new ArrayList<>(explosion.getToBlow());
 		explosion.clearToBlow();
-		Map<ChunkDimPos, Boolean> map = new HashMap<>();
+		/*Map<ChunkDimPos, Boolean> map = new HashMap<>();
 
 		for (BlockPos pos : list) {
 			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
@@ -424,18 +424,23 @@ public class FTBChunks {
 			})) {
 				explosion.getToBlow().add(pos);
 			}
-		}
-
-		/*ServerPlayer player = explosion.getDamageSource().getEntity() instanceof ServerPlayer p ? p : null;
-		int k = 0;
+		}*/
+		Map<ChunkDimPos, Boolean> map = new HashMap<>();
+		ServerPlayer player = explosion.getDamageSource().getEntity() instanceof ServerPlayer p ? p : null;
 		for (BlockPos pos : list) {
 			if (level.getBlockState(pos).isAir()) continue;
 			ChunkDimPos cdpos = new ChunkDimPos(level, pos);
-			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(cdpos);
-			if (chunk == null || chunk.allowExplosions()) {
+			ClaimedChunk chunk = null;
+			if (!map.containsKey(cdpos)) {
+				chunk = FTBChunksAPI.getManager().getChunk(cdpos);
+				boolean allow = chunk == null || chunk.allowExplosions();
+				map.put(cdpos, allow);
+			}
+			if (map.get(cdpos)) {
 				explosion.getToBlow().add(pos);
 				continue;
 			}
+			if (chunk == null) chunk = FTBChunksAPI.getManager().getChunk(cdpos);
 			if (player != null && FTBChunksWorldConfig.ALLOW_EXPLODE_BREAK_COUNT.get()) {
 				Protection protection = FTBChunksExpected.getBlockBreakProtection();
 				ProtectionOverride override = protection.override(player, pos, InteractionHand.MAIN_HAND, chunk, null);
@@ -443,7 +448,7 @@ public class FTBChunks {
 					explosion.getToBlow().add(pos);
 				}
 			}
-		}*/
+		}
 	}
 
 	private void playerCloned(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean wonGame) {

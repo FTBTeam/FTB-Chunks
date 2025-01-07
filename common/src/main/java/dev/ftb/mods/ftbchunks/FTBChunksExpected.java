@@ -34,4 +34,9 @@ public class FTBChunksExpected {
     public static Protection getBlockBreakProtection() {
         throw new AssertionError();
     }
+
+    @ExpectPlatform
+    public static Protection getBlockLeftClickProtection() {
+        throw new AssertionError();
+    }
 }

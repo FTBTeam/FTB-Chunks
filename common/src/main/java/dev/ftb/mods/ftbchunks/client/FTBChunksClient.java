@@ -746,18 +746,27 @@ public enum FTBChunksClient {
             poseStack.scale(size / 16F, size / 16F, 1F);
             m = poseStack.last().pose();
 
+            PointerIconMode mode = FTBChunksClientConfig.POINTER_ICON_MODE_MINIMAP.get();
+            if (mode.showPointer()) {
+                RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+                buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                buffer.addVertex(m, -1, -1, 0).setColor(255, 255, 255, 200).setUv(0F, 0F);
+                buffer.addVertex(m, -1, 1, 0).setColor(255, 255, 255, 200).setUv(0F, 1F);
+                buffer.addVertex(m, 1, 1, 0).setColor(255, 255, 255, 200).setUv(1F, 1F);
+                buffer.addVertex(m, 1, -1, 0).setColor(255, 255, 255, 200).setUv(1F, 0F);
+                BufferUploader.drawWithShader(buffer.buildOrThrow());
+            }
+            if (mode.showFace()) {
+                if (mode.showPointer()) {
+                    // scale & shift face size a little to better align with the pointer
+                    poseStack.scale(0.75f, 0.75f, 0.75f);
+                    poseStack.translate(0f, 0.32f, 0f);
+                }
+                poseStack.translate(-0.5f, -0.5f, 0f);
+                new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile()))
+                        .draw(MapType.MINIMAP, graphics, 0, 0, 1, 1, false, 255);
+            }
 
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-            buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            buffer.addVertex(m, -1, -1, 0).setColor(255, 255, 255, 200).setUv(0F, 0F);
-            buffer.addVertex(m, -1, 1, 0).setColor(255, 255, 255, 200).setUv(0F, 1F);
-            buffer.addVertex(m, 1, 1, 0).setColor(255, 255, 255, 200).setUv(1F, 1F);
-            buffer.addVertex(m, 1, -1, 0).setColor(255, 255, 255, 200).setUv(1F, 0F);
-            BufferUploader.drawWithShader(buffer.buildOrThrow());
-
-            // Todo render in the center and use FTBChunksClientConfig.POINTER_ICON_MODE_MINIMAP config
-            new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile()))
-                    .draw(MapType.MINIMAP, graphics, 0, 0, 1, 1, false, 255);
             poseStack.popPose();
         }
 

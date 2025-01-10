@@ -5,6 +5,7 @@ import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.PlayerNotifier;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.api.Protection;
@@ -16,6 +17,7 @@ import dev.ftb.mods.ftbteams.api.TeamManager;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -213,8 +215,11 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 			boolean prevented = policy.isOverride() ?
 					policy.shouldPreventInteraction() :
 					!player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
-			if (prevented && isFake) {
-				chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
+            if (prevented) {
+				PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.action_prevented").withStyle(ChatFormatting.GOLD), 2000);
+				if (isFake) {
+					chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
+				}
 			}
 			return prevented;
 		} else if (FTBChunksWorldConfig.noWilderness(player)) {
@@ -224,7 +229,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 			} else if (!isFake && (getBypassProtection(player.getUUID()) || player.isSpectator())) {
 				return false;
 			}
-			player.displayClientMessage(Component.translatable("ftbchunks.need_to_claim_chunk"), true);
+			PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.need_to_claim_chunk").withStyle(ChatFormatting.GOLD), 2000);
 			return true;
 		}
 

@@ -11,12 +11,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UndashedUuid;
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.gui.EntityIconSettingsScreen;
+import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
@@ -224,7 +224,7 @@ public class FTBChunksCommands {
                         )
         );
 
-        if (Platform.isDevelopmentEnvironment()) {
+        if (EntityIcons.isDevMode()) {
             dispatcher.register(Commands.literal("ftbchunks_dev")
                     .then(Commands.literal("create_gui")
                             .executes(context -> {

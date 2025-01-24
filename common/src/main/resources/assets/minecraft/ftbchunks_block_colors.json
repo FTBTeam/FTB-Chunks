@@ -71,5 +71,6 @@
 	"repeater": "ignored",
 	"end_rod": "ignored",
 	"chain": "ignored",
-	"lever": "ignored"
+	"lever": "ignored",
+	"barrier": "ignored"
 }

@@ -7,6 +7,7 @@ import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.architectury.networking.NetworkManager;
+import dev.architectury.platform.Platform;
 import dev.architectury.registry.registries.Registrar;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
@@ -593,6 +594,10 @@ public class FTBChunks {
 	private void serverTickPost(MinecraftServer minecraftServer) {
 		ClaimExpirationManager.INSTANCE.tick(minecraftServer);
 		LongRangePlayerTracker.INSTANCE.tick(minecraftServer);
+	}
+
+	public static boolean isDevMode() {
+		return Platform.isDevelopmentEnvironment() || FTBChunksWorldConfig.DEV_COMMANDS.get();
 	}
 
 }

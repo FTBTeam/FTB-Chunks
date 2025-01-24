@@ -224,7 +224,7 @@ public class FTBChunksCommands {
                         )
         );
 
-        if (EntityIcons.isDevMode()) {
+        if (FTBChunks.isDevMode()) {
             dispatcher.register(Commands.literal("ftbchunks_dev")
                     .then(Commands.literal("create_gui")
                             .executes(context -> {

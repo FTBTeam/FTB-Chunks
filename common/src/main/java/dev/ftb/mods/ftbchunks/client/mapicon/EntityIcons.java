@@ -90,7 +90,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
             }
 
             if (entityIconSettings == null) {
-                if (entityType.getCategory() != MobCategory.MISC && isDevMode()) {
+                if (entityType.getCategory() != MobCategory.MISC && FTBChunks.isDevMode()) {
                     LOGGER.error("Missing entity icon settings for {}", id);
                     entityIconSettings = EntityIconSettings.OLD_HIDDEN;
                 } else {
@@ -234,7 +234,4 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
         }
     }
 
-    public static boolean isDevMode() {
-        return Platform.isDevelopmentEnvironment() || FTBChunksWorldConfig.DEV_COMMANDS.get();
-    }
 }

@@ -39,14 +39,24 @@ public class PistonHelper {
             ClaimedChunkManager mgr = FTBChunksAPI.api().getManager();
             ClaimedChunk srcClaim = mgr.getChunk(new ChunkDimPos(level, pistonPos));
             for (BlockPos pos : resolver.getToPush()) {
-                // check ownership of positions the blocks would be moving to
-                ClaimedChunk dstClaim = mgr.getChunk(new ChunkDimPos(level, pos.relative(resolver.getPushDirection())));
-                if (prevent(editProp, srcClaim, dstClaim)) return true;
+                // check ownership of position block would be moving from
+                if (prevent(editProp, srcClaim, mgr.getChunk(new ChunkDimPos(level, pos)))) {
+                    return true;
+                }
+
+                BlockPos toPos = pos.relative(resolver.getPushDirection());
+                if (pos.getX() >> 4 != toPos.getX() >> 4 || pos.getZ() >> 4 != toPos.getZ() >> 4) {
+                    // if different chunk, also check position block would be moving to
+                    if (prevent(editProp, srcClaim, mgr.getChunk(new ChunkDimPos(level, toPos)))) {
+                        return true;
+                    }
+                }
             }
             for (BlockPos pos : resolver.getToDestroy()) {
                 // check ownership of positions the blocks are in now
-                ClaimedChunk dstClaim = mgr.getChunk(new ChunkDimPos(level, pos));
-                if (prevent(editProp, srcClaim, dstClaim)) return true;
+                if (prevent(editProp, srcClaim, mgr.getChunk(new ChunkDimPos(level, pos)))) {
+                    return true;
+                }
             }
         }
         return false;

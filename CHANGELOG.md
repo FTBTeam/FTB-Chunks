@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.3.5]
+
+### Added
+
+* Added protection for pistons moving blocks, including large block structure (e.g. vanilla-style flying machines)
+  * Enabled by default; can be disabled via 'piston_protection' server setting
+  * When enabled, pistons cannot push blocks from the chunk the piston is in to another chunk if the new chunk is owned by a different team, and that team does not have public block-edit permissions
+  * Similar restrictions apply to blocks which would be destroyed by piston moving
+  * Backported from 1.21
+
+### Fixed
+
+* Several vanilla blocks are now invisible on the map/minimap (previously showed as ugly black spots)
+  * Comparators, Repeaters, End Rods, Glass Panes, Levers, Chains, Barrier Blocks
+* Vanilla Cherry Trees now show as pink on the map
+* Integrated Dynamics Menril trees now sho as light blue on the map
+
 ## [2001.3.4]
 
 ### Fixed

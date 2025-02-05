@@ -189,6 +189,8 @@
 	"ftbchunks.location_mode_override.tooltip": "If true, team \"Location Visibility\" settings are ignored, and all players can see each other anywhere on the map",
 	"ftbchunks.max_prevented_log_age": "Fake Player Prevented Access Log Age",
 	"ftbchunks.max_prevented_log_age.tooltip": "Age in days to keep logs of prevented fake player access\nNote: not fully implemented feature; will be used in future to display & control access by fake players to your claims",
+	"ftbchunks.piston_protection": "Piston Protection",
+	"ftbchunks.piston_protection.tooltip": "If true, pistons may not push/pull blocks across claims owned by different teams (unless the block is entering/leaving a claim with block edit mode set to Public)\nIf 'disable_protection' is set to true, this setting is ignored.",
 	"ftbchunks.claim_result": "Chunks modified: %d / %d",
 	"ftbchunks.claim_result.other": "Unknown issues",
 	"ftbchunks.claim_result.not_owner": "Not the chunk owner",

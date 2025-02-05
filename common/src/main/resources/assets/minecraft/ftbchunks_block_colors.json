@@ -64,5 +64,13 @@
 	"iron_bars": "ignored",
 	"lily_pad": "#208030",
 	"dead_bush": "#A89061",
-	"glass": "#CCE5E4"
+	"glass": "#CCE5E4",
+	"cherry_leaves": "#b390a4",
+	"glass_pane": "ignored",
+	"comparator": "ignored",
+	"repeater": "ignored",
+	"end_rod": "ignored",
+	"chain": "ignored",
+	"lever": "ignored",
+	"barrier": "ignored"
 }

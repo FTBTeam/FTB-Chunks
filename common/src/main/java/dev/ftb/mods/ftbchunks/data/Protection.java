@@ -15,10 +15,6 @@ public interface Protection {
 	Protection EDIT_BLOCK = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level.getBlockState(pos);
 
-		if (blockState.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) {
-			return ProtectionOverride.CHECK;
-		}
-
 		if (blockState.is(FTBChunksAPI.EDIT_WHITELIST_TAG)) {
 			return ProtectionOverride.ALLOW;
 		}

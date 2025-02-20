@@ -1,0 +1,13 @@
+{
+	"replace": false,
+	"values": [
+		{
+			"id": "#minecraft:beds",
+			"required": false
+		},
+		{
+			"id": "minecraft:ender_chest",
+			"required": false
+		}
+	]
+}

@@ -49,6 +49,8 @@ public interface FTBChunksWorldConfig {
 	BooleanValue ALLOW_UNKNOWN_BREAKS_IN_FORCE_LOADS = CONFIG.getBoolean("allow_unknown_breaks_in_force_loads", true).comment("Allow blocks to be broken by unknown (null) players in force loaded chunks.");
 	BooleanValue ALLOW_EXPLODE_BREAK_COUNT = CONFIG.getBoolean("allow_explode_break_count", false).comment("Allow blocks to be broken by known explosions and contribute to max_destroy_blocks_per_hour.");
 	//BooleanValue DISABLE_PROTECTION_IN_COMBAT = CONFIG.getBoolean("disable_protection_in_combat", false).comment("If enabled, protection will be removed if players from both factions attack each other.");
+	BooleanValue OPS_SEE_ALL_PLAYERS_MAP = CONFIG.getBoolean("ops_see_all_players_map", false).comment("Allow ops to see all nearby players on the minimap.");
+	//fix the block break black list
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {

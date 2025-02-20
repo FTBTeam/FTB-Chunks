@@ -13,6 +13,7 @@ Mapping, chunk claim protection and chunk loading all in one!
 '''
 # logoFile="logo.png"
 license = "All Rights Reserved"
+displayTest = "MATCH_VERSION"
 
 [[dependencies.ftbchunks]]
 modId = "forge"

@@ -8,10 +8,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import dev.architectury.platform.Platform;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -90,7 +88,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
             }
 
             if (entityIconSettings == null) {
-                if (entityType.getCategory() != MobCategory.MISC && isDevMode()) {
+                if (entityType.getCategory() != MobCategory.MISC && FTBChunks.isDevMode()) {
                     LOGGER.error("Missing entity icon settings for {}", id);
                     entityIconSettings = EntityIconSettings.OLD_HIDDEN;
                 } else {
@@ -234,7 +232,4 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
         }
     }
 
-    public static boolean isDevMode() {
-        return Platform.isDevelopmentEnvironment() || FTBChunksWorldConfig.DEV_COMMANDS.get();
-    }
 }

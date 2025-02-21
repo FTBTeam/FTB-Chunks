@@ -72,5 +72,6 @@
 	"end_rod": "ignored",
 	"chain": "ignored",
 	"lever": "ignored",
-	"barrier": "ignored"
+	"barrier": "ignored",
+	"light": "ignored"
 }

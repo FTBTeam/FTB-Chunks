@@ -42,6 +42,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue OFFLINE_PROTECTION_ONLY_BLOCKS = CONFIG.getBoolean("offline_protection_only_blocks", false).comment("If enabled and disable_protection = false block protection ONLY will be disabled when a team is online.");
 	IntValue OFFLINE_PROTECTION_BUFFER = CONFIG.getInt("offline_protection_buffer", 30).comment("If offline_protection_only = true, the time in SECONDS after all members of a team log off, before chunk protection turns on. This setting is meant to discourage combat logging. Set to 0 to disable. Set to -1 for unlimited block breaking if offline_protection_only = true.");
 	IntValue MAX_DESTROY_BLOCKS_PER_HOUR = CONFIG.getInt("max_destroy_blocks_per_hour", 0).comment("If disable_protection = false, this many blocks can still be destroyed per hour be enemy players. 0 disables this.");
+	// 2nd destroy blocks for hour group
 	IntValue DESTROY_BLOCKS_COUNT_PERIOD = CONFIG.getInt("destroy_blocks_count_period", 300).comment("If max_destroy_blocks_per_hour > 0, the groups of time in seconds where the number of blocks broken are counted. Groups younger than an hour contribute to the total blocks broken. Groups older than an hour are removed.");
 	BooleanValue PROTECT_ENTITIES_OFFLINE_ONLY = CONFIG.getBoolean("protect_entities_offline_only", true).comment("Only protect the living entities listed in the living_entity_attack_blacklist tag when all team members are offline.");
 	BooleanValue PROTECT_NAMED_ENTITIES = CONFIG.getBoolean("protect_named_entities", false).comment("Protect entities that have a name tag.");
@@ -50,6 +51,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue ALLOW_EXPLODE_BREAK_COUNT = CONFIG.getBoolean("allow_explode_break_count", false).comment("Allow blocks to be broken by known explosions and contribute to max_destroy_blocks_per_hour.");
 	//BooleanValue DISABLE_PROTECTION_IN_COMBAT = CONFIG.getBoolean("disable_protection_in_combat", false).comment("If enabled, protection will be removed if players from both factions attack each other.");
 	BooleanValue OPS_SEE_ALL_PLAYERS_MAP = CONFIG.getBoolean("ops_see_all_players_map", false).comment("Allow ops to see all nearby players on the minimap.");
+	BooleanValue FORCE_PUBLIC_CLAIM_VISIBILITY = CONFIG.getBoolean("force_public_claim_visibility", false).comment("All claims will be visible to everyone if enabled.");
 
 	static int getMaxClaimedChunks(FTBChunksTeamData playerData, ServerPlayer player) {
 		if (player != null) {

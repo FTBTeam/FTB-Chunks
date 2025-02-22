@@ -561,7 +561,7 @@ public class FTBChunksTeamData {
 	}
 
 	public boolean shouldHideClaims() {
-		return getTeam().getProperty(CLAIM_VISIBILITY) != PrivacyMode.PUBLIC;
+		return !FTBChunksWorldConfig.FORCE_PUBLIC_CLAIM_VISIBILITY.get() && getTeam().getProperty(CLAIM_VISIBILITY) != PrivacyMode.PUBLIC;
 	}
 
 	public void syncChunksToPlayer(ServerPlayer recipient) {

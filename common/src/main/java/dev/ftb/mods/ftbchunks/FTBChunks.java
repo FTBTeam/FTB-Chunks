@@ -218,7 +218,7 @@ public class FTBChunks {
 		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
 			Team team = FTBTeamsAPI.getManager().getTeamByID(dimensionAndId.getRight());
 			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(team);
-			if (teamData.canUse(player, FTBChunksTeamData.CLAIM_VISIBILITY)) {
+			if (FTBChunksWorldConfig.FORCE_PUBLIC_CLAIM_VISIBILITY.get() || teamData.canUse(player, FTBChunksTeamData.CLAIM_VISIBILITY)) {
 				SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
 				packet.sendTo(player);
 			}

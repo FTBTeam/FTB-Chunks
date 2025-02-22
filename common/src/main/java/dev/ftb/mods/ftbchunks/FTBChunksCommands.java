@@ -375,12 +375,17 @@ public class FTBChunksCommands {
 		ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(pos);
 
 		if (chunk == null) {
-			source.sendSuccess(Component.literal("Chunk not claimed!"), true);
+			source.sendSuccess(Component.literal("Chunk not claimed!"), false);
 			return 0;
 		}
 
-		int remain = chunk.getTeamData().getRemainingBreakableBlocksNum(source.getLevel());
-		source.sendSuccess(Component.literal("Enemy players are currently able to break "+remain+" blocks!"), true);
+		int[] remain = chunk.getTeamData().getRemainingBreakableBlocksNum(source.getLevel());
+		for (int i = remain.length-1; i >= 0; --i) {
+			String text;
+			if (i == 0) text = "Enemy players are currently able to break "+remain[i]+" blocks from all other groups!";
+			else text = "Enemy players are currently able to break "+remain[i]+" blocks from group "+i+"!";
+			source.sendSuccess(Component.literal(text), false);
+		}
 
 		return 1;
 	}

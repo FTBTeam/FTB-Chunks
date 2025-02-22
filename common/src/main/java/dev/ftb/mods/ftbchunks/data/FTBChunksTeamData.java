@@ -42,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -84,7 +85,9 @@ public class FTBChunksTeamData {
 	private long lastLoginTime;
 	private long lastLogoffTime;
 	private Set<String> fakePlayerNameCache;
-	private final BrokenBlocksCounter brokenBlocksCounter;
+	private final BrokenBlocksCounter brokenBlocksCounterGroup1;
+	private final BrokenBlocksCounter brokenBlocksCounterGroup2;
+	private final BrokenBlocksCounter brokenBlocksCounterOther;
 
 	public FTBChunksTeamData(ClaimedChunkManager m, Path f, Team t) {
 		manager = m;
@@ -98,7 +101,9 @@ public class FTBChunksTeamData {
 		lastLoginTime = 0L;
 		lastLogoffTime = 0L;
 		memberData = new HashMap<>();
-		brokenBlocksCounter = new BrokenBlocksCounter();
+		brokenBlocksCounterGroup1 = new BrokenBlocksCounter(FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR_GROUP_1::get);
+		brokenBlocksCounterGroup2 = new BrokenBlocksCounter(FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR_GROUP_2::get);
+		brokenBlocksCounterOther = new BrokenBlocksCounter(FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR_OTHER::get);
 	}
 
 	@Override
@@ -335,7 +340,15 @@ public class FTBChunksTeamData {
 		if (baseUseCheck(p, property, false, forceLoadedChunk)) return true;
 		if (isOnlineBlockProtectionDisabled() && !canUseOffline()) return false;
 		if (state.is(FTBChunksAPI.EDIT_BLACKLIST_TAG)) return false;
-		if (brokenBlocksCounter.canBreakBlock(p, leftClick)) {
+		if (state.is(FTBChunksAPI.COUNT_BREAKS_1))
+			return checkGroup(brokenBlocksCounterGroup1, p, leftClick);
+		if (state.is(FTBChunksAPI.COUNT_BREAKS_2))
+			return checkGroup(brokenBlocksCounterGroup2, p, leftClick);
+		return checkGroup(brokenBlocksCounterOther, p, leftClick);
+	}
+
+	private boolean checkGroup(BrokenBlocksCounter counter, ServerPlayer player, boolean leftClick) {
+		if (counter.canBreakBlock(player, leftClick)) {
 			if (!leftClick) save();
 			return true;
 		}
@@ -408,7 +421,9 @@ public class FTBChunksTeamData {
 			tag.put("member_data", memberTag);
 		}
 
-		tag.put("broken_blocks_counter", brokenBlocksCounter.serializeNBT());
+		tag.put("broken_blocks_counter_group_1", brokenBlocksCounterGroup1.serializeNBT());
+		tag.put("broken_blocks_counter_group_2", brokenBlocksCounterGroup2.serializeNBT());
+		tag.put("broken_blocks_counter_other", brokenBlocksCounterOther.serializeNBT());
 
 		return tag;
 	}
@@ -447,7 +462,9 @@ public class FTBChunksTeamData {
 			}
 		}
 
-		brokenBlocksCounter.deserializeNBT(tag.getCompound("broken_blocks_counter"));
+		brokenBlocksCounterGroup1.deserializeNBT(tag.getCompound("broken_blocks_counter_group_1"));
+		brokenBlocksCounterGroup2.deserializeNBT(tag.getCompound("broken_blocks_counter_group_2"));
+		brokenBlocksCounterOther.deserializeNBT(tag.getCompound("broken_blocks_counter_other"));
 	}
 
 	public int getExtraClaimChunks() {
@@ -709,15 +726,19 @@ public class FTBChunksTeamData {
 	}
 
 	public void resetBrokenBlocksCounter() {
-		brokenBlocksCounter.reset();
+		brokenBlocksCounterGroup1.reset();
+		brokenBlocksCounterGroup2.reset();
+		brokenBlocksCounterOther.reset();
 		save();
 	}
 
-	public int getRemainingBreakableBlocksNum(Level level) {
-		long time = level.getGameTime();
-		int blocks_per_hour = FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR.get();
-		int total = brokenBlocksCounter.getTotalBrokenBlocks(time);
-		return blocks_per_hour - total;
+	/**
+	 * @return index 0 = remaining for ungrouped blocks, index 1 = remaining for group 1, index 2 = remaining for group 2.
+	 */
+	public int[] getRemainingBreakableBlocksNum(Level level) {
+		return new int[] {brokenBlocksCounterOther.getRemainingBreaks(level),
+				brokenBlocksCounterGroup1.getRemainingBreaks(level),
+				brokenBlocksCounterGroup2.getRemainingBreaks(level)};
 	}
 
 	public static final Style WARNING_STYLE = Style.EMPTY.withColor(0xFFFF55);
@@ -725,10 +746,13 @@ public class FTBChunksTeamData {
 
 	public static class BrokenBlocksCounter {
 		private final List<BrokenBlocksGroup> groups = new ArrayList<>();
-		public BrokenBlocksCounter() {}
+		private final Supplier<Integer> maxBlocksPerHour;
+		public BrokenBlocksCounter(Supplier<Integer> maxBlocksPerHour) {
+            this.maxBlocksPerHour = maxBlocksPerHour;
+        }
 		public boolean canBreakBlock(ServerPlayer p, boolean leftClick) {
 			long time = p.getLevel().getGameTime();
-			int blocks_per_hour = FTBChunksWorldConfig.MAX_DESTROY_BLOCKS_PER_HOUR.get();
+			int blocks_per_hour = getMaxBlockBreaksPerHour();
 			if (blocks_per_hour == -1)
 				return true;
 			int total = getTotalBrokenBlocks(time);
@@ -770,6 +794,15 @@ public class FTBChunksTeamData {
 		}
 		public void reset() {
 			groups.clear();
+		}
+		public int getRemainingBreaks(Level level) {
+			long time = level.getGameTime();
+			int blocks_per_hour = getMaxBlockBreaksPerHour();
+			int total = getTotalBrokenBlocks(time);
+			return blocks_per_hour - total;
+		}
+		public int getMaxBlockBreaksPerHour() {
+			return maxBlocksPerHour.get();
 		}
 		public SNBTCompoundTag serializeNBT() {
 			SNBTCompoundTag tag = new SNBTCompoundTag();

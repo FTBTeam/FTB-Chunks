@@ -24,6 +24,8 @@ public class FTBChunksAPI {
 	public static final TagKey<Block> EDIT_WHITELIST_TAG = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "edit_whitelist"));
 	public static final TagKey<Block> EDIT_BLACKLIST_TAG = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "edit_blacklist"));
 	public static final TagKey<Block> INTERACT_WHITELIST_TAG = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "interact_whitelist"));
+	public static final TagKey<Block> COUNT_BREAKS_1 = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "count_breaks_1"));
+	public static final TagKey<Block> COUNT_BREAKS_2 = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "count_breaks_2"));
 	public static final TagKey<Item> RIGHT_CLICK_BLACKLIST_TAG = TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "right_click_blacklist"));
 	public static final TagKey<Item> RIGHT_CLICK_WHITELIST_TAG = TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "right_click_whitelist"));
 	public static final TagKey<EntityType<?>> ENTITY_INTERACT_WHITELIST_TAG = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(FTBChunks.MOD_ID, "entity_interact_whitelist"));

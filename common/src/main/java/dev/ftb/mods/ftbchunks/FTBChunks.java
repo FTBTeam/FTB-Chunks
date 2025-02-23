@@ -36,6 +36,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -118,10 +119,11 @@ public class FTBChunks {
 		PlayerEvent.FILL_BUCKET.register(this::fillBucket);
 		PlayerEvent.PLAYER_CLONE.register(this::playerCloned);
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
-		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
+		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackNonLivingEntity);
 
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
+		EntityEvent.LIVING_HURT.register(this::livingEntityHurt);
 
 		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
@@ -137,11 +139,27 @@ public class FTBChunks {
 		}
 	}
 
-	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
+	private EventResult playerAttackNonLivingEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
 		// note: intentionally does not prevent attacking living entities;
 		// this is for preventing griefing of entities like paintings & item frames
 		if (player instanceof ServerPlayer && !(entity instanceof LivingEntity) && FTBChunksAPI.getManager().protect(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
 			return EventResult.interruptFalse();
+		}
+
+		return EventResult.pass();
+	}
+
+	private EventResult livingEntityHurt(LivingEntity livingEntity, DamageSource damageSource, float damage) {
+		if (livingEntity.level.isClientSide || !FTBChunksAPI.isManagerLoaded()) return EventResult.pass();
+		if (damageSource.getEntity() instanceof ServerPlayer player) {
+			if (FTBChunksAPI.getManager().protect(player, player.swingingArm, livingEntity.blockPosition(), Protection.ATTACK_LIVING_ENTITY, livingEntity)) {
+				return EventResult.interruptFalse();
+			}
+		} else if (livingEntity.getType().is(FTBChunksAPI.LIVING_ENTITY_ATTACK_BLACKLIST_TAG)) { // this block protects the entities from unknown sources
+			ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(livingEntity.level, livingEntity.blockPosition()));
+			if (chunk != null) {
+				return EventResult.interruptFalse();
+			}
 		}
 
 		return EventResult.pass();
@@ -200,7 +218,7 @@ public class FTBChunks {
 		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
 			Team team = FTBTeamsAPI.getManager().getTeamByID(dimensionAndId.getRight());
 			FTBChunksTeamData teamData = FTBChunksAPI.getManager().getData(team);
-			if (teamData.canUse(player, FTBChunksTeamData.CLAIM_VISIBILITY)) {
+			if (FTBChunksWorldConfig.FORCE_PUBLIC_CLAIM_VISIBILITY.get() || teamData.canUse(player, FTBChunksTeamData.CLAIM_VISIBILITY)) {
 				SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
 				packet.sendTo(player);
 			}
@@ -234,6 +252,8 @@ public class FTBChunks {
 			// last player on the team to log out; unforce chunks if the team can't do offline chunk-loading
 			data.updateChunkTickets(false);
 		}
+
+		data.setLastLogoffTime(System.currentTimeMillis());
 	}
 
 	private void teamCreated(TeamCreatedEvent teamEvent) {
@@ -251,10 +271,9 @@ public class FTBChunks {
 	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
-		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
+		if (player instanceof ServerPlayer && FTBChunksAPI.getManager().protect(player, hand, pos, FTBChunksExpected.getBlockLeftClickProtection(), null)) {
 			return EventResult.interruptFalse();
 		}
-
 		return EventResult.pass();
 	}
 
@@ -288,10 +307,9 @@ public class FTBChunks {
 	}
 
 	public EventResult blockBreak(Level level, BlockPos pos, BlockState blockState, ServerPlayer player, @Nullable IntValue intValue) {
-		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
+		if (FTBChunksAPI.getManager().protect(player, InteractionHand.MAIN_HAND, pos, FTBChunksExpected.getBlockBreakProtection(), null, true, level)) {
 			return EventResult.interruptFalse();
 		}
-
 		return EventResult.pass();
 	}
 
@@ -397,7 +415,7 @@ public class FTBChunks {
 
 		List<BlockPos> list = new ArrayList<>(explosion.getToBlow());
 		explosion.clearToBlow();
-		Map<ChunkDimPos, Boolean> map = new HashMap<>();
+		/*Map<ChunkDimPos, Boolean> map = new HashMap<>();
 
 		for (BlockPos pos : list) {
 			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
@@ -405,6 +423,30 @@ public class FTBChunks {
 				return chunk == null || chunk.allowExplosions();
 			})) {
 				explosion.getToBlow().add(pos);
+			}
+		}*/
+		Map<ChunkDimPos, Boolean> map = new HashMap<>();
+		ServerPlayer player = explosion.getDamageSource().getEntity() instanceof ServerPlayer p ? p : null;
+		for (BlockPos pos : list) {
+			if (level.getBlockState(pos).isAir()) continue;
+			ChunkDimPos cdpos = new ChunkDimPos(level, pos);
+			ClaimedChunk chunk = null;
+			if (!map.containsKey(cdpos)) {
+				chunk = FTBChunksAPI.getManager().getChunk(cdpos);
+				boolean allow = chunk == null || chunk.allowExplosions();
+				map.put(cdpos, allow);
+			}
+			if (map.get(cdpos)) {
+				explosion.getToBlow().add(pos);
+				continue;
+			}
+			if (chunk == null) chunk = FTBChunksAPI.getManager().getChunk(cdpos);
+			if (player != null && FTBChunksWorldConfig.ALLOW_EXPLODE_BREAK_COUNT.get()) {
+				Protection protection = FTBChunksExpected.getBlockBreakProtection();
+				ProtectionOverride override = protection.override(player, pos, InteractionHand.MAIN_HAND, chunk, null);
+				if (!override.getProtect()) {
+					explosion.getToBlow().add(pos);
+				}
 			}
 		}
 	}
@@ -436,6 +478,8 @@ public class FTBChunks {
 		event.add(FTBChunksTeamData.ALLOW_ALL_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_NAMED_FAKE_PLAYERS);
 		event.add(FTBChunksTeamData.ALLOW_FAKE_PLAYERS_BY_ID);
+		event.add(FTBChunksTeamData.ALLOW_ATTACK_BLACKLISTED_ENTITIES);
+		event.add(FTBChunksTeamData.ALLOW_ANY_FAKE_PLAYER_BREAK_IF_FORCE_LOADED);
 
 		// block edit/interact properties vary on forge & fabric
 		FTBChunksExpected.getPlatformSpecificProperties(event);

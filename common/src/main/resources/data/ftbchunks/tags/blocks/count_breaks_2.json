@@ -1,0 +1,25 @@
+{
+	"replace": false,
+	"values": [
+		{
+			"id": "#createaddition:plants",
+			"required": false
+		},
+		{
+			"id": "#supplementaries:flower_box_plantable",
+			"required": false
+		},
+		{
+			"id": "#minecraft:flowers",
+			"required": false
+		},
+		{
+			"id": "minecraft:tall_grass",
+			"required": false
+		},
+		{
+			"id": "#minecraft:leaves",
+			"required": false
+		}
+	]
+}

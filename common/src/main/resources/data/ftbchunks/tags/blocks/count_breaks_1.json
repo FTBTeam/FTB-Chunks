@@ -1,0 +1,45 @@
+{
+	"replace": false,
+	"values": [
+		{
+			"id": "#forge:chests",
+			"required": false
+		},
+		{
+			"id": "#storagedrawers:drawers",
+			"required": false
+		},
+		{
+			"id": "ironchest:iron_chest",
+			"required": false
+		},
+		{
+			"id": "ironchest:gold_chest",
+			"required": false
+		},
+		{
+			"id": "ironchest:diamond_chest",
+			"required": false
+		},
+		{
+			"id": "ironchest:copper_chest",
+			"required": false
+		},
+		{
+			"id": "ironchest:crystal_chest",
+			"required": false
+		},
+		{
+			"id": "ironchest:obsidian_chest",
+			"required": false
+		},
+		{
+			"id": "ironchest:dirt_chest",
+			"required": false
+		},
+		{
+			"id": "ae2:drive",
+			"required": false
+		}
+	]
+}

@@ -41,6 +41,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -87,6 +88,9 @@ public class FTBChunksCommands {
 										)
 								)
 						)
+				)
+				.then(Commands.literal("query_block_breaks")
+						.executes(context -> infoBlockBreaks(context.getSource(), new ChunkDimPos(context.getSource().getLevel(), new BlockPos(context.getSource().getPosition()))))
 				)
 				.then(Commands.literal("admin")
 						.requires(source -> source.hasPermission(2))
@@ -171,6 +175,14 @@ public class FTBChunksCommands {
 								)
 								.then(Commands.argument("dimension", DimensionArgument.dimension())
 										.executes(context -> viewLoadedChunks(context.getSource(), DimensionArgument.getDimension(context, "dimension")))
+								)
+						)
+						.then(Commands.literal("reset_block_break_counter")
+								.then(Commands.literal("all")
+										.executes(context -> resetBlockBreakCounter(context.getSource(), null))
+								)
+								.then(Commands.argument("team", TeamArgument.create())
+										.executes(context -> resetBlockBreakCounter(context.getSource(), TeamArgument.get(context, "team")))
 								)
 						)
 				)
@@ -359,6 +371,25 @@ public class FTBChunksCommands {
 		return 1;
 	}
 
+	private static int infoBlockBreaks(CommandSourceStack source, ChunkDimPos pos) {
+		ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(pos);
+
+		if (chunk == null) {
+			source.sendSuccess(Component.literal("Chunk not claimed!"), false);
+			return 0;
+		}
+
+		int[] remain = chunk.getTeamData().getRemainingBreakableBlocksNum(source.getLevel());
+		for (int i = remain.length-1; i >= 0; --i) {
+			String text;
+			if (i == 0) text = "Enemy players are currently able to break "+remain[i]+" blocks from all other groups!";
+			else text = "Enemy players are currently able to break "+remain[i]+" blocks from group "+i+"!";
+			source.sendSuccess(Component.literal(text), false);
+		}
+
+		return 1;
+	}
+
 	private static int getExtraClaimChunks(CommandSourceStack source, ServerPlayer player) {
 		FTBChunksTeamData personalData = FTBChunksAPI.getManager().getPersonalData(player);
 		if (personalData == null) {
@@ -504,5 +535,15 @@ public class FTBChunksCommands {
 
 	private static Team selfTeam(CommandSourceStack source) throws CommandSyntaxException {
 		return FTBTeamsAPI.getPlayerTeam(source.getPlayerOrException());
+	}
+
+	private static int resetBlockBreakCounter(CommandSourceStack source, @Nullable Team team) {
+		if (team == null) {
+			FTBChunksAPI.getManager().getAllTeamData().forEach(FTBChunksTeamData::resetBrokenBlocksCounter);
+		} else {
+			FTBChunksTeamData data = FTBChunksAPI.getManager().getData(team);
+			data.resetBrokenBlocksCounter();
+		}
+		return 1;
 	}
 }

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Properties for newly-created teams are now taken from these defaults
   * Backported from 1.21
 
+### Fixed
+* Fixed light technical blocks (`minecraft:light`) rendering black on the map
+
 ## [2001.3.5]
 
 ### Added

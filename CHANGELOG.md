@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2101.1.8]
 
+### Added
+* Added clientside "Reticle Lines" config (default true) to minimap settings, to control reticle crosshairs draw on the minimap
+
 ### Fixed
 * Fixed light technical blocks (`minecraft:light`) rendering black on the map
 

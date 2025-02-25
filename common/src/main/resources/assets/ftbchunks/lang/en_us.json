@@ -71,6 +71,7 @@
   "ftbchunks.minimap.blur_mode.on": "On",
   "ftbchunks.minimap.blur_mode.off": "Off",
   "ftbchunks.minimap.compass": "Compass",
+  "ftbchunks.minimap.reticle": "Reticle Lines",
   "ftbchunks.minimap.visibility": "Visibility",
   "ftbchunks.minimap.zone": "Zone",
   "ftbchunks.minimap.square": "Square Minimap",

@@ -81,6 +81,7 @@ public interface FTBChunksClientConfig {
     BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.addBoolean("large_entities", false).comment("Entities in minimap will be larger");
     EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.addEnum("blur_mode", MinimapBlurMode.NAME_MAP).comment("Blurs minimap");
     BooleanValue MINIMAP_COMPASS = MINIMAP.addBoolean("compass", true).comment("Adds NWSE compass inside minimap");
+    BooleanValue MINIMAP_RETICLE = MINIMAP.addBoolean("reticle", true).comment("Draw reticle lines on minimap");
     IntValue MINIMAP_VISIBILITY = MINIMAP.addInt("visibility", 255, 0, 255).comment("Minimap visibility");
     IntValue MINIMAP_OFFSET_X = MINIMAP.addInt("position_offset_x", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
     IntValue MINIMAP_OFFSET_Y = MINIMAP.addInt("position_offset_y", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");

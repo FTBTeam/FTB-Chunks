@@ -680,13 +680,16 @@ public enum FTBChunksClient {
         buffer.addVertex(m, halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 0F);
         BufferUploader.drawWithShader(buffer.buildOrThrow());
 
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-        buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-        buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
-        buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        if (FTBChunksClientConfig.MINIMAP_RETICLE.get()) {
+            // draw map crosshairs
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+            buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
+            buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
+            buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
+            buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
+        }
 
         poseStack.popPose();
 

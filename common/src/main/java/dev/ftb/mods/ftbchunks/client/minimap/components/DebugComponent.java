@@ -46,7 +46,7 @@ public class DebugComponent implements MinimapInfoComponent {
         }
 
         int y = 0;
-        int lineHeight = computeLineHeight(context.minecraft(), 1) + font.lineHeight + 1;
+        int lineHeight = computeLineHeight(context.minecraft(), 1) + font.lineHeight;
         for (Component component : components) {
             drawCenteredText(context.minecraft().font, graphics, component, y);
             y += lineHeight;
@@ -55,7 +55,7 @@ public class DebugComponent implements MinimapInfoComponent {
 
     @Override
     public int height(MinimapContext context) {
-        return computeLineHeight(context.minecraft(), 5) + 1;
+        return computeLineHeight(context.minecraft(), 5) + context.minecraft().font.lineHeight;
     }
 
 }

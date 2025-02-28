@@ -93,6 +93,7 @@ public interface FTBChunksClientConfig {
     EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
     EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on full screen minimap");
     EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on minimap");
+    BooleanValue TEXT_ABOVE_MINIMAP = MINIMAP.addBoolean("text_above_minimap", false).comment("Show text above minimap");
 
     SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");

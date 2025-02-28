@@ -83,6 +83,7 @@
   "ftbchunks.minimap.pointer_icon_mode.both": "Both",
   "ftbchunks.minimap.pointer_icon_mode.pointer": "Pointer",
   "ftbchunks.minimap.pointer_icon_mode.face": "Face Icon",
+  "ftbchunks.minimap.text_above_minimap": "Show Text above minimap",
   "sidebar_button.ftbchunks.chunks": "FTB Chunks: Map",
   "sidebar_button.ftbchunks.claim_chunks": "FTB Chunks: Claim Manager",
   "key.categories.ftbchunks": "FTB Chunks",

@@ -629,8 +629,36 @@ public enum FTBChunksClient {
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-        poseStack.translate(x + halfSizeD, y + halfSizeD, 490);
 
+        poseStack.translate(0, y + halfSizeD, 0);
+
+        boolean textAboveMinimap = FTBChunksClientConfig.TEXT_ABOVE_MINIMAP.get();
+        int componentsHeight = getMinimapComponentsTotalHeight(mc, dim, playerX, playerY, playerZ);
+
+        if (textAboveMinimap) {
+            // Move map down if text would go outside the screen
+            int renderY = y - componentsHeight;
+            if (renderY <= 0) {
+                int offset = -renderY + 1;
+                poseStack.translate(0, offset, 0);
+                y += offset;
+            }
+
+            poseStack.pushPose();
+            poseStack.translate(0, -componentsHeight, 0);
+            drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, (int) -halfSizeF - 1, 0, halfSizeD, poseStack, graphics);
+            poseStack.popPose();
+        } else {
+            // Move map up if text would go outside the screen
+            int renderY = y + size + componentsHeight;
+            if (renderY >= scaledHeight) {
+                int offset = -componentsHeight - 1;
+                poseStack.translate(0, offset, 0);
+                y += offset;
+            }
+        }
+
+        poseStack.translate(x + halfSizeD, 0, 490);
         Matrix4f m = poseStack.last().pose();
 
         // Draw the minimap cutout mask - see AdvancementTab for a vanilla example of using colorMask()
@@ -771,6 +799,29 @@ public enum FTBChunksClient {
         }
 
         // The minimap info text
+        if (!textAboveMinimap) {
+            drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, y, size, halfSizeD, poseStack, graphics);
+        }
+
+        RenderSystem.enableDepthTest();
+
+        if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
+            drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
+        }
+    }
+
+    private int getMinimapComponentsTotalHeight(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ) {
+        var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
+        int sum = 0;
+        for (MinimapInfoComponent c : sortedComponents) {
+            if (c.shouldRender(context)) {
+                sum += c.height(context);
+            }
+        }
+        return sum;
+    }
+
+    private void drawMinimapComponents(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ, int scaledHeight, int x, int y, int size, double halfSizeD, PoseStack poseStack, GuiGraphics graphics) {
         var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
         var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
@@ -792,12 +843,6 @@ public enum FTBChunksClient {
             poseStack.popPose();
 
             yOffset += height;
-        }
-
-        RenderSystem.enableDepthTest();
-
-        if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
-            drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
         }
     }
 

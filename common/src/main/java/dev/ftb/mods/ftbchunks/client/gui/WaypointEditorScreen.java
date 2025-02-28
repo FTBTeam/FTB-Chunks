@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -30,6 +31,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
@@ -365,6 +367,11 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                         });
                     }));
                 }
+                list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> {
+                    StringConfig configName = new StringConfig();
+                    configName.setValue(wp.getName());
+                    new FTBChunksClient.WaypointAddScreen(configName, GlobalPos.of(wp.getDimension(), wp.getPos()), Color4I.rgb(wp.getColor()), true).openGui();
+                }));
                 if (Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));

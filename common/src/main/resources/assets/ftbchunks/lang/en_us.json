@@ -115,6 +115,7 @@
   "ftbchunks.gui.clear_deathpoints": "Clear all Death Waypoints",
   "ftbchunks.gui.delete_waypoint": "Delete Waypoint '%s' ?",
   "ftbchunks.gui.change_color": "Change Color",
+  "ftbchunks.gui.edit": "Edit",
   "ftbchunks.gui.hold_alt_for_dates": "Hold Alt: show absolute times",
   "ftbchunks.gui.mouse_wheel_expiry": "Mouse Wheel: adjust force-load expiry",
   "ftbchunks.gui.teleport": "Teleport",

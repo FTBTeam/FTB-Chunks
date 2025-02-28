@@ -1356,12 +1356,21 @@ public enum FTBChunksClient {
     public static class WaypointAddScreen extends BaseScreen {
         private final StringConfig name;
         private final GlobalPos waypointLocation;
+        private final ColorConfig color;
+        private final boolean override;
 
-        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
+        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation, Color4I color, boolean override) {
             super();
             this.name = name;
             this.waypointLocation = waypointLocation;
             this.setHeight(35);
+            this.color = new ColorConfig();
+            this.color.setValue(color);
+            this.override = override;
+        }
+
+        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
+            this(name, waypointLocation, Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F), false);
         }
 
         public WaypointAddScreen(StringConfig name, Player player) {
@@ -1374,13 +1383,15 @@ public enum FTBChunksClient {
 
         @Override
         public void addWidgets() {
-            ColorConfig col = new ColorConfig();
             AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
             globalPosConfig.setValue(waypointLocation);
-            col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
-            AddWaypointOverlay overlay = new AddWaypointOverlay(this, globalPosConfig, name, col, set -> {
+            AddWaypointOverlay overlay = new AddWaypointOverlay(this, globalPosConfig, name, color, set -> {
                 if (set && !name.getValue().isEmpty()) {
-                    Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), col.getValue().rgba());
+                    if (override) {
+                        FTBChunksAPI.clientApi().getWaypointManager(waypointLocation.dimension())
+                                .ifPresent(mgr -> mgr.removeWaypointAt(waypointLocation.pos()));
+                    }
+                    Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba());
                     Minecraft.getInstance().player.displayClientMessage(
                             Component.translatable("ftbchunks.waypoint_added",
                                     Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)

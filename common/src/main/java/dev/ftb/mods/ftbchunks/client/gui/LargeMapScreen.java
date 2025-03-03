@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
@@ -19,6 +20,7 @@ import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -186,14 +188,16 @@ public class LargeMapScreen extends BaseScreen {
                 }));
 
         add(settingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
-                (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this)),
+//                (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this)),
+                (b, m) -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );
 
         if (Minecraft.getInstance().player.hasPermissions(2)) {
             add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
                     Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-                    (b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this)),
+//                    (b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this)),
+                    (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
                     Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
             ));
         }

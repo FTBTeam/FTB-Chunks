@@ -3,10 +3,7 @@ package dev.ftb.mods.ftbchunks;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
-import dev.ftb.mods.ftbchunks.data.AllyMode;
-import dev.ftb.mods.ftbchunks.data.ForceLoadMode;
-import dev.ftb.mods.ftbchunks.data.PartyLimitMode;
-import dev.ftb.mods.ftbchunks.data.PvPMode;
+import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
@@ -17,6 +14,7 @@ import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
 import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
 import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
 import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -24,7 +22,9 @@ import net.minecraft.world.entity.player.Player;
 import java.util.Collections;
 
 public interface FTBChunksWorldConfig {
-	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
+	String KEY = FTBChunks.MOD_ID + "-world";
+
+	SNBTConfig CONFIG = SNBTConfig.create(KEY);
 
 	BooleanValue DISABLE_PROTECTION = CONFIG.addBoolean("disable_protection", false)
 			.comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for force-loading");
@@ -161,4 +161,11 @@ public interface FTBChunksWorldConfig {
 		return !FORCE_DISABLE_MINIMAP.get() && playerHasMapStage(player);
 	}
 
+	static void onConfigChanged(boolean isServerConfig) {
+		if (isServerConfig) {
+			DimensionFilter.clearMatcherCaches();
+			FTBTeamsAPI.api().getManager().getTeams().forEach(team ->
+					ClaimedChunkManagerImpl.getInstance().getOrCreateData(team).updateLimits());
+		}
+	}
 }

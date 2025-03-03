@@ -1,44 +1,23 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
-import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
-import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
-import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
-import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
-import dev.ftb.mods.ftblibrary.snbt.config.StringMapValue;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import dev.ftb.mods.ftbchunks.client.minimap.components.*;
+import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
+import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;
 import java.util.stream.Stream;
 
-import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
-import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.loadDefaulted;
-
 public interface FTBChunksClientConfig {
-    SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-client");
+    String KEY = FTBChunks.MOD_ID + "-client";
+
+    SNBTConfig CONFIG = SNBTConfig.create(KEY);
 
     SNBTConfig APPEARANCE = CONFIG.addGroup("appearance", 0);
     DoubleValue NOISE = APPEARANCE.addDouble("noise", 0.05D, 0D, 0.5D).fader().comment("Noise added to map to make it look less plastic");
@@ -112,42 +91,43 @@ public interface FTBChunksClientConfig {
         return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
     }
 
-    static void init() {
-        loadDefaulted(CONFIG, LOCAL_DIR.resolve("ftbchunks"), FTBChunks.MOD_ID, "client-config.snbt");
-    }
+//    static void init() {
+//        loadDefaulted(CONFIG, LOCAL_DIR.resolve("ftbchunks"), FTBChunks.MOD_ID, "client-config.snbt");
+//    }
 
-    static void openSettings(Screen screen) {
-        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
-            if (accepted) {
-                saveConfig();
-            }
-
-            MapManager.getInstance().ifPresent(manager -> manager.updateAllRegions(false));
-            Minecraft.getInstance().setScreen(screen);
-        });
-        CONFIG.createClientConfig(group);
-        EditConfigScreen gui = new EditConfigScreen(group);
-
-        gui.openGui();
-    }
-
-    static void openServerSettings(Screen screen) {
-        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
-            if (accepted) {
-                SNBTCompoundTag config = new SNBTCompoundTag();
-                FTBChunksWorldConfig.CONFIG.write(config);
-                NetworkManager.sendToServer(new ServerConfigRequestPacket(config));
-            }
-            Minecraft.getInstance().setScreen(screen);
-        });
-        FTBChunksWorldConfig.CONFIG.createClientConfig(group);
-        EditConfigScreen gui = new EditConfigScreen(group);
-
-        gui.openGui();
-    }
+//    static void openSettings(Screen screen) {
+//        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
+//            if (accepted) {
+//                saveConfig();
+//            }
+//
+//            MapManager.getInstance().ifPresent(manager -> manager.updateAllRegions(false));
+//            Minecraft.getInstance().setScreen(screen);
+//        });
+//        CONFIG.createClientConfig(group);
+//        EditConfigScreen gui = new EditConfigScreen(group);
+//
+//        gui.openGui();
+//    }
+//
+//    static void openServerSettings(Screen screen) {
+//        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
+//            if (accepted) {
+//                SNBTCompoundTag config = new SNBTCompoundTag();
+//                FTBChunksWorldConfig.CONFIG.write(config);
+//                NetworkManager.sendToServer(new ServerConfigRequestPacket(config));
+//            }
+//            Minecraft.getInstance().setScreen(screen);
+//        });
+//        FTBChunksWorldConfig.CONFIG.createClientConfig(group);
+//        EditConfigScreen gui = new EditConfigScreen(group);
+//
+//        gui.openGui();
+//    }
 
     static void saveConfig() {
-        CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
+        ConfigManager.getInstance().save(KEY);
+//        CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
     }
 
 }

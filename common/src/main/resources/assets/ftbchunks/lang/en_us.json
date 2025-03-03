@@ -110,6 +110,7 @@
   "ftbchunks.gui.claimed_chunks": "Claimed Chunks",
   "ftbchunks.gui.waypoints": "Waypoint Manager",
   "ftbchunks.gui.add_waypoint": "Add Waypoint",
+  "ftbchunks.gui.edit_waypoint": "Edit Waypoint",
   "ftbchunks.gui.settings": "Settings",
   "ftbchunks.gui.settings.server": "Server Settings",
   "ftbchunks.gui.sync": "Share Map with Allies",

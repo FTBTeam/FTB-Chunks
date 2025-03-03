@@ -579,7 +579,7 @@ public enum FTBChunksClient {
             y -= minimapPosition.posY > 1 ? offsetY : -offsetY;
         }
 
-        // a bit of a kludge here: vanilla renders active mobeffects in the top-right; move the minimap down if necessary to avoid them
+        // a bit of a kludge here: vanilla renders active mobeffects in the top-right; move them to the left of the minimap if necessary
         if (!mc.player.getActiveEffects().isEmpty() && y <= 50 && x + size > scaledWidth - 50) {
             vanillaEffectsOffsetX = -(scaledWidth - x) - 5;
         } else {
@@ -1355,7 +1355,8 @@ public enum FTBChunksClient {
         public void addWidgets() {
             AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
             globalPosConfig.setValue(waypointLocation);
-            AddWaypointOverlay overlay = new AddWaypointOverlay(this, globalPosConfig, name, color, set -> {
+            Component title = Component.translatable("ftbchunks.gui." + (override ? "edit_waypoint" : "add_waypoint"));
+            AddWaypointOverlay overlay = new AddWaypointOverlay(this, title, globalPosConfig, name, color, set -> {
                 if (set && !name.getValue().isEmpty()) {
                     if (override) {
                         FTBChunksAPI.clientApi().getWaypointManager(waypointLocation.dimension())

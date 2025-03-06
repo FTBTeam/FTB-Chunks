@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * `defaultconfigs/ftbchunks/ftbchunks-world.snbt` -> `config/ftbchunks-world.snbt`
   * Server admins may locally copy `config/ftbchunks-world.snbt` to `world/serverconfig/ftbchunks-world.snbt` if they wish to maintain custom settings which will not be reset by modpack updates
 * Improved entity icons for entities from the Aquaculture mod
+* Updated ru_ru translation (thanks @BazZziliuS)
 
 ### Fixed
 * Fixed light technical blocks (`minecraft:light`) rendering black on the map

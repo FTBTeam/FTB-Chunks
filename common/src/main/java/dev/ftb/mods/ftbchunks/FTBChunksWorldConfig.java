@@ -24,7 +24,13 @@ import java.util.Collections;
 public interface FTBChunksWorldConfig {
 	String KEY = FTBChunks.MOD_ID + "-world";
 
-	SNBTConfig CONFIG = SNBTConfig.create(KEY);
+	SNBTConfig CONFIG = SNBTConfig.create(KEY)
+			.comment("Server-specific configuration for FTB Chunks",
+					"Modpack defaults should be defined in <instance>/config/" + KEY + ".snbt",
+					"  (may be overwritten on modpack update)",
+					"Server admins may locally override this by copying into <instance>/world/serverconfig/" + KEY + ".snbt",
+					"  (will NOT be overwritten on modpack update)"
+			);
 
 	BooleanValue DISABLE_PROTECTION = CONFIG.addBoolean("disable_protection", false)
 			.comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for force-loading");

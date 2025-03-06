@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
+import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.AllyMode;
@@ -11,6 +12,7 @@ import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
+import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
@@ -48,6 +50,37 @@ public interface FTBChunksWorldConfig {
 	BooleanValue WAYPOINT_SHARING_SERVER = WAYPOINT_SHARING.addBoolean("waypoint_sharing_server", true).comment("Allow players to share waypoints with the entire server.");
 	BooleanValue WAYPOINT_SHARING_PARTY = WAYPOINT_SHARING.addBoolean("waypoint_sharing_party", true).comment("Allow players to share waypoints with their party.");
 	BooleanValue WAYPOINT_SHARING_PLAYERS = WAYPOINT_SHARING.addBoolean("waypoint_sharing_players", true).comment("Allow players to share waypoints with other players.");
+
+	SNBTConfig TEAM_PROP_DEFAULTS = CONFIG.addGroup("team_prop_defaults");
+	BooleanValue DEF_ALLOW_FAKE_PLAYERS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_players", false)
+			.comment("Default allow-fake-player setting for team properties");
+	BooleanValue DEF_ALLOW_FAKE_PLAYER_IDS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_player_ids", true)
+			.comment("Default allow fake player IDs which are the same as real permitted players");
+	StringListValue DEF_ALLOW_NAMED_FAKE_PLAYERS = TEAM_PROP_DEFAULTS.addStringList("def_named_fake_players", Collections.emptyList())
+			.comment("Default named fake players who should be allowed by default");
+	EnumValue<PrivacyMode> DEF_ENTITY_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_entity_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
+			.comment("Default mode for entity interaction in claimed chunks");
+	EnumValue<PrivacyMode> DEF_BLOCK_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_block_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
+			.comment("Default mode for block interaction (right-click) in claimed chunks (NeoForge only)")
+			.enabled(Platform::isForge);
+	EnumValue<PrivacyMode> DEF_BLOCK_EDIT = TEAM_PROP_DEFAULTS.addEnum("def_block_edit", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
+			.comment("Default mode for block breaking and placing in claimed chunks (NeoForge only)")
+			.enabled(Platform::isForge);
+	EnumValue<PrivacyMode> DEF_BLOCK_EDIT_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_block_edit_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
+			.comment("Default mode for block interaction, breaking and placing in claimed chunks (Fabric only)")
+			.enabled(Platform::isFabric);
+	EnumValue<PrivacyMode> DEF_NONLIVING_ENTITY_ATTACK = TEAM_PROP_DEFAULTS.addEnum("def_entity_attack", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
+			.comment("Default mode for left-clicking non-living entities (armor stands, item frames...) in claimed chunks");
+	BooleanValue DEF_ALLOW_EXPLOSIONS = TEAM_PROP_DEFAULTS.addBoolean("def_allow_explosions", false)
+			.comment("Default explosion protection for claimed chunks");
+	BooleanValue DEF_MOB_GRIEFING = TEAM_PROP_DEFAULTS.addBoolean("def_mob_griefing", false)
+			.comment("Default mob griefing protection for claimed chunks");
+	EnumValue<PrivacyMode> DEF_CLAIM_VISIBILITY = TEAM_PROP_DEFAULTS.addEnum("def_claim_visibility", PrivacyMode.NAME_MAP, PrivacyMode.PUBLIC)
+			.comment("Default claim visibility for claimed chunks");
+	EnumValue<PrivacyMode> DEF_PLAYER_VISIBILITY = TEAM_PROP_DEFAULTS.addEnum("def_player_visibility", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
+			.comment("Default long-range player visibility on map");
+	BooleanValue DEF_PVP = TEAM_PROP_DEFAULTS.addBoolean("def_pvp", true)
+			.comment("Default PvP setting in claimed chunks");
 
 	static int getMaxClaimedChunks(ChunkTeamData playerData, ServerPlayer player) {
 		if (player != null) {

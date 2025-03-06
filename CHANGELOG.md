@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.3.6]
+
+### Added
+* Added team property defaults in server config (see "Team Property Defaults" section)
+  * Properties for newly-created teams are now taken from these defaults
+  * Backported from 1.21
+
+### Changed
+* Updated ru_ru translation (thanks @j-tap)
+
+### Fixed
+* Fixed light technical blocks (`minecraft:light`) rendering black on the map
+
 ## [2001.3.5]
 
 ### Added

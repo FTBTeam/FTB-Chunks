@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added client config "Reticle Lines" (default true) to minimap settings, to control reticle crosshairs draw on the minimap
 * Added client config "Show Text above Minimap" (default false) to control if minimap info is shown above or below minimap
 * Waypoints may now be edited from the waypoint manager either by double-clicking, or right-clicking and selecting "Edit" from the context menu
+* Added tr_tr translation (thanks @RuyaSavascisi)
 
 ### Changed
 * Now using FTB Library 2101.1.10 config system

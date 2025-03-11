@@ -4,6 +4,10 @@
 		"minecraft:crafting_table",
 		"minecraft:bell",
 		{
+			"id": "#create:table_cloths",
+			"required": false
+		},
+		{
 			"id": "#tombstone:graves",
 			"required": false
 		},

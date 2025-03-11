@@ -97,43 +97,8 @@ public interface FTBChunksClientConfig {
         return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
     }
 
-//    static void init() {
-//        loadDefaulted(CONFIG, LOCAL_DIR.resolve("ftbchunks"), FTBChunks.MOD_ID, "client-config.snbt");
-//    }
-
-//    static void openSettings(Screen screen) {
-//        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
-//            if (accepted) {
-//                saveConfig();
-//            }
-//
-//            MapManager.getInstance().ifPresent(manager -> manager.updateAllRegions(false));
-//            Minecraft.getInstance().setScreen(screen);
-//        });
-//        CONFIG.createClientConfig(group);
-//        EditConfigScreen gui = new EditConfigScreen(group);
-//
-//        gui.openGui();
-//    }
-//
-//    static void openServerSettings(Screen screen) {
-//        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
-//            if (accepted) {
-//                SNBTCompoundTag config = new SNBTCompoundTag();
-//                FTBChunksWorldConfig.CONFIG.write(config);
-//                NetworkManager.sendToServer(new ServerConfigRequestPacket(config));
-//            }
-//            Minecraft.getInstance().setScreen(screen);
-//        });
-//        FTBChunksWorldConfig.CONFIG.createClientConfig(group);
-//        EditConfigScreen gui = new EditConfigScreen(group);
-//
-//        gui.openGui();
-//    }
-
     static void saveConfig() {
         ConfigManager.getInstance().save(KEY);
-//        CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
     }
 
 }

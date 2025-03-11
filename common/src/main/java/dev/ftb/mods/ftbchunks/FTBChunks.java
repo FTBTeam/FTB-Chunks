@@ -88,7 +88,6 @@ public class FTBChunks {
 			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);
 		}
 
-//		LifecycleEvent.SERVER_BEFORE_START.register(this::serverBeforeStart);
 		LifecycleEvent.SERVER_LEVEL_LOAD.register(this::serverLevelLoad);
 
 		TeamManagerEvent.CREATED.register(this::teamManagerCreated);
@@ -171,11 +170,6 @@ public class FTBChunks {
 			FTBChunksClient.INSTANCE.maybeClearDeathpoint(player);
 		}
 	}
-
-//	private void serverBeforeStart(MinecraftServer server) {
-//		var configPath = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR);
-//		ConfigUtil.loadDefaulted(FTBChunksWorldConfig.CONFIG, configPath, FTBChunks.MOD_ID);
-//	}
 
 	private void serverLevelLoad(ServerLevel level) {
 		if (ClaimedChunkManagerImpl.getInstance() != null) {

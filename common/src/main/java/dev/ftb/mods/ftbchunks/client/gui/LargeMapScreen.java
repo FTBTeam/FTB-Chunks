@@ -174,7 +174,6 @@ public class LargeMapScreen extends BaseScreen {
                 }));
 
         add(settingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
-//                (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this)),
                 (b, m) -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );
@@ -182,7 +181,6 @@ public class LargeMapScreen extends BaseScreen {
         if (Minecraft.getInstance().player.hasPermissions(2)) {
             add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
                     Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-//                    (b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this)),
                     (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
                     Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
             ));

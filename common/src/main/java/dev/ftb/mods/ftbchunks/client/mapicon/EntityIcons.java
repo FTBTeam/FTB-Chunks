@@ -59,8 +59,6 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
         for (Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : RegistrarManager.get(FTBChunks.MOD_ID).get(Registries.ENTITY_TYPE).entrySet()) {
             ResourceLocation id = entry.getKey().location();
             EntityType<?> entityType = entry.getValue();
-            ResourceKey<EntityType<?>> registryName = BuiltInRegistries.ENTITY_TYPE.getResourceKey(entityType).orElseThrow();
-
 
             String basePath = getBasePath(id);
 
@@ -96,41 +94,36 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
                 }
             }
 
-            Map<ResourceKey<EntityType<?>>, Boolean> stringBooleanMap = FTBChunksClientConfig.ENTITY_ICON.get();
-            if (!stringBooleanMap.containsKey(registryName)) {
-                stringBooleanMap.put(registryName, entityIconSettings.defaultEnabled);
-                FTBChunksClientConfig.saveConfig();
-            }
-
             map.put(entityType, entityIconSettings);
-
         }
 
         return map;
     }
 
     public static boolean canTypeRenderer(EntityType<?> type) {
-        if (type == EntityType.PLAYER) {
-            return false;
-        }
-        Optional<EntityIconSettings> settings = getSettings(type);
-        return settings.isPresent();
+        return type != EntityType.PLAYER && getSettings(type).isPresent();
     }
 
     public static boolean shouldEntityRender(Entity entity, Player player) {
-        if (!canTypeRenderer(entity.getType())) {
+        if (!canTypeRenderer(entity.getType()) || entity.isInvisibleTo(player)) {
             return false;
         }
 
-        if (entity.isInvisibleTo(player)) {
-            return false;
-        }
+        return BuiltInRegistries.ENTITY_TYPE.getResourceKey(entity.getType())
+                .map(key -> isIconEnabled(key, entity.getType()))
+                .orElse(false);
+    }
 
-        Optional<ResourceKey<EntityType<?>>> registryName = BuiltInRegistries.ENTITY_TYPE.getResourceKey(entity.getType());
-        if (registryName.isEmpty()) {
-            return false;
+    private static boolean isIconEnabled(ResourceKey<EntityType<?>> key, EntityType<?> type) {
+        if (!FTBChunksClientConfig.ENTITY_ICON.get().containsKey(key)) {
+            // entity not listed in the config (most likely a new mod was added) - get its defaults if possible
+            EntityIconSettings settings = ENTITY_SETTINGS.getOrDefault(type, EntityIconSettings.OLD_HIDDEN);
+            FTBChunksClientConfig.ENTITY_ICON.get().put(key, settings.defaultEnabled);
+            FTBChunksClientConfig.saveConfig();
+            return settings.defaultEnabled;
+        } else {
+            return FTBChunksClientConfig.ENTITY_ICON.get().get(key);
         }
-        return FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(registryName.get(), true);
     }
 
     private static String getBasePath(ResourceLocation id) {
@@ -175,7 +168,6 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
     protected void apply(Map<EntityType<?>, EntityIconSettings> entityIconDataMap, ResourceManager resourceManager, ProfilerFiller profiler) {
         ICON_CACHE.clear();
         ENTITY_SETTINGS.clear();
-
         ENTITY_SETTINGS.putAll(entityIconDataMap);
     }
 
@@ -188,7 +180,10 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
             double scale,
             boolean defaultEnabled) {
 
-        public static EntityIconSettings OLD_HIDDEN = new EntityIconSettings(false, Optional.empty(), Optional.empty(), List.of(), WidthHeight.DEFAULT, 1D, true);
+        private static final EntityIconSettings OLD_HIDDEN = new EntityIconSettings(
+                false, Optional.empty(), Optional.empty(),
+                List.of(), WidthHeight.DEFAULT, 1D, true
+        );
 
         public static final Codec<EntityIconSettings> CODEC = RecordCodecBuilder.<EntityIconSettings>create(builder ->
                 builder.group(

@@ -5,34 +5,22 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
-import dev.ftb.mods.ftbchunks.client.map.WaypointManagerImpl;
-import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.DropDownMenu;
-import dev.ftb.mods.ftblibrary.ui.NordTheme;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
@@ -186,14 +174,14 @@ public class LargeMapScreen extends BaseScreen {
                 }));
 
         add(settingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
-                (b, m) -> FTBChunksClientConfig.openSettings(new ScreenWrapper(this)),
+                (b, m) -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );
 
         if (Minecraft.getInstance().player.hasPermissions(2)) {
             add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
                     Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-                    (b, m) -> FTBChunksClientConfig.openServerSettings(new ScreenWrapper(this)),
+                    (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
                     Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
             ));
         }
@@ -254,14 +242,15 @@ public class LargeMapScreen extends BaseScreen {
             final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
             GlobalPos globalPos = GlobalPos.of(dimension.dimension, pos);
             List<ContextMenuItem> list = new ArrayList<>();
-            list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, btn -> {
+            Component title = Component.translatable("ftbchunks.gui.add_waypoint");
+            list.add(new ContextMenuItem(title, Icons.ADD, btn -> {
                 StringConfig name = new StringConfig();
                 name.setValue("");
                 ColorConfig col = new ColorConfig();
                 col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
                 AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
                 globalPosConfig.setValue(globalPos);
-                var overlay = new AddWaypointOverlay(getGui(), globalPosConfig, name, col, accepted -> {
+                var overlay = new AddWaypointOverlay(getGui(), title, globalPosConfig, name, col, accepted -> {
                     if (accepted) {
                         MapDimension mapDimension = MapManager.getInstance().orElseThrow().getDimension(globalPosConfig.getValue().dimension());
                         WaypointImpl waypoint = new WaypointImpl(WaypointType.DEFAULT, mapDimension, globalPosConfig.getValue().pos())

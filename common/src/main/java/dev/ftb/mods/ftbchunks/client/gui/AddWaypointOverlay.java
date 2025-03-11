@@ -46,9 +46,8 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     private final Button dropDownButton;
     private final GlobalPosConfig pos;
 
-
-    public AddWaypointOverlay(Panel panel, GlobalPosConfig pos, ConfigFromString<String> config, ColorConfig colorConfig, ConfigCallback callback) {
-        super(panel, config, callback, Component.translatable("ftbchunks.gui.add_waypoint"));
+    public AddWaypointOverlay(Panel panel, Component title, GlobalPosConfig pos, ConfigFromString<String> config, ColorConfig colorConfig, ConfigCallback callback) {
+        super(panel, config, callback, title);
         this.pos = pos;
         colorButton = new ColorButton(colorConfig.getValue(), (btn, mb) -> {
             ColorSelectorPanel.popupAtMouse(getGui(), colorConfig, accepted -> {
@@ -71,7 +70,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         });
         this.dropDownButton = new SimpleButton(this, Component.empty(), Icons.DROPDOWN_OUT, (widget, mouseButton) -> {
             DropDownMenu dropDownMenu = getGui().openDropdownMenu(contextMenuItems);
-            dropDownMenu.setPos(dimension.getX(), dimension.getY() + dimension.getHeight());
+            dropDownMenu.setPos(dropDownMenu.getPosX() + 3 + (dimension.getX() - getMouseX()), dropDownMenu.getPosY() + 3 + (dimension.getY() + dimension.getHeight() - getMouseY()));
         }) {
             @Override
             public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
@@ -185,11 +184,11 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         z.setPosAndSize(2 + w * 2, xyzHeight, w - 2, widgetH);
 
         int buttonW = w + w / 2;
-        int buttonHeight = x.posY + x.getHeight() + 2;
-        buttonAccept.setPosAndSize(width - buttonW * 2 - 2, buttonHeight, buttonW, widgetH + 1);
-        buttonCancel.setPosAndSize(width - buttonW, buttonHeight, buttonW - 3, widgetH + 1);
+        int buttonHeight = x.posY + x.getHeight() + 5;
+        buttonAccept.setPosAndSize(width - buttonW * 2 - 2, buttonHeight, buttonW, 20);
+        buttonCancel.setPosAndSize(width - buttonW, buttonHeight, buttonW - 3, 20);
 
-        height += 28 + 14 + 20;
+        height += 28 + 14 + 30;
     }
 
     @Override

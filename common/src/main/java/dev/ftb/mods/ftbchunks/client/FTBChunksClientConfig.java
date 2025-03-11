@@ -1,44 +1,29 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
-import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
-import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
-import dev.ftb.mods.ftbchunks.net.ServerConfigRequestPacket;
-import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.config.ui.EditConfigScreen;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
-import dev.ftb.mods.ftblibrary.snbt.config.StringMapValue;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import dev.ftb.mods.ftbchunks.client.minimap.components.*;
+import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
+import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;
 import java.util.stream.Stream;
 
-import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.LOCAL_DIR;
-import static dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil.loadDefaulted;
-
 public interface FTBChunksClientConfig {
-    SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-client");
+    String KEY = FTBChunks.MOD_ID + "-client";
+
+    SNBTConfig CONFIG = SNBTConfig.create(KEY)
+            .comment("Client-specific configuration for FTB Chunks",
+                    "Modpack defaults should be defined in <instance>/config/" + KEY + ".snbt",
+                    "  (may be overwritten on modpack update)",
+                    "Players may locally override this by copying into <instance>/local/" + KEY + ".snbt",
+                    "  (will NOT be overwritten on modpack update)"
+            );
 
     SNBTConfig APPEARANCE = CONFIG.addGroup("appearance", 0);
     DoubleValue NOISE = APPEARANCE.addDouble("noise", 0.05D, 0D, 0.5D).fader().comment("Noise added to map to make it look less plastic");
@@ -81,6 +66,7 @@ public interface FTBChunksClientConfig {
     BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.addBoolean("large_entities", false).comment("Entities in minimap will be larger");
     EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.addEnum("blur_mode", MinimapBlurMode.NAME_MAP).comment("Blurs minimap");
     BooleanValue MINIMAP_COMPASS = MINIMAP.addBoolean("compass", true).comment("Adds NWSE compass inside minimap");
+    BooleanValue MINIMAP_RETICLE = MINIMAP.addBoolean("reticle", true).comment("Draw reticle lines on minimap");
     IntValue MINIMAP_VISIBILITY = MINIMAP.addInt("visibility", 255, 0, 255).comment("Minimap visibility");
     IntValue MINIMAP_OFFSET_X = MINIMAP.addInt("position_offset_x", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
     IntValue MINIMAP_OFFSET_Y = MINIMAP.addInt("position_offset_y", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
@@ -93,6 +79,7 @@ public interface FTBChunksClientConfig {
     EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
     EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on full screen minimap");
     EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on minimap");
+    BooleanValue TEXT_ABOVE_MINIMAP = MINIMAP.addBoolean("text_above_minimap", false).comment("Show text above minimap");
 
     SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");
@@ -110,42 +97,8 @@ public interface FTBChunksClientConfig {
         return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
     }
 
-    static void init() {
-        loadDefaulted(CONFIG, LOCAL_DIR.resolve("ftbchunks"), FTBChunks.MOD_ID, "client-config.snbt");
-    }
-
-    static void openSettings(Screen screen) {
-        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
-            if (accepted) {
-                saveConfig();
-            }
-
-            MapManager.getInstance().ifPresent(manager -> manager.updateAllRegions(false));
-            Minecraft.getInstance().setScreen(screen);
-        });
-        CONFIG.createClientConfig(group);
-        EditConfigScreen gui = new EditConfigScreen(group);
-
-        gui.openGui();
-    }
-
-    static void openServerSettings(Screen screen) {
-        ConfigGroup group = new ConfigGroup("ftbchunks", accepted -> {
-            if (accepted) {
-                SNBTCompoundTag config = new SNBTCompoundTag();
-                FTBChunksWorldConfig.CONFIG.write(config);
-                NetworkManager.sendToServer(new ServerConfigRequestPacket(config));
-            }
-            Minecraft.getInstance().setScreen(screen);
-        });
-        FTBChunksWorldConfig.CONFIG.createClientConfig(group);
-        EditConfigScreen gui = new EditConfigScreen(group);
-
-        gui.openGui();
-    }
-
     static void saveConfig() {
-        CONFIG.save(Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt"));
+        ConfigManager.getInstance().save(KEY);
     }
 
 }

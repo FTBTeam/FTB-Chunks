@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -11,14 +12,7 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
@@ -30,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
@@ -43,12 +38,7 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static dev.ftb.mods.ftblibrary.util.TextComponentUtils.hotkeyTooltip;
 
@@ -63,28 +53,10 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         showBottomPanel(false);
         showCloseButton(true);
 
-        for (Map.Entry<ResourceKey<Level>, List<WaypointImpl>> resourceKeyListEntry : collectWaypoints().entrySet()) {
-            collapsed.put(resourceKeyListEntry.getKey(), false);
-            waypoints.put(resourceKeyListEntry.getKey(), new ArrayList<>(resourceKeyListEntry.getValue()));
-        }
-
-        computeWaypointTextWidth();
-
         buttonExpandAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.expand_all"), hotkeyTooltip("="), hotkeyTooltip("+")), Icons.UP,
                 (widget, button) -> toggleAll(true));
         buttonCollapseAll = new SimpleButton(topPanel, List.of(Component.translatable("gui.collapse_all"), hotkeyTooltip("-")), Icons.DOWN,
                 (widget, button) -> toggleAll(false));
-
-        alignWidgets();
-    }
-
-    private void computeWaypointTextWidth() {
-        widestWaypoint = 0;
-        for (var dimKey : waypoints.entrySet()) {
-            for (var wp : dimKey.getValue()) {
-                widestWaypoint = Math.max(widestWaypoint, getTheme().getStringWidth(wp.getName()));
-            }
-        }
     }
 
     private void toggleAll(boolean collapsed) {
@@ -110,7 +82,24 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
     public boolean onInit() {
         setWidth(Mth.clamp(widestWaypoint + 80, 220, getScreen().getGuiScaledWidth() * 4 / 5));
         setHeight(getScreen().getGuiScaledHeight() * 4 / 5);
+
+        for (Map.Entry<ResourceKey<Level>, List<WaypointImpl>> resourceKeyListEntry : collectWaypoints().entrySet()) {
+            collapsed.put(resourceKeyListEntry.getKey(), false);
+            waypoints.put(resourceKeyListEntry.getKey(), new ArrayList<>(resourceKeyListEntry.getValue()));
+        }
+
+        computeWaypointTextWidth();
+
         return true;
+    }
+
+    private void computeWaypointTextWidth() {
+        widestWaypoint = 0;
+        for (var dimKey : waypoints.entrySet()) {
+            for (var wp : dimKey.getValue()) {
+                widestWaypoint = Math.max(widestWaypoint, getTheme().getStringWidth(wp.getName()));
+            }
+        }
     }
 
     @Override
@@ -330,6 +319,21 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         }
 
         @Override
+        public boolean mouseDoubleClicked(MouseButton button) {
+            if (isMouseOver()) {
+                openWaypointEditPanel();
+                return true;
+            }
+            return false;
+        }
+
+        private void openWaypointEditPanel() {
+            StringConfig configName = new StringConfig();
+            configName.setValue(wp.getName());
+            new FTBChunksClient.WaypointAddScreen(configName, GlobalPos.of(wp.getDimension(), wp.getPos()), Color4I.rgb(wp.getColor()), true).openGui();
+        }
+
+        @Override
         public boolean mousePressed(MouseButton button) {
             if (isMouseOver() && button.isRight()) {
                 List<ContextMenuItem> list = new ArrayList<>();
@@ -365,6 +369,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                         });
                     }));
                 }
+                list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> openWaypointEditPanel()));
                 if (Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));

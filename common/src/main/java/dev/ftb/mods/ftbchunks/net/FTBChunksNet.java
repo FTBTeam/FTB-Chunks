@@ -6,7 +6,6 @@ public class FTBChunksNet {
 	public static void init() {
 		NetworkHelper.registerC2S(RequestChunkChangePacket.TYPE, RequestChunkChangePacket.STREAM_CODEC, RequestChunkChangePacket::handle);
 		NetworkHelper.registerC2S(RequestMapDataPacket.TYPE, RequestMapDataPacket.STREAM_CODEC, RequestMapDataPacket::handle);
-		NetworkHelper.registerC2S(ServerConfigRequestPacket.TYPE, ServerConfigRequestPacket.STREAM_CODEC, ServerConfigRequestPacket::handle);
 		NetworkHelper.registerC2S(TeleportFromMapPacket.TYPE, TeleportFromMapPacket.STREAM_CODEC, TeleportFromMapPacket::handle);
 		NetworkHelper.registerC2S(UpdateForceLoadExpiryPacket.TYPE, UpdateForceLoadExpiryPacket.STREAM_CODEC, UpdateForceLoadExpiryPacket::handle);
 		NetworkHelper.registerC2S(SyncTXPacket.TYPE, SyncTXPacket.STREAM_CODEC, SyncTXPacket::handle);
@@ -23,7 +22,6 @@ public class FTBChunksNet {
 		NetworkHelper.registerS2C(SendGeneralDataPacket.TYPE, SendGeneralDataPacket.STREAM_CODEC, SendGeneralDataPacket::handle);
 		NetworkHelper.registerS2C(SendManyChunksPacket.TYPE, SendManyChunksPacket.STREAM_CODEC, SendManyChunksPacket::handle);
 		NetworkHelper.registerS2C(SendPlayerPositionPacket.TYPE, SendPlayerPositionPacket.STREAM_CODEC, SendPlayerPositionPacket::handle);
-		NetworkHelper.registerS2C(ServerConfigResponsePacket.TYPE, ServerConfigResponsePacket.STREAM_CODEC, ServerConfigResponsePacket::handle);
 		NetworkHelper.registerS2C(SyncRXPacket.TYPE, SyncRXPacket.STREAM_CODEC, SyncRXPacket::handle);
 		NetworkHelper.registerS2C(OpenClaimGUIPacket.TYPE, OpenClaimGUIPacket.STREAM_CODEC, OpenClaimGUIPacket::handle);
 	}

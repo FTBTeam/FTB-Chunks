@@ -15,15 +15,15 @@ import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.api.*;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
+import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import dev.ftb.mods.ftblibrary.snbt.config.ConfigUtil;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.event.*;
 import net.minecraft.ChatFormatting;
@@ -81,11 +81,13 @@ public class FTBChunks {
 
 		FTBChunksNet.init();
 
+		ConfigManager.getInstance().registerServerConfig(FTBChunksWorldConfig.CONFIG, MOD_ID, true, FTBChunksWorldConfig::onConfigChanged);
+		ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID);
+
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
 			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);
 		}
 
-		LifecycleEvent.SERVER_BEFORE_START.register(this::serverBeforeStart);
 		LifecycleEvent.SERVER_LEVEL_LOAD.register(this::serverLevelLoad);
 
 		TeamManagerEvent.CREATED.register(this::teamManagerCreated);
@@ -169,11 +171,6 @@ public class FTBChunks {
 		}
 	}
 
-	private void serverBeforeStart(MinecraftServer server) {
-		var configPath = server.getWorldPath(ConfigUtil.SERVER_CONFIG_DIR);
-		ConfigUtil.loadDefaulted(FTBChunksWorldConfig.CONFIG, configPath, FTBChunks.MOD_ID);
-	}
-
 	private void serverLevelLoad(ServerLevel level) {
 		if (ClaimedChunkManagerImpl.getInstance() != null) {
 			ClaimedChunkManagerImpl.getInstance().initForceLoadedChunks(level);
@@ -199,12 +196,10 @@ public class FTBChunks {
 		FTBChunks.LOGGER.debug("handling player team login: player = {}, team = {}",
 				playerId, data.getTeamId());
 
-		SNBTCompoundTag config = new SNBTCompoundTag();
-		FTBChunksWorldConfig.CONFIG.write(config);
 		UUID managerId = FTBTeamsAPI.api().getManager().getId();
-		NetworkManager.sendToPlayer(player, new LoginDataPacket(managerId, config));
+		NetworkManager.sendToPlayer(player, new LoginDataPacket(managerId));
 		SendGeneralDataPacket.send(data, player);
-		FTBChunks.LOGGER.debug("server config and team data sent to {}", playerId);
+		FTBChunks.LOGGER.debug("team data sent to {}", playerId);
 
 		long now = System.currentTimeMillis();
 		Map<Pair<ResourceKey<Level>, UUID>, List<ChunkSyncInfo>> chunksToSend = new HashMap<>();

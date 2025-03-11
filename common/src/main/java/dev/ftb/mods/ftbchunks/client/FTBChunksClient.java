@@ -6,22 +6,10 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientGuiEvent;
-import dev.architectury.event.events.client.ClientLifecycleEvent;
-import dev.architectury.event.events.client.ClientPlayerEvent;
-import dev.architectury.event.events.client.ClientRawInputEvent;
-import dev.architectury.event.events.client.ClientReloadShadersEvent;
-import dev.architectury.event.events.client.ClientScreenInputEvent;
-import dev.architectury.event.events.client.ClientTickEvent;
+import dev.architectury.event.events.client.*;
 import dev.architectury.hooks.client.screen.ScreenAccess;
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.platform.Platform;
@@ -39,35 +27,11 @@ import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
-import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
-import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
-import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
-import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
-import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
-import dev.ftb.mods.ftbchunks.client.map.ChunkUpdateTask;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
-import dev.ftb.mods.ftbchunks.client.map.MapTask;
-import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
-import dev.ftb.mods.ftbchunks.client.map.UpdateChunkFromServerTask;
-import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
-import dev.ftb.mods.ftbchunks.client.map.WaypointManagerImpl;
-import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbchunks.client.gui.*;
+import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityMapIcon;
-import dev.ftb.mods.ftbchunks.client.mapicon.InWorldMapIcon;
-import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
-import dev.ftb.mods.ftbchunks.client.mapicon.TrackedPlayerMapIcon;
-import dev.ftb.mods.ftbchunks.client.minimap.components.BiomeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.DebugComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.FPSComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.GameTimeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.PlayerPosInfoComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.RealTimeComponent;
-import dev.ftb.mods.ftbchunks.client.minimap.components.ZoneInfoComponent;
+import dev.ftb.mods.ftbchunks.client.mapicon.*;
+import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
@@ -78,7 +42,6 @@ import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -90,11 +53,7 @@ import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
+import net.minecraft.client.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -133,17 +92,10 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -209,9 +161,10 @@ public enum FTBChunksClient {
             return;
         }
 
+        maybeMigrateClientConfig();
+
         FTBChunksAPI._initClient(new FTBChunksClientAPIImpl());
 
-        FTBChunksClientConfig.init();
         registerKeys();
 
         ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new EntityIcons());
@@ -240,6 +193,21 @@ public enum FTBChunksClient {
         clientApi.registerMinimapComponent(new DebugComponent());
 
         ClientLifecycleEvent.CLIENT_STARTED.register(this::clientStarted);
+    }
+
+    private void maybeMigrateClientConfig() {
+        // TODO delete in 1.22
+        Path oldConfig = Platform.getGameFolder().resolve("local/ftbchunks/client-config.snbt");
+        Path newConfig = Platform.getConfigFolder().resolve("ftbchunks-client.snbt");
+
+        if (Files.exists(oldConfig) && !Files.exists(newConfig)) {
+            try {
+                Files.move(oldConfig, newConfig);
+                FTBChunks.LOGGER.info("migrated {} to {}", oldConfig, newConfig);
+            } catch (IOException e) {
+                FTBChunks.LOGGER.error("can't migrate {} to {}: {}", oldConfig, newConfig, e.getMessage());
+            }
+        }
     }
 
     private void clientStarted(Minecraft minecraft) {
@@ -301,9 +269,8 @@ public enum FTBChunksClient {
         updateMinimapScheduled = true;
     }
 
-    public void handlePlayerLogin(UUID serverId, SNBTCompoundTag config) {
+    public void handlePlayerLogin(UUID serverId) {
         FTBChunks.LOGGER.info("Loading FTB Chunks client data from world {}", serverId);
-        FTBChunksWorldConfig.CONFIG.read(config);
         MapManager.startUp(serverId);
         scheduleMinimapUpdate();
         renderedDebugCount = 0;
@@ -612,7 +579,7 @@ public enum FTBChunksClient {
             y -= minimapPosition.posY > 1 ? offsetY : -offsetY;
         }
 
-        // a bit of a kludge here: vanilla renders active mobeffects in the top-right; move the minimap down if necessary to avoid them
+        // a bit of a kludge here: vanilla renders active mobeffects in the top-right; move them to the left of the minimap if necessary
         if (!mc.player.getActiveEffects().isEmpty() && y <= 50 && x + size > scaledWidth - 50) {
             vanillaEffectsOffsetX = -(scaledWidth - x) - 5;
         } else {
@@ -629,8 +596,36 @@ public enum FTBChunksClient {
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
-        poseStack.translate(x + halfSizeD, y + halfSizeD, 490);
 
+        poseStack.translate(0, y + halfSizeD, 0);
+
+        boolean textAboveMinimap = FTBChunksClientConfig.TEXT_ABOVE_MINIMAP.get();
+        int componentsHeight = getMinimapComponentsTotalHeight(mc, dim, playerX, playerY, playerZ);
+
+        if (textAboveMinimap) {
+            // Move map down if text would go outside the screen
+            int renderY = y - componentsHeight;
+            if (renderY <= 0) {
+                int offset = -renderY + 1;
+                poseStack.translate(0, offset, 0);
+                y += offset;
+            }
+
+            poseStack.pushPose();
+            poseStack.translate(0, -componentsHeight, 0);
+            drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, (int) -halfSizeF - 1, 0, halfSizeD, poseStack, graphics);
+            poseStack.popPose();
+        } else {
+            // Move map up if text would go outside the screen
+            int renderY = y + size + componentsHeight;
+            if (renderY >= scaledHeight) {
+                int offset = -componentsHeight - 1;
+                poseStack.translate(0, offset, 0);
+                y += offset;
+            }
+        }
+
+        poseStack.translate(x + halfSizeD, 0, 490);
         Matrix4f m = poseStack.last().pose();
 
         // Draw the minimap cutout mask - see AdvancementTab for a vanilla example of using colorMask()
@@ -680,13 +675,16 @@ public enum FTBChunksClient {
         buffer.addVertex(m, halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 0F);
         BufferUploader.drawWithShader(buffer.buildOrThrow());
 
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-        buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-        buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
-        buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        if (FTBChunksClientConfig.MINIMAP_RETICLE.get()) {
+            // draw map crosshairs
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+            buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
+            buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
+            buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
+            buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
+        }
 
         poseStack.popPose();
 
@@ -771,6 +769,29 @@ public enum FTBChunksClient {
         }
 
         // The minimap info text
+        if (!textAboveMinimap) {
+            drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, y, size, halfSizeD, poseStack, graphics);
+        }
+
+        RenderSystem.enableDepthTest();
+
+        if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
+            drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
+        }
+    }
+
+    private int getMinimapComponentsTotalHeight(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ) {
+        var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
+        int sum = 0;
+        for (MinimapInfoComponent c : sortedComponents) {
+            if (c.shouldRender(context)) {
+                sum += c.height(context);
+            }
+        }
+        return sum;
+    }
+
+    private void drawMinimapComponents(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ, int scaledHeight, int x, int y, int size, double halfSizeD, PoseStack poseStack, GuiGraphics graphics) {
         var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
         var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
@@ -792,12 +813,6 @@ public enum FTBChunksClient {
             poseStack.popPose();
 
             yOffset += height;
-        }
-
-        RenderSystem.enableDepthTest();
-
-        if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
-            drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
         }
     }
 
@@ -1311,12 +1326,21 @@ public enum FTBChunksClient {
     public static class WaypointAddScreen extends BaseScreen {
         private final StringConfig name;
         private final GlobalPos waypointLocation;
+        private final ColorConfig color;
+        private final boolean override;
 
-        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
+        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation, Color4I color, boolean override) {
             super();
             this.name = name;
             this.waypointLocation = waypointLocation;
             this.setHeight(35);
+            this.color = new ColorConfig();
+            this.color.setValue(color);
+            this.override = override;
+        }
+
+        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
+            this(name, waypointLocation, Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F), false);
         }
 
         public WaypointAddScreen(StringConfig name, Player player) {
@@ -1329,13 +1353,16 @@ public enum FTBChunksClient {
 
         @Override
         public void addWidgets() {
-            ColorConfig col = new ColorConfig();
             AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
             globalPosConfig.setValue(waypointLocation);
-            col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
-            AddWaypointOverlay overlay = new AddWaypointOverlay(this, globalPosConfig, name, col, set -> {
+            Component title = Component.translatable("ftbchunks.gui." + (override ? "edit_waypoint" : "add_waypoint"));
+            AddWaypointOverlay overlay = new AddWaypointOverlay(this, title, globalPosConfig, name, color, set -> {
                 if (set && !name.getValue().isEmpty()) {
-                    Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), col.getValue().rgba());
+                    if (override) {
+                        FTBChunksAPI.clientApi().getWaypointManager(waypointLocation.dimension())
+                                .ifPresent(mgr -> mgr.removeWaypointAt(waypointLocation.pos()));
+                    }
+                    Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba());
                     Minecraft.getInstance().player.displayClientMessage(
                             Component.translatable("ftbchunks.waypoint_added",
                                     Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added client config "Show Text above Minimap" (default false) to control if minimap info is shown above or below minimap
 * Waypoints may now be edited from the waypoint manager either by double-clicking, or right-clicking and selecting "Edit" from the context menu
 * Added tr_tr translation (thanks @RuyaSavascisi)
+* Added `#create:table_cloths` to `ftbchunks:interact_whitelist` to allow Create Table Cloths (shop blocks) to be right-clicked anywhere
 
 ### Changed
 * Now using FTB Library 2101.1.10 config system

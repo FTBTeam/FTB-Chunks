@@ -16,23 +16,27 @@ import net.minecraft.commands.CommandSourceStack;
  */
 public interface ClaimedChunkEvent {
 	/**
-	 * Fired when a chunk is about to be claimed. This can be cancelled by returning a non-null claim result; it is
-	 * recommended to use {@link ClaimResult#customProblem(String)} for this.
+	 * Fired when a chunk is about to be claimed. This can be cancelled by returning a failed claim result; it is
+	 * recommended to use {@link ClaimResult#customProblem(String)} for this. Return {@link ClaimResult#success()} to
+	 * allow the operation to continue.
 	 */
 	Event<Before> BEFORE_CLAIM = EventFactory.createCompoundEventResult();
 	/**
-	 * Fired when a chunk is about to be force-loaded. This can be cancelled by returning a non-null claim result; it is
-	 * recommended to use {@link ClaimResult#customProblem(String)} for this.
+	 * Fired when a chunk is about to be force-loaded. This can be cancelled by returning a failed claim result; it is
+	 * recommended to use {@link ClaimResult#customProblem(String)} for this. Return {@link ClaimResult#success()} to
+	 * allow the operation to continue.
 	 */
 	Event<Before> BEFORE_LOAD = EventFactory.createCompoundEventResult();
 	/**
-	 * Fired when a chunk is about to be un-claimed. This can be cancelled by returning a non-null claim result; it is
-	 * recommended to use {@link ClaimResult#customProblem(String)} for this.
+	 * Fired when a chunk is about to be unclaimed. This can be cancelled by returning a failed claim result; it is
+	 * recommended to use {@link ClaimResult#customProblem(String)} for this. Return {@link ClaimResult#success()} to
+	 * allow the operation to continue.
 	 */
 	Event<Before> BEFORE_UNCLAIM = EventFactory.createCompoundEventResult();
 	/**
-	 * Fired when a chunk is about to be un-force-loaded. This can be cancelled by returning a non-null claim result; it is
-	 * recommended to use {@link ClaimResult#customProblem(String)} for this.
+	 * Fired when a chunk is about to be un-force-loaded. This can be cancelled by returning a failed claim result; it is
+	 * recommended to use {@link ClaimResult#customProblem(String)} for this. Return {@link ClaimResult#success()} to
+	 * allow the operation to continue.
 	 */
 	Event<Before> BEFORE_UNLOAD = EventFactory.createCompoundEventResult();
 

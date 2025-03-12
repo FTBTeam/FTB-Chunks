@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * Fixed light technical blocks (`minecraft:light`) rendering black on the map
 * Fixed a piston protection issue which allowed blocks to be pulled out of protected chunks with a sticky piston
+* Fixed some entities not rendering on the map/minimap at all
+  * Entities where the texture isn't known now show on the map as a generic "dot" icon
 
 ## [2101.1.7]
 

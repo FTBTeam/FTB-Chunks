@@ -85,13 +85,11 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
                 }
             }
 
-            if (entityIconSettings == null) {
-                if (entityType.getCategory() != MobCategory.MISC && FTBChunks.isDevMode()) {
+            if (entityIconSettings == null && entityType.getCategory() != MobCategory.MISC) {
+                if (FTBChunks.isDevMode()) {
                     LOGGER.error("Missing entity icon settings for {}", id);
-                    entityIconSettings = EntityIconSettings.OLD_HIDDEN;
-                } else {
-                    continue;
                 }
+                entityIconSettings = EntityIconSettings.OLD_HIDDEN;
             }
 
             map.put(entityType, entityIconSettings);

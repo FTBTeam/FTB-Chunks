@@ -14,11 +14,16 @@ public class HeightUtils {
 	public static final int UNKNOWN = Short.MIN_VALUE + 1;
 
 	public static boolean isWater(BlockState state) {
+		if (state == null) {
+			// shouldn't happen, but https://github.com/FTBTeam/FTB-Mods-Issues/issues/1599
+			return false;
+		}
+
 		if (state.getBlock() == Blocks.WATER) {
 			return true;
 		}
 
-		return state instanceof BlockStateFTBC ? ((BlockStateFTBC) state).getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
+		return state instanceof BlockStateFTBC ftbc ? ftbc.getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
 	public static boolean skipBlock(BlockState state) {

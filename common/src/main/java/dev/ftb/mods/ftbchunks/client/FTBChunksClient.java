@@ -360,7 +360,11 @@ public enum FTBChunksClient {
 	}
 
 	public EventResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
-		if (action != GLFW.GLFW_PRESS || client.screen != null || !FTBChunksWorldConfig.playerHasMapStage(client.player)) {
+		if (action != GLFW.GLFW_PRESS
+				|| client.screen != null
+				|| !FTBChunksWorldConfig.playerHasMapStage(client.player)
+				|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), InputConstants.KEY_F3))
+		{
 			return EventResult.pass();
 		}
 		if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers)) {

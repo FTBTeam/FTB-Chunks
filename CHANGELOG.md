@@ -10,12 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added team property defaults in server config (see "Team Property Defaults" section)
   * Properties for newly-created teams are now taken from these defaults
   * Backported from 1.21
+* Create's Table Cloth block is now on the block interact whitelist, meaning it can be right-clicked in any claimed chunk
 
 ### Changed
 * Updated ru_ru translation (thanks @j-tap)
 
 ### Fixed
 * Fixed light technical blocks (`minecraft:light`) rendering black on the map
+* Fixed an edge case causing NPE's during checking blockstates for water
 
 ## [2001.3.5]
 

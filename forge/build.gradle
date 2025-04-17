@@ -138,7 +138,7 @@ if (ENV.CURSEFORGE_KEY) {
 				optionalDependency 'ftb-ranks-forge'
 				optionalDependency 'ftb-xmod-compat'
 			}
-			changelog = getGitChangelog
+			changelog = createChangelog(project)
 			changelogType = 'markdown'
 		}
 	}

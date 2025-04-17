@@ -41,19 +41,20 @@ allprojects {
 		mavenLocal()
 		maven {
 			url "https://maven.architectury.dev/"
-		}
-
-		maven {
-			url "https://www.cursemaven.com"
 			content {
-				includeGroup "curse.maven"
+				includeGroup "dev.architectury"
 			}
 		}
 
 		maven {
-			url "https://maven.saps.dev/minecraft"
+			url "https://maven.ftb.dev/releases"
 			content {
-				includeGroup "dev.latvian.mods"
+				includeGroup "dev.ftb.mods"
+			}
+		}
+		maven {
+			url "https://maven.ftb.dev/snapshots"
+			content {
 				includeGroup "dev.ftb.mods"
 			}
 		}

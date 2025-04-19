@@ -69,11 +69,13 @@ public class SendVisiblePlayerListPacket extends BaseS2CMessage {
 				.collect(Collectors.toList());
 
 		boolean override = FTBChunksWorldConfig.LOCATION_MODE_OVERRIDE.get();
+		boolean allowOps = FTBChunksWorldConfig.OPS_SEE_ALL_PLAYERS_MAP.get();
 		for (VisiblePlayerItem recipient : playerList) {
 			List<UUID> playerIds = new ArrayList<>();
 
 			for (VisiblePlayerItem other : playerList) {
-				if (override || recipient.player.hasPermissions(2) || other.data.canUse(recipient.player, FTBChunksTeamData.LOCATION_MODE)) {
+				if (override || (allowOps && recipient.player.hasPermissions(2))
+						|| other.data.canUse(recipient.player, FTBChunksTeamData.LOCATION_MODE)) {
 					playerIds.add(other.player.getUUID());
 				}
 			}

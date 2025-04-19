@@ -35,6 +35,10 @@ public class FTBChunksExpectedImpl {
     }
 
     public static Protection getBlockBreakProtection() {
-        return Protection.EDIT_AND_INTERACT_BLOCK;
+        return Protection.BREAK_BLOCK_FABRIC;
+    }
+
+    public static Protection getBlockLeftClickProtection() {
+        return Protection.LEFT_CLICK_BLOCK_FABRIC;
     }
 }

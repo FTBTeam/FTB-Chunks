@@ -22,8 +22,8 @@ public interface FTBChunksWorldConfig {
 	SNBTConfig CONFIG = SNBTConfig.create(FTBChunks.MOD_ID + "-world");
 
 	EnumValue<ProtectionPolicy> FAKE_PLAYERS = CONFIG.addEnum("fake_players", NameMap.of(ProtectionPolicy.CHECK, ProtectionPolicy.values()).create()).comment("Override to disable/enable fake players like miners and auto-clickers globally.","Default will check this setting for each team");
-	IntValue MAX_CLAIMED_CHUNKS = CONFIG.addInt("max_claimed_chunks", 500).comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission");
-	IntValue MAX_FORCE_LOADED_CHUNKS = CONFIG.addInt("max_force_loaded_chunks", 25).comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission");
+	IntValue MAX_CLAIMED_CHUNKS = CONFIG.addInt("max_claimed_chunks", 120).comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission");
+	IntValue MAX_FORCE_LOADED_CHUNKS = CONFIG.addInt("max_force_loaded_chunks", 6).comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission");
 	EnumValue<ForceLoadMode> FORCE_LOAD_MODE = CONFIG.addEnum("force_load_mode", ForceLoadMode.NAME_MAP).comment("Control how force-loaded chunks work.","NEVER: only allow chunk force-loading if the owning team has at least one online player.","ALWAYS: always allow force-loading, even if no players are online.","DEFAULT: allow force-loading IF the team has at least one player with the 'ftbchunks.chunk_load_offline' FTB Ranks permission.");
 	BooleanValue DISABLE_PROTECTION = CONFIG.addBoolean("disable_protection", false).comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for force-loading");
 	EnumValue<AllyMode> ALLY_MODE = CONFIG.addEnum("ally_mode", AllyMode.NAME_MAP).comment("Forced modes won't let players change their ally settings");
@@ -54,7 +54,7 @@ public interface FTBChunksWorldConfig {
 	SNBTConfig TEAM_PROP_DEFAULTS = CONFIG.addGroup("team_prop_defaults");
 	BooleanValue DEF_ALLOW_FAKE_PLAYERS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_players", false)
 			.comment("Default allow-fake-player setting for team properties");
-	BooleanValue DEF_ALLOW_FAKE_PLAYER_IDS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_player_ids", true)
+	BooleanValue DEF_ALLOW_FAKE_PLAYER_IDS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_player_ids", false)
 			.comment("Default allow fake player IDs which are the same as real permitted players");
 	StringListValue DEF_ALLOW_NAMED_FAKE_PLAYERS = TEAM_PROP_DEFAULTS.addStringList("def_named_fake_players", Collections.emptyList())
 			.comment("Default named fake players who should be allowed by default");

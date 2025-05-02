@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2101.1.9]
 
+### Added
+* Added `pt_br` translation (thanks @Xlr11)
+* Fixed Create framed glass blocks rendering black on the map (thanks @Varocraft25)
+
 ### Fixed
 * Ensure F3 isn't being held when checking for key presses
   * e.g. if "Add Waypoint" is bound to "B", pressing F3+B no longer pops up the add waypoint dialog

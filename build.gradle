@@ -79,16 +79,6 @@ allprojects {
 					}
 				}
 			}
-
-			if (ftbPublishing.sapsToken) {
-				maven {
-					url ftbPublishing.sapsURL
-					credentials {
-						username = ftbPublishing.sapsUser
-						password = ftbPublishing.sapsToken
-					}
-				}
-			}
 		}
 	}
 }

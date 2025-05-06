@@ -27,7 +27,6 @@ allprojects {
 	apply plugin: "java"
 	apply plugin: "architectury-plugin"
 	apply plugin: "maven-publish"
-	apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/git-md-changelog.gradle"
 
 	version = project.mod_version
 	group = project.maven_group
@@ -46,19 +45,20 @@ allprojects {
 		mavenLocal()
 		maven {
 			url "https://maven.architectury.dev/"
+			content {
+				includeGroup "dev.architectury"
+			}
 		}
 
 		maven {
-			url "https://maven.saps.dev/releases"
+			url "https://maven.ftb.dev/releases"
 			content {
-				includeGroup "dev.latvian.mods"
 				includeGroup "dev.ftb.mods"
 			}
 		}
 		maven {
-			url "https://maven.saps.dev/snapshots"
+			url "https://maven.ftb.dev/snapshots"
 			content {
-				includeGroup "dev.latvian.mods"
 				includeGroup "dev.ftb.mods"
 			}
 		}
@@ -76,16 +76,6 @@ allprojects {
 					credentials {
 						username = ftbPublishing.ftbUser
 						password = ftbPublishing.ftbToken
-					}
-				}
-			}
-
-			if (ftbPublishing.sapsToken) {
-				maven {
-					url ftbPublishing.sapsURL
-					credentials {
-						username = ftbPublishing.sapsUser
-						password = ftbPublishing.sapsToken
 					}
 				}
 			}

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.9]
+
+### Added
+* Added `pt_br` translation (thanks @Xlr11)
+* Added `es_max` translation (thanks @TheLegendofSaram)
+* Added `ja_jp` translation (thanks @twister716)
+* Fixed Create framed glass blocks rendering black on the map (thanks @Varocraft25)
+
+### Fixed
+* Ensure F3 isn't being held when checking for key presses
+  * e.g. if "Add Waypoint" is bound to "B", pressing F3+B no longer pops up the add waypoint dialog
+* Fixed an edge case causing NPE's during checking blockstates for water
+
 ## [2101.1.8]
 
 ### Added

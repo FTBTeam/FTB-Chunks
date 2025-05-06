@@ -20,5 +20,9 @@
       }
     }
   ],
-  "scale": 1.0
+  "scale": 1.0,
+  "default_image_size": {
+    "width": 64,
+    "height": 64
+  }
 }

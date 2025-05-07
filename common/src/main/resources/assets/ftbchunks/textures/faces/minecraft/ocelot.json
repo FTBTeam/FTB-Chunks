@@ -5,5 +5,9 @@
     "y": 4,
     "width": 5,
     "height": 5
+  },
+  "default_image_size": {
+    "width": 64,
+    "height": 32
   }
 }

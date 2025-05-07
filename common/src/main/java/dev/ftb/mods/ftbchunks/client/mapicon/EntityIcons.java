@@ -81,7 +81,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
                 ResourceLocation rl = FTBChunksAPI.rl(basePath + ".png");
                 Optional<Resource> pic = resourceManager.getResource(rl);
                 if (pic.isPresent()) {
-                    entityIconSettings = new EntityIconSettings(false, Optional.of(rl), Optional.empty(), List.of(), WidthHeight.DEFAULT, 1D, true);
+                    entityIconSettings = new EntityIconSettings(false, Optional.of(rl), Optional.empty(), List.of(), WidthHeight.DEFAULT, Optional.empty(), 1D, true);
                 }
             }
 
@@ -159,7 +159,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
     private static Icon getOrCreateIcon(EntityType<?> entityType, ResourceLocation texture, EntityIconSettings settings) {
         return ICON_CACHE
                 .computeIfAbsent(entityType, i -> new HashMap<>())
-                .computeIfAbsent(texture, t -> new EntityImageIcon(t, settings.mainSlice.orElse(null), settings.children));
+                .computeIfAbsent(texture, t -> new EntityImageIcon(t, settings.mainSlice.orElse(null), settings.children, settings.defaultImageSize.orElse(null)));
     }
 
     @Override
@@ -175,12 +175,13 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
             Optional<EntityImageIcon.Slice> mainSlice,
             List<EntityImageIcon.ChildIconData> children,
             WidthHeight widthHeight,
+            Optional<EntityIcons.WidthHeight> defaultImageSize,
             double scale,
             boolean defaultEnabled) {
 
         private static final EntityIconSettings OLD_HIDDEN = new EntityIconSettings(
                 false, Optional.empty(), Optional.empty(),
-                List.of(), WidthHeight.DEFAULT, 1D, true
+                List.of(), WidthHeight.DEFAULT, Optional.empty(), 1D, true
         );
 
         public static final Codec<EntityIconSettings> CODEC = RecordCodecBuilder.<EntityIconSettings>create(builder ->
@@ -190,6 +191,7 @@ public class EntityIcons extends SimplePreparableReloadListener<Map<EntityType<?
                                 EntityImageIcon.Slice.CODEC.optionalFieldOf("slice").forGetter(entityIconData -> entityIconData.mainSlice),
                                 EntityImageIcon.ChildIconData.CODEC.listOf().optionalFieldOf("children", List.of()).forGetter(entityIconData -> entityIconData.children),
                                 WidthHeight.CODEC.optionalFieldOf("size", WidthHeight.DEFAULT).forGetter(s -> s.widthHeight),
+                                WidthHeight.CODEC.optionalFieldOf("default_image_size").forGetter(s -> s.defaultImageSize),
                                 Codec.DOUBLE.optionalFieldOf("scale", 1D).forGetter(s -> s.scale),
                                 Codec.BOOL.optionalFieldOf("default_enabled", true).forGetter(s -> s.defaultEnabled))
                         .apply(builder, EntityIconSettings::new)

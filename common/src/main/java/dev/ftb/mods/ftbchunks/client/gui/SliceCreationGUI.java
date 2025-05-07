@@ -168,7 +168,7 @@ public class SliceCreationGUI extends BaseScreen {
         for (SliceControlBox controlBox : sliceControlBoxes) {
             slices.add(new EntityImageIcon.ChildIconData(Optional.empty(), controlBox.createSlice(), Optional.of(new EntityImageIcon.Offset(controlBox.offsetXText.getIntValue(), controlBox.offsetYText.getIntValue()))));
         }
-        new EntityImageIcon(sliceControlBox.texture, sliceControlBox.createSlice(), slices).draw(graphics, x + 2, y + 2, imageSizeX.getIntValue(), imageSizeY.getIntValue());
+        new EntityImageIcon(sliceControlBox.texture, sliceControlBox.createSlice(), slices, null).draw(graphics, x + 2, y + 2, imageSizeX.getIntValue(), imageSizeY.getIntValue());
     }
 
     @Override
@@ -329,6 +329,7 @@ public class SliceCreationGUI extends BaseScreen {
                             box.createSlice(),
                             Optional.of(new EntityImageIcon.Offset(box.offsetXText.getIntValue(), box.offsetYText.getIntValue())))).toList(),
                     EntityIcons.WidthHeight.DEFAULT,
+                    Optional.empty(),
                     1,
                     true);
 

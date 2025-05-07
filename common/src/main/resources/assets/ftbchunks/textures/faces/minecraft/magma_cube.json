@@ -31,5 +31,9 @@
         "y": 3
       }
     }
-  ]
+  ],
+  "default_image_size": {
+    "width": 64,
+    "height": 32
+  }
 }

@@ -20,10 +20,13 @@ public class EntityImageIcon extends Icon {
     private final List<ChildIconData> children;
     private final Icon mainIcon;
     private final List<Icon> childIcons;
+    @Nullable
+    private final EntityIcons.WidthHeight defaultImageSize;
 
-    public EntityImageIcon(ResourceLocation mainTexture, @Nullable Slice mainSlice, List<ChildIconData> children) {
+    public EntityImageIcon(ResourceLocation mainTexture, @Nullable Slice mainSlice, List<ChildIconData> children, @Nullable EntityIcons.WidthHeight defaultImageSize) {
         this.mainSlice = mainSlice;
         this.children = children;
+        this.defaultImageSize = defaultImageSize;
 
         mainIcon = createIcon(mainTexture, mainSlice);
         childIcons = children.stream().map(childIconData -> createIcon(childIconData.texture.orElse(mainTexture), childIconData.slice)).toList();
@@ -101,9 +104,21 @@ public class EntityImageIcon extends Icon {
         try {
             ImageIcon imageIcon = new ImageIcon(texture);
             if (slice != null) {
+
                 int textureWidth = load.getImage().getWidth();
                 int textureHeight = load.getImage().getHeight();
-                return imageIcon.withUV(slice.x, slice.y, slice.width, slice.height, textureWidth, textureHeight);
+                if (defaultImageSize != null) {
+                    int defaultTextureWidth = defaultImageSize.width();
+                    int defaultTextureHeight = defaultImageSize.height();
+
+                    float scaleX = (float) textureWidth / defaultTextureWidth;
+                    float scaleY = (float) textureHeight / defaultTextureHeight;
+                    return imageIcon.withUV(slice.x * scaleX, slice.y * scaleY, slice.width * scaleX, slice.height * scaleY, textureWidth, textureHeight);
+                } else {
+                    return imageIcon.withUV(slice.x, slice.y, slice.width, slice.height, textureWidth, textureHeight);
+                }
+
+
             }
             return imageIcon;
         } catch (Exception e) {

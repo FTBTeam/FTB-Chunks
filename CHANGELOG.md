@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Ensure F3 isn't being held when checking for key presses
   * e.g. if "Add Waypoint" is bound to "B", pressing F3+B no longer pops up the add waypoint dialog
 * Fixed an edge case causing NPE's during checking blockstates for water
+* Fixed some entity face map icons going missing when using higher-resolution texture packs
 
 ## [2101.1.8]
 

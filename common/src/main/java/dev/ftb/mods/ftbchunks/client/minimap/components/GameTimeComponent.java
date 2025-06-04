@@ -41,7 +41,11 @@ public class GameTimeComponent implements MinimapInfoComponent {
         long time = minecraft.level.getDayTime() % 24000L;
         int hours = (int) (time / 1000L);
         int minutes = (int) ((time % 1000L) * 60L / 1000L);
-        drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hours + 6, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name()))), 0);
+        int hourTime = hours + GAME_TIME_OFFSET_HOURS;
+        if (hourTime >= 24) {
+            hourTime -= 24;
+        }
+        drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hourTime, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name()))), 0);
     }
 
 

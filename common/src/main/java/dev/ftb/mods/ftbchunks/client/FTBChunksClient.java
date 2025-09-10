@@ -40,6 +40,7 @@ import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -170,7 +171,7 @@ public enum FTBChunksClient {
 
         registerKeys();
 
-        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new EntityIcons());
+//        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new EntityIcons());
         ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ColorMapLoader());
         ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(this::loggedOut);
         CustomClickEvent.EVENT.register(this::customClick);
@@ -1106,16 +1107,16 @@ public enum FTBChunksClient {
 
         if (FTBChunksClientConfig.MINIMAP_ENTITIES.get()) {
             for (Entity entity : mc.level.entitiesForRendering()) {
-                if (!EntityIcons.shouldEntityRender(entity, mc.player)) {
+                if (!EntityIconUtils.shouldEntityRender(entity, mc.player)) {
                     continue;
                 }
 
-                Icon icon = EntityIcons.getIcon(entity);
-                Optional<EntityIcons.EntityIconSettings> settings = EntityIcons.getSettings(entity.getType());
+                Icon icon = EntityIconLoader.getIcon(entity);
+                Optional<EntityIconLoader.EntityIconSettings> settings = EntityIconLoader.getSettings(entity.getType());
                 if (settings.isEmpty()) {
                     continue;
                 }
-                EntityIcons.WidthHeight wh = settings.get().widthHeight();
+                EntityIconLoader.WidthHeight wh = settings.get().widthHeight();
 
                 if (!icon.isEmpty()) {
                     if (FTBChunksClientConfig.ONLY_SURFACE_ENTITIES.get() && !mc.level.dimensionType().hasCeiling()) {
@@ -1400,5 +1401,9 @@ public enum FTBChunksClient {
 
     public int getRenderedDebugCount() {
         return renderedDebugCount;
+    }
+
+    public static void openIconSettingsScreen() {
+        Minecraft.getInstance().submit(() -> new EntityIconSettingsScreen(true).openGui());
     }
 }

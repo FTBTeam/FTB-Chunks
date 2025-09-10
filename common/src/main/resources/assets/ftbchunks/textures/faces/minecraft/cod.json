@@ -1,8 +1,0 @@
-{
-  "default_enabled": false,
-  "texture": "ftbchunks:textures/faces/minecraft/cod.png",
-  "default_image_size": {
-    "width": 16,
-    "height": 16
-  }
-}

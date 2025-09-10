@@ -4,18 +4,8 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.JsonOps;
 import dev.architectury.platform.Platform;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityImageIcon;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.ImageIcon;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.IntTextBox;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
+import dev.ftb.mods.ftblibrary.icon.*;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.misc.SimpleToast;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,7 +29,6 @@ import java.util.Optional;
 // Uses the entity texture to render the entity icon
 // Can create multiple slices and move them around.
 public class SliceCreationGUI extends BaseScreen {
-
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final EntityType<?> entityType;
@@ -106,7 +95,6 @@ public class SliceCreationGUI extends BaseScreen {
                 button1.getGui().refreshWidgets();
             }
         });
-
 
         loadExistingSettings();
     }
@@ -178,7 +166,6 @@ public class SliceCreationGUI extends BaseScreen {
 
     // a "Control Box" that allows to create the overlays for the slices and move them around
     public static class SliceControlBox extends Panel {
-
         private final ImageIcon mainIcon;
         private final ResourceLocation texture;
         private final IntTextBox xText;
@@ -289,7 +276,6 @@ public class SliceCreationGUI extends BaseScreen {
         }
     }
 
-
     private static class ColorButton extends SimpleButton {
         private Color4I color4I;
 
@@ -314,13 +300,12 @@ public class SliceCreationGUI extends BaseScreen {
             Color4I.BLACK.withAlpha(125).draw(graphics, x + 2, y + 2, 12, 12);
             color4I.draw(graphics, x + 3, y + 3, 10, 10);
         }
-
     }
 
     private SimpleButton createExportButton() {
         return new SimpleButton(this, Component.literal("Export"), Icons.STAR, (button, mouseButton) -> {
             SliceCreationGUI bu = (SliceCreationGUI) button.getGui();
-            EntityIcons.EntityIconSettings entityIconSettings = new EntityIcons.EntityIconSettings(
+            EntityIconLoader.EntityIconSettings entityIconSettings = new EntityIconLoader.EntityIconSettings(
                     true,
                     Optional.empty(),
                     Optional.of(bu.sliceControlBox.createSlice()),
@@ -328,12 +313,12 @@ public class SliceCreationGUI extends BaseScreen {
                             Optional.empty(),
                             box.createSlice(),
                             Optional.of(new EntityImageIcon.Offset(box.offsetXText.getIntValue(), box.offsetYText.getIntValue())))).toList(),
-                    EntityIcons.WidthHeight.DEFAULT,
+                    EntityIconLoader.WidthHeight.DEFAULT,
                     Optional.empty(),
                     1,
                     true);
 
-            EntityIcons.EntityIconSettings.CODEC.encodeStart(JsonOps.INSTANCE, entityIconSettings).result().ifPresent(jsonElement -> {
+            EntityIconLoader.EntityIconSettings.CODEC.encodeStart(JsonOps.INSTANCE, entityIconSettings).result().ifPresent(jsonElement -> {
                 Path path = Platform.getGameFolder().resolve("export");
                 try {
                     ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
@@ -352,7 +337,7 @@ public class SliceCreationGUI extends BaseScreen {
     }
 
     private void loadExistingSettings() {
-        EntityIcons.getSettings(entityType).ifPresent(settings -> {
+        EntityIconLoader.getSettings(entityType).ifPresent(settings -> {
             settings.mainSlice().ifPresent(slice -> {
                 sliceControlBox.xText.setAmount(slice.x());
                 sliceControlBox.yText.setAmount(slice.y());

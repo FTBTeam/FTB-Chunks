@@ -1,7 +1,8 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
+import dev.ftb.mods.ftbchunks.client.mapicon.EntityIconUtils;
+import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -36,7 +37,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
         for (MobCategory mobCategory : MobCategory.values()) {
             List<EntityType<?>> entityTypes = new ArrayList<>();
             for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
-                if (entityType.getCategory() == mobCategory && EntityIcons.canTypeRenderer(entityType)) {
+                if (entityType.getCategory() == mobCategory && EntityIconUtils.canTypeRender(entityType)) {
                     entityTypes.add(entityType);
                 }
             }
@@ -60,7 +61,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
 
         public RowPanel(Panel panel, EntityType<?> entityType) {
             super(panel, entityType);
-            this.icon = EntityIcons.getIcon(entityType);
+            this.icon = EntityIconLoader.getIcon(entityType);
             this.resourceKey = ResourceKey.create(Registries.ENTITY_TYPE, BuiltInRegistries.ENTITY_TYPE.getKey(entityType));
             setHeight(18);
         }
@@ -74,12 +75,11 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
             }));
 
             if (showCreationButton) {
-                boolean isDynamicTexture = EntityIcons.IS_USING_NEW_JSON.getOrDefault(value, false);
-                Icon icon = isDynamicTexture ? Icons.BOOK_RED : Icons.BOOK;
+                Icon icon = EntityIconLoader.isDynamicTexture(value) ? Icons.BOOK_RED : Icons.BOOK;
                 add(createButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.open_creation_gui"), icon, (widget, button) -> new SliceCreationGUI(value).openGui()));
             }
 
-            EntityIcons.EntityIconSettings entityIconSettings = EntityIcons.getSettings(value).orElseThrow();
+            var entityIconSettings = EntityIconLoader.getSettings(value).orElseThrow();
             add(nameField = new TextField(this) {
                 @Override
                 public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {

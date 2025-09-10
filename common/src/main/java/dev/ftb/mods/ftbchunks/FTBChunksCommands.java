@@ -15,16 +15,11 @@ import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
-import dev.ftb.mods.ftbchunks.client.gui.EntityIconSettingsScreen;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.net.AddWaypointPacket;
-import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
-import dev.ftb.mods.ftbchunks.net.OpenClaimGUIPacket;
-import dev.ftb.mods.ftbchunks.net.RequestBlockColorPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
@@ -34,7 +29,6 @@ import dev.ftb.mods.ftbteams.data.TeamArgumentProvider;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -49,6 +43,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
@@ -228,8 +223,13 @@ public class FTBChunksCommands {
             dispatcher.register(Commands.literal("ftbchunks_dev")
                     .then(Commands.literal("create_gui")
                             .executes(context -> {
-                                Minecraft.getInstance().submit(() -> new EntityIconSettingsScreen(true).openGui());
-                                return Command.SINGLE_SUCCESS;
+                                if (context.getSource().getServer() instanceof DedicatedServer) {
+                                    context.getSource().sendFailure(Component.literal("Not on a dedicted server!"));
+                                    return 0;
+                                } else {
+                                    FTBChunksClient.openIconSettingsScreen();
+                                    return Command.SINGLE_SUCCESS;
+                                }
                             })
                     )
             );

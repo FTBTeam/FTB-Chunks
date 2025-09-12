@@ -80,7 +80,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 
     @Override
     public void addTooltip(TooltipList list) {
-        list.string(waypoint.getName());
+        list.add(waypoint.getDisplayName());
         super.addTooltip(list);
     }
 
@@ -158,7 +158,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
     }
 
     private ContextMenuItem makeTitleMenuItem() {
-        return new ContextMenuItem(Component.literal(waypoint.getName()), icon, null) {
+        return new ContextMenuItem(waypoint.getDisplayName(), icon, null) {
             @Override
             public Icon getIcon() {
                 return icon;
@@ -201,11 +201,11 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
         if (!outsideVisibleArea && mapType.isWorldIcon()) {
             Minecraft mc = Minecraft.getInstance();
             String ds = Mth.ceil(MathUtils.dist(pos.x, pos.y, pos.z, mc.player.getX(), mc.player.getY(), mc.player.getZ())) + " m";
-            int nw = mc.font.width(waypoint.getName());
+            int nw = mc.font.width(waypoint.getDisplayName());
             int dw = mc.font.width(ds);
             Color4I.DARK_GRAY.withAlpha(200).draw(graphics, x + (w - nw) / 2 - 2, y - 14, nw + 4, 12);
             Color4I.DARK_GRAY.withAlpha(200).draw(graphics, x + (w - dw) / 2 - 2, y + 18, dw + 4, 12);
-            graphics.drawString(mc.font, waypoint.getName(), x + (w - nw) / 2, y - 12, 0xFFFFFFFF, true);
+            graphics.drawString(mc.font, waypoint.getDisplayName(), x + (w - nw) / 2, y - 12, 0xFFFFFFFF, true);
             graphics.drawString(mc.font, ds, x + (w - dw) / 2, y + 20, 0xFFFFFFFF, true);
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();

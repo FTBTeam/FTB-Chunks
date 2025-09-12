@@ -54,7 +54,7 @@ public class WaypointShareMenu {
     private static void shareWaypoint(Waypoint waypoint, ShareWaypointPacket.ShareType type, List<UUID> targets) {
         GlobalPos waypointPos = new GlobalPos(waypoint.getDimension(), waypoint.getPos());
         NetworkManager.sendToServer(new ShareWaypointPacket(waypoint.getName(), waypointPos, type, targets));
-        SimpleToast.info(Component.translatable("ftbchunks.waypoint.shared_by_you", waypoint.getName()), Component.empty());
+        SimpleToast.info(Component.translatable("ftbchunks.waypoint.shared_by_you", waypoint.getDisplayName()), Component.empty());
     }
 
     private static class ShareWaypointButtonList extends AbstractButtonListScreen {

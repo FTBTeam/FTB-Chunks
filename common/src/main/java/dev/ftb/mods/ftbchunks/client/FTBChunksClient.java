@@ -1234,7 +1234,7 @@ public enum FTBChunksClient {
                     if (wp.getDistanceSq(player) < maxDist * maxDist) {
                         wpm.remove(wp);
                         wpm.getNearestDeathpoint(player).ifPresent(wp1 -> wp1.setHidden(false));
-                        player.displayClientMessage(Component.translatable("ftbchunks.deathpoint_removed", wp.getName()).withStyle(ChatFormatting.YELLOW), true);
+                        player.displayClientMessage(Component.translatable("ftbchunks.deathpoint_removed", wp.getDisplayName()).withStyle(ChatFormatting.YELLOW), true);
                     }
                 });
             }
@@ -1385,7 +1385,7 @@ public enum FTBChunksClient {
                     Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba());
                     Minecraft.getInstance().player.displayClientMessage(
                             Component.translatable("ftbchunks.waypoint_added",
-                                    Component.literal(wp.getName()).withStyle(ChatFormatting.YELLOW)
+                                    wp.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)
                             ), true);
                 }
             }) {

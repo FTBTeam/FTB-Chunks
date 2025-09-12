@@ -23,6 +23,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
@@ -302,7 +303,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 distField.setPos(hideButton.getPosX() - 5 - distField.width, yOff);
 
                 nameField.setPos(5, yOff);
-                nameField.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), Component.literal(wp.getName()), distField.getPosX() - 5).getString());
+                nameField.setText(ClientTextComponentUtils.ellipsize(getTheme().getFont(), wp.getDisplayName(), distField.getPosX() - 5).getString());
                 nameField.setHeight(getTheme().getFontHeight() + 2);
             }
         }
@@ -396,7 +397,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
         private void deleteWaypoint(boolean gui) {
             if (gui) {
-                getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", Component.literal(wp.getName())
+                getGui().openYesNo(Component.translatable("ftbchunks.gui.delete_waypoint", wp.getDisplayName().copy()
                         .withStyle(Style.EMPTY.withColor(wp.getColor()))), Component.empty(), () -> {
                     wp.removeFromManager();
                     WaypointEditorScreen.this.waypoints.get(wp.getDimension()).remove(wp);
@@ -410,7 +411,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         }
 
         private ContextMenuItem makeTitleMenuItem() {
-            return new ContextMenuItem(Component.literal(wp.getName()), Icon.empty(), null) {
+            return new ContextMenuItem(wp.getDisplayName(), Icon.empty(), null) {
                 @Override
                 public Icon getIcon() {
                     return wp.getType().getIcon().withTint(Color4I.rgb(wp.getColor()));

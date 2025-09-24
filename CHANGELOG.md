@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.11]
+
+### Added
+* Translation keys may now be used as waypoint text; the translated text will be shown where applicable
+  * Primarily useful for adding localized waypoints via command or API
+
+### Changed
+* Moved a lot of entity face icon loading code into FTB Library
+  * No player-visible changes here
+  * This release requires FTB Library 2101.1.21+
+
 ## [2101.1.10]
 
 ### Added

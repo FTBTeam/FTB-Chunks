@@ -16,10 +16,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public record ShareWaypointPacket(String name, GlobalPos position, ShareType shareType, List<UUID> targets) implements CustomPacketPayload {
     public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.rl("share_waypoint_packet"));
@@ -41,18 +38,11 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
         context.queue(() -> {
             ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
             PlayerList playerList = serverPlayer.getServer().getPlayerList();
-            List<ServerPlayer> playersToSend = switch (message.shareType) {
+            Collection<ServerPlayer> playersToSend = switch (message.shareType) {
                 case SERVER -> playerList.getPlayers();
-                case PARTY -> {
-                    Optional<Team> teamForPlayer = FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer);
-                    if (teamForPlayer.isPresent()) {
-                        Team team = teamForPlayer.get();
-                        yield team.getMembers().stream().map(playerList::getPlayer)
-                                .filter(Objects::nonNull).toList();
-                    } else {
-                        yield List.of(serverPlayer);
-                    }
-                }
+                case PARTY -> FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer)
+                        .map(Team::getOnlineMembers)
+                        .orElse(List.of(serverPlayer));
                 case PLAYER -> message.targets.stream()
                         .map(playerList::getPlayer)
                         .filter(Objects::nonNull).toList();
@@ -64,7 +54,7 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
                 String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
                 String dim = message.position.dimension().location().toString();
 
-                Component waypointText = Component.literal(message.name)
+                Component waypointText = Component.translatable(message.name)
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.AQUA)
                                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(dim + " " + cords))));

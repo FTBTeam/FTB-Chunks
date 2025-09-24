@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.api.client.waypoint;
 
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
-import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -44,11 +44,19 @@ public interface Waypoint {
     Waypoint setHidden(boolean hidden);
 
     /**
-     * Get the waypoint's displayed name.
+     * Get the waypoint's raw name, which the player entered, and which is displayed in editing GUIs. This may be a
+     * translation key, or just a literal string.
      *
-     * @return the name
+     * @return the waypoint's name
      */
     String getName();
+
+    /**
+     * {@return the displayed string for the waypoint, as shown on the large map, and for in-world waypoints}
+     */
+    default Component getDisplayName() {
+        return Component.translatable(getName());
+    }
 
     /**
      * Change the waypoint's displayed name.

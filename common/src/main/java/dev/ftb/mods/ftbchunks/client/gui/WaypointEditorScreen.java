@@ -199,7 +199,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
             this.dim = dim;
             this.titleText = TextComponentUtils.translatedDimension(dim).copy()
-                    .withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(dim.location().toString()))));
+                    .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(dim.location().toString()))));
             setCollapsed(startCollapsed);
             this.rowPanels = new ArrayList<>();
             for (WaypointImpl waypoint : waypoints) {

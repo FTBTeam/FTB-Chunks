@@ -57,12 +57,12 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
                 Component waypointText = Component.translatable(message.name)
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.AQUA)
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(dim + " " + cords))));
+                                .withHoverEvent(new HoverEvent.ShowText(Component.literal(dim + " " + cords))));
 
                 playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
                         .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
                                 .withStyle(style ->
-                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
+                                        style.withClickEvent(new ClickEvent.RunCommand("/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
             }
         });
     }

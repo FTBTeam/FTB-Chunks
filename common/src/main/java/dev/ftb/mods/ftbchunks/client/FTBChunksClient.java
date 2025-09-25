@@ -1174,8 +1174,8 @@ public enum FTBChunksClient {
         lastMapIconUpdate = 0L;
     }
 
-    private void reloadShaders(ResourceProvider resourceProvider, ClientReloadShadersEvent.ShadersSink sink) {
-    }
+//    private void reloadShaders(ResourceProvider resourceProvider, ClientReloadShadersEvent.ShadersSink sink) {
+//    }
 
     public void rerender(BlockPos pos) {
         ChunkPos chunkPos = new ChunkPos(pos);

@@ -39,7 +39,7 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-		int bottomY = chunkAccess.getMinBuildHeight();
+		int bottomY = chunkAccess.getMinY();
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();
 		int currentWaterY = UNKNOWN;

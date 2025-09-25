@@ -36,7 +36,8 @@ public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {
 
             Optional<Team> teamByID = FTBTeamsAPI.api().getClientManager().getTeamByID(message.teamId);
             if (teamByID.isEmpty()) {
-                player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", message.teamId, ChatFormatting.RED));
+                // TODO: [21.8] Confirm this looks right
+                player.displayClientMessage(Component.translatable("ftbteams.team_not_found", message.teamId, ChatFormatting.RED), false);
                 return;
             }
 

@@ -16,6 +16,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
+import java.util.Set;
+
 public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<Level> dimension) implements CustomPacketPayload {
 	public static final Type<TeleportFromMapPacket> TYPE = new Type<>(FTBChunksAPI.rl("teleport_from_map_packet"));
 
@@ -45,7 +47,7 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 					ChunkAccess chunkAccess = level.getChunkAt(message.pos);
 
 					int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x1, z1);
-					if (topY == chunkAccess.getMinBuildHeight() - 1) {
+					if (topY == chunkAccess.getMinY() - 1) {
 						return;
 					}
 
@@ -61,7 +63,8 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 					y1 = blockPos.getY() + 1;
 				}
 
-				p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, p.getYRot(), p.getXRot());
+                // TODO: [21.8] false was a guess, no clue what the set does. Looks like how it keeps a specific velocity?
+				p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), false);
 			}
 		});
 	}

@@ -207,8 +207,9 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
             Color4I.DARK_GRAY.withAlpha(200).draw(graphics, x + (w - dw) / 2 - 2, y + 18, dw + 4, 12);
             graphics.drawString(mc.font, waypoint.getDisplayName(), x + (w - nw) / 2, y - 12, 0xFFFFFFFF, true);
             graphics.drawString(mc.font, ds, x + (w - dw) / 2, y + 20, 0xFFFFFFFF, true);
-            RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
+            // TODO: [21.8] this might just not be needed but not confirmed.
+//            RenderSystem.enableBlend();
+//            RenderSystem.enableDepthTest();
         }
     }
 }

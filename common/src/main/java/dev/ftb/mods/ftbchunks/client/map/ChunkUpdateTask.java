@@ -85,7 +85,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		MapChunk mapChunk = manager.getDimension(dimId).getRegion(XZ.regionFromChunk(chunkPos)).getDataBlocking().getChunk(XZ.of(chunkPos));
 		MapRegionData data = mapChunk.getRegionData();
 
-		Registry<Biome> biomes = level.registryAccess().registryOrThrow(Registries.BIOME);
+		Registry<Biome> biomes = level.registryAccess().lookupOrThrow(Registries.BIOME);
 
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		int blockX = chunkPos.getMinBlockX();

@@ -83,11 +83,11 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
             add(nameField = new TextField(this) {
                 @Override
                 public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-                    graphics.pose().pushPose();
+                    graphics.pose().pushMatrix();
                     graphics.pose().translate(x - 16, y - 2, 0);
                     graphics.pose().scale(0.75F, 0.75F, 0);
                     icon.draw(graphics, 0, 0, entityIconSettings.widthHeight().width(), entityIconSettings.widthHeight().height());
-                    graphics.pose().popPose();
+                    graphics.pose().popMatrix();
                     super.draw(graphics, theme, x, y, w, h);
                 }
 

@@ -13,12 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GuiMixin {
     @Inject(method = "renderEffects", at = @At("HEAD"))
     public void onRenderEffectsEnter(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo info) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(FTBChunksClient.getVanillaEffectsOffsetX(), 0, 0);
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate((int) FTBChunksClient.getVanillaEffectsOffsetX(), 0);
     }
 
     @Inject(method = "renderEffects", at = @At("RETURN"))
     public void onRenderEffectsReturn(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo info) {
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
     }
 }

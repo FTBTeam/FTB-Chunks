@@ -170,8 +170,8 @@ public enum FTBChunksClient {
 
         registerKeys();
 
-        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new EntityIcons());
-        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ColorMapLoader());
+        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new EntityIcons(), FTBChunksAPI.rl("entity_icons"));
+        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ColorMapLoader(), FTBChunksAPI.rl("colormap"));
         ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(this::loggedOut);
         CustomClickEvent.EVENT.register(this::customClick);
         ClientRawInputEvent.KEY_PRESSED.register(this::keyPressed);
@@ -182,7 +182,7 @@ public enum FTBChunksClient {
         TeamEvent.CLIENT_PROPERTIES_CHANGED.register(this::teamPropertiesChanged);
         MapIconEvent.LARGE_MAP.register(this::mapIcons);
         MapIconEvent.MINIMAP.register(this::mapIcons);
-        ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
+//        ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
         registerPlatform();
 
         if (ModUtils.isDevMode()) {
@@ -347,15 +347,15 @@ public enum FTBChunksClient {
                     if (mc.hitResult instanceof BlockHitResult hitResult && mc.level != null && mc.player != null) {
                         ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(mc.level.getBlockState(hitResult.getBlockPos()).getBlock());
                         Window window = mc.getWindow();
-                        try (NativeImage image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
-                            int col = image.getPixelRGBA(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
+                        Screenshot.takeScreenshot(mc.getMainRenderTarget(), image -> {
+                            int col = image.getPixel(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
                             String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
                             mc.player.displayClientMessage(Component.literal(id.getNamespace() + " - " + s)
                                     .withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD)
-                                            .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, s))
-                                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to copy")))
+                                            .withClickEvent(new ClickEvent.CopyToClipboard(s))
+                                            .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy")))
                                     ), false);
-                        }
+                        });
                     }
                 });
             }, "Color getter").start();

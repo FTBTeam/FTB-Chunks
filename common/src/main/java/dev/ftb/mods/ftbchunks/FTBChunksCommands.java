@@ -16,15 +16,10 @@ import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.gui.EntityIconSettingsScreen;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.net.AddWaypointPacket;
-import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
-import dev.ftb.mods.ftbchunks.net.OpenClaimGUIPacket;
-import dev.ftb.mods.ftbchunks.net.RequestBlockColorPacket;
-import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
@@ -560,7 +555,7 @@ public class FTBChunksCommands {
             }
         }
 
-        for (long pos : level.getForcedChunks()) {
+        for (long pos : level.getForceLoadedChunks()) {
             if (chunks.get(pos) == LoadedChunkViewPacket.LOADED) {
                 chunks.put(pos, LoadedChunkViewPacket.FORCE_LOADED);
             }

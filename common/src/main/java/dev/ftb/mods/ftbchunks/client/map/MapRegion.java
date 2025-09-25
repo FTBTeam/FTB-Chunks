@@ -1,15 +1,16 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,10 +33,11 @@ public class MapRegion implements MapTask {
 	private NativeImage renderedMapImage;
 	private boolean updateRenderedMapImage;
 	private boolean updateRenderedMapTexture;
-	private int renderedMapImageTextureId;
+//	private int renderedMapImageTextureId;
 	private boolean mapImageLoaded;
 	private boolean renderingMapImage;
 	private final Map<XZ, MapChunk> chunks = new HashMap<>();
+	private DynamicTexture texture;
 
 	public MapRegion(MapDimension d, XZ p) {
 		dimension = d;
@@ -46,7 +48,8 @@ public class MapRegion implements MapTask {
 		renderedMapImage = null;
 		updateRenderedMapImage = true;
 		updateRenderedMapTexture = true;
-		renderedMapImageTextureId = -1;
+//		renderedMapImageTextureId = -1;
+		texture = null;
 		mapImageLoaded = false;
 	}
 
@@ -121,28 +124,42 @@ public class MapRegion implements MapTask {
 		return renderedMapImage;
 	}
 
-	public int getRenderedMapImageTextureId() {
-		if (renderedMapImageTextureId == -1) {
-			renderedMapImageTextureId = FTBChunksClient.INSTANCE.generateTextureId(512, 512);
-		}
-
-		getRenderedMapImage();
-
+	public ResourceLocation getRenderedTextureId() {
+		ResourceLocation texId = texId();
 		if (updateRenderedMapTexture) {
 			mapImageLoaded = false;
-
 			Minecraft.getInstance().submit(() -> {
-				RenderSystem.bindTexture(renderedMapImageTextureId);
-				uploadRenderedMapImage();
+				texture = new DynamicTexture(() -> "todo", getRenderedMapImage());
+				Minecraft.getInstance().getTextureManager().register(texId, texture);
 				mapImageLoaded = true;
 				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
 			});
-
-			updateRenderedMapTexture = false;
 		}
-
-		return renderedMapImageTextureId;
+		return texId;
 	}
+
+//	public int getRenderedMapImageTextureId() {
+//		if (renderedMapImageTextureId == -1) {
+//			renderedMapImageTextureId = FTBChunksClient.INSTANCE.generateTextureId(512, 512);
+//		}
+//
+//		getRenderedMapImage();
+//
+//		if (updateRenderedMapTexture) {
+//			mapImageLoaded = false;
+//
+//			Minecraft.getInstance().submit(() -> {
+//				RenderSystem.bindTexture(renderedMapImageTextureId);
+//				uploadRenderedMapImage();
+//				mapImageLoaded = true;
+//				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
+//			});
+//
+//			updateRenderedMapTexture = false;
+//		}
+//
+//		return renderedMapImageTextureId;
+//	}
 
 	public void release(boolean releaseMapChunks) {
 		if (shouldSave && data != null) {
@@ -183,14 +200,19 @@ public class MapRegion implements MapTask {
 				renderedMapImage.close();
 				renderedMapImage = null;
 			}
+			Minecraft.getInstance().getTextureManager().release(texId());
 		}
 
-		if (renderedMapImageTextureId != -1) {
-			GlStateManager._deleteTexture(renderedMapImageTextureId);
-			renderedMapImageTextureId = -1;
-		}
+//		if (renderedMapImageTextureId != -1) {
+//			GlStateManager._deleteTexture(renderedMapImageTextureId);
+//			renderedMapImageTextureId = -1;
+//		}
 
 		mapImageLoaded = false;
+	}
+
+	private ResourceLocation texId() {
+		return FTBChunksAPI.rl(pos.x() + "_" + pos.z());
 	}
 
 	@Override
@@ -202,15 +224,15 @@ public class MapRegion implements MapTask {
 
 	public void setRenderedMapImageRGBA(int x, int z, int col) {
 		synchronized (dimension.getManager().lock) {
-			getRenderedMapImage().setPixelRGBA(x, z, col);
+			getRenderedMapImage().setPixel(x, z, col);
 		}
 	}
 
-	private void uploadRenderedMapImage() {
-		synchronized (dimension.getManager().lock) {
-			getRenderedMapImage().upload(0, 0, 0, false);
-		}
-	}
+//	private void uploadRenderedMapImage() {
+//		synchronized (dimension.getManager().lock) {
+//			getRenderedMapImage().upload(0, 0, 0, false);
+//		}
+//	}
 
 	public void afterImageRenderTask() {
 		synchronized (dimension.getManager().lock) {

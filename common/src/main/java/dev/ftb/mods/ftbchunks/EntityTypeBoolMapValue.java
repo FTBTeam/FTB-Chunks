@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -48,15 +49,16 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
     public void read(SNBTCompoundTag tag) {
         Map<ResourceKey<EntityType<?>>, Boolean> map = new HashMap<>();
 
-        SNBTCompoundTag compound = tag.getCompound(key);
-        for (String key : compound.getAllKeys()) {
-            try {
-                ResourceLocation parse = ResourceLocation.parse(key);
-                map.put(ResourceKey.create(Registries.ENTITY_TYPE, parse), compound.getBoolean(key));
-            } catch (ResourceLocationException e) {
-                LOGGER.error("Failed to parse {} skipping", key, e);
+        tag.getCompound(key).ifPresent(compound -> {
+            for (String key : compound.keySet()) {
+                try {
+                    ResourceLocation parse = ResourceLocation.parse(key);
+                    compound.getBoolean(key).ifPresent(c -> map.put(ResourceKey.create(Registries.ENTITY_TYPE, parse), c));
+                } catch (ResourceLocationException e) {
+                    LOGGER.error("Failed to parse {} skipping", key, e);
+                }
             }
-        }
+        });
 
         set(map);
     }
@@ -79,19 +81,18 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
             if (v == null) {
                 return super.getStringForGUI(null);
             }
-            int enabled = 0;
-            int disabled = 0;
+            MutableInt enabled = new MutableInt();
+            MutableInt disabled = new MutableInt();
             for (ResourceKey<EntityType<?>> entityTypeResourceKey : v.keySet()) {
-                EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(entityTypeResourceKey);
-                if (entityType != null) {
+                BuiltInRegistries.ENTITY_TYPE.get(entityTypeResourceKey).ifPresent(holder -> {
                     if (v.get(entityTypeResourceKey)) {
-                        enabled++;
+                        enabled.increment();
                     } else {
-                        disabled++;
+                        disabled.increment();
                     }
-                }
+                });
             }
-            return Component.translatable("ftbchunks.gui.enabled_disabled_count", enabled, disabled);
+            return Component.translatable("ftbchunks.gui.enabled_disabled_count", enabled.getValue(), disabled.getValue());
         }
     }
 

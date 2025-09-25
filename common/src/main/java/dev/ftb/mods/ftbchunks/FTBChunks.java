@@ -2,7 +2,6 @@ package dev.ftb.mods.ftbchunks;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import dev.architectury.event.CompoundEventResult;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
@@ -13,12 +12,14 @@ import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
-import dev.ftb.mods.ftbchunks.api.*;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
+import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.*;
-import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -39,17 +40,15 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BaseSpawner;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -268,17 +267,17 @@ public class FTBChunks {
 		ClaimedChunkManagerImpl.getInstance().getOrCreateData(teamEvent.getTeam()).saveNow();
 	}
 
-	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
+	public InteractionResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
 		if (player instanceof ServerPlayer && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
-			return EventResult.interruptFalse();
+			return InteractionResult.FAIL;
 		}
 
-		return EventResult.pass();
+		return InteractionResult.PASS;
 	}
 
-	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
+	public InteractionResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
 		if (player instanceof ServerPlayer sp) {
@@ -290,20 +289,20 @@ public class FTBChunks {
 					|| blockItem && mgr.shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockPlaceProtection(), null))
 			{
 				FTBCUtils.forceHeldItemSync(sp, hand);
-				return EventResult.interruptFalse();
+				return InteractionResult.FAIL;
 			}
 		}
 
-		return EventResult.pass();
+		return InteractionResult.PASS;
 	}
 
-	public CompoundEventResult<ItemStack> itemRightClick(Player player, InteractionHand hand) {
+	public InteractionResult itemRightClick(Player player, InteractionHand hand) {
 		if (player instanceof ServerPlayer sp && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, BlockPos.containing(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM, null)) {
 			FTBCUtils.forceHeldItemSync(sp, hand);
-			return CompoundEventResult.interruptFalse(player.getItemInHand(hand));
+			return InteractionResult.FAIL;
 		}
 
-		return CompoundEventResult.pass();
+		return InteractionResult.PASS;
 	}
 
 
@@ -334,23 +333,23 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
+	public InteractionResult fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
 		if (player instanceof ServerPlayer && target instanceof BlockHitResult hitResult) {
 			InteractionHand hand = player.getUsedItemHand();
 			if (ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, hitResult.getBlockPos(), Protection.EDIT_FLUID, null)) {
-				return CompoundEventResult.interrupt(false, player.getItemInHand(hand));
+				return InteractionResult.FAIL;
 			}
 		}
 
-		return CompoundEventResult.pass();
+		return InteractionResult.PASS;
 	}
 
-	public EventResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, float distance, Entity entity) {
+	public InteractionResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, double distance, Entity entity) {
 		if (entity instanceof ServerPlayer && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
-			return EventResult.interrupt(false);
+			return InteractionResult.FAIL;
 		}
 
-		return EventResult.pass();
+		return InteractionResult.PASS;
 	}
 
 	// This event is a nightmare, gets fired before login
@@ -367,7 +366,7 @@ public class FTBChunks {
 		});
 	}
 
-	public EventResult checkSpawn(LivingEntity entity, LevelAccessor levelAccessor, double x, double y, double z, MobSpawnType type, @Nullable BaseSpawner spawner) {
+	public EventResult checkSpawn(LivingEntity entity, LevelAccessor levelAccessor, double x, double y, double z, EntitySpawnReason type, @Nullable BaseSpawner spawner) {
 		if (!levelAccessor.isClientSide() && !(entity instanceof Player) && levelAccessor instanceof Level level) {
 			switch (type) {
 				case NATURAL, CHUNK_GENERATION, SPAWNER, STRUCTURE, JOCKEY, PATROL -> {

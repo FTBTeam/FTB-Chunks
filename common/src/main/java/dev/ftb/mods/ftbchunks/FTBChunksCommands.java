@@ -560,7 +560,7 @@ public class FTBChunksCommands {
             }
         }
 
-        for (long pos : level.getForcedChunks()) {
+        for (long pos : level.getForceLoadedChunks()) {
             if (chunks.get(pos) == LoadedChunkViewPacket.LOADED) {
                 chunks.put(pos, LoadedChunkViewPacket.FORCE_LOADED);
             }

@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
@@ -239,7 +238,7 @@ public class LargeMapScreen extends BaseScreen {
             prevMouseY = getMouseY();
             return true;
         } else if (button.isRight()) {
-            int fixedY = Math.max(regionPanel.blockY, Minecraft.getInstance().level.getMinBuildHeight());
+            int fixedY = Math.max(regionPanel.blockY, Minecraft.getInstance().level.getMinY());
             final BlockPos pos = new BlockPos(regionPanel.blockX, fixedY, regionPanel.blockZ);
             GlobalPos globalPos = GlobalPos.of(dimension.dimension, pos);
             List<ContextMenuItem> list = new ArrayList<>();
@@ -395,12 +394,12 @@ public class LargeMapScreen extends BaseScreen {
         int coordsw = theme.getStringWidth(coords) / 2;
 
         BACKGROUND_COLOR.withAlpha(150).draw(graphics, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
-        PoseStack poseStack = graphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5, 0F);
-        poseStack.scale(0.5F, 0.5F, 1F);
+        var poseStack = graphics.pose();
+        poseStack.pushMatrix();
+        poseStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5);
+        poseStack.scale(0.5F, 0.5F);
         theme.drawString(graphics, coords, 0, 0, Theme.SHADOW);
-        poseStack.popPose();
+        poseStack.popMatrix();
 
         if (FTBChunksClientConfig.DEBUG_INFO.get()) {
             long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
@@ -410,20 +409,20 @@ public class LargeMapScreen extends BaseScreen {
 
             BACKGROUND_COLOR.withAlpha(150).draw(graphics, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
 
-            poseStack.pushPose();
-            poseStack.translate(x + (w - memoryUsagew) - 1F, y + 1, 0F);
-            poseStack.scale(0.5F, 0.5F, 1F);
+            poseStack.pushMatrix();
+            poseStack.translate(x + (w - memoryUsagew) - 1F, y + 1);
+            poseStack.scale(0.5F, 0.5F);
             theme.drawString(graphics, memoryUsage, 0, 0, Theme.SHADOW);
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
 
         if (zoom == minZoom && zoom > 1) {
             Component zoomWarn = Component.translatable("ftbchunks.zoom_warning");
-            poseStack.pushPose();
-            poseStack.translate(x + w / 2F, y + 1, 0F);
-            poseStack.scale(0.5F, 0.5F, 1F);
+            poseStack.pushMatrix();
+            poseStack.translate(x + w / 2F, y + 1);
+            poseStack.scale(0.5F, 0.5F);
             theme.drawString(graphics, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
     }
 

@@ -65,6 +65,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -105,6 +106,11 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * TODO: Split into classes, this file is way over sized!
+ *       - Split the minimap into render layers that can be registered via an API
+ *          - This would split out the various layers, background, icons, borders, etc.
+ */
 public enum FTBChunksClient {
     INSTANCE;
 
@@ -912,9 +918,10 @@ public enum FTBChunksClient {
         inWorldMapIcons.clear();
 
         // Cleanup after the Gui.setupDrawing
-        RenderSystem.disableBlend();
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.disableDepthTest();
+        // TODO: [21.8] Put back or remove.
+//        RenderSystem.disableBlend();
+//        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+//        RenderSystem.disableDepthTest();
     }
 
     public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, Camera camera, DeltaTracker tickDelta) {
@@ -948,7 +955,7 @@ public enum FTBChunksClient {
         float y1 = (float) (cameraPos.y + 30D);
         float y2 = y1 + 70F;
 
-        int yMin = mc.level.getMinBuildHeight();
+        int yMin = mc.level.getMinY();
 
         for (WaypointIcon waypoint : visibleWaypoints) {
             drawWaypointBeacon(poseStack, cameraPos, depthBuffer, y1, y2, yMin, waypoint);

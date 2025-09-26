@@ -35,10 +35,10 @@ public class TeamMemberData {
     }
 
     public static TeamMemberData deserializeNBT(CompoundTag tag) {
-        int maxClaims = tag.getInt("max_claimed_chunks");
-        int maxForced = tag.getInt("max_force_loaded_chunks");
-        boolean offline = tag.getBoolean("offline_force_loader");
-        Set<ChunkDimPos> orig = readOriginalClaims(tag.getCompound("original_claims"));
+        int maxClaims = tag.getInt("max_claimed_chunks").orElse(FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS.get());
+        int maxForced = tag.getInt("max_force_loaded_chunks").orElse(FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS.get());
+        boolean offline = tag.getBoolean("offline_force_loader").orElse(false);
+        Set<ChunkDimPos> orig = readOriginalClaims(tag.getCompound("original_claims").orElseThrow());
 
         return new TeamMemberData(maxClaims, maxForced, offline, orig);
     }
@@ -83,13 +83,13 @@ public class TeamMemberData {
 
     private static Set<ChunkDimPos> readOriginalClaims(CompoundTag tag) {
         Set<ChunkDimPos> res = new HashSet<>();
-        for (String dimStr : tag.getAllKeys()) {
+        for (String dimStr : tag.keySet()) {
             try {
                 ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(dimStr));
                 Set<ChunkDimPos> cdpSet = new HashSet<>();
-                tag.getList(dimStr, Tag.TAG_COMPOUND).forEach(el -> {
+                tag.getList(dimStr).orElse(new ListTag()).forEach(el -> {
                     if (el instanceof CompoundTag c) {
-                        cdpSet.add(new ChunkDimPos(dimKey, c.getInt("x"), c.getInt("z")));
+                        cdpSet.add(new ChunkDimPos(dimKey, c.getInt("x").orElseThrow(), c.getInt("z").orElseThrow()));
                     }
                 });
                 res.addAll(cdpSet);

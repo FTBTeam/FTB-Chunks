@@ -36,12 +36,14 @@ public class PointerIcon implements MapIcon {
     @Override
     public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         Player player = Minecraft.getInstance().player;
-        graphics.pose().pushPose();
-        graphics.pose().translate(x + w / 2f, y + h / 2f, 0F);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x + w / 2f, y + h / 2f);
         float scale = mapType == MapType.LARGE_MAP ? 2.5F : 2F;
-        graphics.pose().scale(scale, scale, scale);
-        graphics.pose().mulPose(Axis.ZP.rotationDegrees(player.getYRot() + 180F));
+        graphics.pose().scale(scale, scale);
+        // TODO: [21.8] Validate this still works
+        graphics.pose().rotate(player.getYRot() + 180F);
+//        graphics.pose().mulPose(Axis.ZP.rotationDegrees(player.getYRot() + 180F));
         POINTER.draw(graphics, - w / 2, -h / 2, w, h);
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 }

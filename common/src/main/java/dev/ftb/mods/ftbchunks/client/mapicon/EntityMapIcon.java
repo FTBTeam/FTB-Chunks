@@ -16,6 +16,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3x2fStack;
 
 public class EntityMapIcon implements MapIcon {
     private final Entity entity;
@@ -79,13 +80,13 @@ public class EntityMapIcon implements MapIcon {
         if (!(entity instanceof AbstractClientPlayer) || mapType.isMinimap() || w < 4 || icon == EntityIconLoader.NORMAL || icon == EntityIconLoader.HOSTILE) {
             icon.draw(graphics, x, y, w, h);
         } else {
-            PoseStack poseStack = graphics.pose();
-            poseStack.pushPose();
-            poseStack.translate(x, y, 0F);
-            poseStack.scale(w / 18F, h / 18F, 1F);
+            Matrix3x2fStack poseStack = graphics.pose();
+            poseStack.pushMatrix();
+            poseStack.translate(x, y);
+            poseStack.scale(w / 18F, h / 18F);
             Color4I.BLACK.draw(graphics, 0, 0, 18, 18);
             icon.draw(graphics, 1, 1, widthHeight.width(), widthHeight.height());
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
     }
 }

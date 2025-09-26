@@ -84,8 +84,8 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
                 @Override
                 public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
                     graphics.pose().pushMatrix();
-                    graphics.pose().translate(x - 16, y - 2, 0);
-                    graphics.pose().scale(0.75F, 0.75F, 0);
+                    graphics.pose().translate(x - 16, y - 2);
+                    graphics.pose().scale(0.75F, 0.75F);
                     icon.draw(graphics, 0, 0, entityIconSettings.widthHeight().width(), entityIconSettings.widthHeight().height());
                     graphics.pose().popMatrix();
                     super.draw(graphics, theme, x, y, w, h);

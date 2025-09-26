@@ -6,18 +6,27 @@ import com.mojang.serialization.JsonOps;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.misc.SimpleToast;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.*;
+import org.joml.Vector2i;
 import org.slf4j.Logger;
 
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,14 +64,24 @@ public class SliceCreationGUI extends BaseScreen {
         this.imageSizeY = new IntTextBox(this);
         this.imageSizeX.setAmount(16);
         this.imageSizeY.setAmount(16);
-        Entity entity = entityType.create(Minecraft.getInstance().level);
-        this.texture = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity).getTextureLocation(entity);
+
+        Entity entity = entityType.create(Minecraft.getInstance().level, EntitySpawnReason.LOAD);
+        if (!(entity instanceof LivingEntity)) {
+            throw new IllegalArgumentException("Entity type must be a LivingEntity");
+        }
+
+        EntityRenderer<?, ?> entityRenderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
+        if (!(entityRenderer instanceof LivingEntityRenderer<?, ?, ?> livingEntityRenderer)) {
+            throw new IllegalArgumentException("Entity type must have a LivingEntityRenderer");
+        }
+
+        this.texture = getTexture(livingEntityRenderer);
 
         this.exportButton = createExportButton();
 
-        Pair<Integer, Integer> textureSize = getTextureSize();
-        this.textureWidth = textureSize.getFirst();
-        this.textureHeight = textureSize.getSecond();
+        EntityIconLoader.WidthHeight textureSize = getTextureSize();
+        this.textureWidth = textureSize.width();
+        this.textureHeight = textureSize.height();
         this.sliceControlBox = new SliceControlBox(this, texture, textureWidth, textureHeight, false);
 
         // Create the button to move, create or remove slices
@@ -141,8 +160,8 @@ public class SliceCreationGUI extends BaseScreen {
         int oneFourth = w / 4;
         Color4I.BLACK.draw(graphics, oneFourth, y, 4, h);
         theme.drawHorizontalTab(graphics, x + 20, y, w, h, false);
-        graphics.pose().pushPose();
-        graphics.pose().scale(2, 2, 0);
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(2, 2);
 
         sliceControlBox.drawMainTexture(graphics, oneFourth + 5, y);
         sliceControlBox.drawOverlay(graphics, oneFourth + 5, y);
@@ -151,7 +170,7 @@ public class SliceCreationGUI extends BaseScreen {
             controlBox.drawOverlay(graphics, oneFourth + 5, y);
         }
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
         List<EntityImageIcon.ChildIconData> slices = new ArrayList<>();
         for (SliceControlBox controlBox : sliceControlBoxes) {
             slices.add(new EntityImageIcon.ChildIconData(Optional.empty(), controlBox.createSlice(), Optional.of(new EntityImageIcon.Offset(controlBox.offsetXText.getIntValue(), controlBox.offsetYText.getIntValue()))));
@@ -362,17 +381,20 @@ public class SliceCreationGUI extends BaseScreen {
 
     }
 
-    private Pair<Integer, Integer> getTextureSize() {
-        SimpleTexture.TextureImage textureImage = SimpleTexture.TextureImage.load(Minecraft.getInstance().getResourceManager(), texture);
-        int imageWidth;
-        int imageHeight;
-        try {
-            imageWidth = textureImage.getImage().getWidth();
-            imageHeight = textureImage.getImage().getHeight();
-            return Pair.of(imageWidth, imageHeight);
-        } catch (Exception e) {
-            LOGGER.error("Failed to get texture size for {}", texture, e);
+    private EntityIconLoader.WidthHeight getTextureSize() {
+        try (var simpleTexture = new SimpleTexture(texture)) {
+            TextureContents textureContents = simpleTexture.loadContents(Minecraft.getInstance().getResourceManager());
+
+            return new EntityIconLoader.WidthHeight(textureContents.image().getWidth(), textureContents.image().getHeight());
+        } catch (IOException e) {
+            LOGGER.error("Failed to load texture {}", texture, e);
             throw new RuntimeException(e);
         }
+    }
+
+    // Eww. This is needed to get around the fun levels of abstraction & generics.
+    private static <S extends LivingEntityRenderState> ResourceLocation getTexture(LivingEntityRenderer<?, S, ?> renderer) {
+        S state = renderer.createRenderState();
+        return renderer.getTextureLocation(state);
     }
 }

@@ -107,10 +107,10 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().location()));
 	}
 
-	private ChunkTeamDataImpl loadTeamData(Team team) {
+	private ChunkTeamDataImpl loadTeamData(Team team) throws IOException {
 		Path path = dataDirectory.resolve(team.getId() + ".snbt");
 		ChunkTeamDataImpl data = new ChunkTeamDataImpl(this, path, team);
-		CompoundTag dataFile = SNBT.read(path);
+		CompoundTag dataFile = SNBT.tryRead(path);
 
 		if (dataFile != null) {
 			data.deserializeNBT(dataFile);
@@ -129,8 +129,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public ChunkTeamDataImpl getOrCreateData(@NotNull Team team) {
 		ChunkTeamDataImpl data = teamData.get(team.getId());
 		if (data == null) {
-			data = loadTeamData(team);
-			teamData.put(team.getId(), data);
+			try {
+                data = loadTeamData(team);
+                teamData.put(team.getId(), data);
+            } catch (IOException ex) {
+                FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
+            }
 		}
 
 		return data;
@@ -186,7 +190,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	@Override
 	public boolean getBypassProtection(UUID player) {
 		return teamManager.getPlayerTeamForPlayerID(player)
-				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION))
+				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION).orElse(false))
 				.orElse(false);
 		}
 

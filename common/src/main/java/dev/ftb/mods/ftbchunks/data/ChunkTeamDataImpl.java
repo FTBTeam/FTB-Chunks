@@ -348,7 +348,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		CompoundTag chunksTag = new CompoundTag();
 		for (ClaimedChunkImpl chunk : getClaimedChunks()) {
 			String key = chunk.getPos().dimension().location().toString();
-			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
+			ListTag chunksListTag = chunksTag.getList(key).orElse(new ListTag());
 			if (chunksListTag.isEmpty()) {
 				chunksTag.put(key, chunksListTag);
 			}
@@ -372,48 +372,49 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	}
 
 	public void deserializeNBT(CompoundTag tag) {
-		maxClaimChunks = tag.getInt("max_claim_chunks");
-		maxForceLoadChunks = tag.getInt("max_force_load_chunks");
-		extraClaimChunks = tag.getInt("extra_claim_chunks");
-		extraForceLoadChunks = tag.getInt("extra_force_load_chunks");
-		lastLoginTime = tag.getLong("last_login_time");
+		maxClaimChunks = tag.getInt("max_claim_chunks").orElse(-1);
+		maxForceLoadChunks = tag.getInt("max_force_load_chunks").orElse(-1);
+		extraClaimChunks = tag.getInt("extra_claim_chunks").orElse(0);
+		extraForceLoadChunks = tag.getInt("extra_force_load_chunks").orElse(0);
+		lastLoginTime = tag.getLong("last_login_time").orElse(0L);
 		canForceLoadChunks = null;
 		claimedChunkCache = null;
 		forcedChunkCache = null;
 
-		CompoundTag chunksTag = tag.getCompound("chunks");
+		tag.getCompound("chunks").ifPresent(chunksTag -> {
+            for (String key : chunksTag.keySet()) {
+                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(key));
+                ListTag chunksListTag = chunksTag.getList(key).orElse(new ListTag());
 
-		for (String key : chunksTag.getAllKeys()) {
-			ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(key));
-			ListTag chunksListTag = chunksTag.getList(key, Tag.TAG_COMPOUND);
-
-			for (int i = 0; i < chunksListTag.size(); i++) {
-				ClaimedChunkImpl chunk = ClaimedChunkImpl.deserializeNBT(this, dimKey, chunksListTag.getCompound(i));
-				manager.registerClaim(chunk.getPos(), chunk);
-			}
-		}
+                for (int i = 0; i < chunksListTag.size(); i++) {
+                    ClaimedChunkImpl chunk = ClaimedChunkImpl.deserializeNBT(this, dimKey, chunksListTag.getCompound(i).orElseThrow());
+                    manager.registerClaim(chunk.getPos(), chunk);
+                }
+            }
+        });
 
 		memberData.clear();
-		CompoundTag memberTag = tag.getCompound("member_data");
-		for (String key : memberTag.getAllKeys()) {
-			try {
-				UUID id = UUID.fromString(key);
-				if (id != Util.NIL_UUID) {
-					memberData.put(id, TeamMemberData.deserializeNBT(memberTag.getCompound(key)));
-				}
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			}
-		}
+		tag.getCompound("member_data").ifPresent(memberTag -> {
+            for (String key : memberTag.keySet()) {
+                try {
+                    UUID id = UUID.fromString(key);
+                    if (id != Util.NIL_UUID) {
+                        memberData.put(id, TeamMemberData.deserializeNBT(memberTag.getCompound(key).orElseThrow()));
+                    }
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
 		preventedAccess.clear();
-		if (tag.contains("prevented_access")) {
-			CompoundTag p = tag.getCompound("prevented_access");
-			for (String key : p.getAllKeys()) {
-				preventedAccess.put(UUID.fromString(key), PreventedAccess.CODEC.parse(NbtOps.INSTANCE, p.getCompound(key)).result().orElseThrow());
-			}
-			prunePreventedLog();
-		}
+
+        tag.getCompound("prevented_access").ifPresent(accessTag -> {
+            for (String key : accessTag.keySet()) {
+                preventedAccess.put(UUID.fromString(key), PreventedAccess.CODEC.parse(NbtOps.INSTANCE, accessTag.getCompound(key).orElseThrow()).result().orElseThrow());
+            }
+            prunePreventedLog();
+        });
 	}
 
 	@Override

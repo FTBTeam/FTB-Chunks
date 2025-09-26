@@ -179,8 +179,11 @@ public class ChunkScreenPanel extends Panel {
 		int sx = getX() + xPos;
 		int sy = getY() + yPos;
 
-		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
-		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
+        // TODO: [21.8] Validate this still works
+        //       - Blocked by dynamic image generation.
+        graphics.blit(FTBChunksClient.INSTANCE.getMinimapTextureId(), sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
+//		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
+//		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {

@@ -204,10 +204,10 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	public static ClaimedChunkImpl deserializeNBT(ChunkTeamDataImpl data, ResourceKey<Level> dimKey, CompoundTag tag) {
-		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.getInt("x"), tag.getInt("z")));
-		chunk.time = tag.getLong("time");
-		chunk.forceLoaded = tag.getLong("force_loaded");
-		chunk.forceLoadExpiryTime = tag.getLong("expiry_time");
+		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.getInt("x").orElseThrow(), tag.getInt("z").orElseThrow()));
+		chunk.time = tag.getLong("time").orElse(System.currentTimeMillis());
+		chunk.forceLoaded = tag.getLong("force_loaded").orElse(0L);
+		chunk.forceLoadExpiryTime = tag.getLong("expiry_time").orElse(0L);
 		return chunk;
 	}
 

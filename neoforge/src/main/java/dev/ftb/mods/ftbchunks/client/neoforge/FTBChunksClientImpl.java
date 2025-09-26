@@ -13,11 +13,9 @@ public class FTBChunksClientImpl {
 	}
 
 	@SubscribeEvent
-	public static void renderLevelStageForge(RenderLevelStageEvent event) {
-		if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
-			FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getProjectionMatrix(),
-					event.getModelViewMatrix(), event.getCamera(), event.getPartialTick());
-		}
+	public static void renderLevelStageForge(RenderLevelStageEvent.AfterParticles event) {
+        FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getModelViewMatrix(),
+                event.getModelViewMatrix(), event.getCamera(), event.getPartialTick());
 	}
 
 	public static boolean doesKeybindMatch(KeyMapping keyMapping, int keyCode, int scanCode, int modifiers) {

@@ -36,6 +36,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -181,7 +182,9 @@ public class ChunkScreenPanel extends Panel {
 
         // TODO: [21.8] Validate this still works
         //       - Blocked by dynamic image generation.
-        graphics.blit(FTBChunksClient.INSTANCE.getMinimapTextureId(), sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
+        graphics.submitBlit(RenderPipelines.GUI_TEXTURED, FTBChunksClient.INSTANCE.dynamicTexture().getTextureView(),
+                sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight, 0xFFFFFFFF);
+//        graphics.blit(FTBChunksClient.INSTANCE.getMinimapTextureId(), sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
 //		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
 //		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
 

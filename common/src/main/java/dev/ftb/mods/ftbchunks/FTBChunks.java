@@ -381,31 +381,31 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-	private boolean ignoreExplosion(Level level, Explosion explosion) {
-		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
-			return true;
-		}
-
-		return explosion.source == null && !FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS.get();
-	}
+//	private boolean ignoreExplosion(Level level, Explosion explosion) {
+//		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
+//			return true;
+//		}
+//
+//		return explosion.source == null && !FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS.get();
+//	}
 
 	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
-		if (FTBChunksWorldConfig.DISABLE_PROTECTION.get() || ignoreExplosion(level, explosion)) {
-			return;
-		}
-
-		List<BlockPos> list = new ArrayList<>(explosion.getToBlow());
-		explosion.clearToBlow();
-		Map<ChunkDimPos, Boolean> map = new HashMap<>();
-
-		for (BlockPos pos : list) {
-			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
-				ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(cpos);
-				return chunk == null || chunk.allowExplosions();
-			})) {
-				explosion.getToBlow().add(pos);
-			}
-		}
+//		if (FTBChunksWorldConfig.DISABLE_PROTECTION.get() || ignoreExplosion(level, explosion)) {
+//			return;
+//		}
+//
+//		List<BlockPos> list = new ArrayList<>(explosion.getToBlow());
+//		explosion.clearToBlow();
+//		Map<ChunkDimPos, Boolean> map = new HashMap<>();
+//
+//		for (BlockPos pos : list) {
+//			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
+//				ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(cpos);
+//				return chunk == null || chunk.allowExplosions();
+//			})) {
+//				explosion.getToBlow().add(pos);
+//			}
+//		}
 	}
 
 	private void playerCloned(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean wonGame) {

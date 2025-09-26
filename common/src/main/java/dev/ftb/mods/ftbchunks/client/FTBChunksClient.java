@@ -1,11 +1,13 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import dev.architectury.event.EventResult;
@@ -64,6 +66,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -92,6 +95,7 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
@@ -145,7 +149,8 @@ public enum FTBChunksClient {
     private long taskQueueTicks = 0L;
     private final Map<ChunkPos, IntOpenHashSet> rerenderCache = new HashMap<>();
 
-    private int minimapTextureId = -1;
+//    private int minimapTextureId = -1;
+    private DynamicTexture dynamicTexture;
     private int currentPlayerChunkX, currentPlayerChunkZ;
     private double currentPlayerX, currentPlayerY, currentPlayerZ;
     private double prevPlayerX, prevPlayerY, prevPlayerZ;
@@ -494,12 +499,6 @@ public enum FTBChunksClient {
         return (float) z;
     }
 
-    public int generateTextureId(int w, int h) {
-        int textureId = TextureUtil.generateTextureId();
-        TextureUtil.prepareImage(textureId, w, h);
-        return textureId;
-    }
-
     public void renderHud(GuiGraphics graphics, DeltaTracker tickDelta) {
         Minecraft mc = Minecraft.getInstance();
 
@@ -530,10 +529,10 @@ public enum FTBChunksClient {
             MapManager.getInstance().ifPresent(MapManager::saveAllRegions);
         }
 
-        if (minimapTextureId == -1) {
-            minimapTextureId = generateTextureId(FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE);
-            scheduleMinimapUpdate();
-        }
+//        if (minimapTextureId == -1) {
+//            minimapTextureId = generateTextureId(FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE);
+//            scheduleMinimapUpdate();
+//        }
 
         float zoom0 = getZoom();
         float zoom = zoom0 / 3.5F;
@@ -541,9 +540,10 @@ public enum FTBChunksClient {
         boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (zoom0 < 1.5F) : blurMode == MinimapBlurMode.ON;
         int filter = minimapBlur ? GL11.GL_LINEAR : GL11.GL_NEAREST;
 
-        RenderSystem.bindTextureForSetup(minimapTextureId);
-        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
-        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
+        // TODO: [21.8] Figure out how to do this. Game already supports bluring so we can likely figure it out from there!
+//        RenderSystem.bindTextureForSetup(minimapTextureId);
+//        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
+//        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
 
         int cx = Mth.floor(playerX) >> 4;
         int cz = Mth.floor(playerZ) >> 4;
@@ -563,7 +563,9 @@ public enum FTBChunksClient {
                     int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
                     MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
-                    region.getRenderedMapImage().upload(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, minimapBlur, false, false, false);
+                    dynamicTexture = new DynamicTexture(() -> "Minimap", region.getRenderedMapImage());
+                    dynamicTexture.upload(); // TODO: [21.8] this might not be needed
+//                    region.getRenderedMapImage().upload(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, minimapBlur, false, false, false);
                 }
             }
 
@@ -617,12 +619,12 @@ public enum FTBChunksClient {
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
-        RenderSystem.enableDepthTest();
+//        RenderSystem.enableDepthTest();
 
-        PoseStack poseStack = graphics.pose();
-        poseStack.pushPose();
+        Matrix3x2fStack poseStack = graphics.pose();
+        poseStack.pushMatrix();
 
-        poseStack.translate(0, y + halfSizeD, 0);
+        poseStack.translate((float) 0, (float) (y + halfSizeD));
 
         boolean textAboveMinimap = FTBChunksClientConfig.TEXT_ABOVE_MINIMAP.get();
         int componentsHeight = getMinimapComponentsTotalHeight(mc, dim, playerX, playerY, playerZ);
@@ -632,44 +634,46 @@ public enum FTBChunksClient {
             int renderY = y - componentsHeight;
             if (renderY <= 0) {
                 int offset = -renderY + 1;
-                poseStack.translate(0, offset, 0);
+                poseStack.translate(0, offset);
                 y += offset;
             }
 
-            poseStack.pushPose();
-            poseStack.translate(0, -componentsHeight, 0);
+            poseStack.pushMatrix();
+            poseStack.translate(0, -componentsHeight);
             drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, (int) -halfSizeF - 1, 0, halfSizeD, poseStack, graphics);
-            poseStack.popPose();
+            poseStack.popMatrix();
         } else {
             // Move map up if text would go outside the screen
             int renderY = y + size + componentsHeight;
             if (renderY >= scaledHeight) {
                 int offset = -componentsHeight - 1;
-                poseStack.translate(0, offset, 0);
+                poseStack.translate(0, offset);
                 y += offset;
             }
         }
 
-        poseStack.translate(x + halfSizeD, 0, 490);
-        Matrix4f m = poseStack.last().pose();
+        // TODO: [21.8] Z used to be 490
+        poseStack.translate((float) (x + halfSizeD), 0);
+//        Matrix4f m = poseStack.last().pose();
 
         // Draw the minimap cutout mask - see AdvancementTab for a vanilla example of using colorMask()
-        RenderSystem.colorMask(false, false, false, false);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_MASK : CIRCLE_MASK);
-        buffer.addVertex(m, -halfSizeF + border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(0F, 0F);
-        buffer.addVertex(m, -halfSizeF + border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(0F, 1F);
-        buffer.addVertex(m, halfSizeF - border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(1F, 1F);
-        buffer.addVertex(m, halfSizeF - border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(1F, 0F);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        // TODO: [21.8] Figure out how to do this with the current rendering system
+//        RenderSystem.colorMask(false, false, false, false);
+//        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+//        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_MASK : CIRCLE_MASK);
+//        buffer.addVertex(m, -halfSizeF + border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(0F, 0F);
+//        buffer.addVertex(m, -halfSizeF + border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(0F, 1F);
+//        buffer.addVertex(m, halfSizeF - border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(1F, 1F);
+//        buffer.addVertex(m, halfSizeF - border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(1F, 0F);
+//        BufferUploader.drawWithShader(buffer.buildOrThrow());
 
-        RenderSystem.colorMask(true, true, true, true);
+//        RenderSystem.colorMask(true, true, true, true);
 
         // minimap rotation
-        poseStack.mulPose(Axis.ZP.rotationDegrees(minimapRotation + 180F));
+        poseStack.rotate(minimapRotation + 180F);
 
-        RenderSystem.depthFunc(GL11.GL_GEQUAL);
+//        RenderSystem.depthFunc(GL11.GL_GEQUAL);
 
         // draw the map itself
         float halfSizeBorderF = halfSizeF - border;
@@ -677,46 +681,74 @@ public enum FTBChunksClient {
         float offZ = 0.5F + (float) ((MathUtils.mod(playerZ, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
         float zws = 2F / (FTBChunks.TILES * zoom);
 
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, minimapTextureId);
-        buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.addVertex(m, -halfSizeBorderF, -halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX - zws, offZ - zws);
-        buffer.addVertex(m, -halfSizeBorderF, halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX - zws, offZ + zws);
-        buffer.addVertex(m, halfSizeBorderF, halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX + zws, offZ + zws);
-        buffer.addVertex(m, halfSizeBorderF, -halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX + zws, offZ - zws);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        GpuTextureView textureView = dynamicTexture.getTextureView();
+        /// RenderPipeline renderpipeline, GpuTextureView gputextureview, int i, int j, int k, int l, float f, float f1, float f2, float f3, int i1
+        // i = x0, j = y0, k = x1, l= y1, f = u0, f1= u1, f2= v0, f3=v1, i1= color
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthFunc(GL11.GL_LEQUAL);
-        RenderSystem.defaultBlendFunc();
+        int color = (alpha << 24) | (255 << 16) | (255 << 8) | 255;
+
+        int x0 = (int) -halfSizeBorderF;
+        int y0 = (int) -halfSizeBorderF;
+        int x1 = (int) halfSizeBorderF;
+        int y1 = (int) halfSizeBorderF;
+
+        float u0 = offX - zws;
+        float u1 = offX + zws;
+        float v0 = offZ - zws;
+        float v1 = offZ + zws;
+
+        graphics.submitBlit(
+                RenderPipelines.GUI_TEXTURED,
+                textureView,
+                x0, y0, x1, y1,
+                u0, u1, v0, v1,
+                color
+        );
+
+
+//        // Convert to the above!
+//        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//        RenderSystem.setShaderTexture(0, minimapTextureId);
+//        buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//        buffer.addVertex(m, -halfSizeBorderF, -halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX - zws, offZ - zws);
+//        buffer.addVertex(m, -halfSizeBorderF, halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX - zws, offZ + zws);
+//        buffer.addVertex(m, halfSizeBorderF, halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX + zws, offZ + zws);
+//        buffer.addVertex(m, halfSizeBorderF, -halfSizeBorderF, 0F).setColor(255, 255, 255, alpha).setUv(offX + zws, offZ - zws);
+//        BufferUploader.drawWithShader(buffer.buildOrThrow());
+
+        // TODO: [21.8] Add this back / find the right way of doing it. I think we need more render types!
+//        RenderSystem.disableDepthTest();
+//        RenderSystem.depthFunc(GL11.GL_LEQUAL);
+//        RenderSystem.defaultBlendFunc();
 
         // draw the map border
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER);
-        buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.addVertex(m, -halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(0F, 0F);
-        buffer.addVertex(m, -halfSizeF, halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(0F, 1F);
-        buffer.addVertex(m, halfSizeF, halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 1F);
-        buffer.addVertex(m, halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 0F);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        // TODO: [21.8] Re-implement borders
+//        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER);
+//        buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//        buffer.addVertex(m, -halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(0F, 0F);
+//        buffer.addVertex(m, -halfSizeF, halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(0F, 1F);
+//        buffer.addVertex(m, halfSizeF, halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 1F);
+//        buffer.addVertex(m, halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 0F);
+//        BufferUploader.drawWithShader(buffer.buildOrThrow());
+//
+//        if (FTBChunksClientConfig.MINIMAP_RETICLE.get()) {
+//            // draw map crosshairs
+//            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+//            buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+//            buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
+//            buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
+//            buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
+//            buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
+//            BufferUploader.drawWithShader(buffer.buildOrThrow());
+//        }
 
-        if (FTBChunksClientConfig.MINIMAP_RETICLE.get()) {
-            // draw map crosshairs
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-            buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-            buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-            buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
-            buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
-            BufferUploader.drawWithShader(buffer.buildOrThrow());
-        }
+        poseStack.popMatrix();
 
-        poseStack.popPose();
-
-        m = poseStack.last().pose();
+//        m = poseStack.last().pose();
 
         if (FTBChunksClientConfig.MINIMAP_COMPASS.get()) {
-            drawMinimapCompassPoints(minimapRotation, size, halfSizeD, x, y, tessellator, buffer, m);
+            drawMinimapCompassPoints(minimapRotation, size, halfSizeD, x, y, tessellator, buffer); //m);
         }
 
         if (lastMapIconUpdate == 0L || (now - lastMapIconUpdate) >= FTBChunksClientConfig.MINIMAP_ICON_UPDATE_TIMER.get()) {
@@ -751,46 +783,50 @@ public enum FTBChunksClient {
             double wy = y + halfSizeD + Math.sin(angle) * d;
             float wsf = (float) (ws * 2D);
 
-            poseStack.pushPose();
-            poseStack.translate(wx - ws, wy - ws - (icon.isIconOnEdge(MapType.MINIMAP, d >= halfSizeD) ? ws / 2D : 0D), 0);
-            poseStack.scale(wsf, wsf, 1F);
+            poseStack.pushMatrix();
+            poseStack.translate((float) (wx - ws), (float) (wy - ws - (icon.isIconOnEdge(MapType.MINIMAP, d >= halfSizeD) ? ws / 2D : 0D)));
+            poseStack.scale(wsf, wsf);
             icon.draw(MapType.MINIMAP, graphics, 0, 0, 1, 1, d >= halfSizeD, 255);
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
 
         if (rotationLocked || FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED.get()) {
             // pointer icon at the map centre (player position)
-            RenderSystem.setShaderTexture(0, PLAYER);
-            poseStack.pushPose();
-            poseStack.translate(x + halfSizeD, y + halfSizeD, 0);
+            // TODO: [21.8] Do we need to cache this?
+            GpuTextureView gputextureview = Minecraft.getInstance().getTextureManager().getTexture(PLAYER).getTextureView();
+            RenderSystem.setShaderTexture(0, gputextureview);
+            poseStack.pushMatrix();
+            poseStack.translate((float) (x + halfSizeD), (float) (y + halfSizeD));
             if (rotationLocked) {
-                poseStack.mulPose(Axis.ZP.rotationDegrees(mc.player.getYRot() + 180F));
+                poseStack.rotate(mc.player.getYRot() + 180F);
+//                poseStack.mulPose(Axis.ZP.rotationDegrees(mc.player.getYRot() + 180F));
             }
-            poseStack.scale(size / 16F, size / 16F, 1F);
-            m = poseStack.last().pose();
+            poseStack.scale(size / 16F, size / 16F);
+//            m = poseStack.last().pose(); // [21.8] This shouldnt' be needed anymore
 
             PointerIconMode mode = FTBChunksClientConfig.POINTER_ICON_MODE_MINIMAP.get();
             if (mode.showPointer()) {
-                RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-                buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-                buffer.addVertex(m, -1, -1, 0).setColor(255, 255, 255, 200).setUv(0F, 0F);
-                buffer.addVertex(m, -1, 1, 0).setColor(255, 255, 255, 200).setUv(0F, 1F);
-                buffer.addVertex(m, 1, 1, 0).setColor(255, 255, 255, 200).setUv(1F, 1F);
-                buffer.addVertex(m, 1, -1, 0).setColor(255, 255, 255, 200).setUv(1F, 0F);
-                BufferUploader.drawWithShader(buffer.buildOrThrow());
+                // TODO: [21.8] re-implement pointer icon
+//                RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//                buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//                buffer.addVertex(m, -1, -1, 0).setColor(255, 255, 255, 200).setUv(0F, 0F);
+//                buffer.addVertex(m, -1, 1, 0).setColor(255, 255, 255, 200).setUv(0F, 1F);
+//                buffer.addVertex(m, 1, 1, 0).setColor(255, 255, 255, 200).setUv(1F, 1F);
+//                buffer.addVertex(m, 1, -1, 0).setColor(255, 255, 255, 200).setUv(1F, 0F);
+//                BufferUploader.drawWithShader(buffer.buildOrThrow());
             }
             if (mode.showFace()) {
                 if (mode.showPointer()) {
                     // scale & shift face size a little to better align with the pointer
-                    poseStack.scale(0.75f, 0.75f, 0.75f);
-                    poseStack.translate(0f, 0.32f, 0f);
+                    poseStack.scale(0.75f, 0.75f);
+                    poseStack.translate(0f, 0.32f);
                 }
-                poseStack.translate(-0.5f, -0.5f, 0f);
+                poseStack.translate(-0.5f, -0.5f);
                 new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile()))
                         .draw(MapType.MINIMAP, graphics, 0, 0, 1, 1, false, 255);
             }
 
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
 
         // The minimap info text
@@ -798,7 +834,8 @@ public enum FTBChunksClient {
             drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, y, size, halfSizeD, poseStack, graphics);
         }
 
-        RenderSystem.enableDepthTest();
+        // TODO: [21.8] Not sure if this is needed
+//        RenderSystem.enableDepthTest();
 
         if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
             drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
@@ -816,7 +853,7 @@ public enum FTBChunksClient {
         return sum;
     }
 
-    private void drawMinimapComponents(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ, int scaledHeight, int x, int y, int size, double halfSizeD, PoseStack poseStack, GuiGraphics graphics) {
+    private void drawMinimapComponents(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ, int scaledHeight, int x, int y, int size, double halfSizeD, Matrix3x2fStack poseStack, GuiGraphics graphics) {
         var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
         var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
@@ -829,19 +866,19 @@ public enum FTBChunksClient {
             var height = component.height(context);
             var isBottom = y + size + height >= scaledHeight;
             var yOff = isBottom ? (-height - yOffset) : (size + 2f + yOffset);
-            poseStack.pushPose();
-            poseStack.translate(x + halfSizeD, y + yOff, 0D);
-            poseStack.scale(fontScale, fontScale, 1F);
+            poseStack.pushMatrix();
+            poseStack.translate((float) (x + halfSizeD), y + yOff);
+            poseStack.scale(fontScale, fontScale);
 
             component.render(context, graphics, mc.font);
 
-            poseStack.popPose();
+            poseStack.popMatrix();
 
             yOffset += height;
         }
     }
 
-    private void drawMinimapCompassPoints(float minimapRotation, int size, double halfSizeD, int minimapX, int minimapY, Tesselator tessellator, BufferBuilder buffer, Matrix4f m) {
+    private void drawMinimapCompassPoints(float minimapRotation, int size, double halfSizeD, int minimapX, int minimapY, Tesselator tessellator, BufferBuilder buffer) {//Matrix4f m) {
         // compass letters at the 4 cardinal points
         double d = size / 2.2D;
         float ws = size / 32F;
@@ -851,19 +888,21 @@ public enum FTBChunksClient {
             float wx = (float) (minimapX + halfSizeD + Math.cos(angle) * d);
             float wy = (float) (minimapY + halfSizeD + Math.sin(angle) * d);
 
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-            RenderSystem.setShaderTexture(0, COMPASS[face]);
-            buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            buffer.addVertex(m, wx - ws, wy - ws, 0).setColor(255, 255, 255, 255).setUv(0F, 0F);
-            buffer.addVertex(m, wx - ws, wy + ws, 0).setColor(255, 255, 255, 255).setUv(0F, 1F);
-            buffer.addVertex(m, wx + ws, wy + ws, 0).setColor(255, 255, 255, 255).setUv(1F, 1F);
-            buffer.addVertex(m, wx + ws, wy - ws, 0).setColor(255, 255, 255, 255).setUv(1F, 0F);
-            BufferUploader.drawWithShader(buffer.buildOrThrow());
+            // TODO: [21.8] Re-implement compass points
+//            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//            RenderSystem.setShaderTexture(0, COMPASS[face]);
+//            buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//            buffer.addVertex(m, wx - ws, wy - ws, 0).setColor(255, 255, 255, 255).setUv(0F, 0F);
+//            buffer.addVertex(m, wx - ws, wy + ws, 0).setColor(255, 255, 255, 255).setUv(0F, 1F);
+//            buffer.addVertex(m, wx + ws, wy + ws, 0).setColor(255, 255, 255, 255).setUv(1F, 1F);
+//            buffer.addVertex(m, wx + ws, wy - ws, 0).setColor(255, 255, 255, 255).setUv(1F, 0F);
+//            BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
     }
 
     private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, DeltaTracker tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
-        GuiHelper.setupDrawing();
+        // TODO: [21.8] Put back or remove.
+//        GuiHelper.setupDrawing();
         float scaledWidth2 = scaledWidth / 2F;
         float scaledHeight2 = scaledHeight / 2F;
         InWorldMapIcon focusedIcon = null;
@@ -905,12 +944,13 @@ public enum FTBChunksClient {
                 float maxSize = (float) (minSize * FTBChunksClientConfig.WAYPOINT_FOCUS_SCALE.get());
                 if (iconAlpha > 0) {
                     float iconScale = Mth.lerp((50f - Math.min((float) icon.distanceToMouse(), 50f)) / 50f, minSize, maxSize);
-                    PoseStack poseStack = graphics.pose();
-                    poseStack.pushPose();
-                    poseStack.translate(icon.x(), icon.y(), icon == focusedIcon ? 50F : -100F);
-                    poseStack.scale(iconScale, iconScale, 1F);
+                    Matrix3x2fStack poseStack = graphics.pose();
+                    poseStack.pushMatrix();
+                    // TODO: [21.8] This used to have a z of icon == focusedIcon ? 50F : -100F
+                    poseStack.translate(icon.x(), icon.y());
+                    poseStack.scale(iconScale, iconScale);
                     icon.icon().draw(MapType.WORLD_ICON, graphics, -8, -8, 16, 16, icon != focusedIcon, iconAlpha);
-                    poseStack.popPose();
+                    poseStack.popMatrix();
                 }
             }
         }
@@ -1292,8 +1332,8 @@ public enum FTBChunksClient {
         return generalChunkData;
     }
 
-    public int getMinimapTextureId() {
-        return minimapTextureId;
+    public DynamicTexture dynamicTexture() {
+        return dynamicTexture;
     }
 
     public static Waypoint addWaypoint(String name, GlobalPos position, int color) {

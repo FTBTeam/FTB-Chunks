@@ -107,16 +107,21 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().location()));
 	}
 
-	private ChunkTeamDataImpl loadTeamData(Team team) throws IOException {
+	private ChunkTeamDataImpl loadTeamData(Team team) {
 		Path path = dataDirectory.resolve(team.getId() + ".snbt");
 		ChunkTeamDataImpl data = new ChunkTeamDataImpl(this, path, team);
-		CompoundTag dataFile = SNBT.tryRead(path);
 
-		if (dataFile != null) {
-			data.deserializeNBT(dataFile);
-			teamData.put(team.getId(), data);
-			return data;
-		}
+        try {
+            CompoundTag dataFile = SNBT.tryRead(path);
+
+            if (dataFile != null) {
+                data.deserializeNBT(dataFile);
+                teamData.put(team.getId(), data);
+                return data;
+            }
+        } catch (Exception ex) {
+            FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
+        }
 
 		return data;
 	}
@@ -129,12 +134,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public ChunkTeamDataImpl getOrCreateData(@NotNull Team team) {
 		ChunkTeamDataImpl data = teamData.get(team.getId());
 		if (data == null) {
-			try {
-                data = loadTeamData(team);
-                teamData.put(team.getId(), data);
-            } catch (IOException ex) {
-                FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
-            }
+            data = loadTeamData(team);
+            teamData.put(team.getId(), data);
 		}
 
 		return data;

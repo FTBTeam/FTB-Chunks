@@ -10,4 +10,5 @@ accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpd
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket positions [S
 accessible field net/minecraft/world/level/Explosion source Lnet/minecraft/world/entity/Entity;
 
-accessible class net/minecraft/client/renderer/texture/SimpleTexture$TextureImage
+accessible method net/minecraft/client/gui/GuiGraphics submitBlit (Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lcom/mojang/blaze3d/textures/GpuTextureView;IIIIFFFFI)V
+extendable class net/minecraft/nbt/CompoundTag

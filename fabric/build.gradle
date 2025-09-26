@@ -58,6 +58,8 @@ dependencies {
 	modImplementation("dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}") { transitive = false }
 	modImplementation("dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}") { transitive = false }
 
+    modImplementation "curse.maven:atlasviewer-633577:6712181"
+
 	common(project(path: ":common", configuration: "dev")) { transitive false }
 	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 }

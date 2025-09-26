@@ -563,8 +563,13 @@ public enum FTBChunksClient {
                     int oz = cz + mz - FTBChunks.TILE_OFFSET;
 
                     MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
+                    if (dynamicTexture != null) {
+                        dynamicTexture.close();
+                    }
+
                     dynamicTexture = new DynamicTexture(() -> "Minimap", region.getRenderedMapImage());
-                    dynamicTexture.upload(); // TODO: [21.8] this might not be needed
+//                    dynamicTexture.upload(); // TODO: [21.8] this might not be needed
+                    System.out.printf("Generated minimap for region %s (chunk %d,%d) at %d,%d\n", region.pos, ox, oz, mx * 16, mz * 16);
 //                    region.getRenderedMapImage().upload(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, minimapBlur, false, false, false);
                 }
             }
@@ -798,7 +803,7 @@ public enum FTBChunksClient {
             poseStack.pushMatrix();
             poseStack.translate((float) (x + halfSizeD), (float) (y + halfSizeD));
             if (rotationLocked) {
-                poseStack.rotate(mc.player.getYRot() + 180F);
+                poseStack.rotate((mc.player.getVisualRotationYInDegrees() + 180F) / 100);
 //                poseStack.mulPose(Axis.ZP.rotationDegrees(mc.player.getYRot() + 180F));
             }
             poseStack.scale(size / 16F, size / 16F);

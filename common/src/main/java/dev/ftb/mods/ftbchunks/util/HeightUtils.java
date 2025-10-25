@@ -94,5 +94,4 @@ public class HeightUtils {
                 .getOrDefault(chunkPos, FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get());
     }
 
-    public record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {}
 }

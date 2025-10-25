@@ -7,7 +7,6 @@ import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
-import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
@@ -113,10 +112,10 @@ public interface FTBChunksClientConfig {
         ConfigManager.getInstance().save(KEY);
     }
 
-    class ChunkPosCustomYSetValue extends BaseValue<Set<HeightUtils.ChunkPosWithMinY>> {
+    class ChunkPosCustomYSetValue extends BaseValue<Set<ChunkPosWithMinY>> {
         private final HashMap<Long, Integer> lookup = new HashMap<>();
 
-        protected ChunkPosCustomYSetValue(@Nullable SNBTConfig c, String n, Set<HeightUtils.ChunkPosWithMinY> def) {
+        protected ChunkPosCustomYSetValue(@Nullable SNBTConfig c, String n, Set<ChunkPosWithMinY> def) {
             super(c, n, def);
             super.set(new HashSet<>());
         }
@@ -125,7 +124,7 @@ public interface FTBChunksClientConfig {
         public void write(SNBTCompoundTag tag) {
             var listTag = new ListTag();
 
-            for (HeightUtils.ChunkPosWithMinY pos : get()) {
+            for (ChunkPosWithMinY pos : get()) {
                 var posTag = new SNBTCompoundTag();
                 posTag.putInt("x", pos.chunkX());
                 posTag.putInt("z", pos.chunkZ());
@@ -139,26 +138,32 @@ public interface FTBChunksClientConfig {
         @Override
         public void read(SNBTCompoundTag tag) {
             var list = tag.getList(key, SNBTCompoundTag.class);
-            Set<HeightUtils.ChunkPosWithMinY> set = new HashSet<>();
+            Set<ChunkPosWithMinY> set = new HashSet<>();
 
             for (SNBTCompoundTag posTag : list) {
                 int x = posTag.getInt("x");
                 int z = posTag.getInt("z");
                 int minY = posTag.getInt("min_y");
-                set.add(new HeightUtils.ChunkPosWithMinY(x, z, minY));
+                set.add(new ChunkPosWithMinY(x, z, minY));
             }
 
             set(set);
+        }
 
-            // Rebuild lookup
+        @Override
+        public void set(Set<ChunkPosWithMinY> value) {
+            super.set(value);
+
             lookup.clear();
-            for (HeightUtils.ChunkPosWithMinY pos : set) {
+            for (ChunkPosWithMinY pos : value) {
                 lookup.put(ChunkPos.asLong(pos.chunkX(), pos.chunkZ()), pos.minY());
             }
         }
 
-        public HashMap<Long, Integer> lookup() {
-            return lookup;
+        public Map<Long, Integer> lookup() {
+            return Collections.unmodifiableMap(lookup);
         }
     }
+
+    record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {}
 }

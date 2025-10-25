@@ -88,7 +88,7 @@ public class HeightUtils {
 	}
 
     private static int getMinYFromChunkOrConfig(int x, int z) {
-        Long chunkPos = ChunkPos.asLong(x, z);
+        long chunkPos = ChunkPos.asLong(x, z);
 
         return FTBChunksClientConfig.CHUNKS_WITH_CUSTOM_Y.lookup()
                 .getOrDefault(chunkPos, FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get());

@@ -101,7 +101,7 @@ public interface FTBChunksClientConfig {
     SNBTConfig CUSTOM_BEHAVIOUR = CONFIG.addGroup("custom_behaviour").excluded();
 
     BooleanValue OVERRIDE_MIN_Y_LEVEL = CUSTOM_BEHAVIOUR.addBoolean("use_custom_min_y_level", false).excluded().comment("Override minimum Y level used when rendering map");
-    IntValue OVERRIDE_MIN_Y_LEVEL_VALUE = CUSTOM_BEHAVIOUR.addInt("custom_min_y_level", Short.MIN_VALUE, Short.MIN_VALUE, Short.MAX_VALUE).excluded().comment("Custom minimum Y level to scan when rendering map, used if use_custom_min_y_level is true\"");
+    IntValue OVERRIDE_MIN_Y_LEVEL_VALUE = CUSTOM_BEHAVIOUR.addInt("custom_min_y_level", Short.MIN_VALUE, Short.MIN_VALUE, Short.MAX_VALUE).excluded().comment("Custom minimum Y level to scan when rendering map, used if use_custom_min_y_level is true");
 
     ChunkPosCustomYSetValue CHUNKS_WITH_CUSTOM_Y = CUSTOM_BEHAVIOUR.add(new ChunkPosCustomYSetValue(CUSTOM_BEHAVIOUR, "chunks_with_custom_y", Collections.emptySet())).excluded().comment("Set of chunks with custom minimum Y levels, used if use_custom_min_y_level is true");
 

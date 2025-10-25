@@ -4,12 +4,15 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 public class HeightUtils {
 	public static final int UNKNOWN = Short.MIN_VALUE + 1;
@@ -40,9 +43,15 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-		int bottomY = FTBChunksClientConfig.USE_CUSTOM_MIN_Y_LEVEL.get()
-            ? FTBChunksClientConfig.CUSTOM_MIN_Y_LEVEL.get()
-            : chunkAccess.getMinBuildHeight();
+        int chunkX = pos.getX() >> 4;
+        int chunkZ = pos.getZ() >> 4;
+
+        // Clamped within the dimensions build height limits
+        int startY = FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL.get()
+                ? getMinYFromChunkOrConfig(chunkX, chunkZ)
+                : chunkAccess.getMinBuildHeight();
+
+		int bottomY = Mth.clamp(startY, chunkAccess.getMinBuildHeight(), chunkAccess.getMaxBuildHeight());
 
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();
@@ -78,4 +87,17 @@ public class HeightUtils {
 		pos.setY(UNKNOWN);
 		return UNKNOWN;
 	}
+
+    private static int getMinYFromChunkOrConfig(int x, int z) {
+        Set<ChunkPosWithMinY> chunkPosWithMinY = FTBChunksClientConfig.CHUNKS_WITH_CUSTOM_Y.get();
+        for (ChunkPosWithMinY c : chunkPosWithMinY) {
+            if (c.chunkX == x && c.chunkZ == z) {
+                return c.minY;
+            }
+        }
+
+        return FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get();
+    }
+
+    public record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {}
 }

@@ -114,6 +114,8 @@ public interface FTBChunksClientConfig {
     }
 
     class ChunkPosCustomYSetValue extends BaseValue<Set<HeightUtils.ChunkPosWithMinY>> {
+        private final HashMap<Long, Integer> lookup = new HashMap<>();
+
         protected ChunkPosCustomYSetValue(@Nullable SNBTConfig c, String n, Set<HeightUtils.ChunkPosWithMinY> def) {
             super(c, n, def);
             super.set(new HashSet<>());
@@ -147,6 +149,16 @@ public interface FTBChunksClientConfig {
             }
 
             set(set);
+
+            // Rebuild lookup
+            lookup.clear();
+            for (HeightUtils.ChunkPosWithMinY pos : set) {
+                lookup.put(ChunkPos.asLong(pos.chunkX(), pos.chunkZ()), pos.minY());
+            }
+        }
+
+        public HashMap<Long, Integer> lookup() {
+            return lookup;
         }
     }
 }

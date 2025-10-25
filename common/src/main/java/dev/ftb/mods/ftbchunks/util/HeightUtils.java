@@ -5,14 +5,13 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Set;
 
 public class HeightUtils {
 	public static final int UNKNOWN = Short.MIN_VALUE + 1;
@@ -89,14 +88,10 @@ public class HeightUtils {
 	}
 
     private static int getMinYFromChunkOrConfig(int x, int z) {
-        Set<ChunkPosWithMinY> chunkPosWithMinY = FTBChunksClientConfig.CHUNKS_WITH_CUSTOM_Y.get();
-        for (ChunkPosWithMinY c : chunkPosWithMinY) {
-            if (c.chunkX == x && c.chunkZ == z) {
-                return c.minY;
-            }
-        }
+        Long chunkPos = ChunkPos.asLong(x, z);
 
-        return FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get();
+        return FTBChunksClientConfig.CHUNKS_WITH_CUSTOM_Y.lookup()
+                .getOrDefault(chunkPos, FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get());
     }
 
     public record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {}

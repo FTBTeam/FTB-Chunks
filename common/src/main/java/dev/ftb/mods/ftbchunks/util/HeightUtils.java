@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
@@ -46,7 +47,7 @@ public class HeightUtils {
         int chunkZ = pos.getZ() >> 4;
 
         // Clamped within the dimensions build height limits
-        int startY = FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL.get()
+        int startY = FTBChunksWorldConfig.OVERRIDE_MIN_Y_LEVEL.get()
                 ? getMinYFromChunkOrConfig(chunkX, chunkZ)
                 : chunkAccess.getMinBuildHeight();
 
@@ -90,8 +91,8 @@ public class HeightUtils {
     private static int getMinYFromChunkOrConfig(int x, int z) {
         long chunkPos = ChunkPos.asLong(x, z);
 
-        return FTBChunksClientConfig.CHUNKS_WITH_CUSTOM_Y.lookup()
-                .getOrDefault(chunkPos, FTBChunksClientConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get());
+        return FTBChunksWorldConfig.CHUNKS_WITH_CUSTOM_Y.lookup()
+                .getOrDefault(chunkPos, FTBChunksWorldConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get());
     }
 
 }

@@ -7,13 +7,10 @@ import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
+import dev.ftb.mods.ftbchunks.util.ChunkPosCustomYSetValue;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.ChunkPos;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -97,13 +94,6 @@ public interface FTBChunksClientConfig {
     IntValue AUTORELEASE_ON_MAP_CLOSE = MEMORY.addInt("autorelease_on_map_close", 32, 0, Integer.MAX_VALUE).comment("When the large map is closed, auto-release least recently accessed regions down to this number (0 disables releasing)");
     BooleanValue MAX_ZOOM_CONSTRAINT = MEMORY.addBoolean("max_zoom_constraint", true).comment("Constrain maximum map zoom-out based on number of explored regions and available memory");
 
-    SNBTConfig CUSTOM_BEHAVIOUR = CONFIG.addGroup("custom_behaviour").excluded();
-
-    BooleanValue OVERRIDE_MIN_Y_LEVEL = CUSTOM_BEHAVIOUR.addBoolean("use_custom_min_y_level", false).excluded().comment("Override minimum Y level used when rendering map");
-    IntValue OVERRIDE_MIN_Y_LEVEL_VALUE = CUSTOM_BEHAVIOUR.addInt("custom_min_y_level", Short.MIN_VALUE, Short.MIN_VALUE, Short.MAX_VALUE).excluded().comment("Custom minimum Y level to scan when rendering map, used if use_custom_min_y_level is true");
-
-    ChunkPosCustomYSetValue CHUNKS_WITH_CUSTOM_Y = CUSTOM_BEHAVIOUR.add(new ChunkPosCustomYSetValue(CUSTOM_BEHAVIOUR, "chunks_with_custom_y", Collections.emptySet())).excluded().comment("Set of chunks with custom minimum Y levels, used if use_custom_min_y_level is true");
-
     static boolean hasOtherMinimapMod() {
         return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
     }
@@ -111,59 +101,4 @@ public interface FTBChunksClientConfig {
     static void saveConfig() {
         ConfigManager.getInstance().save(KEY);
     }
-
-    class ChunkPosCustomYSetValue extends BaseValue<Set<ChunkPosWithMinY>> {
-        private final HashMap<Long, Integer> lookup = new HashMap<>();
-
-        protected ChunkPosCustomYSetValue(@Nullable SNBTConfig c, String n, Set<ChunkPosWithMinY> def) {
-            super(c, n, def);
-            super.set(new HashSet<>());
-        }
-
-        @Override
-        public void write(SNBTCompoundTag tag) {
-            var listTag = new ListTag();
-
-            for (ChunkPosWithMinY pos : get()) {
-                var posTag = new SNBTCompoundTag();
-                posTag.putInt("x", pos.chunkX());
-                posTag.putInt("z", pos.chunkZ());
-                posTag.putInt("min_y", pos.minY());
-                listTag.add(posTag);
-            }
-
-            tag.put(key, listTag);
-        }
-
-        @Override
-        public void read(SNBTCompoundTag tag) {
-            var list = tag.getList(key, SNBTCompoundTag.class);
-            Set<ChunkPosWithMinY> set = new HashSet<>();
-
-            for (SNBTCompoundTag posTag : list) {
-                int x = posTag.getInt("x");
-                int z = posTag.getInt("z");
-                int minY = posTag.getInt("min_y");
-                set.add(new ChunkPosWithMinY(x, z, minY));
-            }
-
-            set(set);
-        }
-
-        @Override
-        public void set(Set<ChunkPosWithMinY> value) {
-            super.set(value);
-
-            lookup.clear();
-            for (ChunkPosWithMinY pos : value) {
-                lookup.put(ChunkPos.asLong(pos.chunkX(), pos.chunkZ()), pos.minY());
-            }
-        }
-
-        public Map<Long, Integer> lookup() {
-            return Collections.unmodifiableMap(lookup);
-        }
-    }
-
-    record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {}
 }

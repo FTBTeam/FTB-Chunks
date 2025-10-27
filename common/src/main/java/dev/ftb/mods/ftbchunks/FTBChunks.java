@@ -14,6 +14,7 @@ import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
 import dev.ftb.mods.ftbchunks.api.*;
+import dev.ftb.mods.ftbchunks.api.event.CustomMinYEvent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.data.*;
@@ -133,6 +134,10 @@ public class FTBChunks {
 		TickEvent.PLAYER_POST.register(this::playerTickPost);
 
 		EnvExecutor.runInEnv(Env.CLIENT, () -> FTBChunksClient.INSTANCE::init);
+
+		LifecycleEvent.SETUP.register(() ->
+				CustomMinYEvent.REGISTER.invoker().register(CustomMinYRegistryImpl.getInstance(Platform.getEnvironment() == Env.CLIENT))
+		);
 	}
 
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {

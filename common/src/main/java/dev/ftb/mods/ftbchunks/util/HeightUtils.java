@@ -43,14 +43,6 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-//        int chunkX = pos.getX() >> 4;
-//        int chunkZ = pos.getZ() >> 4;
-
-        // Clamped within the dimensions build height limits
-//        int startY = FTBChunksWorldConfig.OVERRIDE_MIN_Y_LEVEL.get()
-//                ? getMinYFromChunkOrConfig(chunkX, chunkZ)
-//                : chunkAccess.getMinBuildHeight();
-
 		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide).getMinYAt(level, pos);
 		int bottomY = Mth.clamp(startY, chunkAccess.getMinBuildHeight(), chunkAccess.getMaxBuildHeight());
 
@@ -88,12 +80,4 @@ public class HeightUtils {
 		pos.setY(UNKNOWN);
 		return UNKNOWN;
 	}
-
-    private static int getMinYFromChunkOrConfig(int x, int z) {
-        long chunkPos = ChunkPos.asLong(x, z);
-
-        return FTBChunksWorldConfig.CHUNKS_WITH_CUSTOM_Y.lookup()
-                .getOrDefault(chunkPos, FTBChunksWorldConfig.OVERRIDE_MIN_Y_LEVEL_VALUE.get());
-    }
-
 }

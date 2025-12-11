@@ -351,17 +351,19 @@ public class MapManager implements MapTask {
 
 	public void checkForRegionPurge() {
 		if (pendingRegionPurge != null) {
-			int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
-			List<MapRegion> dataLoadedRegions = pendingRegionPurge.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).toList();
-			long nLoaded = dataLoadedRegions.size();
-			autoRelease = Math.max(4, autoRelease);  // not useful to release regions which will be reloaded pretty much immediately
-			if (nLoaded > autoRelease) {
-				dataLoadedRegions.stream()
-						.sorted(Comparator.comparingLong(MapRegion::getLastDataAccess))
-						.limit(nLoaded - autoRelease)
-						.forEach(r -> r.release(false));
+			synchronized (lock) {
+				int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
+				List<MapRegion> dataLoadedRegions = pendingRegionPurge.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).toList();
+				long nLoaded = dataLoadedRegions.size();
+				autoRelease = Math.max(4, autoRelease);  // not useful to release regions which will be reloaded pretty much immediately
+				if (nLoaded > autoRelease) {
+					dataLoadedRegions.stream()
+							.sorted(Comparator.comparingLong(MapRegion::getLastDataAccess))
+							.limit(nLoaded - autoRelease)
+							.forEach(r -> r.release(false));
+				}
+				pendingRegionPurge = null;
 			}
-			pendingRegionPurge = null;
 		}
 	}
 }

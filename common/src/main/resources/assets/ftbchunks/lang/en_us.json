@@ -1,5 +1,7 @@
 {
   "ftbchunks": "FTB Chunks",
+  "ftbchunks.config.client": "Client Settings",
+  "ftbchunks.config.server": "Server Settings",
   "ftbchunks.zoom_warning": "Max zoom-out limited due to memory constraints",
   "ftbchunks.appearance": "Appearance",
   "ftbchunks.appearance.noise": "Noise",

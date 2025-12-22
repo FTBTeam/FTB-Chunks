@@ -83,8 +83,8 @@ public class FTBChunks {
 
 		FTBChunksNet.init();
 
-		ConfigManager.getInstance().registerServerConfig(FTBChunksWorldConfig.CONFIG, MOD_ID, true, FTBChunksWorldConfig::onConfigChanged);
-		ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID);
+		ConfigManager.getInstance().registerServerConfig(FTBChunksWorldConfig.CONFIG, MOD_ID + ".config.server", true, FTBChunksWorldConfig::onConfigChanged);
+		ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID + ".config.client");
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
 			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);

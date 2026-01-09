@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import com.mojang.math.Axis;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class PointerIcon implements MapIcon {
 
-    private static final Icon POINTER = Icon.getIcon(FTBChunksAPI.rl("textures/player.png"));
+    private static final Icon<?> POINTER = Icon.getIcon(FTBChunksAPI.id("textures/player.png"));
     
     @Override
     public Vec3 getPos(float partialTick) {
@@ -43,7 +43,7 @@ public class PointerIcon implements MapIcon {
         // TODO: [21.8] Validate this still works
         graphics.pose().rotate(player.getYRot() + 180F);
 //        graphics.pose().mulPose(Axis.ZP.rotationDegrees(player.getYRot() + 180F));
-        POINTER.draw(graphics, - w / 2, -h / 2, w, h);
+        IconHelper.renderIcon(POINTER, graphics, - w / 2, -h / 2, w, h);
         graphics.pose().popMatrix();
     }
 }

@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface MinimapRenderer {
 
@@ -12,5 +12,5 @@ public interface MinimapRenderer {
 	 *                    Set to 0 to disable rendering on the edge if it would be off-map.
 	 *                    Set to a negative number for infinity.
 	 */
-	void render(double x, double z, int color, int maxDistance, ResourceLocation texture);
+	void render(double x, double z, int color, int maxDistance, Identifier texture);
 }

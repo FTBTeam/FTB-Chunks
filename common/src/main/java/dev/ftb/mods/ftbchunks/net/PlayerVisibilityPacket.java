@@ -14,6 +14,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPayload {
-	public static final Type<PlayerVisibilityPacket> TYPE = new Type<>(FTBChunksAPI.rl("player_visibility_packet"));
+	public static final Type<PlayerVisibilityPacket> TYPE = new Type<>(FTBChunksAPI.id("player_visibility_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, PlayerVisibilityPacket> STREAM_CODEC = StreamCodec.composite(
 			UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs.list()), PlayerVisibilityPacket::uuids,
@@ -62,7 +63,7 @@ public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPa
 			List<UUID> playerIds = new ArrayList<>();
 
 			for (VisiblePlayerItem other : playerList) {
-				if (override || recipient.player.hasPermissions(2) || other.data.canPlayerUse(recipient.player, FTBChunksProperties.LOCATION_MODE)) {
+				if (override || recipient.player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || other.data.canPlayerUse(recipient.player, FTBChunksProperties.LOCATION_MODE)) {
 					playerIds.add(other.player.getUUID());
 				}
 			}

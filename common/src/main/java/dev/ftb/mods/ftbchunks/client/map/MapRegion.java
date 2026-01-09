@@ -10,7 +10,7 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -124,8 +124,8 @@ public class MapRegion implements MapTask {
 		return renderedMapImage;
 	}
 
-	public ResourceLocation getRenderedTextureId() {
-		ResourceLocation texId = texId();
+	public Identifier getRenderedTextureId() {
+		Identifier texId = texId();
 		if (updateRenderedMapTexture) {
 			mapImageLoaded = false;
 			Minecraft.getInstance().submit(() -> {
@@ -211,8 +211,8 @@ public class MapRegion implements MapTask {
 		mapImageLoaded = false;
 	}
 
-	private ResourceLocation texId() {
-		return FTBChunksAPI.rl(pos.x() + "_" + pos.z());
+	private Identifier texId() {
+		return FTBChunksAPI.id(pos.x() + "_" + pos.z());
 	}
 
 	@Override
@@ -224,7 +224,7 @@ public class MapRegion implements MapTask {
 
 	public void setRenderedMapImageRGBA(int x, int z, int col) {
 		synchronized (dimension.getManager().lock) {
-			getRenderedMapImage().setPixel(x, z, col);
+//			getRenderedMapImage().setPixel(x, z, col);
 		}
 	}
 

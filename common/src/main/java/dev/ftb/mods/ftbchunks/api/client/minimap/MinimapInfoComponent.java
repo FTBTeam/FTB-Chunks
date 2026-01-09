@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collections;
 import java.util.Set;
@@ -17,7 +17,7 @@ public interface MinimapInfoComponent {
     /**
      * The ID of this component.
      */
-    ResourceLocation id();
+    Identifier id();
 
     /**
      * Render your component here, the {@link com.mojang.blaze3d.vertex.PoseStack} will already be scaled and

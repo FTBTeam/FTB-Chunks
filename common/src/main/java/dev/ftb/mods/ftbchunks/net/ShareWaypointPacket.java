@@ -19,7 +19,7 @@ import net.minecraft.server.players.PlayerList;
 import java.util.*;
 
 public record ShareWaypointPacket(String name, GlobalPos position, ShareType shareType, List<UUID> targets) implements CustomPacketPayload {
-    public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.rl("share_waypoint_packet"));
+    public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.id("share_waypoint_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, ShareWaypointPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.STRING_UTF8, ShareWaypointPacket::name,
@@ -37,7 +37,7 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
     public static void handle(ShareWaypointPacket message, NetworkManager.PacketContext context) {
         context.queue(() -> {
             ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
-            PlayerList playerList = serverPlayer.getServer().getPlayerList();
+            PlayerList playerList = serverPlayer.level().getServer().getPlayerList();
             Collection<ServerPlayer> playersToSend = switch (message.shareType) {
                 case SERVER -> playerList.getPlayers();
                 case PARTY -> FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer)
@@ -52,7 +52,7 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
 
             for (ServerPlayer playerListPlayer : playersToSend) {
                 String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
-                String dim = message.position.dimension().location().toString();
+                String dim = message.position.dimension().identifier().toString();
 
                 Component waypointText = Component.translatable(message.name)
                         .withStyle(style -> style

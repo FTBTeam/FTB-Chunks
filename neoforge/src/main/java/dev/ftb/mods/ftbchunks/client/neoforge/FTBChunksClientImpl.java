@@ -2,6 +2,8 @@ package dev.ftb.mods.ftbchunks.client.neoforge;
 
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -15,16 +17,16 @@ public class FTBChunksClientImpl {
 	@SubscribeEvent
 	public static void renderLevelStageForge(RenderLevelStageEvent.AfterParticles event) {
         FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getModelViewMatrix(),
-                event.getModelViewMatrix(), event.getCamera(), event.getPartialTick());
+                event.getModelViewMatrix(), event.getLevelRenderState().cameraRenderState, Minecraft.getInstance().getDeltaTracker());
 	}
 
-	public static boolean doesKeybindMatch(KeyMapping keyMapping, int keyCode, int scanCode, int modifiers) {
-		if (keyMapping.matches(keyCode, scanCode)) {
+	public static boolean doesKeybindMatch(KeyMapping keyMapping, KeyEvent event) {
+		if (keyMapping.matches(event)) {
 			return switch (keyMapping.getKeyModifier()) {
-				case NONE -> modifiers == 0;
-				case SHIFT ->  (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
-				case CONTROL ->  (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
-				case ALT ->  (modifiers & GLFW.GLFW_MOD_ALT) != 0;
+				case NONE -> event.modifiers() == 0;
+				case SHIFT -> (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
+				case CONTROL -> (event.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0;
+				case ALT ->  (event.modifiers() & GLFW.GLFW_MOD_ALT) != 0;
 			};
 		}
 		return false;

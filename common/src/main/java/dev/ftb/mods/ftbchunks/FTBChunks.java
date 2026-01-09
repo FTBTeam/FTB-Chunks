@@ -26,7 +26,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.event.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -168,7 +168,7 @@ public class FTBChunks {
 	}
 
 	private void playerTickPost(Player player) {
-		if (player.level().isClientSide && player.level().getGameTime() % 20 == 0) {
+		if (player.level().isClientSide() && player.level().getGameTime() % 20 == 0) {
 			FTBChunksClient.INSTANCE.maybeClearDeathpoint(player);
 		}
 	}
@@ -177,7 +177,7 @@ public class FTBChunks {
 		if (ClaimedChunkManagerImpl.getInstance() != null) {
 			ClaimedChunkManagerImpl.getInstance().initForceLoadedChunks(level);
 		} else {
-			FTBChunks.LOGGER.warn("Level {} loaded before FTB Chunks manager was initialized! Unable to force-load chunks", level.dimension().location() );
+			FTBChunks.LOGGER.warn("Level {} loaded before FTB Chunks manager was initialized! Unable to force-load chunks", level.dimension().identifier() );
 		}
 	}
 
@@ -253,7 +253,7 @@ public class FTBChunks {
 				data.updateChunkTickets(false);
 			}
 		} else {
-			FTBChunks.LOGGER.warn("on player disconnect: player '{}' has no team?", player.getGameProfile().getName());
+			FTBChunks.LOGGER.warn("on player disconnect: player '{}' has no team?", player.getGameProfile().name());
 		}
 	}
 
@@ -585,7 +585,7 @@ public class FTBChunks {
 		ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.getTeam());
 		List<ServerPlayer> players = new ArrayList<>();
 		event.getPlayers().forEach(profile -> {
-			ServerPlayer p = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getPlayerList().getPlayer(profile.getId());
+			ServerPlayer p = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getPlayerList().getPlayer(profile.id());
 			if (p != null) {
 				teamData.syncChunksToPlayer(p);
 				players.add(p);

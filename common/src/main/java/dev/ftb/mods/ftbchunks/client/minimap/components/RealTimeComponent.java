@@ -8,7 +8,7 @@ import dev.ftb.mods.ftblibrary.config.NameMap;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 
 public class RealTimeComponent implements MinimapInfoComponent {
 
-    public static final ResourceLocation ID = FTBChunksAPI.rl("real_time");
+    public static final Identifier ID = FTBChunksAPI.id("real_time");
 
     @Override
-    public ResourceLocation id() {
+    public Identifier id() {
         return ID;
     }
 

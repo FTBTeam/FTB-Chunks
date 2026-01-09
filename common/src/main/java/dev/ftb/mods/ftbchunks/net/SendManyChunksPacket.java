@@ -5,7 +5,7 @@ import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, List<ChunkSyncInfo> chunks) implements CustomPacketPayload {
-	public static final Type<SendManyChunksPacket> TYPE = new Type<>(FTBChunksAPI.rl("send_many_chunks_packet"));
+	public static final Type<SendManyChunksPacket> TYPE = new Type<>(FTBChunksAPI.id("send_many_chunks_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, SendManyChunksPacket> STREAM_CODEC = StreamCodec.composite(
 			ResourceKey.streamCodec(Registries.DIMENSION), SendManyChunksPacket::dimension,

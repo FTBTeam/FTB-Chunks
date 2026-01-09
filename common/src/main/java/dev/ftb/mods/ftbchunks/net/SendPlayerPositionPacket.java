@@ -14,7 +14,7 @@ import net.minecraft.world.item.component.ResolvableProfile;
 import java.util.Optional;
 
 public record SendPlayerPositionPacket(ResolvableProfile profile, Optional<BlockPos> pos) implements CustomPacketPayload {
-    public static final Type<SendPlayerPositionPacket> TYPE = new Type<>(FTBChunksAPI.rl("send_player_position_packet"));
+    public static final Type<SendPlayerPositionPacket> TYPE = new Type<>(FTBChunksAPI.id("send_player_position_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, SendPlayerPositionPacket> STREAM_CODEC = StreamCodec.composite(
             ResolvableProfile.STREAM_CODEC, SendPlayerPositionPacket::profile,
@@ -23,11 +23,11 @@ public record SendPlayerPositionPacket(ResolvableProfile profile, Optional<Block
     );
 
     public static SendPlayerPositionPacket startTracking(ServerPlayer player) {
-        return new SendPlayerPositionPacket(new ResolvableProfile(player.getGameProfile()), Optional.of(player.blockPosition()));
+        return new SendPlayerPositionPacket(ResolvableProfile.createResolved(player.getGameProfile()), Optional.of(player.blockPosition()));
     }
 
     public static SendPlayerPositionPacket stopTracking(ServerPlayer player) {
-        return new SendPlayerPositionPacket(new ResolvableProfile(player.getGameProfile()), Optional.empty());
+        return new SendPlayerPositionPacket(ResolvableProfile.createResolved(player.getGameProfile()), Optional.empty());
     }
 
     @Override
@@ -36,6 +36,6 @@ public record SendPlayerPositionPacket(ResolvableProfile profile, Optional<Block
     }
 
     public static void handle(SendPlayerPositionPacket message, NetworkManager.PacketContext context) {
-        FTBChunksClient.INSTANCE.updateTrackedPlayerPos(message.profile.gameProfile(), message.pos.orElse(null));
+        FTBChunksClient.INSTANCE.updateTrackedPlayerPos(message.profile.partialProfile(), message.pos.orElse(null));
     }
 }

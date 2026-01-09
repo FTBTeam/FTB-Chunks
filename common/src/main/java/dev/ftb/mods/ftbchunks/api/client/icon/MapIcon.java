@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.api.client.icon;
 
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
@@ -151,7 +152,7 @@ public interface MapIcon {
         @Override
         public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
             if (!icon.isEmpty()) {
-                icon.draw(graphics, x, y, w, h);
+                IconHelper.renderIcon(icon, graphics, x, y, w, h);
             }
         }
 

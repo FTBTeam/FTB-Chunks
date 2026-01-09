@@ -39,7 +39,7 @@ public class WaypointShareMenu {
                 Collection<KnownClientPlayer> knownClientPlayers = FTBTeamsAPI.api().getClientManager().knownClientPlayers();
                 List<GameProfile> list = knownClientPlayers.stream()
                         .filter(KnownClientPlayer::online)
-                        .filter(p -> !p.id().equals(sharingPlayer.getGameProfile().getId()))
+                        .filter(p -> !p.id().equals(sharingPlayer.getGameProfile().id()))
                         .map(KnownClientPlayer::profile).toList();
                 List<GameProfile> selectedProfiles = new ArrayList<>();
                 new ShareWaypointButtonList(selectedProfiles, waypoint, list).openGui();
@@ -75,7 +75,7 @@ public class WaypointShareMenu {
 
         @Override
         protected void doAccept() {
-            List<UUID> toShare = selectedProfiles.stream().map(GameProfile::getId).toList();
+            List<UUID> toShare = selectedProfiles.stream().map(GameProfile::id).toList();
             if (!toShare.isEmpty()) {
                 shareWaypoint(waypoint, ShareWaypointPacket.ShareType.PLAYER, toShare);
             }
@@ -85,9 +85,9 @@ public class WaypointShareMenu {
         @Override
         public void addButtons(Panel panel) {
             for (GameProfile gameProfile : gameProfiles) {
-                Component unchecked = (Component.literal("☐ ")).append(gameProfile.getName());
-                Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.getName());
-                NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile)) {
+                Component unchecked = (Component.literal("☐ ")).append(gameProfile.name());
+                Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.name());
+                NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile, true)) {
                     @Override
                     public void onClicked(MouseButton button) {
                         if (selectedProfiles.contains(gameProfile)) {

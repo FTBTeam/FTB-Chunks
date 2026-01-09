@@ -11,6 +11,7 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
@@ -29,12 +30,12 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -47,7 +48,7 @@ import java.util.List;
 
 public class LargeMapScreen extends BaseScreen {
     private static final Color4I BACKGROUND_COLOR = Color4I.rgb(0x202225);
-    private static final Icon MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.rl("textures/minimap_info.png"));
+    private static final Icon MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.id("textures/minimap_info.png"));
 
     private final RegionMapPanel regionPanel;
     private int zoom = 256;
@@ -177,7 +178,7 @@ public class LargeMapScreen extends BaseScreen {
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );
 
-        if (Minecraft.getInstance().player.hasPermissions(2)) {
+        if (Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
                     Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
                     (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
@@ -282,7 +283,7 @@ public class LargeMapScreen extends BaseScreen {
             NetworkManager.sendToServer(new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension));
             closeGui(false);
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_F3)) {
+        } else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_F3)) {
             FTBChunksClientConfig.CHUNK_GRID.toggle();
             FTBChunksClientConfig.saveConfig();
             dimension.getManager().updateAllRegions(false);
@@ -291,7 +292,7 @@ public class LargeMapScreen extends BaseScreen {
             claimChunksButton.onClicked(MouseButton.LEFT);
             return true;
         } else if (key.is(GLFW.GLFW_KEY_S)) {
-            if (Screen.hasControlDown()) {
+            if (Minecraft.getInstance().hasControlDown()) {
                 if (serverSettingsButton != null) {
                     serverSettingsButton.onClicked(MouseButton.LEFT);
                 }
@@ -329,7 +330,7 @@ public class LargeMapScreen extends BaseScreen {
             movedToPlayer = true;
         }
 
-        BACKGROUND_COLOR.draw(graphics, 0, 0, width, height);
+        IconHelper.renderIcon(BACKGROUND_COLOR, graphics, 0, 0, width, height);
         return false;
     }
 
@@ -383,7 +384,7 @@ public class LargeMapScreen extends BaseScreen {
                 int waterLightAndBiome = data.waterLightAndBiome[regionPanel.blockIndex] & 0xFFFF;
                 ResourceKey<Biome> biome = dimension.getManager().getBiomeKey(waterLightAndBiome);
                 Block block = dimension.getManager().getBlock(data.getBlockIndex(regionPanel.blockIndex));
-                coords = coords + " | " + I18n.get("biome." + biome.location().getNamespace() + "." + biome.location().getPath()) + " | " + I18n.get(block.getDescriptionId());
+                coords = coords + " | " + I18n.get("biome." + biome.identifier().getNamespace() + "." + biome.identifier().getPath()) + " | " + I18n.get(block.getDescriptionId());
 
                 if ((waterLightAndBiome & (1 << 15)) != 0) {
                     coords += " (in water)";
@@ -393,7 +394,7 @@ public class LargeMapScreen extends BaseScreen {
 
         int coordsw = theme.getStringWidth(coords) / 2;
 
-        BACKGROUND_COLOR.withAlpha(150).draw(graphics, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
+        IconHelper.renderIcon(BACKGROUND_COLOR.withAlpha(150), graphics, x + (w - coordsw) / 2, y + h - 6, coordsw + 4, 6);
         var poseStack = graphics.pose();
         poseStack.pushMatrix();
         poseStack.translate(x + (w - coordsw) / 2F + 2F, y + h - 5);
@@ -407,7 +408,7 @@ public class LargeMapScreen extends BaseScreen {
             String memoryUsage = "Estimated Memory Usage: " + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB";
             int memoryUsagew = theme.getStringWidth(memoryUsage) / 2;
 
-            BACKGROUND_COLOR.withAlpha(150).draw(graphics, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
+            IconHelper.renderIcon(BACKGROUND_COLOR.withAlpha(150), graphics, x + (w - memoryUsagew) - 2, y, memoryUsagew + 4, 6);
 
             poseStack.pushMatrix();
             poseStack.translate(x + (w - memoryUsagew) - 1F, y + 1);

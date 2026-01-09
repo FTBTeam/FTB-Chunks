@@ -11,7 +11,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -19,13 +19,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ZoneInfoComponent implements MinimapInfoComponent {
-    public static final ResourceLocation ID = FTBChunksAPI.rl("zone");
+    public static final Identifier ID = FTBChunksAPI.id("zone");
     public static final Component WILDNESS = Component.translatable("wilderness").withStyle(s -> s.withColor(ChatFormatting.DARK_GREEN).withItalic(true));
 
     private Team team;
 
     @Override
-    public ResourceLocation id() {
+    public Identifier id() {
         return ID;
     }
 

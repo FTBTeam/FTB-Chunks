@@ -13,7 +13,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import java.util.EnumMap;
 
 public record ChunkChangeResponsePacket(int totalChunks, int changedChunks, EnumMap<StandardProblem,Integer> problems) implements CustomPacketPayload {
-    public static final Type<ChunkChangeResponsePacket> TYPE = new Type<>(FTBChunksAPI.rl("chunk_change_response_packet"));
+    public static final Type<ChunkChangeResponsePacket> TYPE = new Type<>(FTBChunksAPI.id("chunk_change_response_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, ChunkChangeResponsePacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.VAR_INT, ChunkChangeResponsePacket::totalChunks,

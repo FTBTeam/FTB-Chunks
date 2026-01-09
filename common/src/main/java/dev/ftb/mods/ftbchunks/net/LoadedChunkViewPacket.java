@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 public record LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap chunks) implements CustomPacketPayload {
-	public static final Type<LoadedChunkViewPacket> TYPE = new Type<>(FTBChunksAPI.rl("loaded_chunk_view_packet"));
+	public static final Type<LoadedChunkViewPacket> TYPE = new Type<>(FTBChunksAPI.id("loaded_chunk_view_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, LoadedChunkViewPacket> STREAM_CODEC = StreamCodec.composite(
 			ResourceKey.streamCodec(Registries.DIMENSION), LoadedChunkViewPacket::dimension,

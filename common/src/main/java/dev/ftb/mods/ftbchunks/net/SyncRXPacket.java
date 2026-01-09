@@ -10,7 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public record SyncRXPacket(RegionSyncKey key, int offset, int total, byte[] data) implements CustomPacketPayload {
-	public static final Type<SyncRXPacket> TYPE = new Type<>(FTBChunksAPI.rl("sync_rx_packet"));
+	public static final Type<SyncRXPacket> TYPE = new Type<>(FTBChunksAPI.id("sync_rx_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, SyncRXPacket> STREAM_CODEC = StreamCodec.composite(
 			RegionSyncKey.STREAM_CODEC, SyncRXPacket::key,

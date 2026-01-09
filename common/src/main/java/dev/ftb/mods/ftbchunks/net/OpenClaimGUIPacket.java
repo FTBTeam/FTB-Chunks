@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {
 
-    public static final Type<OpenClaimGUIPacket> TYPE = new Type<>(FTBChunksAPI.rl("open_claim_gui_packet"));
+    public static final Type<OpenClaimGUIPacket> TYPE = new Type<>(FTBChunksAPI.id("open_claim_gui_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, OpenClaimGUIPacket> STREAM_CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC, OpenClaimGUIPacket::teamId,

@@ -4,6 +4,7 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
@@ -11,7 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
 
 import java.util.Arrays;
@@ -20,11 +21,11 @@ import java.util.stream.Collectors;
 
 public class GameTimeComponent implements MinimapInfoComponent {
 
-    public static final ResourceLocation ID = FTBChunksAPI.rl("game_time");
-    private static final Icon CLOCK_ICON = ItemIcon.getItemIcon(Items.CLOCK);
+    public static final Identifier ID = FTBChunksAPI.id("game_time");
+    private static final Icon<?> CLOCK_ICON = ItemIcon.ofItem(Items.CLOCK);
 
     @Override
-    public ResourceLocation id() {
+    public Identifier id() {
         return ID;
     }
 
@@ -32,7 +33,7 @@ public class GameTimeComponent implements MinimapInfoComponent {
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
         String setting = context.getSetting(this);
         if (setting.equals(ClockedTimeMode.CLOCK.name())) {
-            CLOCK_ICON.draw(graphics, -8, 0, 16, 16);
+            IconHelper.renderIcon(CLOCK_ICON, graphics, -8, 0, 16, 16);
             return;
         }
 

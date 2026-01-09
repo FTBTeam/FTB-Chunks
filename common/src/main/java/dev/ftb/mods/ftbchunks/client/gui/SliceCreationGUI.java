@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.JsonOps;
 import dev.architectury.platform.Platform;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -19,7 +20,7 @@ import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.*;
@@ -43,7 +44,7 @@ public class SliceCreationGUI extends BaseScreen {
     private final EntityType<?> entityType;
     private final int textureWidth;
     private final int textureHeight;
-    private final ResourceLocation texture;
+    private final Identifier texture;
     private final SliceControlBox sliceControlBox;
     private final SimpleButton exportButton;
     private final IntTextBox imageSizeX;
@@ -158,7 +159,7 @@ public class SliceCreationGUI extends BaseScreen {
     public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
         super.drawBackground(graphics, theme, x, y, w, h);
         int oneFourth = w / 4;
-        Color4I.BLACK.draw(graphics, oneFourth, y, 4, h);
+        IconHelper.renderIcon(Color4I.BLACK, graphics, oneFourth, y, 4, h);
         theme.drawHorizontalTab(graphics, x + 20, y, w, h, false);
         graphics.pose().pushMatrix();
         graphics.pose().scale(2, 2);
@@ -175,7 +176,7 @@ public class SliceCreationGUI extends BaseScreen {
         for (SliceControlBox controlBox : sliceControlBoxes) {
             slices.add(new EntityImageIcon.ChildIconData(Optional.empty(), controlBox.createSlice(), Optional.of(new EntityImageIcon.Offset(controlBox.offsetXText.getIntValue(), controlBox.offsetYText.getIntValue()))));
         }
-        new EntityImageIcon(sliceControlBox.texture, sliceControlBox.createSlice(), slices, null).draw(graphics, x + 2, y + 2, imageSizeX.getIntValue(), imageSizeY.getIntValue());
+        IconHelper.renderIcon(new EntityImageIcon(sliceControlBox.texture, sliceControlBox.createSlice(), slices, null), graphics, x + 2, y + 2, imageSizeX.getIntValue(), imageSizeY.getIntValue());
     }
 
     @Override
@@ -186,7 +187,7 @@ public class SliceCreationGUI extends BaseScreen {
     // a "Control Box" that allows to create the overlays for the slices and move them around
     public static class SliceControlBox extends Panel {
         private final ImageIcon mainIcon;
-        private final ResourceLocation texture;
+        private final Identifier texture;
         private final IntTextBox xText;
         private final IntTextBox yText;
         private final IntTextBox wText;
@@ -200,7 +201,7 @@ public class SliceCreationGUI extends BaseScreen {
         private final Button toggleOverlay;
         private boolean overlay = true;
 
-        public SliceControlBox(Panel p, ResourceLocation texture, int imageWidth, int imageHeight, boolean offset) {
+        public SliceControlBox(Panel p, Identifier texture, int imageWidth, int imageHeight, boolean offset) {
             super(p);
             this.colorButton = new ColorButton(this, Color4I.WHITE);
             this.mainIcon = new ImageIcon(texture);
@@ -273,12 +274,12 @@ public class SliceCreationGUI extends BaseScreen {
         }
 
         public void drawMainTexture(GuiGraphics graphics, int x, int y) {
-            mainIcon.draw(graphics, x, y, imageWidth, imageHeight);
+            IconHelper.renderIcon(mainIcon, graphics, x, y, imageWidth, imageHeight);
         }
 
         public void drawOverlay(GuiGraphics graphics, int x, int y) {
             if (overlay) {
-                colorButton.color4I.withAlpha(100).draw(graphics, x + xText.getIntValue(), y + yText.getIntValue(), wText.getIntValue(), hText.getIntValue());
+                IconHelper.renderIcon(colorButton.color4I.withAlpha(100), graphics, x + xText.getIntValue(), y + yText.getIntValue(), wText.getIntValue(), hText.getIntValue());
             }
         }
 
@@ -316,8 +317,8 @@ public class SliceCreationGUI extends BaseScreen {
         public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
             super.draw(graphics, theme, x, y, w, h);
             theme.drawWidget(graphics, x, y, w, h, getWidgetType());
-            Color4I.BLACK.withAlpha(125).draw(graphics, x + 2, y + 2, 12, 12);
-            color4I.draw(graphics, x + 3, y + 3, 10, 10);
+            IconHelper.renderIcon(Color4I.BLACK.withAlpha(125), graphics, x + 2, y + 2, 12, 12);
+            IconHelper.renderIcon(color4I, graphics, x + 3, y + 3, 10, 10);
         }
     }
 
@@ -340,7 +341,7 @@ public class SliceCreationGUI extends BaseScreen {
             EntityIconLoader.EntityIconSettings.CODEC.encodeStart(JsonOps.INSTANCE, entityIconSettings).result().ifPresent(jsonElement -> {
                 Path path = Platform.getGameFolder().resolve("export");
                 try {
-                    ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+                    Identifier key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
                     String path1 = key.getNamespace() + "/" + key.getPath();
                     Path resolve = path.resolve(path1 + ".json");
                     if (!Files.exists(resolve.getParent())) {
@@ -393,7 +394,7 @@ public class SliceCreationGUI extends BaseScreen {
     }
 
     // Eww. This is needed to get around the fun levels of abstraction & generics.
-    private static <S extends LivingEntityRenderState> ResourceLocation getTexture(LivingEntityRenderer<?, S, ?> renderer) {
+    private static <S extends LivingEntityRenderState> Identifier getTexture(LivingEntityRenderer<?, S, ?> renderer) {
         S state = renderer.createRenderState();
         return renderer.getTextureLocation(state);
     }

@@ -15,7 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.Date;
 
 public record UpdateForceLoadExpiryPacket(ChunkDimPos pos, long relativeExpiryTime) implements CustomPacketPayload {
-    public static final Type<UpdateForceLoadExpiryPacket> TYPE = new Type<>(FTBChunksAPI.rl("update_force_load_expiry_packet"));
+    public static final Type<UpdateForceLoadExpiryPacket> TYPE = new Type<>(FTBChunksAPI.id("update_force_load_expiry_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, UpdateForceLoadExpiryPacket> STREAM_CODEC = StreamCodec.composite(
             ChunkDimPos.STREAM_CODEC, UpdateForceLoadExpiryPacket::pos,

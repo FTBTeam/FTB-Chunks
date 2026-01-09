@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.ConfigCallback;
 import dev.ftb.mods.ftblibrary.config.ConfigFromString;
@@ -28,7 +29,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,7 +66,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
             }
         };
         List<ContextMenuItem> contextMenuItems = createDimContextItems(key -> {
-            dimension.setText(key.location().toString());
+            dimension.setText(key.identifier().toString());
             getGui().closeContextMenu();
         });
         this.dropDownButton = new SimpleButton(this, Component.empty(), Icons.DROPDOWN_OUT, (widget, mouseButton) -> {
@@ -87,7 +88,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         this.y.setLabel(Component.literal("Y"));
         this.z.setLabel(Component.literal("Z"));
 
-        this.dimension.setText(pos.getValue().dimension().location().toString());
+        this.dimension.setText(pos.getValue().dimension().identifier().toString());
         this.x.setAmount(pos.getValue().pos().getX());
         this.y.setAmount(pos.getValue().pos().getY());
         this.z.setAmount(pos.getValue().pos().getZ());
@@ -143,7 +144,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     }
 
     private void updatePos() {
-        ResourceLocation dimension = ResourceLocation.parse(this.dimension.getText());
+        Identifier dimension = Identifier.parse(this.dimension.getText());
         ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, dimension);
         if (x.getText().isBlank() || y.getText().isBlank() || z.getText().isBlank()) {
             return;
@@ -207,7 +208,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
 
         @Override
         public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-            icon.draw(graphics, x, y, w, h);
+            IconHelper.renderIcon(icon, graphics, x, y, w, h);
             Color4I shade = getIcon().addBrightness(-0.15f);
             GuiHelper.drawHollowRect(graphics, x, y, w, h, shade, false);
         }

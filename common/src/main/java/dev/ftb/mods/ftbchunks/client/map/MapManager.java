@@ -14,7 +14,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
@@ -45,8 +45,8 @@ public class MapManager implements MapTask {
 	private boolean needsSave;
 	private MapDimension pendingRegionPurge = null;
 
-	private final Int2ObjectOpenHashMap<ResourceLocation> blockColorIndexMap;
-	private final Object2IntOpenHashMap<ResourceLocation> blockColorIndexMapReverse;
+	private final Int2ObjectOpenHashMap<Identifier> blockColorIndexMap;
+	private final Object2IntOpenHashMap<Identifier> blockColorIndexMapReverse;
 	private final Int2ObjectOpenHashMap<ResourceKey<Biome>> biomeColorIndexMap;
 	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColCache;
 	private final List<BiomeFTBC> biomesToRelease;
@@ -60,7 +60,7 @@ public class MapManager implements MapTask {
 		needsSave = false;
 
 		blockColorIndexMap = new Int2ObjectOpenHashMap<>();
-		blockColorIndexMap.defaultReturnValue(ResourceLocation.fromNamespaceAndPath("minecraft", "air"));
+		blockColorIndexMap.defaultReturnValue(Identifier.fromNamespaceAndPath("minecraft", "air"));
 		blockColorIndexMapReverse = new Object2IntOpenHashMap<>();
 		blockColorIndexMapReverse.defaultReturnValue(0);
 		biomeColorIndexMap = new Int2ObjectOpenHashMap<>();
@@ -78,7 +78,7 @@ public class MapManager implements MapTask {
 					s = s.trim();
 
 					if (s.length() >= 3) {
-						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(s));
+						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, Identifier.tryParse(s));
 						dimensions.put(key, new MapDimension(this, key, directory));
 					}
 				}
@@ -95,7 +95,7 @@ public class MapManager implements MapTask {
 					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
-						ResourceLocation loc = ResourceLocation.tryParse(s1[1]);
+						Identifier loc = Identifier.tryParse(s1[1]);
 						blockColorIndexMap.put(i, loc);
 						blockColorIndexMapReverse.put(loc, i);
 					}
@@ -113,7 +113,7 @@ public class MapManager implements MapTask {
 					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
 						int i = Integer.decode(s1[0]);
-						ResourceLocation loc = ResourceLocation.tryParse(s1[1]);
+						Identifier loc = Identifier.tryParse(s1[1]);
 						ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, loc);
 						biomeColorIndexMap.put(i, key);
 					}
@@ -223,7 +223,7 @@ public class MapManager implements MapTask {
 		List<String> dimensionsList = dimensions
 				.keySet()
 				.stream()
-				.map(key -> key.location().toString())
+				.map(key -> key.identifier().toString())
 				.collect(Collectors.toList());
 
 		List<String> blockColorIndexMapList = blockColorIndexMap
@@ -236,8 +236,8 @@ public class MapManager implements MapTask {
 		List<String> biomeColorIndexMapList = biomeColorIndexMap
 				.int2ObjectEntrySet()
 				.stream()
-				.sorted(Comparator.comparing(o -> o.getValue().location()))
-				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
+				.sorted(Comparator.comparing(o -> o.getValue().identifier()))
+				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().identifier()))
 				.collect(Collectors.toList());
 
 		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
@@ -251,7 +251,7 @@ public class MapManager implements MapTask {
 		});
 	}
 
-	public int getBlockColorIndex(ResourceLocation id) {
+	public int getBlockColorIndex(Identifier id) {
 		int i = blockColorIndexMapReverse.getInt(id);
 
 		if (i == 0) {
@@ -295,8 +295,8 @@ public class MapManager implements MapTask {
 				}
 			}
 
-			Random random = new Random((long) key.location().getNamespace().hashCode() & 4294967295L | ((long) key.location().getPath().hashCode() & 4294967295L) << 32);
-			i = key.location().hashCode() & 0b111_11111111;
+			Random random = new Random((long) key.identifier().getNamespace().hashCode() & 4294967295L | ((long) key.identifier().getPath().hashCode() & 4294967295L) << 32);
+			i = key.identifier().hashCode() & 0b111_11111111;
 
 			while (i == 0 || biomeColorIndexMap.containsKey(i)) {
 				i = random.nextInt() & 0b111_11111111;
@@ -312,7 +312,7 @@ public class MapManager implements MapTask {
 	}
 
 	public Block getBlock(int id) {
-		ResourceLocation rl = blockColorIndexMap.get(id & 0xFFFFFF);
+		Identifier rl = blockColorIndexMap.get(id & 0xFFFFFF);
 		Block block = rl == null ? null : FTBChunks.BLOCK_REGISTRY.get(rl);
 		return block == null ? Blocks.AIR : block;
 	}

@@ -4,6 +4,7 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -21,6 +22,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.permissions.Permissions;
 import org.jetbrains.annotations.Nullable;
 
 public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
@@ -164,7 +166,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         public void addWidgets() {
             add(closeButton);
             add(removeAllClaims);
-            if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+            if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
                 add(adminButton);
             }
             add(mouseReferenceButton);
@@ -183,7 +185,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         @Override
         public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawPanelBackground(graphics, x, y, w, h);
-            Color4I.BLACK.withAlpha(80).draw(graphics, x, y + h - 1, w, 1);
+            IconHelper.renderIcon(Color4I.BLACK.withAlpha(80), graphics, x, y + h - 1, w, 1);
         }
 
         private class AdminButton extends ToggleableButton {
@@ -238,7 +240,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawPanelBackground(graphics, x, y, w, h);
 
-            Color4I.GRAY.withAlpha(64).draw(graphics, x, y, w, 1);
+            IconHelper.renderIcon(Color4I.GRAY.withAlpha(64), graphics, x, y, w, 1);
             SendGeneralDataPacket.GeneralChunkData generalChunkData = FTBChunksClient.INSTANCE.getGeneralChunkData();
 
             int claimed = generalChunkData.claimed();

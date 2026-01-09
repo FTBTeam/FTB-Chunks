@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -19,7 +20,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.Set;
 
 public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<Level> dimension) implements CustomPacketPayload {
-	public static final Type<TeleportFromMapPacket> TYPE = new Type<>(FTBChunksAPI.rl("teleport_from_map_packet"));
+	public static final Type<TeleportFromMapPacket> TYPE = new Type<>(FTBChunksAPI.id("teleport_from_map_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, TeleportFromMapPacket> STREAM_CODEC = StreamCodec.composite(
 			BlockPos.STREAM_CODEC, TeleportFromMapPacket::pos,
@@ -36,9 +37,9 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 	public static void handle(TeleportFromMapPacket message, NetworkManager.PacketContext context) {
 		context.queue(() -> {
 			ServerPlayer p = (ServerPlayer) context.getPlayer();
-			ServerLevel level = p.getServer().getLevel(message.dimension);
+			ServerLevel level = p.level().getServer().getLevel(message.dimension);
 
-			if (level != null && p.hasPermissions(2)) {
+			if (level != null && p.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
 				int x1 = message.pos.getX();
 				int y1 = message.pos.getY();
 				int z1 = message.pos.getZ();

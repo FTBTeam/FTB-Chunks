@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public record RequestBlockColorPacket() implements CustomPacketPayload {
-    public static final Type<RequestBlockColorPacket> TYPE = new Type<>(FTBChunksAPI.rl("request_block_color_packet"));
+    public static final Type<RequestBlockColorPacket> TYPE = new Type<>(FTBChunksAPI.id("request_block_color_packet"));
 
     private static final RequestBlockColorPacket INSTANCE = new RequestBlockColorPacket();
 

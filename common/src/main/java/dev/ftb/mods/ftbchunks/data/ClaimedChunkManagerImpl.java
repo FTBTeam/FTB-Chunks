@@ -104,7 +104,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 		level.getChunkSource().save(false);
 
-		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().location()));
+		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().identifier()));
 	}
 
 	private ChunkTeamDataImpl loadTeamData(Team team) {

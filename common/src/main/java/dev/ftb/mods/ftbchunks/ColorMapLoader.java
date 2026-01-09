@@ -9,7 +9,7 @@ import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
-	private static final Map<ResourceLocation, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
+	private static final Map<Identifier, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
 
 	@Override
 	protected JsonObject prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
@@ -32,7 +32,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 
 		for (String namespace : resourceManager.getNamespaces()) {
 			try {
-				for (Resource resource : resourceManager.getResourceStack(ResourceLocation.fromNamespaceAndPath(namespace, "ftbchunks_block_colors.json"))) {
+				for (Resource resource : resourceManager.getResourceStack(Identifier.fromNamespaceAndPath(namespace, "ftbchunks_block_colors.json"))) {
 					try (Reader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
 						for (Map.Entry<String, JsonElement> entry : gson.fromJson(reader, JsonObject.class).entrySet()) {
 							if (entry.getKey().startsWith("#")) {
@@ -58,7 +58,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 
 		for (Map.Entry<ResourceKey<Block>, Block> entry : FTBChunks.BLOCK_REGISTRY.entrySet()) {
 			Block block = entry.getValue();
-			ResourceLocation id = entry.getKey().location();
+			Identifier id = entry.getKey().identifier();
 
 			if (id != null) {
 				if (block instanceof AirBlock
@@ -92,7 +92,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 				BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
 
 				if (col != null) {
-					BLOCK_ID_TO_COLOR_MAP.put(ResourceLocation.tryParse(entry.getKey()), col);
+					BLOCK_ID_TO_COLOR_MAP.put(Identifier.tryParse(entry.getKey()), col);
 				}
 			}
 		}
@@ -100,7 +100,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 		// Fire event Post
 	}
 
-	public static BlockColor getBlockColor(ResourceLocation id) {
+	public static BlockColor getBlockColor(Identifier id) {
 		return BLOCK_ID_TO_COLOR_MAP.getOrDefault(id, BlockColors.IGNORED);
 	}
 }

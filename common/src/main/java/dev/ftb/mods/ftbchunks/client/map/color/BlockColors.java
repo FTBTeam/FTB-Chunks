@@ -25,7 +25,7 @@ public class BlockColors {
 	@Nullable
 	public static BlockColor getFromType(String value) {
 		if (value.indexOf('#') == 0) {
-			return new CustomBlockColor(Color4I.fromString(value));
+			return new CustomBlockColor(Color4I.parse(value));
 		} else {
 			return TYPE_MAP.get(value);
 		}

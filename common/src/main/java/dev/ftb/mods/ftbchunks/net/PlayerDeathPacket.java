@@ -10,7 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public record PlayerDeathPacket(GlobalPos pos, int number) implements CustomPacketPayload {
-	public static final Type<PlayerDeathPacket> TYPE = new Type<>(FTBChunksAPI.rl("player_death_packet"));
+	public static final Type<PlayerDeathPacket> TYPE = new Type<>(FTBChunksAPI.id("player_death_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, PlayerDeathPacket> STREAM_CODEC = StreamCodec.composite(
 			GlobalPos.STREAM_CODEC, PlayerDeathPacket::pos,

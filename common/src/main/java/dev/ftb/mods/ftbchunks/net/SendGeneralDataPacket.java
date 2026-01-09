@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 public record SendGeneralDataPacket(GeneralChunkData data) implements CustomPacketPayload {
-    public static final Type<SendGeneralDataPacket> TYPE = new Type<>(FTBChunksAPI.rl("send_general_data_packet"));
+    public static final Type<SendGeneralDataPacket> TYPE = new Type<>(FTBChunksAPI.id("send_general_data_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, SendGeneralDataPacket> STREAM_CODEC = StreamCodec.composite(
 	    GeneralChunkData.STREAM_CODEC, SendGeneralDataPacket::data,

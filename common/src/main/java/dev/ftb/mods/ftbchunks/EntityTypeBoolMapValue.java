@@ -10,12 +10,12 @@ import dev.ftb.mods.ftblibrary.snbt.config.BaseValue;
 import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import net.minecraft.ResourceLocationException;
+import net.minecraft.IdentifierException;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +39,7 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
         SNBTCompoundTag mapTag = new SNBTCompoundTag();
 
         for (Map.Entry<ResourceKey<EntityType<?>>, Boolean> entry : map.entrySet()) {
-            mapTag.putBoolean(entry.getKey().location().toString(), entry.getValue());
+            mapTag.putBoolean(entry.getKey().identifier().toString(), entry.getValue());
         }
 
         tag.put(key, mapTag);
@@ -52,9 +52,9 @@ public class EntityTypeBoolMapValue extends BaseValue<Map<ResourceKey<EntityType
         tag.getCompound(key).ifPresent(compound -> {
             for (String key : compound.keySet()) {
                 try {
-                    ResourceLocation parse = ResourceLocation.parse(key);
+                    Identifier parse = Identifier.parse(key);
                     compound.getBoolean(key).ifPresent(c -> map.put(ResourceKey.create(Registries.ENTITY_TYPE, parse), c));
-                } catch (ResourceLocationException e) {
+                } catch (IdentifierException e) {
                     LOGGER.error("Failed to parse {} skipping", key, e);
                 }
             }

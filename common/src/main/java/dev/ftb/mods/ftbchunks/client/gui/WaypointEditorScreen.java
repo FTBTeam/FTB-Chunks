@@ -6,6 +6,7 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -30,7 +31,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
@@ -199,7 +201,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
             this.dim = dim;
             this.titleText = TextComponentUtils.translatedDimension(dim).copy()
-                    .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(dim.location().toString()))));
+                    .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(dim.identifier().toString()))));
             setCollapsed(startCollapsed);
             this.rowPanels = new ArrayList<>();
             for (WaypointImpl waypoint : waypoints) {
@@ -234,13 +236,13 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
             theme.drawWidget(graphics, x, y, w, h, getWidgetType());
             theme.drawString(graphics, getTitle(), x + 3, y + 3);
             if (isMouseOver()) {
-                Color4I.WHITE.withAlpha(33).draw(graphics, x, y, w, h);
+                IconHelper.renderIcon(Color4I.WHITE.withAlpha(33), graphics, x, y, w, h);
             }
         }
 
         @Override
         public void addMouseOverText(TooltipList list) {
-            list.add(Component.literal(dim.location().toString()));
+            list.add(Component.literal(dim.identifier().toString()));
         }
     }
 
@@ -315,7 +317,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
             var mouseOver = getMouseY() >= 20 && isMouseOver();
 
             if (mouseOver) {
-                Color4I.WHITE.withAlpha(33).draw(graphics, x, y, w, h);
+                IconHelper.renderIcon(Color4I.WHITE.withAlpha(33), graphics, x, y, w, h);
             }
         }
 
@@ -371,8 +373,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                     }));
                 }
                 list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> openWaypointEditPanel()));
-                if (Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {  // permissions are checked again on server!
-                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.getItemIcon(Items.ENDER_PEARL), btn -> {
+                if (Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {  // permissions are checked again on server!
+                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.ofItem(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));
                         closeGui(false);
                     }));
@@ -429,8 +431,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 .filter(dim -> !dim.getWaypointManager().isEmpty())
                 .sorted((dim1, dim2) -> {
                     // put vanilla dimensions first
-                    ResourceLocation dim1id = dim1.dimension.location();
-                    ResourceLocation dim2id = dim2.dimension.location();
+                    Identifier dim1id = dim1.dimension.identifier();
+                    Identifier dim2id = dim2.dimension.identifier();
                     if (dim1id.getNamespace().equals("minecraft") && !dim2id.getNamespace().equals("minecraft")) {
                         return -1;
                     }

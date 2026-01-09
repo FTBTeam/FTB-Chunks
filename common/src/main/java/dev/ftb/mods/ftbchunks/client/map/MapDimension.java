@@ -44,7 +44,7 @@ public class MapDimension implements MapTask {
 		this.manager = manager;
 		this.dimension = dimension;
 
-		safeDimensionId = this.dimension.location().toString().replace(':', '_');
+		safeDimensionId = this.dimension.identifier().toString().replace(':', '_');
 		this.directory = directory.resolve(safeDimensionId);
 		needsSave = false;
 		loadedChunkView = new Long2IntOpenHashMap();

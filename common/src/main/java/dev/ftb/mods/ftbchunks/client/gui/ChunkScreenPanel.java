@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
@@ -15,13 +14,13 @@ import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -39,6 +38,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
@@ -57,8 +57,8 @@ import java.util.stream.Collectors;
 import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
 
 public class ChunkScreenPanel extends Panel {
-	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.rl("textures/force_loaded.png"));
-	private static final ImageIcon CHECKERED_ICON = new ImageIcon(FTBChunksAPI.rl("textures/checkered.png"));
+	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.id("textures/force_loaded.png"));
+	private static final ImageIcon CHECKERED_ICON = new ImageIcon(FTBChunksAPI.id("textures/checkered.png"));
 
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
 	private final Set<XZ> selectedChunks = new HashSet<>();
@@ -182,13 +182,14 @@ public class ChunkScreenPanel extends Panel {
 
         // TODO: [21.8] Validate this still works
         //       - Blocked by dynamic image generation.
-        graphics.submitBlit(RenderPipelines.GUI_TEXTURED, FTBChunksClient.INSTANCE.dynamicTexture().getTextureView(),
-                sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight, 0xFFFFFFFF);
+		// TODO: @since 21.11: submitBlit is private, todo: find replacement or AT
+//        graphics.submitBlit(RenderPipelines.GUI_TEXTURED, FTBChunksClient.INSTANCE.dynamicTexture().getTextureView(),
+//                sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight, 0xFFFFFFFF);
 //        graphics.blit(FTBChunksClient.INSTANCE.getMinimapTextureId(), sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
 //		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
 //		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
 
-		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
+		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_TAB)) {
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
 				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSizeY, 0x64464646);
 			}
@@ -201,7 +202,7 @@ public class ChunkScreenPanel extends Panel {
 		double hy = sy + tileSizeY * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
 
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
-		FaceIcon.getFace(player.getGameProfile()).draw(graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
+		IconHelper.renderIcon(FaceIcon.getFace(player.getGameProfile(), true), graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
 		if (updateInfo != null && updateInfo.shouldDisplay()) {
 			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
@@ -215,7 +216,7 @@ public class ChunkScreenPanel extends Panel {
 	}
 
 	private boolean canChangeAsAdmin() {
-		return Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS) && chunkScreen.getOpenedAs() == null && isAdminEnabled;
+		return Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) && chunkScreen.getOpenedAs() == null && isAdminEnabled;
 	}
 
 	private class ChunkButton extends Button {
@@ -237,18 +238,17 @@ public class ChunkScreenPanel extends Panel {
 
 		@Override
 		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-			if (chunk.getForceLoadedDate().isPresent() && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_TAB)) {
+			if (chunk.getForceLoadedDate().isPresent() && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_TAB)) {
 				chunk.getTeam().ifPresent(team -> {
 					Color4I teamColor = team.getProperties().get(TeamProperties.COLOR);
 					float[] hsb = Color4I.RGBtoHSB(teamColor.redi(), teamColor.greeni(), teamColor.bluei(), null);
 					hsb[0] = (hsb[0] + 0.5f) % 1f;
-					FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])).draw(graphics, x, y, w, h);
+					IconHelper.renderIcon(FORCE_LOAD_ICON.withColor(Color4I.hsb(hsb[0], hsb[1], hsb[2])), graphics, x, y, w, h);
 				});
 			}
 			if (isMouseOver() || selectedChunks.contains(chunkPos)) {
-				Color4I.WHITE.withAlpha(100).draw(graphics, x, y, w, h);
-				CHECKERED_ICON.withColor(Color4I.GRAY.withAlpha(150)).draw(graphics, x, y, w, h);
-
+				IconHelper.renderIcon(Color4I.WHITE.withAlpha(100), graphics, x, y, w, h);
+				IconHelper.renderIcon(CHECKERED_ICON.withColor(Color4I.GRAY.withAlpha(150)), graphics, x, y, w, h);
 			}
 		}
 
@@ -272,7 +272,7 @@ public class ChunkScreenPanel extends Panel {
 				Date date = new Date();
 
 				chunk.getClaimedDate().ifPresent(claimedDate -> {
-					if (Screen.hasAltDown()) {
+					if (Minecraft.getInstance().hasAltDown()) {
 						list.add(Component.literal(claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
 					} else {
 						list.add(Component.literal(TimeUtils.prettyTimeString((date.getTime() - claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
@@ -282,20 +282,20 @@ public class ChunkScreenPanel extends Panel {
 				chunk.getForceLoadedDate().ifPresent(forceLoadedDate -> {
 					list.add(Component.translatable("ftbchunks.gui.force_loaded").withStyle(ChatFormatting.YELLOW));
 
-					String loadStr = Screen.hasAltDown() ?
+					String loadStr = Minecraft.getInstance().hasAltDown() ?
 							"  " + forceLoadedDate.toLocaleString() :
 							"  " + TimeUtils.prettyTimeString((date.getTime() - forceLoadedDate.getTime()) / 1000L) + " ago";
 					list.add(Component.literal(loadStr).withStyle(ChatFormatting.GRAY));
 
 					chunk.getForceLoadExpiryDate().ifPresent(expiryDate -> {
 						list.add(Component.translatable("ftbchunks.gui.force_load_expires").withStyle(ChatFormatting.GOLD));
-						String expireStr = Screen.hasAltDown() ?
+						String expireStr = Minecraft.getInstance().hasAltDown() ?
 								"  " + expiryDate.toLocaleString() :
 								"  " + TimeUtils.prettyTimeString((expiryDate.getTime() - date.getTime()) / 1000L) + " from now";
 						list.add(Component.literal(expireStr).withStyle(ChatFormatting.GRAY));
 					});
 
-					if (!Screen.hasAltDown()) {
+					if (!Minecraft.getInstance().hasAltDown()) {
 						list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
 					}
 					if (team.getRankForPlayer(Minecraft.getInstance().player.getUUID()).isMemberOrBetter()){

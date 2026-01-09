@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityIconUtils;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -56,7 +57,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
         private TextField nameField;
         private SimpleButton hideButton;
         private SimpleButton createButton;
-        private final Icon icon;
+        private final Icon<?> icon;
         private final ResourceKey<EntityType<?>> resourceKey;
 
         public RowPanel(Panel panel, EntityType<?> entityType) {
@@ -86,7 +87,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
                     graphics.pose().pushMatrix();
                     graphics.pose().translate(x - 16, y - 2);
                     graphics.pose().scale(0.75F, 0.75F);
-                    icon.draw(graphics, 0, 0, entityIconSettings.widthHeight().width(), entityIconSettings.widthHeight().height());
+                    IconHelper.renderIcon(icon, graphics, 0, 0, entityIconSettings.widthHeight().width(), entityIconSettings.widthHeight().height());
                     graphics.pose().popMatrix();
                     super.draw(graphics, theme, x, y, w, h);
                 }

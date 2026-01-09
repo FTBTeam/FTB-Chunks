@@ -8,7 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
@@ -69,7 +69,7 @@ public class TeamMemberData {
 
         Map<String, ListTag> perDimensionTags = new HashMap<>();
         originalClaims.forEach(cdp -> {
-            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension().location().toString(), k -> new ListTag());
+            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension().identifier().toString(), k -> new ListTag());
             SNBTCompoundTag cdpTag = new SNBTCompoundTag();
             cdpTag.singleLine();
             cdpTag.putInt("x", cdp.x());
@@ -85,7 +85,7 @@ public class TeamMemberData {
         Set<ChunkDimPos> res = new HashSet<>();
         for (String dimStr : tag.keySet()) {
             try {
-                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(dimStr));
+                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, Identifier.tryParse(dimStr));
                 Set<ChunkDimPos> cdpSet = new HashSet<>();
                 tag.getList(dimStr).orElse(new ListTag()).forEach(el -> {
                     if (el instanceof CompoundTag c) {

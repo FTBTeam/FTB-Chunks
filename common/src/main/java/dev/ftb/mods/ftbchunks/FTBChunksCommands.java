@@ -42,12 +42,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -96,7 +97,7 @@ public class FTBChunksCommands {
                                 )
                         )
                         .then(Commands.literal("admin")
-                                .requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                                 .then(Commands.literal("bypass_protection")
                                         .executes(context -> bypassProtection(context.getSource()))
                                 )
@@ -416,7 +417,7 @@ public class FTBChunksCommands {
 
         ClaimedChunk chunk = claimManager().getChunk(pos);
 
-        boolean canKnowChunkStatus = source.hasPermission(Commands.LEVEL_GAMEMASTERS) || (source.isPlayer() || (chunk != null && chunk.getTeamData().canPlayerUse(source.getPlayerOrException(), FTBChunksProperties.CLAIM_VISIBILITY)));
+        boolean canKnowChunkStatus = source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || (source.isPlayer() || (chunk != null && chunk.getTeamData().canPlayerUse(source.getPlayerOrException(), FTBChunksProperties.CLAIM_VISIBILITY)));
 
         if (canKnowChunkStatus) {
             if (chunk == null) {
@@ -426,7 +427,7 @@ public class FTBChunksCommands {
 
             source.sendSuccess(() -> {
                 Component owner = chunk.getTeamData().getTeam().getColoredName().copy().append(" / " + UndashedUuid.toString(chunk.getTeamData().getTeam().getId()));
-                String location = pos.dimension().location().toString() + " [" + pos.x() + ", " + pos.z() + "]";
+                String location = pos.dimension().identifier().toString() + " [" + pos.x() + ", " + pos.z() + "]";
                 return Component.translatable("ftbchunks.commands.location", location)
                         .append(Component.literal("\n"))
                         .append(Component.translatable("ftbchunks.commands.owner").append(owner.getString()))
@@ -593,7 +594,7 @@ public class FTBChunksCommands {
         return ColumnPosArgument.getColumnPos(context, "anchor");
     }
 
-    private static RequiredArgumentBuilder<CommandSourceStack, ResourceLocation> dimArg() {
+    private static RequiredArgumentBuilder<CommandSourceStack, Identifier> dimArg() {
         return Commands.argument("dimension", DimensionArgument.dimension());
     }
 
@@ -603,7 +604,7 @@ public class FTBChunksCommands {
 
     private static RequiredArgumentBuilder<CommandSourceStack, TeamArgumentProvider> forTeam(ToIntBiFunction<CommandSourceStack, Team> callback) {
         return Commands.argument("team", TeamArgument.create())
-                .requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .executes(context -> callback.applyAsInt(context.getSource(), TeamArgument.get(context, "team")));
     }
 

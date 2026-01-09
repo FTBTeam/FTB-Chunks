@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -20,7 +20,7 @@ import org.joml.Matrix3x2fStack;
 
 public class EntityMapIcon implements MapIcon {
     private final Entity entity;
-    private final Icon icon;
+    private final Icon<?> icon;
     private final EntityIconLoader.WidthHeight widthHeight;
 
     public EntityMapIcon(Entity entity, Icon icon) {
@@ -78,14 +78,14 @@ public class EntityMapIcon implements MapIcon {
     @Override
     public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         if (!(entity instanceof AbstractClientPlayer) || mapType.isMinimap() || w < 4 || icon == EntityIconLoader.NORMAL || icon == EntityIconLoader.HOSTILE) {
-            icon.draw(graphics, x, y, w, h);
+            IconHelper.renderIcon(icon, graphics, x, y, w, h);
         } else {
             Matrix3x2fStack poseStack = graphics.pose();
             poseStack.pushMatrix();
             poseStack.translate(x, y);
             poseStack.scale(w / 18F, h / 18F);
-            Color4I.BLACK.draw(graphics, 0, 0, 18, 18);
-            icon.draw(graphics, 1, 1, widthHeight.width(), widthHeight.height());
+            IconHelper.renderIcon(Color4I.BLACK, graphics, 0, 0, 18, 18);
+            IconHelper.renderIcon(icon, graphics, 1, 1, widthHeight.width(), widthHeight.height());
             poseStack.popMatrix();
         }
     }

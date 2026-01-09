@@ -8,7 +8,7 @@ import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -119,7 +119,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
 				cache.save(false);
 			} else {
-				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x() + ", " + pos.z() + " @ " + pos.dimension().location() + "!");
+				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x() + ", " + pos.z() + " @ " + pos.dimension().identifier() + "!");
 			}
 		}
 	}

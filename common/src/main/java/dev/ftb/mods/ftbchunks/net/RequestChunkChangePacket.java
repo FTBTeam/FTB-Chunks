@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boolean tryAdminChanges, Optional<UUID> teamId) implements CustomPacketPayload {
-	public static final Type<RequestChunkChangePacket> TYPE = new Type<>(FTBChunksAPI.rl("request_chunk_change_packet"));
+	public static final Type<RequestChunkChangePacket> TYPE = new Type<>(FTBChunksAPI.id("request_chunk_change_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, RequestChunkChangePacket> STREAM_CODEC = StreamCodec.composite(
 			NetworkHelper.enumStreamCodec(ChunkChangeOp.class), RequestChunkChangePacket::action,
@@ -74,7 +74,7 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 			ClaimResult r = consumer.apply(pos);
 			if (!r.isSuccess()) {
 				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(),
-						message.action.name, player.level().dimension().location(), pos.x(), pos.z(), r));
+						message.action.name, player.level().dimension().identifier(), pos.x(), pos.z(), r));
 				if (r instanceof ClaimResult.StandardProblem cr) {
 					problems.put(cr, problems.getOrDefault(cr, 0) + 1);
 				}

@@ -31,7 +31,7 @@ public class HeightUtils {
 	}
 
 	public static boolean skipBlock(Level level, BlockState state) {
-		if (level.isClientSide) {
+		if (level.isClientSide()) {
 			return state.isAir() || FTBChunksClient.INSTANCE.skipBlock(state);
 		} else {
 			return false;
@@ -43,7 +43,7 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide).getMinYAt(level, pos);
+		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide()).getMinYAt(level, pos);
 		int bottomY = Mth.clamp(startY, chunkAccess.getMinY(), chunkAccess.getMaxY());
 
 		int topY = pos.getY();

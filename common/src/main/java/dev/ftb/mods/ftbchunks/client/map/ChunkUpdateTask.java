@@ -3,14 +3,14 @@ package dev.ftb.mods.ftbchunks.client.map;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -28,7 +28,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 			array[i] = i;
 		}
 	});
-	private static final ResourceLocation AIR = ResourceLocation.fromNamespaceAndPath("minecraft", "air");
+	private static final Identifier AIR = Identifier.fromNamespaceAndPath("minecraft", "air");
 	private static long debugLastTime = 0L;
 
 	private MapManager manager;
@@ -123,7 +123,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 			// state shouldn't ever be null here, but yay threads
 			// https://github.com/FTBTeam/FTB-Mods-Issues/issues/811
-			@SuppressWarnings("ConstantValue") ResourceLocation id = state == null ? AIR : FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
+			@SuppressWarnings("ConstantValue") Identifier id = state == null ? AIR : FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
 			int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
 
 			// Biome biome = biomeManager.getBiome(blockPos);

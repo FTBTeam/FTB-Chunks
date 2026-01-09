@@ -12,7 +12,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 public record SyncTXPacket(RegionSyncKey key, int offset, int total, byte[] data) implements CustomPacketPayload {
-	public static final Type<SyncTXPacket> TYPE = new Type<>(FTBChunksAPI.rl("sync_tx_packet"));
+	public static final Type<SyncTXPacket> TYPE = new Type<>(FTBChunksAPI.id("sync_tx_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, SyncTXPacket> STREAM_CODEC = StreamCodec.composite(
 			RegionSyncKey.STREAM_CODEC, SyncTXPacket::key,
@@ -32,7 +32,7 @@ public record SyncTXPacket(RegionSyncKey key, int offset, int total, byte[] data
 			ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
 			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
 
-			for (ServerPlayer p1 : serverPlayer.getServer().getPlayerList().getPlayers()) {
+			for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
 				if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
 					NetworkManager.sendToPlayer(p1, message);
 				}

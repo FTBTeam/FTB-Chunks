@@ -1,8 +1,12 @@
 package dev.ftb.mods.ftbchunks.util;
 
+import dev.ftb.mods.ftbchunks.CustomMinYRegistryImpl;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,7 +43,9 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-		int bottomY = chunkAccess.getMinY();
+		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide).getMinYAt(level, pos);
+		int bottomY = Mth.clamp(startY, chunkAccess.getMinBuildHeight(), chunkAccess.getMaxBuildHeight());
+
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();
 		int currentWaterY = UNKNOWN;

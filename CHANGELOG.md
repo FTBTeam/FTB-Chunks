@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.13]
+
+### Added
+* An API `CustomMinYEvent` event to register custom `min-y` providers
+
+### Removed
+* Remove the previously added support for custom min-y per chunk scanning. This does not effect the global min-y already available
+
+## [2101.1.12]
+
+### Added
+* Added support for a user defined minimum `y` level to start the surface block scanning from. This allows the scanning to start from a `y` level other than the worlds lowest point.
+
+## [2101.1.11]
+
+### Added
+* Translation keys may now be used as waypoint text; the translated text will be shown where applicable
+  * Primarily useful for adding localized waypoints via command or API
+
+### Changed
+* Moved a lot of entity face icon loading code into FTB Library
+  * No player-visible changes here
+  * This release requires FTB Library 2101.1.21+
+
 ## [2101.1.10]
 
 ### Added
@@ -298,7 +322,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Periodically, least-recently accessed region data is released from RAM, requiring reload from disk on the next access. Every 300 seconds by default; can be tuned in client config.
   * When the large map screen is closed, regions furthest from the player are released from RAM, down to 32 loaded regions by default; also tunable in client config.
   * Map zoom-out is limited where the ratio of the number of known (explored) regions to available JVM memory is poor. Limiting zoom-out reduces the number of regions which need to be loaded in memory at a given moment. This can be disabled in client config if you prefer.
-  * New client config settings are available in the "Memory Usage" section of the client config; tuning them is a trade-off between RAM usage and disk activity. However, even when tuned toward lower RAM usage, the level of disk activity should not be a major concern. 
+  * New client config settings are available in the "Memory Usage" section of the client config; tuning them is a trade-off between RAM usage and disk activity. However, even when tuned toward lower RAM usage, the level of disk activity should not be a major concern.
 
 ## [1902.3.20]
 
@@ -319,7 +343,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 * Fixed a crash with fake player mods which use buckets to pick up water in protected chunks
 * Fixed interaction with Fabric mods which do block placement protection by firing the FAPI block break event directly (thanks @TelepathicGrunt)
-  * Example mod: Bumblezone 
+  * Example mod: Bumblezone
   * Architectury currently handles this via its own mixin
 
 
@@ -415,7 +439,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * This means player heads will only be visible to team-mates and allies by default; if you're not in a party team but want to be visible on the map, set your "Location Visibility" to "Public" in team settings.
 * Player heads can now be tracked on the map at any range, not just inside the default entity tracking range
   * The same visibility restrictions apply as above, via "Location Visibility"
-  * Added server-side config item `long_range_tracker_interval` which controls how frequently long-range tracking data is sent by the server to clients; default is every 20 ticks (for players who are moving). 
+  * Added server-side config item `long_range_tracker_interval` which controls how frequently long-range tracking data is sent by the server to clients; default is every 20 ticks (for players who are moving).
   * Set this to 0 to disable long-tracking entirely
   * Be careful about setting this to very low (non-zero) values; it can cause extra server and network load, especially on very busy servers
 * Added entity interaction protection as a Team setting

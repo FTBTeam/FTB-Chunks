@@ -7,11 +7,12 @@ import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
+import dev.ftb.mods.ftbchunks.util.ChunkPosCustomYSetValue;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
 import dev.ftb.mods.ftblibrary.snbt.config.*;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.Collections;
+import java.util.*;
 import java.util.stream.Stream;
 
 public interface FTBChunksClientConfig {
@@ -100,5 +101,4 @@ public interface FTBChunksClientConfig {
     static void saveConfig() {
         ConfigManager.getInstance().save(KEY);
     }
-
 }

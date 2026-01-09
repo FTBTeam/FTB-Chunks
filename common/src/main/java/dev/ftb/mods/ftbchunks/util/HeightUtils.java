@@ -44,7 +44,7 @@ public class HeightUtils {
 		}
 
 		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide).getMinYAt(level, pos);
-		int bottomY = Mth.clamp(startY, chunkAccess.getMinBuildHeight(), chunkAccess.getMaxBuildHeight());
+		int bottomY = Mth.clamp(startY, chunkAccess.getMinY(), chunkAccess.getMaxY());
 
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();

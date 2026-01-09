@@ -38,9 +38,9 @@ public class ChunkPosCustomYSetValue extends BaseValue<Set<ChunkPosWithMinY>> {
         Set<ChunkPosWithMinY> set = new HashSet<>();
 
         for (SNBTCompoundTag posTag : list) {
-            int x = posTag.getInt("x");
-            int z = posTag.getInt("z");
-            int minY = posTag.getInt("min_y");
+            int x = posTag.getIntOr("x", 0);
+            int z = posTag.getIntOr("z", 0);
+            int minY = posTag.getIntOr("min_y", 0);
             set.add(new ChunkPosWithMinY(x, z, minY));
         }
 

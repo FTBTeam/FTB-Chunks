@@ -30,6 +30,6 @@ public class CustomMinYRegistryImpl implements CustomMinYEvent.CustomMinYRegistr
                 return h.getAsInt();
             }
         }
-        return level.getMinBuildHeight();
+        return level.getMinY();
     }
 }

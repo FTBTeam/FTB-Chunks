@@ -3,7 +3,9 @@ package dev.ftb.mods.ftbchunks.client.gui;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 
 public class MapTileWidget extends Widget {
 	public final MapRegion region;
@@ -15,20 +17,19 @@ public class MapTileWidget extends Widget {
 
 	@Override
 	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-		if (region.isMapImageLoaded()) {
-			graphics.blit(region.getRenderedTextureId(), x, y, x + w, x + h, 0f, 0f, 1f, 1f);
+		var regionTexture = region.regionTexture().getTexture();
+		if (regionTexture == null) {
+			return;
 		}
 
-//		int id = region.getRenderedMapImageTextureId();
-//
-//		if (region.isMapImageLoaded()) {
-//			RenderSystem.bindTextureForSetup(id);
-//			int filter = w * Minecraft.getInstance().getWindow().getGuiScale() < 512D ? GL11.GL_LINEAR : GL11.GL_NEAREST;
-//			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
-//			RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
-//
-//			RenderSystem.setShaderTexture(0, id);
-//			GuiHelper.drawTexturedRect(graphics, x, y, w, h, Color4I.WHITE, 0F, 0F, 1F, 1F);
-//		}
+		graphics.blit(RenderPipelines.GUI_TEXTURED,
+			regionTexture,
+			x, y,
+			0f, 0f,
+			w, h,
+			w, h,
+			w, h,
+			Color4I.WHITE.rgba()
+		);
 	}
 }

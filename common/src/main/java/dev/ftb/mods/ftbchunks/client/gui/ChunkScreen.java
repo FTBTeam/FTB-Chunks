@@ -50,10 +50,10 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     public boolean onInit() {
-        int size = (int) (getScreen().getGuiScaledHeight() * 0.85f);
+        int size = (int) (getWindow().getGuiScaledHeight() * 0.85f);
 
-        setWidth(Math.min(size + 2, getScreen().getGuiScaledWidth() - 2));
-        setHeight(Math.min(size + getTopPanelHeight() + getBottomPanelHeight(), getScreen().getGuiScaledHeight() - 2));
+        setWidth(Math.min(size + 2, getWindow().getGuiScaledWidth() - 2));
+        setHeight(Math.min(size + getTopPanelHeight() + getBottomPanelHeight(), getWindow().getGuiScaledHeight() - 2));
 
         return true;
     }

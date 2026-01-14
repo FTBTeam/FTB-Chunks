@@ -8,7 +8,7 @@ accessible field net/minecraft/server/level/ChunkMap visibleChunkMap Lit/unimi/d
 accessible field net/minecraft/server/level/ChunkMap entityMap Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket positions [S
-accessible field net/minecraft/world/level/Explosion source Lnet/minecraft/world/entity/Entity;
+accessible field net/minecraft/world/level/ServerExplosion source Lnet/minecraft/world/entity/Entity;
 
-accessible method net/minecraft/client/gui/GuiGraphics submitBlit (Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lcom/mojang/blaze3d/textures/GpuTextureView;IIIIFFFFI)V
+accessible method net/minecraft/client/gui/GuiGraphics submitBlit (Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuSampler;IIIIFFFFI)V
 extendable class net/minecraft/nbt/CompoundTag

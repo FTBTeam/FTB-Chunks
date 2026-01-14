@@ -11,11 +11,12 @@ public class FTBChunksClientImpl {
 	}
 
 	private static void renderWorldLastFabric(WorldRenderContext context) {
-		FTBChunksClient.INSTANCE.renderWorldLast(context.matrices(), context.gameRenderer().getProjectionMatrix(), context.positionMatrix(), context.camera(), context.tickCounter());
+//		FTBChunksClient.INSTANCE.renderWorldLast(context.matrices(), context.gameRenderer().getProjectionMatrix(), context.positionMatrix(), context.camera(), context.tickCounter());
 	}
 
 	public static boolean doesKeybindMatch(KeyMapping keyMapping, int keyCode, int scanCode, int modifiers) {
 		// TODO how can we handle key modifiers on Fabric?
-		return keyMapping.matches(keyCode, scanCode);
+//		return keyMapping.matches(keyCode, scanCode);
+		return false;
 	}
 }

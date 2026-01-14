@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
@@ -22,15 +23,25 @@ import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Random;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class RenderMapImageTask implements MapTask {
 	private static boolean alwaysRenderChunksOnMap = false;
 
 	public final MapRegion region;
-	private static final boolean exportImages = false;
+	private static final boolean exportImages = true;
+	private final Consumer<NativeImage> onFinished;
 
-	public RenderMapImageTask(MapRegion r) {
+	private final NativeImage regionImage;
+
+	public RenderMapImageTask(MapRegion r, Consumer<NativeImage> onFinished) {
 		region = r;
+		this.onFinished = onFinished;
+
+		// Set up the canvas
+		regionImage = new NativeImage(NativeImage.Format.RGBA, 512, 512, true);
+		regionImage.fillRect(0, 0, 512, 512, 0);
 	}
 
 	private static int getHeight(MapMode m, int whf, short data, short height) {
@@ -117,6 +128,15 @@ public class RenderMapImageTask implements MapTask {
 			for (int y = 0; y < size; y++) {
 				for (int x = 0; x < size; x++) {
 					export.setRGB(x, y, newColors[x][y]);
+				}
+			}
+
+			var parent = Platform.getGameFolder().resolve("local/ftbchunks/debug/");
+			if (!Files.exists(parent)) {
+				try {
+					Files.createDirectories(parent);
+				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 			}
 
@@ -249,11 +269,11 @@ public class RenderMapImageTask implements MapTask {
 
 						if (c == null) {
 							if (loadedView == LoadedChunkViewPacket.LOADED) {
-								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? weakLoadedTint2 : weakLoadedTint).rgb()));
+								regionImage.setPixel(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? weakLoadedTint2 : weakLoadedTint).rgb()));
 							} else if (loadedView == LoadedChunkViewPacket.FORCE_LOADED) {
-								region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint).rgb()));
+								regionImage.setPixel(ax, az, ColorUtils.convertToNative(0xFF000000 | Color4I.BLACK.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint).rgb()));
 							} else {
-								region.setRenderedMapImageRGBA(ax, az, 0);
+								regionImage.setPixel(ax, az, 0);
 							}
 						} else {
 							BlockColor blockColor = region.dimension.getManager().getBlockColor(data.getBlockIndex(index));
@@ -269,7 +289,7 @@ public class RenderMapImageTask implements MapTask {
 							} else if (mapMode == MapMode.LIGHT_SOURCES) {
 								col = ColorUtils.getLightMapPalette()[15][(data.waterLightAndBiome[index] >> 11) & 15];
 							} else if ((claimBarUp && z == 0) || (claimBarDown && z == 15) || (claimBarLeft && x == 0) || (claimBarRight && x == 15)) {
-								region.setRenderedMapImageRGBA(ax, az, fullClaimColor);
+								regionImage.setPixel(ax, az, fullClaimColor);
 								continue;
 							} else {
 								if (blockColor instanceof CustomBlockColor cbc) {
@@ -350,14 +370,14 @@ public class RenderMapImageTask implements MapTask {
 								col = col.withTint(tint2 ? strongLoadedTint2 : strongLoadedTint);
 							}
 
-							region.setRenderedMapImageRGBA(ax, az, ColorUtils.convertToNative(0xFF000000 | col.rgb()));
+							regionImage.setPixel(ax, az, ColorUtils.convertToNative(0xFF000000 | col.rgb()));
 						}
 					}
 				}
 			}
 		}
 
-		region.afterImageRenderTask();
+		this.onFinished.accept(regionImage);
 	}
 
 	@Override

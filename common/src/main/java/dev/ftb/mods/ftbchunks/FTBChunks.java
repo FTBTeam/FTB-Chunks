@@ -70,6 +70,7 @@ public class FTBChunks {
 	public static final int TILE_SIZE = 16;
 	public static final int TILE_OFFSET = TILES / 2;
 	public static final int MINIMAP_SIZE = TILE_SIZE * TILES;
+
 	public static final XZ[] RELATIVE_SPIRAL_POSITIONS = new XZ[TILES * TILES];
 
 	public static final Registrar<Block> BLOCK_REGISTRY = RegistrarManager.get(MOD_ID).get(Registries.BLOCK);

@@ -1,8 +1,12 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
@@ -31,6 +35,7 @@ import dev.ftb.mods.ftbchunks.client.gui.*;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
+import dev.ftb.mods.ftbchunks.client.minimap.MinimapRegionCutoutTexture;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
@@ -48,6 +53,7 @@ import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.util.Lazy;
 import dev.ftb.mods.ftblibrary.util.ModUtils;
 import dev.ftb.mods.ftbteams.api.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
@@ -61,7 +67,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -143,13 +153,14 @@ public enum FTBChunksClient {
     private final Map<ChunkPos, IntOpenHashSet> rerenderCache = new HashMap<>();
 
 //    private int minimapTextureId = -1;
-    private DynamicTexture dynamicTexture;
+    private final Lazy<MinimapRegionCutoutTexture> miniMapTexture = Lazy.of(MinimapRegionCutoutTexture::new);
+
     private int currentPlayerChunkX, currentPlayerChunkZ;
     private double currentPlayerX, currentPlayerY, currentPlayerZ;
     private double prevPlayerX, prevPlayerY, prevPlayerZ;
     private int renderedDebugCount = 0;
 
-    private boolean updateMinimapScheduled = false;
+    private boolean updateMinimapScheduled = true;
     private GeneralChunkData generalChunkData;
     private long nextRegionSave = 0L;
     private double prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get();
@@ -177,13 +188,12 @@ public enum FTBChunksClient {
         CustomClickEvent.EVENT.register(this::customClick);
         ClientRawInputEvent.KEY_PRESSED.register(this::keyPressed);
         ClientScreenInputEvent.KEY_PRESSED_PRE.register(this::keyPressed);
-//        ClientGuiEvent.RENDER_HUD.register(this::renderHud);
+        ClientGuiEvent.RENDER_HUD.register(this::renderHud);
         ClientGuiEvent.INIT_PRE.register(this::screenOpened);
         ClientTickEvent.CLIENT_PRE.register(this::clientTick);
         TeamEvent.CLIENT_PROPERTIES_CHANGED.register(this::teamPropertiesChanged);
         MapIconEvent.LARGE_MAP.register(this::mapIcons);
         MapIconEvent.MINIMAP.register(this::mapIcons);
-//        ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
         registerPlatform();
 
         if (ModUtils.isDevMode()) {
@@ -544,25 +554,7 @@ public enum FTBChunksClient {
 
         if (updateMinimapScheduled) {
             updateMinimapScheduled = false;
-
-            // TODO: More math here to upload from (up to) 4 regions instead of all chunks inside them, to speed things up
-
-            for (int mz = 0; mz < FTBChunks.TILES; mz++) {
-                for (int mx = 0; mx < FTBChunks.TILES; mx++) {
-                    int ox = cx + mx - FTBChunks.TILE_OFFSET;
-                    int oz = cz + mz - FTBChunks.TILE_OFFSET;
-
-                    MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
-//                    if (dynamicTexture != null) {
-//                        dynamicTexture.close();
-//                    }
-
-//                    dynamicTexture = new DynamicTexture(() -> "Minimap", region.getRenderedMapImage());
-//                    dynamicTexture.upload(); // TODO: [21.8] this might not be needed
-                    System.out.printf("Generated minimap for region %s (chunk %d,%d) at %d,%d\n", region.pos, ox, oz, mx * 16, mz * 16);
-//                    region.getRenderedMapImage().upload(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, minimapBlur, false, false, false);
-                }
-            }
+            miniMapTexture.get().update(dim.dimension, cx, cz);
 
             currentPlayerChunkX = cx;
             currentPlayerChunkZ = cz;
@@ -649,24 +641,25 @@ public enum FTBChunksClient {
 
         // TODO: [21.8] Z used to be 490
         poseStack.translate((float) (x + halfSizeD), 0);
-//        Matrix4f m = poseStack.last().pose();
+
+        var maskId = FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_MASK : CIRCLE_MASK;
+        var maskTexture = Minecraft.getInstance().getTextureManager().getTexture(maskId);
+
+        graphics.submitBlit(
+                RenderPipelines.GUI_TEXTURED,
+                maskTexture.getTextureView(),
+                maskTexture.getSampler(),
+                (int) -halfSizeF, (int) -halfSizeF, (int) halfSizeF, (int) halfSizeF,
+                0F, 1F, 0F, 1F,
+                0xFFFFFFFF
+        );
 
         // Draw the minimap cutout mask - see AdvancementTab for a vanilla example of using colorMask()
         // TODO: [21.8] Figure out how to do this with the current rendering system
-//        RenderSystem.colorMask(false, false, false, false);
-//        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-//        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-//        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_MASK : CIRCLE_MASK);
-//        buffer.addVertex(m, -halfSizeF + border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(0F, 0F);
-//        buffer.addVertex(m, -halfSizeF + border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(0F, 1F);
-//        buffer.addVertex(m, halfSizeF - border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(1F, 1F);
-//        buffer.addVertex(m, halfSizeF - border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(1F, 0F);
-//        BufferUploader.drawWithShader(buffer.buildOrThrow());
-
-//        RenderSystem.colorMask(true, true, true, true);
+//        GlStateManager._colorMask(false, false, false, false);
 
         // minimap rotation
-        poseStack.rotate(minimapRotation + 180F);
+//        poseStack.rotate(minimapRotation + 180F);
 
 //        RenderSystem.depthFunc(GL11.GL_GEQUAL);
 
@@ -675,12 +668,6 @@ public enum FTBChunksClient {
         float offX = 0.5F + (float) ((MathUtils.mod(playerX, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
         float offZ = 0.5F + (float) ((MathUtils.mod(playerZ, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
         float zws = 2F / (FTBChunks.TILES * zoom);
-
-        GpuTextureView textureView = dynamicTexture.getTextureView();
-        /// RenderPipeline renderpipeline, GpuTextureView gputextureview, int i, int j, int k, int l, float f, float f1, float f2, float f3, int i1
-        // i = x0, j = y0, k = x1, l= y1, f = u0, f1= u1, f2= v0, f3=v1, i1= color
-
-        int color = (alpha << 24) | (255 << 16) | (255 << 8) | 255;
 
         int x0 = (int) -halfSizeBorderF;
         int y0 = (int) -halfSizeBorderF;
@@ -692,15 +679,19 @@ public enum FTBChunksClient {
         float v0 = offZ - zws;
         float v1 = offZ + zws;
 
-        // TODO: @since 21.11: this is private now...
-//        graphics.submitBlit(
-//                RenderPipelines.GUI_TEXTURED,
-//                textureView,
-//                x0, y0, x1, y1,
-//                u0, u1, v0, v1,
-//                color
-//        );
+        int color = (alpha << 24) | (255 << 16) | (255 << 8) | 255;
 
+        AbstractTexture texture = miniMapTexture.get().getTexture();
+        GpuTextureView textureView = texture.getTextureView();
+        GpuSampler sampler = texture.getSampler();
+        graphics.submitBlit(
+                RenderPipelines.GUI_TEXTURED,
+                textureView,
+                sampler,
+                x0, y0, x1, y1,
+                u0, u1, v0, v1,
+                color
+        );
 
 //        // Convert to the above!
 //        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
@@ -717,34 +708,45 @@ public enum FTBChunksClient {
 //        RenderSystem.depthFunc(GL11.GL_LEQUAL);
 //        RenderSystem.defaultBlendFunc();
 
-        // draw the map border
-        // TODO: [21.8] Re-implement borders
-//        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-//        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER);
-//        buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-//        buffer.addVertex(m, -halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(0F, 0F);
-//        buffer.addVertex(m, -halfSizeF, halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(0F, 1F);
-//        buffer.addVertex(m, halfSizeF, halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 1F);
-//        buffer.addVertex(m, halfSizeF, -halfSizeF, 0F).setColor(255, 255, 255, alpha).setUv(1F, 0F);
-//        BufferUploader.drawWithShader(buffer.buildOrThrow());
-//
-//        if (FTBChunksClientConfig.MINIMAP_RETICLE.get()) {
-//            // draw map crosshairs
-//            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-//            buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-//            buffer.addVertex(m, -halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-//            buffer.addVertex(m, halfSizeF, 0, 0F).setColor(0, 0, 0, 30);
-//            buffer.addVertex(m, 0, -halfSizeF, 0F).setColor(0, 0, 0, 30);
-//            buffer.addVertex(m, 0, halfSizeF, 0F).setColor(0, 0, 0, 30);
-//            BufferUploader.drawWithShader(buffer.buildOrThrow());
-//        }
+        GlStateManager._depthFunc(GL11.GL_LEQUAL);
+        GlStateManager._disableDepthTest();
 
+        var borderId = FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER;
+        var borderTexture = Minecraft.getInstance().getTextureManager().getTexture(borderId);
+
+        // draw the map border
+        graphics.submitBlit(
+                RenderPipelines.GUI_TEXTURED,
+                borderTexture.getTextureView(),
+                borderTexture.getSampler(),
+                x0, y0, x1, y1,
+                0F, 1F, 0F, 1F,
+                (alpha << 24) | (255 << 16) | (255 << 8) | 255
+        );
+
+        // draw map crosshairs
+        if (FTBChunksClientConfig.MINIMAP_RETICLE.get()) {
+            graphics.hLine(x0, x1, 0, (30 << 24));
+            graphics.hLine(x0, x1, 0, (30 << 24));
+            graphics.vLine(0, y0, y1, (30 << 24));
+            graphics.vLine(0, y0, y1, (30 << 24));
+        }
+
+//        RenderSystem.colorMask(false, false, false, false);
+//        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+//        RenderSystem.setShaderTexture(0, FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_MASK : CIRCLE_MASK);
+//        buffer.addVertex(m, -halfSizeF + border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(0F, 0F);
+//        buffer.addVertex(m, -halfSizeF + border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(0F, 1F);
+//        buffer.addVertex(m, halfSizeF - border, halfSizeF - border, 0F).setColor(255, 255, 255, 255).setUv(1F, 1F);
+//        buffer.addVertex(m, halfSizeF - border, -halfSizeF + border, 0F).setColor(255, 255, 255, 255).setUv(1F, 0F);
+//        BufferUploader.drawWithShader(buffer.buildOrThrow());
+
+//        RenderSystem.colorMask(true, true, true, true);
         poseStack.popMatrix();
 
-//        m = poseStack.last().pose();
-
         if (FTBChunksClientConfig.MINIMAP_COMPASS.get()) {
-            drawMinimapCompassPoints(minimapRotation, size, halfSizeD, x, y, tessellator, buffer); //m);
+            drawMinimapCompassPoints(graphics, minimapRotation, size, halfSizeD, x, y);
         }
 
         if (lastMapIconUpdate == 0L || (now - lastMapIconUpdate) >= FTBChunksClientConfig.MINIMAP_ICON_UPDATE_TIMER.get()) {
@@ -788,10 +790,6 @@ public enum FTBChunksClient {
 
         if (rotationLocked || FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED.get()) {
             // pointer icon at the map centre (player position)
-            // TODO: [21.8] Do we need to cache this?
-            GpuTextureView gputextureview = Minecraft.getInstance().getTextureManager().getTexture(PLAYER).getTextureView();
-            // TODO: @since 21.11: This isn't how this is done anymore
-//            RenderSystem.setShaderTexture(0, gputextureview);
             poseStack.pushMatrix();
             poseStack.translate((float) (x + halfSizeD), (float) (y + halfSizeD));
             if (rotationLocked) {
@@ -799,7 +797,6 @@ public enum FTBChunksClient {
 //                poseStack.mulPose(Axis.ZP.rotationDegrees(mc.player.getYRot() + 180F));
             }
             poseStack.scale(size / 16F, size / 16F);
-//            m = poseStack.last().pose(); // [21.8] This shouldnt' be needed anymore
 
             PointerIconMode mode = FTBChunksClientConfig.POINTER_ICON_MODE_MINIMAP.get();
             if (mode.showPointer()) {
@@ -830,9 +827,6 @@ public enum FTBChunksClient {
         if (!textAboveMinimap) {
             drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, y, size, halfSizeD, poseStack, graphics);
         }
-
-        // TODO: [21.8] Not sure if this is needed
-//        RenderSystem.enableDepthTest();
 
         if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
             drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
@@ -875,7 +869,7 @@ public enum FTBChunksClient {
         }
     }
 
-    private void drawMinimapCompassPoints(float minimapRotation, int size, double halfSizeD, int minimapX, int minimapY, Tesselator tessellator, BufferBuilder buffer) {//Matrix4f m) {
+    private void drawMinimapCompassPoints(GuiGraphics graphics, float minimapRotation, int size, double halfSizeD, int minimapX, int minimapY) {
         // compass letters at the 4 cardinal points
         double d = size / 2.2D;
         float ws = size / 32F;
@@ -884,6 +878,12 @@ public enum FTBChunksClient {
 
             float wx = (float) (minimapX + halfSizeD + Math.cos(angle) * d);
             float wy = (float) (minimapY + halfSizeD + Math.sin(angle) * d);
+
+            //  public void blit(Identifier location, int x0, int y0, int x1, int y1, float u0, float u1, float v0, float v1) {
+            graphics.blit(COMPASS[face],
+                    (int) (wx - ws), (int) (wy - ws),
+                    (int) (wx + ws), (int) (wy + ws),
+                    0F, 0F, 1F, 1F);
 
             // TODO: [21.8] Re-implement compass points
 //            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
@@ -898,8 +898,6 @@ public enum FTBChunksClient {
     }
 
     private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, DeltaTracker tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
-        // TODO: [21.8] Put back or remove.
-//        GuiHelper.setupDrawing();
         float scaledWidth2 = scaledWidth / 2F;
         float scaledHeight2 = scaledHeight / 2F;
         InWorldMapIcon focusedIcon = null;
@@ -943,7 +941,6 @@ public enum FTBChunksClient {
                     float iconScale = Mth.lerp((50f - Math.min((float) icon.distanceToMouse(), 50f)) / 50f, minSize, maxSize);
                     Matrix3x2fStack poseStack = graphics.pose();
                     poseStack.pushMatrix();
-                    // TODO: [21.8] This used to have a z of icon == focusedIcon ? 50F : -100F
                     poseStack.translate(icon.x(), icon.y());
                     poseStack.scale(iconScale, iconScale);
                     icon.icon().draw(MapType.WORLD_ICON, graphics, -8, -8, 16, 16, icon != focusedIcon, iconAlpha);
@@ -953,12 +950,6 @@ public enum FTBChunksClient {
         }
 
         inWorldMapIcons.clear();
-
-        // Cleanup after the Gui.setupDrawing
-        // TODO: [21.8] Put back or remove.
-//        RenderSystem.disableBlend();
-//        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-//        RenderSystem.disableDepthTest();
     }
 
     public void renderWorldLast(PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, CameraRenderState camera, DeltaTracker tickDelta) {
@@ -986,22 +977,20 @@ public enum FTBChunksClient {
         poseStack.pushPose();
         poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
-        // TODO: @since 21.11: This has changed, we need to look into it more.
-//        RenderType renderType = RenderType.beaconBeam(WAYPOINT_BEAM, true);
-//        VertexConsumer depthBuffer = mc.renderBuffers().bufferSource().getBuffer(renderType);
-//
-//        float y1 = (float) (cameraPos.y + 30D);
-//        float y2 = y1 + 70F;
-//
-//        int yMin = mc.level.getMinY();
-//
-//        for (WaypointIcon waypoint : visibleWaypoints) {
-//            drawWaypointBeacon(poseStack, cameraPos, depthBuffer, y1, y2, yMin, waypoint);
-//        }
-//
+        RenderType renderType = RenderTypes.beaconBeam(WAYPOINT_BEAM, true);
+        VertexConsumer depthBuffer = mc.renderBuffers().bufferSource().getBuffer(renderType);
+
+        float y1 = (float) (cameraPos.y + 30D);
+        float y2 = y1 + 70F;
+
+        int yMin = mc.level.getMinY();
+
+        for (WaypointIcon waypoint : visibleWaypoints) {
+            drawWaypointBeacon(poseStack, cameraPos, depthBuffer, y1, y2, yMin, waypoint);
+        }
+
         poseStack.popPose();
-//
-//        mc.renderBuffers().bufferSource().endBatch(renderType);
+        mc.renderBuffers().bufferSource().endBatch(renderType);
     }
 
     private static void drawWaypointBeacon(PoseStack poseStack, Vec3 cameraPos, VertexConsumer depthBuffer, float y1, float y2, int yMin, WaypointIcon waypoint) {
@@ -1219,9 +1208,6 @@ public enum FTBChunksClient {
         lastMapIconUpdate = 0L;
     }
 
-//    private void reloadShaders(ResourceProvider resourceProvider, ClientReloadShadersEvent.ShadersSink sink) {
-//    }
-
     public void rerender(BlockPos pos) {
         ChunkPos chunkPos = new ChunkPos(pos);
         IntOpenHashSet set = rerenderCache.get(chunkPos);
@@ -1328,10 +1314,6 @@ public enum FTBChunksClient {
 
     public GeneralChunkData getGeneralChunkData() {
         return generalChunkData;
-    }
-
-    public DynamicTexture dynamicTexture() {
-        return dynamicTexture;
     }
 
     public static Waypoint addWaypoint(String name, GlobalPos position, int color) {

@@ -69,9 +69,9 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
 
         @Override
         public void addWidgets() {
-            boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey.toString(), true);
+            boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey.identifier().toString(), true);
             add(hideButton = new ToggleableButton(this, hiddenState, Icons.ACCEPT, Icons.ACCEPT_GRAY, (hideButton, hidden) -> {
-                FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey.toString(), hidden);
+                FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey.identifier().toString(), hidden);
                 FTBChunksClientConfig.saveConfig();
             }));
 

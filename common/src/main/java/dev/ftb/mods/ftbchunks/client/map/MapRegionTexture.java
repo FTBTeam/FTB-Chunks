@@ -52,8 +52,15 @@ public class MapRegionTexture {
     }
 
     private void upload(NativeImage image) {
-        this.texture = new DynamicTexture(identifier::toString, image);
-        Minecraft.getInstance().getTextureManager().register(identifier, this.texture);
+        if (this.texture == null) {
+            // First time - create texture
+            this.texture = new DynamicTexture(identifier::toString, image);
+            Minecraft.getInstance().getTextureManager().register(identifier, this.texture);
+        } else {
+            // Subsequent times - just update pixels and upload
+            this.texture.setPixels(image);
+            this.texture.upload();
+        }
     }
 
     public void close() {
@@ -76,5 +83,9 @@ public class MapRegionTexture {
 
     public boolean isOpen() {
         return texture != null;
+    }
+
+    public @Nullable DynamicTexture bakedTexture() {
+        return texture;
     }
 }

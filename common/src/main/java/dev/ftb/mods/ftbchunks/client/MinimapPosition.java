@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import dev.ftb.mods.ftblibrary.config.NameMap;
-import org.jetbrains.annotations.Nullable;
+import dev.ftb.mods.ftblibrary.util.NameMap;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Predicate;
 

@@ -9,8 +9,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Map;
@@ -28,7 +28,7 @@ public interface ClaimedChunkManager {
      * @param team the team
      * @return the FTB Chunks data for the team
      */
-    ChunkTeamData getOrCreateData(@NotNull Team team);
+    ChunkTeamData getOrCreateData(@NonNull Team team);
 
     /**
      * Get the FTB Chunks team data for the given player, creating a new instance if necessary. This will get the
@@ -125,7 +125,7 @@ public interface ClaimedChunkManager {
      * @param dimension the dimension to check
      * @return a map of all force-loaded chunks, mapping long-encoded chunk pos to team ID
      */
-    @NotNull Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension);
+    @NonNull Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension);
 
     /**
      * Check if the given chunk (dimension and chunk pos) is currently force-loaded.

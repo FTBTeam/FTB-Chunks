@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
@@ -26,8 +26,7 @@ public class FTBChunksAPI {
      * @return the API handler
      * @throws NullPointerException if called before initialised
      */
-    @NotNull
-    public static FTBChunksAPI.API api() {
+    public static FTBChunksAPI.@NonNull API api() {
         return Objects.requireNonNull(instance);
     }
 
@@ -37,7 +36,7 @@ public class FTBChunksAPI {
      * @return the client API handler
      * @throws NullPointerException if called before initialised, or on the server
      */
-    @NotNull
+    @NonNull
     public static FTBChunksClientAPI clientApi() {
         return Objects.requireNonNull(clientInstance);
     }

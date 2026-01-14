@@ -2,16 +2,16 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityIconUtils;
+import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractGroupedButtonListScreen;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
+import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.TextField;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ToggleableButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
-import dev.ftb.mods.ftblibrary.ui.misc.AbstractGroupedButtonListScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -69,14 +69,14 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
 
         @Override
         public void addWidgets() {
-            boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey, true);
+            boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey.toString(), true);
             add(hideButton = new ToggleableButton(this, hiddenState, Icons.ACCEPT, Icons.ACCEPT_GRAY, (hideButton, hidden) -> {
-                FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey, hidden);
+                FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey.toString(), hidden);
                 FTBChunksClientConfig.saveConfig();
             }));
 
             if (showCreationButton) {
-                Icon icon = EntityIconLoader.isDynamicTexture(value) ? Icons.BOOK_RED : Icons.BOOK;
+                Icon<?> icon = EntityIconLoader.isDynamicTexture(value) ? Icons.BOOK_RED : Icons.BOOK;
                 add(createButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.open_creation_gui"), icon, (widget, button) -> new SliceCreationGUI(value).openGui()));
             }
 

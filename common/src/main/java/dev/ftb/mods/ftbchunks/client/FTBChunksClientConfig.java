@@ -7,9 +7,14 @@ import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
-import dev.ftb.mods.ftbchunks.util.ChunkPosCustomYSetValue;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
-import dev.ftb.mods.ftblibrary.snbt.config.*;
+import dev.ftb.mods.ftblibrary.config.value.BooleanValue;
+import dev.ftb.mods.ftblibrary.config.value.Config;
+import dev.ftb.mods.ftblibrary.config.value.DoubleValue;
+import dev.ftb.mods.ftblibrary.config.value.EnumValue;
+import dev.ftb.mods.ftblibrary.config.value.IntValue;
+import dev.ftb.mods.ftblibrary.config.value.StringListValue;
+import dev.ftb.mods.ftblibrary.config.value.StringMapValue;
 import net.minecraft.resources.Identifier;
 
 import java.util.*;
@@ -18,7 +23,7 @@ import java.util.stream.Stream;
 public interface FTBChunksClientConfig {
     String KEY = FTBChunks.MOD_ID + "-client";
 
-    SNBTConfig CONFIG = SNBTConfig.create(KEY)
+    Config CONFIG = Config.create(KEY)
             .comment("Client-specific configuration for FTB Chunks",
                     "Modpack defaults should be defined in <instance>/config/" + KEY + ".snbt",
                     "  (may be overwritten on modpack update)",
@@ -26,23 +31,23 @@ public interface FTBChunksClientConfig {
                     "  (will NOT be overwritten on modpack update)"
             );
 
-    SNBTConfig APPEARANCE = CONFIG.addGroup("appearance", 0);
-    DoubleValue NOISE = APPEARANCE.addDouble("noise", 0.05D, 0D, 0.5D).fader().comment("Noise added to map to make it look less plastic");
-    DoubleValue SHADOWS = APPEARANCE.addDouble("shadows", 0.1D, 0D, 0.3D).fader().comment("Shadow intensity");
+    Config APPEARANCE = CONFIG.addGroup("appearance", 0);
+    DoubleValue NOISE = APPEARANCE.addDouble("noise", 0.05D, 0D, 0.5D).comment("Noise added to map to make it look less plastic");
+    DoubleValue SHADOWS = APPEARANCE.addDouble("shadows", 0.1D, 0D, 0.3D).comment("Shadow intensity");
     BooleanValue CHUNK_GRID = APPEARANCE.addBoolean("chunk_grid", false).comment("Chunk grid overlay in large map");
     BooleanValue REDUCED_COLOR_PALETTE = APPEARANCE.addBoolean("reduced_color_palette", false).comment("Reduces color palette to 256 colors");
-    DoubleValue SATURATION = APPEARANCE.addDouble("saturation", 1D, 0D, 1D).fader().comment("Color intensity");
+    DoubleValue SATURATION = APPEARANCE.addDouble("saturation", 1D, 0D, 1D).comment("Color intensity");
     BooleanValue CLAIMED_CHUNKS_ON_MAP = APPEARANCE.addBoolean("claimed_chunks_on_map", true).comment("Show claimed chunks on the map");
     BooleanValue OWN_CLAIMED_CHUNKS_ON_MAP = APPEARANCE.addBoolean("own_claimed_chunks_on_map", true).comment("Show your own claimed chunks on the map");
     BooleanValue ONLY_SURFACE_ENTITIES = APPEARANCE.addBoolean("only_surface_entities", true).comment("Only show entities that are on the surface");
     EnumValue<MapMode> MAP_MODE = APPEARANCE.addEnum("map_mode", MapMode.NAME_MAP).comment("Different ways to render map");
     IntValue WATER_HEIGHT_FACTOR = APPEARANCE.addInt("water_height_factor", 8, 0, 128).comment("How many blocks should height checks skip in water. 0 means flat water, ignoring terrain");
     EnumValue<BiomeBlendMode> BIOME_BLEND = APPEARANCE.addEnum("biome_blend", BiomeBlendMode.NAME_MAP).comment("Biome blend");
-    IntValue WATER_VISIBILITY = APPEARANCE.addInt("water_visibility", 220, 0, 255).excluded().comment("Advanced option. Water visibility");
-    IntValue GRASS_DARKNESS = APPEARANCE.addInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
-    IntValue FOLIAGE_DARKNESS = APPEARANCE.addInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
+    IntValue WATER_VISIBILITY = APPEARANCE.addInt("water_visibility", 220, 0, 255).excludedFromGui().comment("Advanced option. Water visibility");
+    IntValue GRASS_DARKNESS = APPEARANCE.addInt("grass_darkness", 50, 0, 255).excludedFromGui().comment("Advanced option. Grass darkness");
+    IntValue FOLIAGE_DARKNESS = APPEARANCE.addInt("foliage_darkness", 50, 0, 255).excludedFromGui().comment("Advanced option. Foliage darkness");
 
-    SNBTConfig WAYPOINTS = CONFIG.addGroup("waypoints", 1);
+    Config WAYPOINTS = CONFIG.addGroup("waypoints", 1);
     BooleanValue IN_WORLD_WAYPOINTS = WAYPOINTS.addBoolean("in_world_waypoints", true).comment("Show waypoints in world");
     BooleanValue DEATH_WAYPOINTS = WAYPOINTS.addBoolean("death_waypoints", true).comment("Enables creation of death waypoints");
     IntValue DEATH_WAYPOINT_AUTOREMOVE_DISTANCE = WAYPOINTS.addInt("death_waypoint_autoremove_distance", 0, 0, Integer.MAX_VALUE).comment("Automatically remove death waypoints if closer than this many blocks away (distance of 0 disables removal)");
@@ -52,7 +57,7 @@ public interface FTBChunksClientConfig {
     DoubleValue WAYPOINT_FOCUS_DISTANCE = WAYPOINTS.addDouble("waypoint_focus_distance", 1d, 1d, 10d).comment("How close player crosshair needs to be to in-world waypoints to show waypoint labels");
     DoubleValue WAYPOINT_FOCUS_SCALE = WAYPOINTS.addDouble("waypoint_focus_scale", 2d, 1d, 10d).comment("How much do in-world waypoints enlarge when the player crosshair is close");
 
-    SNBTConfig MINIMAP = CONFIG.addGroup("minimap", 2);
+    Config MINIMAP = CONFIG.addGroup("minimap", 2);
     BooleanValue MINIMAP_ENABLED = MINIMAP.addBoolean("enabled", !hasOtherMinimapMod()).comment("Enable minimap");
     EnumValue<MinimapPosition> MINIMAP_POSITION = MINIMAP.addEnum("position", MinimapPosition.NAME_MAP).comment("Enables minimap to show up in corner");
     DoubleValue MINIMAP_SCALE = MINIMAP.addDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
@@ -74,22 +79,22 @@ public interface FTBChunksClientConfig {
     EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.addEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
     BooleanValue SQUARE_MINIMAP = MINIMAP.addBoolean("square", false).comment("Draw a square minimap instead of a circular one");
     BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
-    StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList()).excluded().comment("Info displayed under minimap");
-    StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList()).excluded().comment("Info hidden under minimap");
+    StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList()).excludedFromGui().comment("Info displayed under minimap");
+    StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList()).excludedFromGui().comment("Info hidden under minimap");
     StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new MinimapComponentConfig(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
     EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
     EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on full screen minimap");
     EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on minimap");
     BooleanValue TEXT_ABOVE_MINIMAP = MINIMAP.addBoolean("text_above_minimap", false).comment("Show text above minimap");
 
-    SNBTConfig ADVANCED = CONFIG.addGroup("advanced", 3);
+    Config ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");
-    IntValue TASK_QUEUE_TICKS = ADVANCED.addInt("task_queue_ticks", 4, 1, 300).excluded().comment("Advanced option. How often queued tasks will run");
-    IntValue RERENDER_QUEUE_TICKS = ADVANCED.addInt("rerender_queue_ticks", 60, 1, 600).excluded().comment("Advanced option. How often map render update will be queued");
-    IntValue TASK_QUEUE_MAX = ADVANCED.addInt("task_queue_max", 100, 1, 10000).excluded().comment("Advanced option. Max tasks that can queue up");
-    IntValue MINIMAP_ICON_UPDATE_TIMER = ADVANCED.addInt("minimap_icon_update_timer", 500, 0, 10000).excluded().comment("Advanced option. Change how often the minimap will refresh icons");
+    IntValue TASK_QUEUE_TICKS = ADVANCED.addInt("task_queue_ticks", 4, 1, 300).excludedFromGui().comment("Advanced option. How often queued tasks will run");
+    IntValue RERENDER_QUEUE_TICKS = ADVANCED.addInt("rerender_queue_ticks", 60, 1, 600).excludedFromGui().comment("Advanced option. How often map render update will be queued");
+    IntValue TASK_QUEUE_MAX = ADVANCED.addInt("task_queue_max", 100, 1, 10000).excludedFromGui().comment("Advanced option. Max tasks that can queue up");
+    IntValue MINIMAP_ICON_UPDATE_TIMER = ADVANCED.addInt("minimap_icon_update_timer", 500, 0, 10000).excludedFromGui().comment("Advanced option. Change how often the minimap will refresh icons");
 
-    SNBTConfig MEMORY = ADVANCED.addGroup("memory", 4);
+    Config MEMORY = ADVANCED.addGroup("memory", 4);
     IntValue REGION_RELEASE_TIME = MEMORY.addInt("region_release_time", 300, 0, Integer.MAX_VALUE).comment("Periodically release region data for non-recently-used regions to save memory (units of seconds, 0 disables releasing");
     IntValue AUTORELEASE_ON_MAP_CLOSE = MEMORY.addInt("autorelease_on_map_close", 32, 0, Integer.MAX_VALUE).comment("When the large map is closed, auto-release least recently accessed regions down to this number (0 disables releasing)");
     BooleanValue MAX_ZOOM_CONSTRAINT = MEMORY.addBoolean("max_zoom_constraint", true).comment("Constrain maximum map zoom-out based on number of explored regions and available memory");

@@ -19,7 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class ClaimedChunkImpl implements ClaimedChunk {
 	private ChunkTeamDataImpl teamData;
@@ -42,7 +42,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return teamData;
 	}
 
-	public void setTeamData(@NotNull ChunkTeamDataImpl teamData) {
+	public void setTeamData(@NonNull ChunkTeamDataImpl teamData) {
 		teamData.clearClaimCaches();
 		this.teamData.clearClaimCaches();
 		this.teamData = teamData;

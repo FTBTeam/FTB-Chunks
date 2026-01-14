@@ -35,20 +35,20 @@ import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
-import dev.ftb.mods.ftblibrary.config.ColorConfig;
-import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
+import dev.ftb.mods.ftblibrary.client.gui.CustomClickEvent;
+import dev.ftb.mods.ftblibrary.client.gui.input.Key;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.ModUtils;
-import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
 import dev.ftb.mods.ftbteams.api.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -87,7 +87,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -440,7 +440,7 @@ public enum FTBChunksClient {
     }
 
     private EventResult addQuickWaypoint() {
-        StringConfig name = new StringConfig();
+        EditableString name = new EditableString();
         Player player = Minecraft.getInstance().player;
         if (player == null) return EventResult.pass();
 
@@ -1388,26 +1388,26 @@ public enum FTBChunksClient {
     }
 
     public static class WaypointAddScreen extends BaseScreen {
-        private final StringConfig name;
+        private final EditableString name;
         private final GlobalPos waypointLocation;
-        private final ColorConfig color;
+        private final EditableColor color;
         private final boolean override;
 
-        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation, Color4I color, boolean override) {
+        public WaypointAddScreen(EditableString name, GlobalPos waypointLocation, Color4I color, boolean override) {
             super();
             this.name = name;
             this.waypointLocation = waypointLocation;
             this.setHeight(35);
-            this.color = new ColorConfig();
+            this.color = new EditableColor();
             this.color.setValue(color);
             this.override = override;
         }
 
-        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
+        public WaypointAddScreen(EditableString name, GlobalPos waypointLocation) {
             this(name, waypointLocation, Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F), false);
         }
 
-        public WaypointAddScreen(StringConfig name, Player player) {
+        public WaypointAddScreen(EditableString name, Player player) {
             this(name, new GlobalPos(player.level().dimension(), player.blockPosition()));
         }
 

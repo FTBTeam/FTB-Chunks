@@ -20,7 +20,7 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	private static final int[] ALL_BLOCKS = Util.make(new int[256], array -> {

@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.client.map.color;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 

@@ -25,14 +25,14 @@ public class EntityIconUtils {
     }
 
     private static boolean isIconEnabled(ResourceKey<EntityType<?>> key, EntityType<?> type) {
-        if (!FTBChunksClientConfig.ENTITY_ICON.get().containsKey(key)) {
+        if (!FTBChunksClientConfig.ENTITY_ICON.get().containsKey(key.toString())) {
             // entity not listed in the config (most likely a new mod was added) - get its defaults if possible
             EntityIconSettings settings = EntityIconLoader.getSettings(type).orElse(EntityIconSettings.legacy());
-            FTBChunksClientConfig.ENTITY_ICON.get().put(key, settings.defaultEnabled());
+            FTBChunksClientConfig.ENTITY_ICON.get().put(key.toString(), settings.defaultEnabled());
             FTBChunksClientConfig.saveConfig();
             return settings.defaultEnabled();
         } else {
-            return FTBChunksClientConfig.ENTITY_ICON.get().get(key);
+            return FTBChunksClientConfig.ENTITY_ICON.get().get(key.toString());
         }
     }
 }

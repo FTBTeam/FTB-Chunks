@@ -30,8 +30,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -131,7 +131,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	@Override
-	public ChunkTeamDataImpl getOrCreateData(@NotNull Team team) {
+	public ChunkTeamDataImpl getOrCreateData(@NonNull Team team) {
 		ChunkTeamDataImpl data = teamData.get(team.getId());
 		if (data == null) {
             data = loadTeamData(team);
@@ -263,7 +263,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		return Collections.unmodifiableMap(forceLoadedChunkCache);
 	}
 
-	@NotNull
+	@NonNull
 	@Override
 	public Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension) {
 		return getForceLoadedChunks().getOrDefault(dimension, EMPTY_CHUNKS);

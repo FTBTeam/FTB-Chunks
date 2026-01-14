@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
@@ -9,21 +8,20 @@ import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointShareMenu;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
+import dev.ftb.mods.ftblibrary.client.gui.input.Key;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ColorSelectorPanel;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
-import dev.ftb.mods.ftblibrary.config.ColorConfig;
-import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.commands.Commands;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
@@ -108,7 +106,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
         WaypointShareMenu.makeShareMenu(player, waypoint).ifPresent(contextMenu::add);
 
         contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, b -> {
-            StringConfig config = new StringConfig();
+            EditableString config = new EditableString();
             config.setValue(waypoint.getName());
             config.onClicked(b, MouseButton.LEFT, accepted -> {
                 if (accepted) {
@@ -120,7 +118,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 
         if (waypoint.getType().canChangeColor()) {
             contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, btn -> {
-                ColorConfig col = new ColorConfig();
+                EditableColor col = new EditableColor();
                 col.setValue(Color4I.rgb(waypoint.getColor()));
                 ColorSelectorPanel.popupAtMouse(btn.getGui(), col, accepted -> {
                     if (accepted) {
@@ -146,7 +144,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
         }
 
         contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> {
-            StringConfig configName = new StringConfig();
+            EditableString configName = new EditableString();
             configName.setValue(waypoint.getName());
             new FTBChunksClient.WaypointAddScreen(configName, GlobalPos.of(waypoint.getDimension(), waypoint.getPos()), Color4I.rgb(waypoint.getColor()), true).openGui();
         }));

@@ -20,7 +20,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -182,7 +182,7 @@ public class MapManager implements MapTask {
 		}
 	}
 
-	@NotNull
+	@NonNull
 	public synchronized MapDimension getDimension(ResourceKey<Level> dim) {
 		return getDimensions().computeIfAbsent(dim, dimKey -> {
 			needsSave = true;

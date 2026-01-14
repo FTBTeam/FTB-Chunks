@@ -6,26 +6,31 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
+import dev.ftb.mods.ftblibrary.client.gui.input.Key;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractButtonListScreen;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Button;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ColorSelectorPanel;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
+import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.TextField;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ToggleableButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
-import dev.ftb.mods.ftblibrary.config.ColorConfig;
-import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.client.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.commands.Commands;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -331,7 +336,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         }
 
         private void openWaypointEditPanel() {
-            StringConfig configName = new StringConfig();
+            EditableString configName = new EditableString();
             configName.setValue(wp.getName());
             new FTBChunksClient.WaypointAddScreen(configName, GlobalPos.of(wp.getDimension(), wp.getPos()), Color4I.rgb(wp.getColor()), true).openGui();
         }
@@ -346,7 +351,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 WaypointShareMenu.makeShareMenu(Minecraft.getInstance().player, wp).ifPresent(list::add);
 
                 list.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, btn -> {
-                    StringConfig config = new StringConfig();
+                    EditableString config = new EditableString();
                     config.setDefaultValue("");
                     config.setValue(wp.getName());
                     config.onClicked(btn, MouseButton.LEFT, accepted -> {
@@ -359,7 +364,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                 }));
                 if (wp.getType().canChangeColor()) {
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.change_color"), Icons.COLOR_RGB, btn -> {
-                        ColorConfig col = new ColorConfig();
+                        EditableColor col = new EditableColor();
                         col.setValue(Color4I.rgb(wp.getColor()));
                         ColorSelectorPanel.popupAtMouse(btn.getGui(), col, accepted -> {
                             if (accepted) {

@@ -11,19 +11,27 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
+import dev.ftb.mods.ftblibrary.client.gui.input.Key;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.screens.KeyReferenceScreen;
+import dev.ftb.mods.ftblibrary.client.gui.theme.NordTheme;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Button;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.client.gui.widget.DropDownMenu;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
+import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
-import dev.ftb.mods.ftblibrary.config.ColorConfig;
-import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -48,7 +56,7 @@ import java.util.List;
 
 public class LargeMapScreen extends BaseScreen {
     private static final Color4I BACKGROUND_COLOR = Color4I.rgb(0x202225);
-    private static final Icon MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.id("textures/minimap_info.png"));
+    private static final Icon<?> MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.id("textures/minimap_info.png"));
 
     private final RegionMapPanel regionPanel;
     private int zoom = 256;
@@ -245,9 +253,9 @@ public class LargeMapScreen extends BaseScreen {
             List<ContextMenuItem> list = new ArrayList<>();
             Component title = Component.translatable("ftbchunks.gui.add_waypoint");
             list.add(new ContextMenuItem(title, Icons.ADD, btn -> {
-                StringConfig name = new StringConfig();
+                EditableString name = new EditableString();
                 name.setValue("");
-                ColorConfig col = new ColorConfig();
+                EditableColor col = new EditableColor();
                 col.setValue(Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F));
                 AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
                 globalPosConfig.setValue(globalPos);

@@ -12,8 +12,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -69,14 +69,14 @@ public class MapRegion implements MapTask {
 		return mapImageLoaded;
 	}
 
-	@NotNull
+	@NonNull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.getManager().lock) {
 			return getDataBlockingNoSync();
 		}
 	}
 
-	@NotNull
+	@NonNull
 	public MapRegionData getDataBlockingNoSync() {
 		if (data == null) {
 			data = new MapRegionData(this);

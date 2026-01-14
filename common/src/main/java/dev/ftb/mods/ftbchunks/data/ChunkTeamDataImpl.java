@@ -39,7 +39,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -457,7 +457,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		return true;
 	}
 
-	@NotNull
+	@NonNull
 	private TeamMemberData getTeamMemberData(UUID id) {
 		if (id.equals(Util.NIL_UUID)) {
 			FTBChunks.LOGGER.warn("attempt to get member data for nil UUID");

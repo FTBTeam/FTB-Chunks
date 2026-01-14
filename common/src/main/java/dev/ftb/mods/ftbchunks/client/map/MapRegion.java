@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
@@ -9,16 +8,12 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,11 +52,7 @@ public class MapRegion implements MapTask {
 	public long getLastDataAccess() {
 		return lastDataAccess;
 	}
-
-//	public boolean isMapImageLoaded() {
-//		return mapImageLoaded;
-//	}
-
+	
 	@NonNull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.getManager().lock) {
@@ -98,84 +89,6 @@ public class MapRegion implements MapTask {
 		return data;
 	}
 
-//	public NativeImage getRenderedMapImage() {
-//		synchronized (dimension.getManager().lock) {
-//			if (renderedMapImage == null) {
-//				renderedMapImage = new NativeImage(NativeImage.Format.RGBA, 512, 512, true);
-//				renderedMapImage.fillRect(0, 0, 512, 512, 0);
-//				update(false);
-//			}
-//		}
-//
-//		if (updateRenderedMapImage && !renderingMapImage) {
-//			updateRenderedMapImage = false;
-//			mapImageLoaded = false;
-//			renderingMapImage = true;
-//			FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this));
-//		}
-//
-//		return renderedMapImage;
-//	}
-
-//	public Identifier getRenderedTextureId() {
-//		Identifier texId = texId();
-//		if (updateRenderedMapTexture) {
-//			mapImageLoaded = false;
-//			Minecraft.getInstance().submit(() -> {
-//				texture = new DynamicTexture(() -> "todo", getRenderedMapImage());
-//				Minecraft.getInstance().getTextureManager().register(texId, texture);
-//				mapImageLoaded = true;
-//				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
-//			});
-//		}
-//		return texId;
-//	}
-
-//	public @Nullable Identifier getOrLoadTexture() {
-//		Identifier texId = texId();
-//		if (updateRenderedMapTexture) {
-//			mapImageLoaded = false;
-////			Minecraft.getInstance().submit(() -> {
-////				var thing = getRenderedMapImage();
-//////				texture = new DynamicTexture(() -> "todo", getRenderedMapImage());
-//////				Minecraft.getInstance().getTextureManager().register(texId, texture);
-////				mapImageLoaded = true;
-////				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
-////			});
-//
-//			return null;
-//		}
-//
-//		if (!mapImageLoaded) {
-//			return null;
-//		}
-//
-//		return texId;
-//	}
-
-//	public int getRenderedMapImageTextureId() {
-//		if (renderedMapImageTextureId == -1) {
-//			renderedMapImageTextureId = FTBChunksClient.INSTANCE.generateTextureId(512, 512);
-//		}
-//
-//		getRenderedMapImage();
-//
-//		if (updateRenderedMapTexture) {
-//			mapImageLoaded = false;
-//
-//			Minecraft.getInstance().submit(() -> {
-//				RenderSystem.bindTexture(renderedMapImageTextureId);
-//				uploadRenderedMapImage();
-//				mapImageLoaded = true;
-//				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
-//			});
-//
-//			updateRenderedMapTexture = false;
-//		}
-//
-//		return renderedMapImageTextureId;
-//	}
-
 	public void release(boolean releaseMapChunks) {
 		if (shouldSave && data != null) {
 			try {
@@ -210,20 +123,6 @@ public class MapRegion implements MapTask {
 	}
 
 	public void releaseMapImage() {
-//		synchronized (dimension.getManager().lock) {
-//			if (renderedMapImage != null) {
-//				renderedMapImage.close();
-//				renderedMapImage = null;
-//			}
-//			Minecraft.getInstance().getTextureManager().release(texId());
-//		}
-
-//		if (renderedMapImageTextureId != -1) {
-//			GlStateManager._deleteTexture(renderedMapImageTextureId);
-//			renderedMapImageTextureId = -1;
-//		}
-
-//		mapImageLoaded = false;
 		if (regionTexture.isOpen()) {
 			regionTexture.close();
 		}
@@ -243,26 +142,6 @@ public class MapRegion implements MapTask {
 	public MapRegionTexture regionTexture() {
 		return regionTexture;
 	}
-
-	//	public void setRenderedMapImageRGBA(int x, int z, int col) {
-//		synchronized (dimension.getManager().lock) {
-//			getRenderedMapImage().setPixel(x, z, col);
-//		}
-//	}
-
-//	private void uploadRenderedMapImage() {
-//		synchronized (dimension.getManager().lock) {
-//			getRenderedMapImage().upload(0, 0, 0, false);
-//		}
-//	}
-
-//	public void afterImageRenderTask() {
-//		synchronized (dimension.getManager().lock) {
-//			updateRenderedMapTexture = true;
-//			FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
-//			renderingMapImage = false;
-//		}
-//	}
 
 	public void update(boolean save) {
 		if (save) {

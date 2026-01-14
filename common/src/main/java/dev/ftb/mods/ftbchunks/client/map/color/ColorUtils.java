@@ -17,7 +17,12 @@ public class ColorUtils {
 	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
 
 	public static int convertToNative(int c) {
-		return ARGB.color((c >> 24) & 0xFF, c & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF);
+		return ARGB.color(
+				(c >> 24) & 0xFF,
+				(c >> 16) & 0xFF,
+				(c >> 8) & 0xFF,
+				c & 0xFF
+		);
 	}
 
 	public static int convertFromNative(int c) {

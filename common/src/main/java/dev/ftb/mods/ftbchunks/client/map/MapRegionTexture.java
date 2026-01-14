@@ -10,8 +10,6 @@ import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.nio.file.Path;
-
 public class MapRegionTexture {
     private static final Logger LOGGER = LogUtils.getLogger();
 

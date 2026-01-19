@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * Fixed added waypoint Y values being way out in void dimensions
 * Fixed a dupe bug under certain circumstances
+* Fixed waypoint sharing not working for waypoints with spaces in their names
 
 ## [2001.3.6]
 

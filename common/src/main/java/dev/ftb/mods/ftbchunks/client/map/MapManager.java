@@ -9,6 +9,8 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.api.Team;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.IdentifierException;
@@ -53,6 +55,7 @@ public class MapManager implements MapTask {
 	private final Int2ObjectOpenHashMap<ResourceKey<Biome>> biomeColorIndexMap;
 	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColCache;
 	private final List<BiomeFTBC> biomesToRelease;
+	private final PendingUpdateEvents pendingUpdateEvents;
 
 	private MapManager(UUID serverId, Path directory) {
 		this.serverId = serverId;
@@ -72,6 +75,8 @@ public class MapManager implements MapTask {
 		blockIdToColCache = new Int2ObjectOpenHashMap<>();
 
 		biomesToRelease = new ArrayList<>();
+
+		pendingUpdateEvents = new PendingUpdateEvents();
 
 		try {
 			Path dimFile = this.directory.resolve("dimensions.txt");
@@ -375,5 +380,13 @@ public class MapManager implements MapTask {
 				pendingRegionPurge = null;
 			}
 		}
+	}
+
+	public void addPendingUpdateEvent(Team team, ChunkDimPos dim, MapChunk.DateInfo dateInfo) {
+		pendingUpdateEvents.addPending(team, dim, dateInfo);
+	}
+
+	public void firePendingUpdateEvents() {
+		pendingUpdateEvents.fireEvents();
 	}
 }

@@ -11,11 +11,11 @@ import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
-import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent;
 import dev.ftb.mods.ftbchunks.client.gui.EntityIconSettingsScreen;
 import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointAddScreen;
@@ -311,6 +311,8 @@ public enum FTBChunksClient {
             if (mc.player != null && mc.player.tickCount % 20 == 0) {
                 maybeClearDeathpoint(mc.player);
             }
+
+            manager.firePendingUpdateEvents();
 
             taskQueueTicks++;
         });

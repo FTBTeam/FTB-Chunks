@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.ftb.mods.ftbchunks.api.client.event.ChunksUpdatedFromServerEvent;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
@@ -114,6 +115,8 @@ public class MapChunk {
 		team = FTBTeamsAPI.api().getClientManager().getTeamByID(teamId).orElse(null);
 		dateInfo = packet.getDateInfo(team != null, now.getTime());
 		region.update(false);
+
+		MapManager.getInstance().ifPresent(mgr -> mgr.addPendingUpdateEvent(team, getActualPos().dim(region.dimension.dimension), dateInfo));
 	}
 
 	public void updateForceLoadExpiryDate(long now, long offset) {

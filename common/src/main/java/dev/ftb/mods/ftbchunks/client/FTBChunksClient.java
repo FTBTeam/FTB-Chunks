@@ -20,6 +20,7 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
+import dev.ftb.mods.ftbchunks.api.client.event.ChunksUpdatedFromServerEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
@@ -52,6 +53,7 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.ModUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
+import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -1069,6 +1071,8 @@ public enum FTBChunksClient {
             if (mc.screen == null) {
                 manager.checkForRegionPurge();
             }
+
+            manager.firePendingUpdateEvents();
 
             taskQueueTicks++;
         });

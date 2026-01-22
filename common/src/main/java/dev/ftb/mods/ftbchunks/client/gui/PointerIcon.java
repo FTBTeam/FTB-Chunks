@@ -10,12 +10,12 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public class PointerIcon implements MapIcon {
-
-    private static final Icon<?> POINTER = Icon.getIcon(FTBChunksAPI.id("textures/player.png"));
+    public static final Icon<?> POINTER = Icon.getIcon(FTBChunksAPI.id("textures/player.png"));
     
     @Override
     public Vec3 getPos(float partialTick) {
@@ -40,9 +40,7 @@ public class PointerIcon implements MapIcon {
         graphics.pose().translate(x + w / 2f, y + h / 2f);
         float scale = mapType == MapType.LARGE_MAP ? 2.5F : 2F;
         graphics.pose().scale(scale, scale);
-        // TODO: [21.8] Validate this still works
-        graphics.pose().rotate(player.getYRot() + 180F);
-//        graphics.pose().mulPose(Axis.ZP.rotationDegrees(player.getYRot() + 180F));
+        graphics.pose().rotate((player.getYRot() + 180F) * Mth.DEG_TO_RAD);
         IconHelper.renderIcon(POINTER, graphics, - w / 2, -h / 2, w, h);
         graphics.pose().popMatrix();
     }

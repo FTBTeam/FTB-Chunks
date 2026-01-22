@@ -8,15 +8,7 @@ import dev.ftb.mods.ftblibrary.client.config.gui.EditStringConfigOverlay;
 import dev.ftb.mods.ftblibrary.client.gui.GuiHelper;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
-import dev.ftb.mods.ftblibrary.client.gui.widget.Button;
-import dev.ftb.mods.ftblibrary.client.gui.widget.ColorSelectorPanel;
-import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.client.gui.widget.DropDownMenu;
-import dev.ftb.mods.ftblibrary.client.gui.widget.IntTextBox;
-import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
-import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
-import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.client.gui.widget.TextBox;
+import dev.ftb.mods.ftblibrary.client.gui.widget.*;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -28,8 +20,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 
@@ -198,7 +190,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     }
 
     private class ColorButton extends SimpleButton {
-        public ColorButton(Icon icon, Callback c) {
+        public ColorButton(Color4I icon, Callback c) {
             super(AddWaypointOverlay.this, Component.empty(), icon, c);
         }
 

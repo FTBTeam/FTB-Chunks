@@ -27,12 +27,7 @@ public class ClientTaskQueue {
 
             for (MapTask task : tasks) {
                 if (task != null) {
-                    try {
-                        task.runMapTask();
-                    } catch (Exception ex) {
-                        FTBChunks.LOGGER.error("Failed to run task " + task);
-                        ex.printStackTrace();
-                    }
+                    tryRunTask(task);
                 }
             }
         }
@@ -41,17 +36,20 @@ public class ClientTaskQueue {
     public static void flushTasks() {
         MapTask task;
         while ((task = taskQueue.pollFirst()) != null) {
-            try {
-                task.runMapTask();
-            } catch (Exception ex) {
-                FTBChunks.LOGGER.error("Failed to run task " + task);
-                ex.printStackTrace();
-            }
+            tryRunTask(task);
+        }
+    }
+
+    private static void tryRunTask(MapTask task) {
+        try {
+            task.runMapTask();
+        } catch (Exception ex) {
+            FTBChunks.LOGGER.error("Failed to run task {}: {} ", task, ex.getMessage());
         }
     }
 
     public static void dumpTaskInfo() {
-        FTBChunks.LOGGER.info("=== Task Queue: " + taskQueue.size());
+        FTBChunks.LOGGER.info("=== Task Queue: {}", taskQueue.size());
         taskQueue.stream().map(Object::toString).forEach(FTBChunks.LOGGER::info);
         FTBChunks.LOGGER.info("===");
     }

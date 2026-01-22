@@ -34,7 +34,7 @@ import java.util.List;
 
 public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
     private final WaypointImpl waypoint;
-    private Icon outsideIcon;
+    private Icon<?> outsideIcon;
     private int alpha;
 
     public WaypointMapIcon(WaypointImpl waypoint) {

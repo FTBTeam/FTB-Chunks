@@ -270,7 +270,7 @@ public class LargeMapScreen extends BaseScreen {
                     }
                 }).atMousePosition();
                 overlay.setWidth(150);
-                overlay.setX(Math.min(overlay.getX(), getScreen().getGuiScaledWidth() - 155));
+                overlay.setX(Math.min(overlay.getX(), getWindow().getGuiScaledWidth() - 155));
                 getGui().pushModalPanel(overlay);
             }));
             openContextMenu(list);

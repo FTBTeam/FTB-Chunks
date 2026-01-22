@@ -12,6 +12,7 @@
 	"client": [
 		"ClientPacketListenerMixin",
 		"GuiMixin",
+		"GuiGraphicsMixin",
 		"UtilMixin"
 	],
 	"injectors": {

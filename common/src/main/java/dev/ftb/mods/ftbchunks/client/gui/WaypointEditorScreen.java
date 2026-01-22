@@ -88,8 +88,8 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
     @Override
     public boolean onInit() {
-        setWidth(Mth.clamp(widestWaypoint + 80, 220, getScreen().getGuiScaledWidth() * 4 / 5));
-        setHeight(getScreen().getGuiScaledHeight() * 4 / 5);
+        setWidth(Mth.clamp(widestWaypoint + 80, 220, getWindow().getGuiScaledWidth() * 4 / 5));
+        setHeight(getWindow().getGuiScaledHeight() * 4 / 5);
 
         for (Map.Entry<ResourceKey<Level>, List<WaypointImpl>> resourceKeyListEntry : collectWaypoints().entrySet()) {
             collapsed.put(resourceKeyListEntry.getKey(), false);

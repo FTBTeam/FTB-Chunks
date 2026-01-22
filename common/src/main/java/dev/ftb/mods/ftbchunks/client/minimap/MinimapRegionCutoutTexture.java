@@ -12,10 +12,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
-import java.util.function.Supplier;
-
 public class MinimapRegionCutoutTexture {
-    private final Identifier identifier = FTBChunksAPI.id("minimap_region_cutout_texture");
+    public static final Identifier ID = FTBChunksAPI.id("minimap_region_cutout_texture");
     private final NativeImage image;
 
     private final DynamicTexture texture;
@@ -30,8 +28,8 @@ public class MinimapRegionCutoutTexture {
         image = new NativeImage(NativeImage.Format.RGBA, size, size, true);
         image.fillRect(0, 0, size, size, 0);
 
-        texture = new DynamicTexture(identifier::toString, image);
-        Minecraft.getInstance().getTextureManager().register(identifier, texture);
+        texture = new DynamicTexture(ID::toString, image);
+        Minecraft.getInstance().getTextureManager().register(ID, texture);
     }
 
     public void update(ResourceKey<Level> key, int chunkX, int chunkZ) {
@@ -90,6 +88,6 @@ public class MinimapRegionCutoutTexture {
     }
 
     public Identifier identifier() {
-        return identifier;
+        return ID;
     }
 }

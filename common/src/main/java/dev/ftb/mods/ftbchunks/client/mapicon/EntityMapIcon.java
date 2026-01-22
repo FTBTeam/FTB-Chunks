@@ -23,13 +23,13 @@ public class EntityMapIcon implements MapIcon {
     private final Icon<?> icon;
     private final EntityIconLoader.WidthHeight widthHeight;
 
-    public EntityMapIcon(Entity entity, Icon icon) {
+    public EntityMapIcon(Entity entity, Icon<?> icon) {
         this.entity = entity;
         this.icon = icon;
         this.widthHeight = new EntityIconLoader.WidthHeight(16, 16);
     }
 
-    public EntityMapIcon(Entity entity, Icon icon, EntityIconLoader.WidthHeight widthHeight) {
+    public EntityMapIcon(Entity entity, Icon<?> icon, EntityIconLoader.WidthHeight widthHeight) {
         this.entity = entity;
         this.icon = icon;
         this.widthHeight = widthHeight;

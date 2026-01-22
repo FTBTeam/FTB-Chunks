@@ -14,8 +14,8 @@ public class WaypointType {
 			= WaypointType.builder().build("death");
 
 	private final String id;
-	private final Icon icon;
-	private final Icon outsideIcon;
+	private final Icon<?> icon;
+	private final Icon<?> outsideIcon;
 	private final boolean canChangeColor;
 
 	public static Builder builder() {
@@ -38,7 +38,7 @@ public class WaypointType {
 		return id;
 	}
 
-	public Icon getOutsideIcon() {
+	public Icon<?> getOutsideIcon() {
 		return outsideIcon;
 	}
 
@@ -46,12 +46,12 @@ public class WaypointType {
 		return canChangeColor;
 	}
 
-	public Icon getIcon() {
+	public Icon<?> getIcon() {
 		return icon;
 	}
 
 	public static class Builder {
-		private Icon outsideIcon = null;
+		private Icon<?> outsideIcon = null;
 		private boolean canChangeColor = false;
 
 		public Builder withOutsideIcon(String icon) {
@@ -59,7 +59,7 @@ public class WaypointType {
 			return this;
 		}
 
-		public Builder withOutsideIcon(Icon icon) {
+		public Builder withOutsideIcon(Icon<?> icon) {
 			outsideIcon = icon;
 			return this;
 		}

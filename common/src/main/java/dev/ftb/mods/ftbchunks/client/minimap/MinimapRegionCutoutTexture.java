@@ -18,9 +18,6 @@ public class MinimapRegionCutoutTexture {
 
     private final DynamicTexture texture;
 
-    private int lastChunkX;
-    private int lastChunkZ;
-
     public MinimapRegionCutoutTexture() {
         var size = FTBChunks.MINIMAP_SIZE;
 
@@ -33,14 +30,9 @@ public class MinimapRegionCutoutTexture {
     }
 
     public void update(ResourceKey<Level> key, int chunkX, int chunkZ) {
-        if (chunkX == lastChunkX && chunkZ == lastChunkZ) {
+        if (MapDimension.getCurrent().isEmpty()) {
             return;
         }
-
-        // Update the last chunk positions.
-        lastChunkX = chunkX;
-        lastChunkZ = chunkZ;
-
         MapDimension dim = MapDimension.getCurrent().get();
         if (dim.dimension != key) {
             return;

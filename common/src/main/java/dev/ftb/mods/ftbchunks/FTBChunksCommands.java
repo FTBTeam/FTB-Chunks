@@ -196,7 +196,7 @@ public class FTBChunksCommands {
                         .then(Commands.literal("block_color")
 //						.requires(source -> source.getServer().isSingleplayer())
                                         .executes(context -> {
-                                            NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), new RequestBlockColorPacket());
+                                            NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), RequestBlockColorPacket.INSTANCE);
                                             return Command.SINGLE_SUCCESS;
                                         })
                         )

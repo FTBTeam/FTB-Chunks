@@ -17,7 +17,7 @@ public class FTBChunksClientImpl {
 	@SubscribeEvent
 	public static void renderLevelStageForge(RenderLevelStageEvent.AfterParticles event) {
         FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getModelViewMatrix(),
-                event.getModelViewMatrix(), event.getLevelRenderState().cameraRenderState, Minecraft.getInstance().getDeltaTracker());
+				event.getLevelRenderState().cameraRenderState, Minecraft.getInstance().getDeltaTracker());
 	}
 
 	public static boolean doesKeybindMatch(KeyMapping keyMapping, KeyEvent event) {

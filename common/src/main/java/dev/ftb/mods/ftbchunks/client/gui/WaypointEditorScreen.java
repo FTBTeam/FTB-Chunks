@@ -2,7 +2,6 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -338,7 +337,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         private void openWaypointEditPanel() {
             EditableString configName = new EditableString();
             configName.setValue(wp.getName());
-            new FTBChunksClient.WaypointAddScreen(configName, GlobalPos.of(wp.getDimension(), wp.getPos()), Color4I.rgb(wp.getColor()), true).openGui();
+            new WaypointAddScreen(configName, GlobalPos.of(wp.getDimension(), wp.getPos()), Color4I.rgb(wp.getColor()), true).openGui();
         }
 
         @Override

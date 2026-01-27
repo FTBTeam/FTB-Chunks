@@ -42,15 +42,14 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     public AddWaypointOverlay(Panel panel, Component title, GlobalPosConfig pos, EditableStringifiedConfig<String> config, EditableColor colorConfig, ConfigCallback callback) {
         super(panel, config, callback, title);
         this.pos = pos;
-        colorButton = new ColorButton(colorConfig.getValue(), (btn, mb) -> {
-            ColorSelectorPanel.popupAtMouse(getGui(), colorConfig, accepted -> {
-                if (accepted) {
-                    btn.setIcon(colorConfig.getValue());
-                } else {
-                    colorConfig.setValue(((ColorButton) btn).getIcon());
-                }
-            });
-        });
+        colorButton = new ColorButton(colorConfig.getValue(), (btn, mb) ->
+                ColorSelectorPanel.popupAtMouse(getGui(), colorConfig, accepted -> {
+                    if (accepted) {
+                        btn.setIcon(colorConfig.getValue());
+                    } else {
+                        colorConfig.setValue(((ColorButton) btn).getIcon());
+                    }
+                }));
         this.dimension = new TextBox(this) {
             @Override
             public boolean allowInput() {

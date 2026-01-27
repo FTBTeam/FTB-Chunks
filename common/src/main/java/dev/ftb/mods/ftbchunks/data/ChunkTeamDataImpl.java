@@ -9,6 +9,7 @@ import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
@@ -23,23 +24,24 @@ import dev.ftb.mods.ftbteams.api.TeamRank;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
 import net.minecraft.ChatFormatting;
-import net.minecraft.server.permissions.Permissions;
-import net.minecraft.util.Util;
+import net.minecraft.IdentifierException;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -56,6 +58,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	private int maxForceLoadChunks;
 	private int extraClaimChunks;
 	private int extraForceLoadChunks;
+	@Nullable
 	private Boolean canForceLoadChunks;
 	private final Map<UUID,TeamMemberData> memberData;
 
@@ -63,9 +66,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	private int prevChunkZ = Integer.MAX_VALUE;
 	private String lastChunkID = "";
 	private long lastLoginTime;
-	private Set<String> fakePlayerNameCache;
 
+	@Nullable
+	private Set<String> fakePlayerNameCache;
+	@Nullable
 	private Collection<ClaimedChunkImpl> claimedChunkCache;
+	@Nullable
 	private Collection<ClaimedChunkImpl> forcedChunkCache;
 
 	private final Map<UUID,PreventedAccess> preventedAccess = new HashMap<>();
@@ -150,7 +156,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			ClaimedChunkImpl cc = manager.getChunk(cdp);
 			// original claim must still be claimed, and by the current team
 			if (cc != null && cc.getTeamData() == this) {
-				res.add(manager.getChunk(cdp));
+				res.add(cc);
 			}
 		}
 
@@ -310,7 +316,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			return mode == PrivacyMode.ALLIES;
 		}
 
-		boolean checkById = team.getProperty(FTBChunksProperties.ALLOW_FAKE_PLAYERS_BY_ID) && player.getUUID() != null;
+		boolean checkById = team.getProperty(FTBChunksProperties.ALLOW_FAKE_PLAYERS_BY_ID);
 		if (mode == PrivacyMode.ALLIES) {
 			return checkById && isAlly(player.getUUID()) || fakePlayerMatches(player.getGameProfile());
 		} else if (mode == PrivacyMode.PRIVATE) {
@@ -384,13 +390,17 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 		tag.getCompound("chunks").ifPresent(chunksTag -> {
             for (String key : chunksTag.keySet()) {
-                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, Identifier.tryParse(key));
-                ListTag chunksListTag = chunksTag.getList(key).orElse(new ListTag());
+				try {
+					ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, Identifier.parse(key));
+					ListTag chunksListTag = chunksTag.getList(key).orElse(new ListTag());
 
-                for (int i = 0; i < chunksListTag.size(); i++) {
-                    ClaimedChunkImpl chunk = ClaimedChunkImpl.deserializeNBT(this, dimKey, chunksListTag.getCompound(i).orElseThrow());
-                    manager.registerClaim(chunk.getPos(), chunk);
-                }
+					for (int i = 0; i < chunksListTag.size(); i++) {
+						ClaimedChunkImpl chunk = ClaimedChunkImpl.deserializeNBT(this, dimKey, chunksListTag.getCompound(i).orElseThrow());
+						manager.registerClaim(chunk.getPos(), chunk);
+					}
+				} catch (IdentifierException ex) {
+					FTBChunks.LOGGER.error("ignoring bad dimension key {}", key);
+				}
             }
         });
 
@@ -403,7 +413,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
                         memberData.put(id, TeamMemberData.deserializeNBT(memberTag.getCompound(key).orElseThrow()));
                     }
                 } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
+					FTBChunks.LOGGER.error("ignoring bad UUID {}", key);
                 }
             }
         });
@@ -423,10 +433,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		if (extraClaimChunks > 0 && team.isPartyTeam()) {
 			FTBChunks.LOGGER.info("found non-zero extra_claim_chunks={} in party team {}: transferring to owner {}", extraClaimChunks, getTeamId(), team.getOwner());
 			ChunkTeamDataImpl personalTeam = ClaimedChunkManagerImpl.getInstance().getPersonalData(team.getOwner());
-			personalTeam.extraClaimChunks = extraClaimChunks;
-			extraClaimChunks = 0;
-			markDirty();
-			personalTeam.markDirty();
+			if (personalTeam != null) {
+				personalTeam.extraClaimChunks = extraClaimChunks;
+				extraClaimChunks = 0;
+				markDirty();
+				personalTeam.markDirty();
+			}
 		}
 		return extraClaimChunks;
 	}
@@ -436,10 +448,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		if (extraForceLoadChunks > 0 && team.isPartyTeam()) {
 			FTBChunks.LOGGER.info("found non-zero extra_force_load_chunks={} in party team {}: transferring to owner {}", extraForceLoadChunks, getTeamId(), team.getOwner());
 			ChunkTeamDataImpl personalTeam = ClaimedChunkManagerImpl.getInstance().getPersonalData(team.getOwner());
-			personalTeam.extraForceLoadChunks = extraForceLoadChunks;
-			extraForceLoadChunks = 0;
-			markDirty();
-			personalTeam.markDirty();
+			if (personalTeam != null) {
+				personalTeam.extraForceLoadChunks = extraForceLoadChunks;
+				extraForceLoadChunks = 0;
+				markDirty();
+				personalTeam.markDirty();
+			}
 		}
 		return extraForceLoadChunks;
 	}
@@ -689,8 +703,8 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		}
 	}
 
-	private boolean hasChunkChanged(ClaimedChunkImpl chunk) {
-		String s = chunk == null ? "-" : chunk.getTeamData().getTeamId().toString();
+	private boolean hasChunkChanged(@Nullable ClaimedChunk chunk) {
+		String s = chunk == null ? "-" : chunk.getTeamData().getTeam().getTeamId().toString();
 		if (!lastChunkID.equals(s)) {
 			lastChunkID = s;
 			return true;
@@ -701,7 +715,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 	public void checkForChunkChange(Player player, int chunkX, int chunkZ) {
 		if (prevChunkX != chunkX || prevChunkZ != chunkZ) {
-			ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(player));
+			ClaimedChunk chunk = getManager().getChunk(new ChunkDimPos(player));
 			if (hasChunkChanged(chunk)) {
 				if (chunk != null) {
 					player.displayClientMessage(chunk.getTeamData().getTeam().getColoredName(), true);

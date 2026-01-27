@@ -19,16 +19,15 @@ public class ClientTaskQueue {
             MapTask[] tasks = new MapTask[nTasks];
 
             for (int i = 0; i < nTasks; i++) {
-                tasks[i] = taskQueue.pollFirst();
-                if (tasks[i] == null || tasks[i].cancelOtherTasks()) {
+                var task = taskQueue.pollFirst();
+                if (task == null || task.cancelOtherTasks()) {
                     break;
                 }
+                tasks[i] = task;
             }
 
             for (MapTask task : tasks) {
-                if (task != null) {
-                    tryRunTask(task);
-                }
+                tryRunTask(task);
             }
         }
     }

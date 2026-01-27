@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.util;
 
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftblibrary.util.Lazy;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
@@ -11,9 +12,12 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class DimensionFilter {
-    private static WildcardedRLMatcher dimensionMatcherB = null;
-    private static WildcardedRLMatcher dimensionMatcherW = null;
-    private static WildcardedRLMatcher noWilderness = null;
+    private static final Lazy<WildcardedRLMatcher> DIMENSION_MATCHER_B
+            = Lazy.of(() -> new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST.get()));
+    private static final Lazy<WildcardedRLMatcher> DIMENSION_MATCHER_W
+            = Lazy.of(() -> new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_WHITELIST.get()));
+    private static final Lazy<WildcardedRLMatcher> NO_WILDERNESS
+            = Lazy.of(() -> new WildcardedRLMatcher(FTBChunksWorldConfig.NO_WILDERNESS_DIMENSIONS.get()));
 
     public static boolean isDimensionOK(ResourceKey<Level> levelKey) {
         Identifier name = levelKey.identifier();
@@ -25,30 +29,21 @@ public class DimensionFilter {
     }
 
     private static WildcardedRLMatcher getDimensionWhitelist() {
-        if (dimensionMatcherW == null) {
-            dimensionMatcherW = new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_WHITELIST.get());
-        }
-        return dimensionMatcherW;
+        return DIMENSION_MATCHER_W.get();
     }
 
     private static WildcardedRLMatcher getDimensionBlacklist() {
-        if (dimensionMatcherB == null) {
-            dimensionMatcherB = new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST.get());
-        }
-        return dimensionMatcherB;
+        return DIMENSION_MATCHER_B.get();
     }
 
     private static WildcardedRLMatcher getNoWildernessList() {
-        if (noWilderness == null) {
-            noWilderness = new WildcardedRLMatcher(FTBChunksWorldConfig.NO_WILDERNESS_DIMENSIONS.get());
-        }
-        return noWilderness;
+        return NO_WILDERNESS.get();
     }
 
     public static void clearMatcherCaches() {
-        dimensionMatcherB = null;
-        dimensionMatcherW = null;
-        noWilderness = null;
+        DIMENSION_MATCHER_B.invalidate();
+        DIMENSION_MATCHER_W.invalidate();
+        NO_WILDERNESS.invalidate();
     }
 
     private static class WildcardedRLMatcher implements Predicate<Identifier> {

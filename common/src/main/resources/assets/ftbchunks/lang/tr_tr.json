@@ -85,7 +85,7 @@
   "ftbchunks.minimap.pointer_icon_mode.face": "Yüz Simgesi",
   "sidebar_button.ftbchunks.chunks": "FTB Yığınlar: Harita",
   "sidebar_button.ftbchunks.claim_chunks": "FTB Yığınlar: Talep Yöneticisi",
-  "key.categories.ftbchunks": "FTB Yığınlar",
+  "key.category.ftbchunks.keys": "FTB Yığınlar",
   "key.ftbchunks.map": "Haritayı Aç",
   "key.ftbchunks.claim_manager": "Talep Yöneticisini Aç",
   "key.ftbchunks.minimap.zoomIn": "Mini Haritayı Yakınlaştır",

@@ -7,9 +7,11 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
+import dev.ftb.mods.ftbchunks.client.minimap.MinimapRegionCutoutTexture;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
@@ -20,6 +22,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.Button;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
@@ -33,21 +36,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
@@ -79,7 +75,8 @@ public class ChunkScreenPanel extends Panel {
 
 	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
-			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
+			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, ClientUtils.getClientLevel().getGameTime());
+			FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
 		}
 	}
 
@@ -94,8 +91,7 @@ public class ChunkScreenPanel extends Panel {
 
 	@Override
 	public void addWidgets() {
-		Player player = Minecraft.getInstance().player;
-		ChunkPos chunkPos = player.chunkPosition();
+		ChunkPos chunkPos = ClientUtils.getClientPlayer().chunkPosition();
 		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
 		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
 
@@ -165,7 +161,7 @@ public class ChunkScreenPanel extends Panel {
 
 	@Override
 	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-		Player player = Minecraft.getInstance().player;
+		Player player = ClientUtils.getClientPlayer();
 
 		// make sure the window is a multiple of the tile amount
 		int maxWidth = getWidth() / FTBChunks.TILES * FTBChunks.TILES;
@@ -176,16 +172,10 @@ public class ChunkScreenPanel extends Panel {
 		int sx = getX() + xPos;
 		int sy = getY() + yPos;
 
-        // TODO: [21.8] Validate this still works
-        //       - Blocked by dynamic image generation.
-		// TODO: @since 21.11: submitBlit is private, todo: find replacement or AT
-//        graphics.submitBlit(RenderPipelines.GUI_TEXTURED, FTBChunksClient.INSTANCE.dynamicTexture().getTextureView(),
-//                sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight, 0xFFFFFFFF);
-//        graphics.blit(FTBChunksClient.INSTANCE.getMinimapTextureId(), sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
-//		RenderSystem.setShaderTexture(0, FTBChunksClient.INSTANCE.getMinimapTextureId());
-//		GuiHelper.drawTexturedRect(graphics, sx, sy, maxWidth, maxHeight, Color4I.WHITE, 0F, 0F, 1F, 1F);
+		graphics.blit(RenderPipelines.GUI_TEXTURED, MinimapRegionCutoutTexture.ID, sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
 
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_TAB)) {
+			// grid overlay
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
 				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSizeY, 0x64464646);
 			}
@@ -212,7 +202,9 @@ public class ChunkScreenPanel extends Panel {
 	}
 
 	private boolean canChangeAsAdmin() {
-		return Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) && chunkScreen.getOpenedAs() == null && isAdminEnabled;
+		return ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)
+				&& chunkScreen.getOpenedAs() == null
+				&& isAdminEnabled;
 	}
 
 	private class ChunkButton extends Button {
@@ -294,7 +286,7 @@ public class ChunkScreenPanel extends Panel {
 					if (!Minecraft.getInstance().hasAltDown()) {
 						list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
 					}
-					if (team.getRankForPlayer(Minecraft.getInstance().player.getUUID()).isMemberOrBetter()){
+					if (team.getRankForPlayer(ClientUtils.getClientPlayer().getUUID()).isMemberOrBetter()){
 						list.add(Component.translatable("ftbchunks.gui.mouse_wheel_expiry").withStyle(ChatFormatting.DARK_GRAY));
 					}
 				});
@@ -347,7 +339,7 @@ public class ChunkScreenPanel extends Panel {
 
 			if (lastAdjust > 0L && System.currentTimeMillis() - lastAdjust > 1000L) {
 				// send update to server, but not more than once a second - avoid flood of updates while adjusting mouse wheel
-				NetworkManager.sendToServer(new UpdateForceLoadExpiryPacket(chunkPos.dim(Minecraft.getInstance().level), chunk.getForceLoadExpiryDate().orElse(null)));
+				NetworkManager.sendToServer(new UpdateForceLoadExpiryPacket(chunkPos.dim(ClientUtils.getClientLevel()), chunk.getForceLoadExpiryDate().orElse(null)));
 				lastAdjust = 0L;
 			}
 		}
@@ -361,7 +353,7 @@ public class ChunkScreenPanel extends Panel {
 		public boolean shouldDisplay() {
 			// display for 3 seconds + 1 second per line of problem data
 			long timeout = 60L + 20L * problems.size();
-			return Minecraft.getInstance().level.getGameTime() - timestamp < timeout;
+			return ClientUtils.getClientLevel().getGameTime() - timestamp < timeout;
 		}
 
 		public Component summary() {

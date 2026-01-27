@@ -88,7 +88,7 @@ public enum ClaimExpirationManager {
                     .filter(cc -> cc.isForceLoaded() && cc.hasForceLoadExpired(now))
                     .toList();
             if (!expired.isEmpty()) {
-                ChunkTeamData teamData = expired.get(0).getTeamData();
+                ChunkTeamData teamData = expired.getFirst().getTeamData();
                 CommandSourceStack sourceStack = server.createCommandSourceStack();
                 Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync = new HashMap<>();
                 expired.forEach(cc -> {

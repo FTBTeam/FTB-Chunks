@@ -12,6 +12,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ToggleableButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -151,9 +152,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                         if (isShiftKeyDown()) {
                             chunkScreenPanel.removeAllClaims();
                         } else {
-                            getGui().openYesNo(Component.translatable("ftbchunks.gui.unclaim_all"), Component.translatable("ftbchunks.gui.unclaim_all.description"), () -> {
-                                chunkScreenPanel.removeAllClaims();
-                            });
+                            getGui().openYesNo(Component.translatable("ftbchunks.gui.unclaim_all"), Component.translatable("ftbchunks.gui.unclaim_all.description"), () -> chunkScreenPanel.removeAllClaims());
                         }
                     })
                     .setForceButtonSize(false);
@@ -165,7 +164,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         public void addWidgets() {
             add(closeButton);
             add(removeAllClaims);
-            if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+            if (!Minecraft.getInstance().isSingleplayer() && openedAs == null && ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
                 add(adminButton);
             }
             add(mouseReferenceButton);
@@ -194,9 +193,8 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
             private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info").withStyle(ChatFormatting.GRAY);
 
             public AdminButton() {
-                super(CustomTopPanel.this, false, Icons.LOCK_OPEN, Icons.LOCK, (btn, newState) -> {
-                    ChunkScreen.this.getChunkScreen().isAdminEnabled = newState;
-                });
+                super(CustomTopPanel.this, false, Icons.LOCK_OPEN, Icons.LOCK, (btn, newState) ->
+                        ChunkScreen.this.getChunkScreen().isAdminEnabled = newState);
                 setEnabledText(ENABLED);
                 setDisabledText(DISABLED);
             }

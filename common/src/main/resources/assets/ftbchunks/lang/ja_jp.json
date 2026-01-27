@@ -87,7 +87,7 @@
   "ftbchunks.minimap.text_above_minimap": "ミニマップの上にテキストを表示",
   "sidebar_button.ftbchunks.chunks": "FTB Chunks:マップ",
   "sidebar_button.ftbchunks.claim_chunks": "FTB Chunks:占有マネージャー",
-  "key.categories.ftbchunks": "FTB Chunks",
+  "key.category.ftbchunks.keys": "FTB Chunks",
   "key.ftbchunks.map": "マップを開く",
   "key.ftbchunks.claim_manager": "占有マネージャーを開く",
   "key.ftbchunks.minimap.zoomIn": "ミニマップを拡大",

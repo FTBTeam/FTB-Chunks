@@ -1,8 +1,10 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WaypointType {
@@ -30,7 +32,7 @@ public class WaypointType {
 		this.id = id;
 
 		icon = Icon.getIcon("ftbchunks:textures/waypoint_" + this.id + ".png");
-		outsideIcon = builder.outsideIcon == null ? icon : builder.outsideIcon;
+		outsideIcon = Objects.requireNonNullElse(builder.outsideIcon, icon);
 		canChangeColor = builder.canChangeColor;
 	}
 
@@ -51,6 +53,7 @@ public class WaypointType {
 	}
 
 	public static class Builder {
+		@Nullable
 		private Icon<?> outsideIcon = null;
 		private boolean canChangeColor = false;
 

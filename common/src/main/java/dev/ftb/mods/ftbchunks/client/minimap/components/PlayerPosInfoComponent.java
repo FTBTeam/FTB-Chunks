@@ -10,7 +10,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
 public class PlayerPosInfoComponent implements MinimapInfoComponent {
-
     public static final Identifier ID = FTBChunksAPI.id("player_pos");
 
     @Override
@@ -20,8 +19,11 @@ public class PlayerPosInfoComponent implements MinimapInfoComponent {
 
     @Override
     public void render(MinimapContext context, GuiGraphics graphics, Font font) {
-        var text = Component.literal(Mth.floor(context.playerPos().x()) + " " + Mth.floor(context.playerPos().y()) + " " + Mth.floor(context.playerPos().z()));
+        var text = Component.literal(
+                Mth.floor(context.playerPos().x()) + " " +
+                        Mth.floor(context.playerPos().y()) + " " +
+                        Mth.floor(context.playerPos().z())
+        );
         drawCenteredText(font, graphics, text, 0);
     }
-
 }

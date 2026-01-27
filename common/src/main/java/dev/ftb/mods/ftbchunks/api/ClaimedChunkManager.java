@@ -49,6 +49,7 @@ public interface ClaimedChunkManager {
      * @param id a player UUID
      * @return the FTB Chunks data for the player, or null if something went wrong
      */
+    @Nullable
     ChunkTeamData getPersonalData(UUID id);
 
     /**

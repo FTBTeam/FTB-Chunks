@@ -6,14 +6,16 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.util.HashMap;
 
 public class ColorUtils {
-	private static Color4I[] reducedColorPalette = null;
-	private static Color4I[] topographyPalette = null;
-	private static Color4I[][] lightMapPalette = null;
+
+	private static Color4I @Nullable[] reducedColorPalette = null;
+	private static Color4I @Nullable[] topographyPalette = null;
+	private static Color4I @Nullable[][] lightMapPalette = null;
 	private static final HashMap<Color4I, Color4I> reducedColorMap = new HashMap<>();
 
 	public static int convertToNative(int c) {

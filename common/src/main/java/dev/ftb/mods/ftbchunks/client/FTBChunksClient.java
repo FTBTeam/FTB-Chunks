@@ -5,7 +5,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.client.*;
@@ -135,12 +136,19 @@ public enum FTBChunksClient {
             Icon.getIcon(FTBChunksAPI.id("textures/compass_s.png"))
     );
 
+    @Nullable
     public KeyMapping openMapKey;
+    @Nullable
     public KeyMapping toggleMinimapKey;
+    @Nullable
     public KeyMapping openClaimManagerKey;
+    @Nullable
     public KeyMapping zoomInKey;
+    @Nullable
     public KeyMapping zoomOutKey;
+    @Nullable
     public KeyMapping addWaypointKey;
+    @Nullable
     public KeyMapping waypointManagerKey;
 
     private final Map<UUID, TrackedPlayerMapIcon> longRangePlayerTracker = new HashMap<>();
@@ -148,30 +156,33 @@ public enum FTBChunksClient {
     private long taskQueueTicks = 0L;
     private final Map<ChunkPos, IntOpenHashSet> rerenderCache = new HashMap<>();
 
-    //    private int minimapTextureId = -1;
     private final Lazy<MinimapRegionCutoutTexture> miniMapTexture = Lazy.of(MinimapRegionCutoutTexture::new);
 
-    private int currentPlayerChunkX, currentPlayerChunkZ;
-    private double currentPlayerX, currentPlayerY, currentPlayerZ;
-    private double prevPlayerX, prevPlayerY, prevPlayerZ;
+//    private int currentPlayerChunkX, currentPlayerChunkZ;
+    private XZ currentPlayerChunk = XZ.of(0, 0);
+    private Vec3 currentPlayerPos = Vec3.ZERO, prevPlayerPos = Vec3.ZERO;
+//    private double currentPlayerX, currentPlayerY, currentPlayerZ;
+//    private double prevPlayerX, prevPlayerY, prevPlayerZ;
     private int renderedDebugCount = 0;
 
     private boolean updateMinimapScheduled = true;
-    private GeneralChunkData generalChunkData;
+    private GeneralChunkData generalChunkData = GeneralChunkData.NONE;
     private long nextRegionSave = 0L;
     private double prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get();
     private long lastZoomTime = 0L;
     private final List<MapIcon> mapIcons = new ArrayList<>();
     private final List<InWorldMapIcon> inWorldMapIcons = new ArrayList<>();
     private long lastMapIconUpdate = 0L;
-
+    @Nullable
     private Matrix4f worldMatrix;
+    @Nullable
     private Vec3 cameraPos;
+    @Nullable
+    private Matrix4f savedProjectionMatrix;
     private final List<MinimapInfoComponent> sortedComponents = new LinkedList<>();
     // kludge to move potion effects left to avoid rendering over/under minimap in top right of screen
     private static double vanillaEffectsOffsetX;
     private static final KeyMapping.Category KEY_CATEGORY = new KeyMapping.Category(FTBChunksAPI.id("keys"));
-    private Matrix4f savedProjectionMatrix;
 
     public void init() {
         FTBChunksAPI._initClient(new FTBChunksClientAPIImpl());
@@ -214,7 +225,7 @@ public enum FTBChunksClient {
 
     private void waypointManagerAvailable(WaypointManager mgr) {
         // only called in dev mode, testing transient waypoints
-        if (Minecraft.getInstance().level.dimension().equals(Level.OVERWORLD)) {
+        if (ClientUtils.getClientLevel().dimension().equals(Level.OVERWORLD)) {
             mgr.addTransientWaypointAt(new BlockPos(0, 65, 0), "Transient Dev-Mode Waypoint").setColor(0x808080);
         }
     }
@@ -262,11 +273,11 @@ public enum FTBChunksClient {
     }
 
     @ExpectPlatform
-    public static boolean doesKeybindMatch(KeyMapping keyMapping, KeyEvent keyEvent) {
+    public static boolean doesKeybindMatch(@Nullable KeyMapping keyMapping, KeyEvent keyEvent) {
         throw new AssertionError();
     }
 
-    public static boolean doesKeybindMatch(KeyMapping keyMapping, Key key) {
+    public static boolean doesKeybindMatch(@Nullable KeyMapping keyMapping, Key key) {
         return doesKeybindMatch(keyMapping, key.event());
     }
 
@@ -307,7 +318,7 @@ public enum FTBChunksClient {
     }
 
     public void handlePlayerDeath(GlobalPos pos, int deathNumber) {
-        if (FTBChunksClientConfig.DEATH_WAYPOINTS.get() && FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
+        if (FTBChunksClientConfig.DEATH_WAYPOINTS.get() && FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer())) {
             MapManager.getInstance().ifPresent(manager -> {
                 MapDimension dimension = manager.getDimension(pos.dimension());
                 for (WaypointImpl w : dimension.getWaypointManager()) {
@@ -370,7 +381,7 @@ public enum FTBChunksClient {
     }
 
     public EventResult customClick(CustomClickEvent event) {
-        if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
+        if (FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer())) {
             if (event.id().equals(BUTTON_ID_MAP)) {
                 openGui();
                 return EventResult.interruptTrue();
@@ -386,7 +397,7 @@ public enum FTBChunksClient {
     public EventResult keyPressed(Minecraft client, int action, KeyEvent keyEvent) {
         if (action != GLFW.GLFW_PRESS
                 || client.screen != null
-                || !FTBChunksWorldConfig.playerHasMapStage(client.player)
+                || !FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer())
                 || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F3))
         {
             return EventResult.pass();
@@ -492,9 +503,11 @@ public enum FTBChunksClient {
 
         float partialTicks = tickDelta.getGameTimeDeltaPartialTick(false);
 
-        double playerX = Mth.lerp(partialTicks, prevPlayerX, currentPlayerX);
-        double playerY = Mth.lerp(partialTicks, prevPlayerY, currentPlayerY);
-        double playerZ = Mth.lerp(partialTicks, prevPlayerZ, currentPlayerZ);
+//        double playerX = Mth.lerp(partialTicks, prevPlayerX, currentPlayerX);
+//        double playerY = Mth.lerp(partialTicks, prevPlayerY, currentPlayerY);
+//        double playerZ = Mth.lerp(partialTicks, prevPlayerZ, currentPlayerZ);
+        Vec3 playerPos = prevPlayerPos.lerp(currentPlayerPos, partialTicks);
+
         double guiScale = mc.getWindow().getGuiScale();
         int scaledWidth = mc.getWindow().getGuiScaledWidth();
         int scaledHeight = mc.getWindow().getGuiScaledHeight();
@@ -513,11 +526,6 @@ public enum FTBChunksClient {
             MapManager.getInstance().ifPresent(MapManager::saveAllRegions);
         }
 
-//        if (minimapTextureId == -1) {
-//            minimapTextureId = generateTextureId(FTBChunks.MINIMAP_SIZE, FTBChunks.MINIMAP_SIZE);
-//            scheduleMinimapUpdate();
-//        }
-
         float zoom0 = getZoom();
         float zoom = zoom0 / 3.5F;
         MinimapBlurMode blurMode = FTBChunksClientConfig.MINIMAP_BLUR_MODE.get();
@@ -529,22 +537,26 @@ public enum FTBChunksClient {
 //        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
 //        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
 
-        int cx = Mth.floor(playerX) >> 4;
-        int cz = Mth.floor(playerZ) >> 4;
+        XZ playerChunkPos = new XZ(Mth.floor(playerPos.x) >> 4, Mth.floor(playerPos.z) >> 4);
+//        int cx = Mth.floor(playerPos.x) >> 4;
+//        int cz = Mth.floor(playerPos.z) >> 4;
 
-        if (cx != currentPlayerChunkX || cz != currentPlayerChunkZ) {
+        if (!playerChunkPos.equals(currentPlayerChunk)) {
             scheduleMinimapUpdate();
         }
+//        if (cx != currentPlayerChunkX || cz != currentPlayerChunkZ) {
+//            scheduleMinimapUpdate();
+//        }
 
         if (updateMinimapScheduled) {
             updateMinimapScheduled = false;
-            miniMapTexture.get().update(dim.dimension, cx, cz);
-
-            currentPlayerChunkX = cx;
-            currentPlayerChunkZ = cz;
+            miniMapTexture.get().update(dim.dimension, currentPlayerChunk);
+            currentPlayerChunk = playerChunkPos;
+//            currentPlayerChunkX = cx;
+//            currentPlayerChunkZ = cz;
         }
 
-        if (mc.options.hideGui || mc.getDebugOverlay().showDebugScreen() || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
+        if (mc.options.hideGui || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
             return;
         }
 
@@ -587,8 +599,8 @@ public enum FTBChunksClient {
         float border = 0F;
         int alpha = FTBChunksClientConfig.MINIMAP_VISIBILITY.get();
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//        Tesselator tessellator = Tesselator.getInstance();
+//        BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
 //        RenderSystem.enableDepthTest();
 
@@ -598,7 +610,7 @@ public enum FTBChunksClient {
         poseStack.translate(0f, y + halfSizeF);
 
         boolean textAboveMinimap = FTBChunksClientConfig.TEXT_ABOVE_MINIMAP.get();
-        int componentsHeight = getMinimapComponentsTotalHeight(mc, dim, playerX, playerY, playerZ);
+        int componentsHeight = getMinimapComponentsTotalHeight(mc, dim, playerPos);
 
         if (textAboveMinimap) {
             // Move map down if text would go outside the screen
@@ -611,7 +623,7 @@ public enum FTBChunksClient {
 
             poseStack.pushMatrix();
             poseStack.translate(0, -componentsHeight);
-            drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, (int) -halfSizeF - 1, 0, halfSizeD, poseStack, graphics);
+            drawMinimapComponents(mc, dim, playerPos, scaledHeight, x, (int) -halfSizeF - 1, 0, halfSizeD, poseStack, graphics);
             poseStack.popMatrix();
         } else {
             // Move map up if text would go outside the screen
@@ -648,8 +660,8 @@ public enum FTBChunksClient {
 
         // draw the map itself
         float halfSizeBorderF = halfSizeF - border;
-        float offX = 0.5F + (float) ((MathUtils.mod(playerX, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
-        float offZ = 0.5F + (float) ((MathUtils.mod(playerZ, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
+        float offX = 0.5F + (float) ((MathUtils.mod(playerPos.x, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
+        float offZ = 0.5F + (float) ((MathUtils.mod(playerPos.z, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
         float zws = 2F / (FTBChunks.TILES * zoom);
 
         int x0 = (int) -halfSizeBorderF;
@@ -715,11 +727,11 @@ public enum FTBChunksClient {
             drawMinimapCrosshairs(graphics, poseStack, halfSizeBorderF);
         }
 
-        updateMinimapIconsIfNeeded(tickDelta, now, dim, mc);
+        updateMinimapIconsIfNeeded(tickDelta, now, dim);
 
-        renderEntityMinimapIcons(graphics, tickDelta, playerX, playerZ, scale, zoom, halfSizeD, minimapRotation, minimapSize, poseStack);
+        renderEntityMinimapIcons(graphics, tickDelta, playerPos, scale, zoom, halfSizeD, minimapRotation, minimapSize, poseStack);
 
-        renderPlayerMinimapIcon(graphics, rotationLocked, poseStack, mc, minimapSize);
+        renderPlayerMinimapIcon(graphics, rotationLocked, poseStack, minimapSize);
 
         if (FTBChunksClientConfig.MINIMAP_COMPASS.get()) {
             drawMinimapCompassPoints(graphics, minimapRotation, minimapSize);
@@ -729,15 +741,15 @@ public enum FTBChunksClient {
 
         // The minimap info text
         if (!textAboveMinimap) {
-            drawMinimapComponents(mc, dim, playerX, playerY, playerZ, scaledHeight, x, y, minimapSize, halfSizeD, poseStack, graphics);
+            drawMinimapComponents(mc, dim, playerPos, scaledHeight, x, y, minimapSize, halfSizeD, poseStack, graphics);
         }
 
-        if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
-            drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
+        if (FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
+            drawInWorldIcons(graphics, tickDelta, playerPos, scaledWidth, scaledHeight);
         }
     }
 
-    private void updateMinimapIconsIfNeeded(DeltaTracker tickDelta, long now, MapDimension dim, Minecraft mc) {
+    private void updateMinimapIconsIfNeeded(DeltaTracker tickDelta, long now, MapDimension dim) {
         if (lastMapIconUpdate == 0L || (now - lastMapIconUpdate) >= FTBChunksClientConfig.MINIMAP_ICON_UPDATE_TIMER.get()) {
             lastMapIconUpdate = now;
 
@@ -745,7 +757,7 @@ public enum FTBChunksClient {
             MapIconEvent.MINIMAP.invoker().accept(new MapIconEvent(dim.dimension, mapIcons, MapType.MINIMAP));
 
             if (mapIcons.size() >= 2) {
-                mapIcons.sort(new MapIconComparator(mc.player.position(), tickDelta.getGameTimeDeltaPartialTick(false)));
+                mapIcons.sort(new MapIconComparator(ClientUtils.getClientPlayer().position(), tickDelta.getGameTimeDeltaPartialTick(false)));
             }
         }
     }
@@ -760,11 +772,11 @@ public enum FTBChunksClient {
         poseStack.popMatrix();
     }
 
-    private void renderEntityMinimapIcons(GuiGraphics graphics, DeltaTracker tickDelta, double playerX, double playerZ, float scale, float zoom, double halfSizeD, float minimapRotation, int size, Matrix3x2fStack poseStack) {
+    private void renderEntityMinimapIcons(GuiGraphics graphics, DeltaTracker tickDelta, Vec3 playerPos, float scale, float zoom, double halfSizeD, float minimapRotation, int size, Matrix3x2fStack poseStack) {
         for (MapIcon icon : mapIcons) {
             // map icons (waypoints, entities...)
             Vec3 pos = icon.getPos(tickDelta.getGameTimeDeltaPartialTick(false));
-            double distance = MathUtils.dist(playerX, playerZ, pos.x, pos.z);
+            double distance = MathUtils.dist(playerPos.x, playerPos.z, pos.x, pos.z);
             float scaledDist = (float) (distance * scale * zoom);
 
             if (!icon.isVisible(MapType.MINIMAP, distance, scaledDist > halfSizeD)) {
@@ -775,7 +787,7 @@ public enum FTBChunksClient {
                 scaledDist = (float) halfSizeD;
             }
 
-            float angle = (float) (Mth.atan2(playerZ - pos.z, playerX - pos.x) + minimapRotation * Mth.DEG_TO_RAD);
+            float angle = (float) (Mth.atan2(playerPos.z - pos.z, playerPos.x - pos.x) + minimapRotation * Mth.DEG_TO_RAD);
 
             float ws = (float) (size / (32F / icon.getIconScale(MapType.MINIMAP)));
             float wx = Mth.cos(angle) * scaledDist;
@@ -790,12 +802,14 @@ public enum FTBChunksClient {
         }
     }
 
-    private static void renderPlayerMinimapIcon(GuiGraphics graphics, boolean rotationLocked, Matrix3x2fStack poseStack, Minecraft mc, int size) {
+    private static void renderPlayerMinimapIcon(GuiGraphics graphics, boolean rotationLocked, Matrix3x2fStack poseStack, int size) {
         if (rotationLocked || FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED.get()) {
+            Player player = ClientUtils.getClientPlayer();
+
             // pointer icon at the map centre (player position)
             poseStack.pushMatrix();
             if (rotationLocked) {
-                poseStack.rotate((mc.player.getVisualRotationYInDegrees() + 180F) * Mth.DEG_TO_RAD);
+                poseStack.rotate((player.getVisualRotationYInDegrees() + 180F) * Mth.DEG_TO_RAD);
             }
             poseStack.scale(size / 16F, size / 16F);
 
@@ -810,7 +824,7 @@ public enum FTBChunksClient {
                     poseStack.translate(0f, 0.32f);
                 }
                 poseStack.translate(-0.5f, -0.5f);
-                new EntityMapIcon(mc.player, FaceIcon.getFace(mc.player.getGameProfile(), true))
+                new EntityMapIcon(player, FaceIcon.getFace(player.getGameProfile(), true))
                         .draw(MapType.MINIMAP, graphics, 0, 0, 1, 1, false, 255);
             }
 
@@ -818,8 +832,8 @@ public enum FTBChunksClient {
         }
     }
 
-    private int getMinimapComponentsTotalHeight(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ) {
-        var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
+    private int getMinimapComponentsTotalHeight(Minecraft mc, MapDimension dim, Vec3 playerPos) {
+        var context = new MinimapContext(mc, ClientUtils.getClientPlayer(), dim, currentPlayerChunk, playerPos, FTBChunksClientConfig.MINIMAP_SETTINGS.get());
         int sum = 0;
         for (MinimapInfoComponent c : sortedComponents) {
             if (c.shouldRender(context)) {
@@ -829,8 +843,8 @@ public enum FTBChunksClient {
         return sum;
     }
 
-    private void drawMinimapComponents(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ, int scaledHeight, int x, int y, int size, double halfSizeD, Matrix3x2fStack poseStack, GuiGraphics graphics) {
-        var context = new MinimapContext(mc, mc.player, dim, XZ.of(currentPlayerChunkX, currentPlayerChunkZ), new Vec3(playerX, playerY, playerZ), FTBChunksClientConfig.MINIMAP_SETTINGS.get());
+    private void drawMinimapComponents(Minecraft mc, MapDimension dim, Vec3 playerPos, int scaledHeight, int x, int y, int size, double halfSizeD, Matrix3x2fStack poseStack, GuiGraphics graphics) {
+        var context = new MinimapContext(mc, ClientUtils.getClientPlayer(), dim, currentPlayerChunk, playerPos, FTBChunksClientConfig.MINIMAP_SETTINGS.get());
         var fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
 
         int yOffset = 0;
@@ -867,18 +881,23 @@ public enum FTBChunksClient {
         }
     }
 
-    private void drawInWorldIcons(Minecraft mc, GuiGraphics graphics, DeltaTracker tickDelta, double playerX, double playerY, double playerZ, int scaledWidth, int scaledHeight) {
+    private void drawInWorldIcons(GuiGraphics graphics, DeltaTracker tickDelta, Vec3 playerPos, int scaledWidth, int scaledHeight) {
+        if (worldMatrix == null || cameraPos == null) {
+            return;
+        }
+
         float scaledWidth2 = scaledWidth / 2F;
         float scaledHeight2 = scaledHeight / 2F;
         InWorldMapIcon focusedIcon = null;
 
+        Player player = ClientUtils.getClientPlayer();
         for (MapIcon icon : mapIcons) {
             Vec3 pos = icon.getPos(tickDelta.getGameTimeDeltaPartialTick(false));
-            double playerDist = MathUtils.dist(pos.x, pos.y, pos.z, playerX, playerY, playerZ);
+            double playerDist = pos.distanceTo(playerPos); //MathUtils.dist(pos.x, pos.y, pos.z, playerX, playerY, playerZ);
 
             if (icon.isVisible(MapType.WORLD_ICON, playerDist, false)) {
                 Vector4f v = new Vector4f((float) (pos.x - cameraPos.x), (float) (pos.y - cameraPos.y), (float) (pos.z - cameraPos.z), 1F);
-                double lookAngle = mc.player.getLookAngle().dot(new Vec3(v.x(), v.y(), v.z()).normalize());
+                double lookAngle = player.getLookAngle().dot(new Vec3(v.x(), v.y(), v.z()).normalize());
                 if (lookAngle > 0) {  // icon in front of the player
                     worldMatrix.transform(v);
                     v.div(v.w());
@@ -1014,13 +1033,14 @@ public enum FTBChunksClient {
                     double distance = Math.sqrt(waypoint.getDistanceSq(player));
 
                     if (distance > fadeOutDistanceP && distance <= FTBChunksClientConfig.WAYPOINT_MAX_DISTANCE.get()) {
-                        int alpha = 150;
-                        if (distance < fadeOutDistance) {
-                            alpha = (int) (alpha * ((distance - fadeOutDistanceP) / (fadeOutDistance - fadeOutDistanceP)));
-                        }
+                        int alpha = distance < fadeOutDistance ?
+                                (int) (150 * ((distance - fadeOutDistanceP) / (fadeOutDistance - fadeOutDistanceP))) :
+                                150;
                         if (alpha > 0) {
-                            waypoint.getMapIcon().setAlpha(alpha);
-                            visibleWaypoints.add(waypoint.getMapIcon());
+                            waypoint.getMapIcon().ifPresent(icon -> {
+                                icon.setAlpha(alpha);
+                                visibleWaypoints.add(icon);
+                            });
                         }
                     }
                 }
@@ -1046,12 +1066,14 @@ public enum FTBChunksClient {
 
         MapManager.getInstance().ifPresent(manager -> {
             if (mc.player != null) {
-                prevPlayerX = currentPlayerX;
-                prevPlayerY = currentPlayerY;
-                prevPlayerZ = currentPlayerZ;
-                currentPlayerX = mc.player.getX();
-                currentPlayerY = mc.player.getY();
-                currentPlayerZ = mc.player.getZ();
+                prevPlayerPos = currentPlayerPos;
+                currentPlayerPos = mc.player.position();
+//                prevPlayerX = currentPlayerX;
+//                prevPlayerY = currentPlayerY;
+//                prevPlayerZ = currentPlayerZ;
+//                currentPlayerX = mc.player.getX();
+//                currentPlayerY = mc.player.getY();
+//                currentPlayerZ = mc.player.getZ();
             }
 
             Level level = Objects.requireNonNull(mc.level);
@@ -1102,7 +1124,7 @@ public enum FTBChunksClient {
             MapDimension.getCurrent().ifPresent(mapDimension -> {
                 for (Waypoint w : mapDimension.getWaypointManager()) {
                     if (!w.isHidden() || !event.getMapType().isMinimap()) {
-                        event.add(w.getMapIcon());
+                        w.getMapIcon().ifPresent(event::add);
                     }
                 }
             });
@@ -1180,12 +1202,7 @@ public enum FTBChunksClient {
 
     public void rerender(BlockPos pos) {
         ChunkPos chunkPos = new ChunkPos(pos);
-        IntOpenHashSet set = rerenderCache.get(chunkPos);
-
-        if (set == null) {
-            set = new IntOpenHashSet();
-            rerenderCache.put(chunkPos, set);
-        }
+        IntOpenHashSet set = rerenderCache.computeIfAbsent(chunkPos, k -> new IntOpenHashSet());
 
         if (set.add((pos.getX() & 15) + ((pos.getZ() & 15) * 16))) {
             if (FTBChunksClientConfig.DEBUG_INFO.get()) {
@@ -1241,7 +1258,7 @@ public enum FTBChunksClient {
         });
     }
 
-    public void updateTrackedPlayerPos(GameProfile profile, BlockPos pos) {
+    public void updateTrackedPlayerPos(GameProfile profile, @Nullable BlockPos pos) {
         // called periodically when a player (outside of vanilla entity tracking range) that this client is tracking moves
         boolean changed = false;
         if (pos == null) {
@@ -1263,7 +1280,7 @@ public enum FTBChunksClient {
     }
 
     public List<Component> getChunkSummary() {
-        if (generalChunkData == null) return List.of();
+        if (generalChunkData == GeneralChunkData.NONE) return List.of();
 
         List<Component> list = new ArrayList<>(4);
 
@@ -1286,6 +1303,7 @@ public enum FTBChunksClient {
         return generalChunkData;
     }
 
+    @Nullable
     public static Waypoint addWaypoint(String name, GlobalPos position, int color) {
         return FTBChunksAPI.clientApi().getWaypointManager(position.dimension()).map(mgr -> {
             Waypoint wp = mgr.addWaypointAt(position.pos(), name);

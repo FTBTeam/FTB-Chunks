@@ -1,23 +1,31 @@
 package dev.ftb.mods.ftbchunks.neoforge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksTags;
 import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
+import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.event.entity.EntityEvent;
 import net.neoforged.neoforge.event.entity.EntityMobGriefingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 @Mod(FTBChunks.MOD_ID)
-public class FTBChunksForge {
-	public FTBChunksForge(IEventBus modEventBus) {
+public class FTBChunksNeoForge {
+	public FTBChunksNeoForge(IEventBus modEventBus) {
 		NeoForge.EVENT_BUS.addListener(this::entityInteractSpecific);
 		NeoForge.EVENT_BUS.addListener(this::mobGriefing);
+		NeoForge.EVENT_BUS.addListener(this::enteringSection);
 
 		ForceLoading.setup(modEventBus);
 
@@ -50,6 +58,16 @@ public class FTBChunksForge {
 			if (cc != null && !cc.allowMobGriefing()) {
 				event.setCanGrief(false);
 			}
+		}
+	}
+
+	private void enteringSection(EntityEvent.EnteringSection event) {
+		if (event.getEntity() instanceof ServerPlayer sp && !(event.getEntity() instanceof FakePlayer)
+				&& event.didChunkChange() && FTBTeamsAPI.api().isManagerLoaded() && FTBChunksAPI.api().isManagerLoaded()) {
+			FTBTeamsAPI.api().getManager().getTeamForPlayerID(event.getEntity().getUUID()).ifPresent(team -> {
+				ChunkTeamDataImpl data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
+				data.checkForChunkChange(sp, event.getNewPos().x(), event.getNewPos().z());
+			});
 		}
 	}
 }

@@ -31,10 +31,11 @@ public record SyncTXPacket(RegionSyncKey key, int offset, int total, byte[] data
 		context.queue(() -> {
 			ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
 			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
-
-			for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
-				if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
-					NetworkManager.sendToPlayer(p1, message);
+			if (teamData != null) {
+				for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
+					if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
+						NetworkManager.sendToPlayer(p1, message);
+					}
 				}
 			}
 		});

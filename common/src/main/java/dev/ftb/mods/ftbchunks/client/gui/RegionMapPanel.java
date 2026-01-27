@@ -12,14 +12,15 @@ import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,17 +96,17 @@ public class RegionMapPanel extends Panel {
 			add(new MapTileWidget(this, region));
 		}
 
-		Minecraft mc = Minecraft.getInstance();
+		Player player = ClientUtils.getClientPlayer();
 
 		mapIcons.clear();
 		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMap.dimension.dimension, mapIcons, MapType.LARGE_MAP));
 
 		if (mapIcons.size() >= 2) {
-			mapIcons.sort(new MapIconComparator(mc.player.position(), 1F));
+			mapIcons.sort(new MapIconComparator(player.position(), 1F));
 		}
 
 		for (MapIcon icon : mapIcons) {
-			if (icon.isVisible(MapType.LARGE_MAP, MathUtils.dist(mc.player.getX(), mc.player.getZ(), icon.getPos(1F).x, icon.getPos(1F).z), false)) {
+			if (icon.isVisible(MapType.LARGE_MAP, MathUtils.dist(player.getX(), player.getZ(), icon.getPos(1F).x, icon.getPos(1F).z), false)) {
 				add(new MapIconWidget(this, icon));
 			}
 		}

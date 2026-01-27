@@ -85,8 +85,10 @@ public interface MapIcon {
      */
     default void addTooltip(TooltipList list) {
         Player player = Minecraft.getInstance().player;
-        Vec3 pos = getPos(1F);
-        list.styledString(String.format("%,d m", Mth.ceil(MathUtils.dist(player.getX(), player.getZ(), pos.x, pos.z))), ChatFormatting.GRAY);
+        if (player != null) {
+            Vec3 pos = getPos(1F);
+            list.styledString(String.format("%,d m", Mth.ceil(MathUtils.dist(player.getX(), player.getZ(), pos.x, pos.z))), ChatFormatting.GRAY);
+        }
     }
 
     /**
@@ -125,9 +127,9 @@ public interface MapIcon {
      */
     class SimpleMapIcon implements MapIcon {
         protected final Vec3 pos;
-        protected Icon icon;
+        protected Icon<?> icon;
 
-        public SimpleMapIcon(Vec3 pos, Icon icon) {
+        public SimpleMapIcon(Vec3 pos, Icon<?> icon) {
             this.pos = pos;
             this.icon = icon;
         }
@@ -141,11 +143,11 @@ public interface MapIcon {
             return pos;
         }
 
-        public Icon getIcon() {
+        public Icon<?> getIcon() {
             return icon;
         }
 
-        public void setIcon(Icon icon) {
+        public void setIcon(Icon<?> icon) {
             this.icon = icon;
         }
 

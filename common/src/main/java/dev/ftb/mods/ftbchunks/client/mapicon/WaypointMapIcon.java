@@ -16,16 +16,17 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ColorSelectorPanel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
@@ -101,7 +102,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
         contextMenu.add(makeTitleMenuItem());
         contextMenu.add(ContextMenuItem.SEPARATOR);
 
-        LocalPlayer player = Minecraft.getInstance().player;
+        Player player = ClientUtils.getClientPlayer();
 
         WaypointShareMenu.makeShareMenu(player, waypoint).ifPresent(contextMenu::add);
 
@@ -160,7 +161,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
     private ContextMenuItem makeTitleMenuItem() {
         return new ContextMenuItem(waypoint.getDisplayName(), icon, null) {
             @Override
-            public Icon getIcon() {
+            public Icon<?> getIcon() {
                 return icon;
             }
         };
@@ -199,17 +200,15 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
         }
 
         if (!outsideVisibleArea && mapType.isWorldIcon()) {
+            Player player = ClientUtils.getClientPlayer();
             Minecraft mc = Minecraft.getInstance();
-            String ds = Mth.ceil(MathUtils.dist(pos.x, pos.y, pos.z, mc.player.getX(), mc.player.getY(), mc.player.getZ())) + " m";
+            String ds = Mth.ceil(MathUtils.dist(pos.x, pos.y, pos.z, player.getX(), player.getY(), player.getZ())) + " m";
             int nw = mc.font.width(waypoint.getDisplayName());
             int dw = mc.font.width(ds);
             IconHelper.renderIcon(Color4I.DARK_GRAY.withAlpha(200), graphics, x + (w - nw) / 2 - 2, y - 14, nw + 4, 12);
             IconHelper.renderIcon(Color4I.DARK_GRAY.withAlpha(200), graphics, x + (w - dw) / 2 - 2, y + 18, dw + 4, 12);
             graphics.drawString(mc.font, waypoint.getDisplayName(), x + (w - nw) / 2, y - 12, 0xFFFFFFFF, true);
             graphics.drawString(mc.font, ds, x + (w - dw) / 2, y + 20, 0xFFFFFFFF, true);
-            // TODO: [21.8] this might just not be needed but not confirmed.
-//            RenderSystem.enableBlend();
-//            RenderSystem.enableDepthTest();
         }
     }
 }

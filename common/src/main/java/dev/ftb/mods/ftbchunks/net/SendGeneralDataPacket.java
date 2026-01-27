@@ -49,6 +49,8 @@ public record SendGeneralDataPacket(GeneralChunkData data) implements CustomPack
 	}
 
 	public record GeneralChunkData(int claimed, int loaded, int maxClaimChunks, int maxForceLoadChunks) {
+		public static final GeneralChunkData NONE = new GeneralChunkData(0, 0, 0, 0);
+
 		public static StreamCodec<FriendlyByteBuf, GeneralChunkData> STREAM_CODEC = StreamCodec.composite(
 				ByteBufCodecs.VAR_INT, GeneralChunkData::claimed,
 				ByteBufCodecs.VAR_INT, GeneralChunkData::loaded,

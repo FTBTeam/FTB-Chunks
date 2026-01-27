@@ -29,7 +29,7 @@ public class BiomeComponent implements MinimapInfoComponent {
 
     @Override
     public boolean shouldRender(MinimapContext context) {
-        Holder<Biome> biome = context.minecraft().level.getBiome(context.minecraft().player.blockPosition());
+        Holder<Biome> biome = context.clientLevel().getBiome(context.clientPlayer().blockPosition());
         if (biome.unwrapKey().isPresent()) {
             biomeKey = biome.unwrapKey().get();
             return true;

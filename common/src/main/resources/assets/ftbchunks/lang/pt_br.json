@@ -87,7 +87,7 @@
   "ftbchunks.minimap.text_above_minimap": "Mostrar texto acima do minimapa",
   "sidebar_button.ftbchunks.chunks": "FTB Chunks: Mapa",
   "sidebar_button.ftbchunks.claim_chunks": "FTB Chunks: Gerenciador de Reivindicações",
-  "key.categories.ftbchunks": "FTB Chunks",
+  "key.category.ftbchunks.keys": "FTB Chunks",
   "key.ftbchunks.map": "Abrir Mapa",
   "key.ftbchunks.claim_manager": "Abrir Gerenciador de Reivindicações",
   "key.ftbchunks.minimap.zoomIn": "Aumentar Zoom do Minimapa",

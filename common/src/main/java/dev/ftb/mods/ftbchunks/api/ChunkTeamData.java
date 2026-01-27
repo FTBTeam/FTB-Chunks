@@ -24,27 +24,27 @@ public interface ChunkTeamData {
     ClaimedChunkManager getManager();
 
     /**
-     * Convenience method to get the FTB Teams manager instances.
+     * Convenience method to get the FTB Teams manager instance.
      * @return the team manager
      */
     TeamManager getTeamManager();
 
     /**
-     * Get the team that this data pertains to.
+     * Get the FTB Teams team that this data pertains to.
      *
      * @return the team
      */
     Team getTeam();
 
     /**
-     * Get a collection of all the chunks this team currently has claimed.
+     * Get an immutable collection of all the chunks this team currently has claimed.
      *
      * @return all the claimed chunks for this team
      */
     Collection<? extends ClaimedChunk> getClaimedChunks();
 
     /**
-     * Get a collection of all the chunks this team currently has force-loading enabled for. Note that the chunks
+     * Get an immutable collection of all the chunks this team currently has force-loading enabled for. Note that the chunks
      * are not necessarily force-loaded right now, depending on player online status and server offline force-loading
      * settings; use {@link ClaimedChunk#isActuallyForceLoaded()} to verify this.
      *

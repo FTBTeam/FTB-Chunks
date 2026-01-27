@@ -58,6 +58,9 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 		if (chunkTeamData == null) {
 			chunkTeamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
 		}
+		if (chunkTeamData == null) {
+			return;
+		}
 
 		ChunkTeamData data = chunkTeamData;
 

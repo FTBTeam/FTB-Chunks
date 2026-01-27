@@ -87,7 +87,7 @@
   "ftbchunks.minimap.text_above_minimap": "Mostrar texto sobre el minimapa",
   "sidebar_button.ftbchunks.chunks": "FTB Chunks: Mapa",
   "sidebar_button.ftbchunks.claim_chunks": "FTB Chunks: Gestor de protecciones",
-  "key.categories.ftbchunks": "FTB Chunks",
+  "key.category.ftbchunks.keys": "FTB Chunks",
   "key.ftbchunks.map": "Abrir mapa",
   "key.ftbchunks.claim_manager": "Abrir gestor de protecciones",
   "key.ftbchunks.minimap.zoomIn": "Acercar minimapa",

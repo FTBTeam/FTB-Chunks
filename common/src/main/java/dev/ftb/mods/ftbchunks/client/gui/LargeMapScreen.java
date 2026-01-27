@@ -26,6 +26,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
 import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -162,12 +163,6 @@ public class LargeMapScreen extends BaseScreen {
 
         add(clearDeathpointsButton = new ClearDeathPointButton(this));
 
-        /*
-		add(syncButton = new SimpleButton(this, new TranslationTextComponent("ftbchunks.gui.sync"), Icons.REFRESH, (b, m) -> {
-			dimension.sync();
-		}));
-		 */
-
         Component dimName = TextComponentUtils.translatedDimension(dimension.dimension);
         List<ContextMenuItem> dimItems = AddWaypointOverlay.createDimContextItems(key -> {
             dimension = dimension.getManager().getDimension(key);
@@ -186,7 +181,7 @@ public class LargeMapScreen extends BaseScreen {
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );
 
-        if (Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+        if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
                     Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
                     (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
@@ -199,25 +194,8 @@ public class LargeMapScreen extends BaseScreen {
         return MapManager.getInstance().orElseThrow().getDimension(dimension.dimension).getWaypointManager();
     }
 
-    private void cycleVisibleDimension(MouseButton m) {
-        try {
-            List<MapDimension> list = new ArrayList<>(dimension.getManager().getDimensions().values());
-            int i = list.indexOf(dimension);
-
-            if (i != -1) {
-                dimension = list.get(MathUtils.mod(i + (m.isLeft() ? 1 : -1), list.size()));
-                refreshWidgets();
-                movedToPlayer = false;
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
     @Override
     public void alignWidgets() {
-        // alliesButton.setPosAndSize(1, 19, 16, 16);
-        // syncButton.setPosAndSize(1, 55, 16, 16);
-
         claimChunksButton.setPosAndSize(1, 1, 16, 16);
         waypointManagerButton.setPosAndSize(1, 19, 16, 16);
         infoButton.setPosAndSize(1, 37, 16, 16);
@@ -247,7 +225,7 @@ public class LargeMapScreen extends BaseScreen {
             prevMouseY = getMouseY();
             return true;
         } else if (button.isRight()) {
-            int fixedY = Math.max(regionPanel.blockY, Minecraft.getInstance().level.getMinY());
+            int fixedY = Math.max(regionPanel.blockY, ClientUtils.getClientLevel().getMinY());
             final BlockPos pos = new BlockPos(regionPanel.blockX, fixedY, regionPanel.blockZ);
             GlobalPos globalPos = GlobalPos.of(dimension.dimension, pos);
             List<ContextMenuItem> list = new ArrayList<>();
@@ -332,7 +310,7 @@ public class LargeMapScreen extends BaseScreen {
     @Override
     public boolean drawDefaultBackground(GuiGraphics graphics) {
         if (!movedToPlayer) {
-            Player p = Minecraft.getInstance().player;
+            Player p = ClientUtils.getClientPlayer();
             regionPanel.resetScroll();
             regionPanel.scrollTo(p.getX() / 512D, p.getZ() / 512D);
             movedToPlayer = true;

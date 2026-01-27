@@ -7,11 +7,13 @@ import net.minecraft.client.input.KeyEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class FTBChunksClientImpl {
-	public static void registerPlatform() {
-		NeoForge.EVENT_BUS.register(FTBChunksClientImpl.class);
+	// arch expectplatform
+	@SuppressWarnings("unused")
+    public static void registerPlatform() {
 	}
 
 	@SubscribeEvent
@@ -20,8 +22,10 @@ public class FTBChunksClientImpl {
 				event.getLevelRenderState().cameraRenderState, Minecraft.getInstance().getDeltaTracker());
 	}
 
-	public static boolean doesKeybindMatch(KeyMapping keyMapping, KeyEvent event) {
-		if (keyMapping.matches(event)) {
+	// arch expectplatform
+	@SuppressWarnings("unused")
+    public static boolean doesKeybindMatch(@Nullable KeyMapping keyMapping, KeyEvent event) {
+		if (keyMapping != null && keyMapping.matches(event)) {
 			return switch (keyMapping.getKeyModifier()) {
 				case NONE -> event.modifiers() == 0;
 				case SHIFT -> (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;

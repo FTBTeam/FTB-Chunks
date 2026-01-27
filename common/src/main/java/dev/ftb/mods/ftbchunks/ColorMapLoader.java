@@ -1,9 +1,6 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
@@ -27,7 +24,7 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 
 	@Override
 	protected JsonObject prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
-		Gson gson = new GsonBuilder().setLenient().create();
+		Gson gson = new GsonBuilder().setStrictness(Strictness.LENIENT).create();
 		JsonObject object = new JsonObject();
 
 		for (String namespace : resourceManager.getNamespaces()) {
@@ -60,30 +57,28 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 			Block block = entry.getValue();
 			Identifier id = entry.getKey().identifier();
 
-			if (id != null) {
-				if (block instanceof AirBlock
-						|| block instanceof BushBlock
-						|| block instanceof FireBlock
-						|| block instanceof ButtonBlock
-						|| block instanceof TorchBlock && !(block instanceof RedstoneTorchBlock)
-						|| block instanceof StainedGlassPaneBlock
-				) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.IGNORED);
-				} else if (block instanceof GrassBlock) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.GRASS);
-				} else if (block instanceof LeavesBlock || block instanceof VineBlock) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.FOLIAGE);
-				} else if (block instanceof FlowerPotBlock) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x683A2D)));
-				} else if (FTBCUtils.isRail(block)) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
-				} else if (block.defaultMapColor() != null) {
-					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMapColor().col)));
-				} else {
-					BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.RED));
-				}
-			}
-		}
+            if (block instanceof AirBlock
+                    || block instanceof BushBlock
+                    || block instanceof FireBlock
+                    || block instanceof ButtonBlock
+                    || block instanceof TorchBlock
+                    || block instanceof StainedGlassPaneBlock
+            ) {
+                BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.IGNORED);
+            } else if (block instanceof GrassBlock) {
+                BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.GRASS);
+            } else if (block instanceof LeavesBlock || block instanceof VineBlock) {
+                BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.FOLIAGE);
+            } else if (block instanceof FlowerPotBlock) {
+                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x683A2D)));
+            } else if (FTBCUtils.isRail(block)) {
+                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
+            } else if (block.defaultMapColor() != null) {
+                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMapColor().col)));
+            } else {
+                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.RED));
+            }
+        }
 
 		// Fire event Pre
 

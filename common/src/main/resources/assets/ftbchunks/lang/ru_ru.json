@@ -85,7 +85,7 @@
   "ftbchunks.minimap.pointer_icon_mode.face": "Иконка лица",
   "sidebar_button.ftbchunks.chunks": "FTB Chunks: Карта",
   "sidebar_button.ftbchunks.claim_chunks": "FTB Chunks: Управление приватами",
-  "key.categories.ftbchunks": "FTB Chunks",
+  "key.category.ftbchunks.keys": "FTB Chunks",
   "key.ftbchunks.map": "Открыть карту",
   "key.ftbchunks.claim_manager": "Открыть управление захватом",
   "key.ftbchunks.minimap.zoomIn": "Увеличить масштаб миникарты",

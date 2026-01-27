@@ -11,15 +11,10 @@ import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractButtonListScreen;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
-import dev.ftb.mods.ftblibrary.client.gui.widget.Button;
-import dev.ftb.mods.ftblibrary.client.gui.widget.ColorSelectorPanel;
-import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
-import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
-import dev.ftb.mods.ftblibrary.client.gui.widget.TextField;
-import dev.ftb.mods.ftblibrary.client.gui.widget.ToggleableButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.*;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientTextComponentUtils;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -29,28 +24,24 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.lwjgl.glfw.GLFW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 import static dev.ftb.mods.ftblibrary.util.TextComponentUtils.hotkeyTooltip;
 
 public class WaypointEditorScreen extends AbstractButtonListScreen {
-    private static final Logger log = LoggerFactory.getLogger(WaypointEditorScreen.class);
     private final Map<ResourceKey<Level>, Boolean> collapsed = new HashMap<>();
     private final Map<ResourceKey<Level>, List<WaypointImpl>> waypoints = new HashMap<>();
     private final Button buttonCollapseAll, buttonExpandAll;
@@ -135,7 +126,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
     @Override
     public void addButtons(Panel panel) {
         if (waypoints.isEmpty()) {
-            panel.add(new NoWayPoints(panel, Component.empty(), Icons.REMOVE));
+            panel.add(new NoWayPoints(panel));
         }
 
         waypoints.forEach((key, value) -> {
@@ -149,16 +140,14 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
     }
 
     protected static class NoWayPoints extends Button {
-
         private static final Component NO_WAYPOINTS = Component.translatable("ftbchunks.gui.no_waypoints");
 
-        public NoWayPoints(Panel panel, Component t, Icon i) {
-            super(panel);
+        public NoWayPoints(Panel panel) {
+            super(panel, Component.empty(), Icons.REMOVE);
         }
 
         @Override
         public void onClicked(MouseButton button) {
-
         }
 
         @Override
@@ -273,7 +262,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
 
             add(nameField = new TextField(this).setTrim().setColor(Color4I.rgb(wp.getColor())).addFlags(Theme.SHADOW));
 
-            LocalPlayer player = Minecraft.getInstance().player;
+            Player player = ClientUtils.getClientPlayer();
             String distStr = player.level().dimension().equals(wp.getDimension()) ?
                     String.format("%.1fm", Math.sqrt(wp.getDistanceSq(player))) : "";
             add(distField = new TextField(this).setText(distStr).setColor(Color4I.WHITE));
@@ -377,7 +366,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
                     }));
                 }
                 list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> openWaypointEditPanel()));
-                if (Minecraft.getInstance().player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {  // permissions are checked again on server!
+                if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.ofItem(Items.ENDER_PEARL), btn -> {
                         NetworkManager.sendToServer(new TeleportFromMapPacket(wp.getPos().above(), false, wp.getDimension()));
                         closeGui(false);
@@ -419,7 +408,7 @@ public class WaypointEditorScreen extends AbstractButtonListScreen {
         private ContextMenuItem makeTitleMenuItem() {
             return new ContextMenuItem(wp.getDisplayName(), Icon.empty(), null) {
                 @Override
-                public Icon getIcon() {
+                public Icon<?> getIcon() {
                     return wp.getType().getIcon().withTint(Color4I.rgb(wp.getColor()));
                 }
             };

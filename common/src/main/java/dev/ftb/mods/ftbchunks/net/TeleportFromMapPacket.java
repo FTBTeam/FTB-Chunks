@@ -64,8 +64,7 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 					y1 = blockPos.getY() + 1;
 				}
 
-                // TODO: [21.8] false was a guess, no clue what the set does. Looks like how it keeps a specific velocity?
-				p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), false);
+				p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), true);
 			}
 		});
 	}

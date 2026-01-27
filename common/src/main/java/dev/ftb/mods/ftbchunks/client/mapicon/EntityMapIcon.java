@@ -42,7 +42,9 @@ public class EntityMapIcon implements MapIcon {
 
     @Override
     public boolean isVisible(MapType mapType, double distanceToPlayer, boolean outsideVisibleArea) {
-        return !mapType.isWorldIcon() && (entity instanceof AbstractClientPlayer || !outsideVisibleArea) && FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(entity.getType().arch$registryName().toString(), true);
+        return !mapType.isWorldIcon()
+                && (entity instanceof AbstractClientPlayer || !outsideVisibleArea)
+                && FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(entity.getType().arch$registryName().toString(), true);
     }
 
     @Override

@@ -1,14 +1,14 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
+import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.util.NameMap;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GameTimeComponent implements MinimapInfoComponent {
-
     public static final Identifier ID = FTBChunksAPI.id("game_time");
     private static final Icon<?> CLOCK_ICON = ItemIcon.ofItem(Items.CLOCK);
 
@@ -37,23 +36,21 @@ public class GameTimeComponent implements MinimapInfoComponent {
             return;
         }
 
-        Minecraft minecraft = context.minecraft();
-
-        long time = minecraft.level.getDayTime() % 24000L;
+        long time = ClientUtils.getClientLevel().getDayTime() % 24000L;
         int hours = (int) (time / 1000L);
         int minutes = (int) ((time % 1000L) * 60L / 1000L);
         int hourTime = hours + 6;
         if (hourTime >= 24) {
             hourTime -= 24;
         }
-        drawCenteredText(minecraft.font, graphics, Component.literal(RealTimeComponent.createTimeString(hourTime, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(font, graphics, Component.literal(RealTimeComponent.createTimeString(hourTime, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name()))), 0);
     }
 
 
     @Override
     public int height(MinimapContext context) {
         String setting = context.getSetting(this);
-        return !setting.equals(ClockedTimeMode.CLOCK.name()) ? MinimapInfoComponent.super.height(context) : 10;
+        return setting.equals(ClockedTimeMode.CLOCK.name()) ? 10 : MinimapInfoComponent.super.height(context);
     }
 
     @Override

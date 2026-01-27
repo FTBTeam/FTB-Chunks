@@ -12,6 +12,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ToggleableButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -65,7 +66,7 @@ public class SliceCreationGUI extends BaseScreen {
         this.imageSizeX.setAmount(16);
         this.imageSizeY.setAmount(16);
 
-        Entity entity = entityType.create(Minecraft.getInstance().level, EntitySpawnReason.LOAD);
+        Entity entity = entityType.create(ClientUtils.getClientLevel(), EntitySpawnReason.LOAD);
         if (!(entity instanceof LivingEntity)) {
             throw new IllegalArgumentException("Entity type must be a LivingEntity");
         }
@@ -224,9 +225,8 @@ public class SliceCreationGUI extends BaseScreen {
             this.offsetYText = new IntTextBox(this);
             offsetXText.setAmount(0);
             offsetYText.setAmount(0);
-            this.toggleOverlay = new ToggleableButton(this, overlay, Icons.ACCEPT, Icons.REMOVE, (button, newState) -> {
-                overlay = newState;
-            });
+            this.toggleOverlay = new ToggleableButton(this, overlay, Icons.ACCEPT, Icons.REMOVE,
+                    (button, newState) -> overlay = newState);
         }
 
         @Override
@@ -302,7 +302,7 @@ public class SliceCreationGUI extends BaseScreen {
             super(panel, Component.literal(""), Icons.COLOR_BLANK, null);
             color4I = activeValue;
             setConsumer((button, mouseButton) -> {
-                int random = (int) Mth.randomBetween(Minecraft.getInstance().level.random, 0, 255);
+                int random = Mth.randomBetweenInclusive(ClientUtils.getClientLevel().random, 0, 255);
                 color4I = Color4I.get256(random);
             });
         }

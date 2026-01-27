@@ -13,7 +13,6 @@ public class FTBCUtils {
 		throw new AssertionError();
 	}
 
-
 	/**
 	 * Used after various events have been cancelled server-side; client may already have updated the held item for the
 	 * player, but it needs to be brought back in sync with the server.

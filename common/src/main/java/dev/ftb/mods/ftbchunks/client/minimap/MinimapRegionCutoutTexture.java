@@ -29,7 +29,7 @@ public class MinimapRegionCutoutTexture {
         Minecraft.getInstance().getTextureManager().register(ID, texture);
     }
 
-    public void update(ResourceKey<Level> key, int chunkX, int chunkZ) {
+    public void update(ResourceKey<Level> key, XZ chunkPos) {
         if (MapDimension.getCurrent().isEmpty()) {
             return;
         }
@@ -45,8 +45,8 @@ public class MinimapRegionCutoutTexture {
         // Time to update.
         for (int mz = 0; mz < FTBChunks.TILES; mz++) {
             for (int mx = 0; mx < FTBChunks.TILES; mx++) {
-                int ox = chunkX + mx - FTBChunks.TILE_OFFSET;
-                int oz = chunkZ + mz - FTBChunks.TILE_OFFSET;
+                int ox = chunkPos.x() + mx - FTBChunks.TILE_OFFSET;
+                int oz = chunkPos.z() + mz - FTBChunks.TILE_OFFSET;
 
                 MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
                 DynamicTexture dynamicTexture = region.regionTexture().bakedTexture();

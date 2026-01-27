@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.api;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -55,6 +56,7 @@ public interface ClaimResult {
 	 *
 	 * @return a successful outcome
 	 */
+	@Nullable
 	static ClaimResult success() {
 		return null;
 	}
@@ -81,7 +83,7 @@ public interface ClaimResult {
 		}
 
 		public static Optional<StandardProblem> forName(String name) {
-			return Optional.ofNullable(NAME_MAP.get(name));
+			return Optional.ofNullable(NAME_MAP.getNullable(name));
 		}
 
 		public MutableComponent getMessage() {

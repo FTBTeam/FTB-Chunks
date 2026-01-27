@@ -113,13 +113,13 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 			}
 
 			ServerChunkCache cache = level.getChunkSource();
-			ChunkPos chunkPos = pos.chunkPos();
 
 			if (cache != null) {
+				ChunkPos chunkPos = pos.chunkPos();
 				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
 				cache.save(false);
 			} else {
-				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x() + ", " + pos.z() + " @ " + pos.dimension().identifier() + "!");
+                FTBChunks.LOGGER.warn("Failed to force-load chunk {}, {} @ {}!", pos.x(), pos.z(), pos.dimension().identifier());
 			}
 		}
 	}

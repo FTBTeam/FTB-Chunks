@@ -13,6 +13,7 @@ import net.minecraft.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -62,7 +63,7 @@ public class PistonHelper {
         return false;
     }
 
-    private static boolean prevent(PrivacyProperty editProp, ClaimedChunk srcClaim, ClaimedChunk dstClaim) {
+    private static boolean prevent(PrivacyProperty editProp, @Nullable ClaimedChunk srcClaim, @Nullable ClaimedChunk dstClaim) {
         if (srcClaim != dstClaim && dstClaim != null) {
             UUID srcId = srcClaim == null ? Util.NIL_UUID : srcClaim.getTeamData().getTeam().getTeamId();
             UUID dstId = dstClaim.getTeamData().getTeam().getTeamId();

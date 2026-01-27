@@ -7,10 +7,10 @@ import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
 import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
@@ -56,7 +56,7 @@ public class WaypointAddScreen extends BaseScreen {
                             .ifPresent(mgr -> mgr.removeWaypointAt(waypointLocation.pos()));
                 }
                 Waypoint wp = FTBChunksClient.addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba());
-                Minecraft.getInstance().player.displayClientMessage(
+                ClientUtils.getClientPlayer().displayClientMessage(
                         Component.translatable("ftbchunks.waypoint_added",
                                 wp.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)
                         ), true);

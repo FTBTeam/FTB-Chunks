@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.Strictness;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
@@ -62,8 +63,9 @@ import java.util.*;
 public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
-	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
+	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setStrictness(Strictness.LENIENT).create();
 
+	@Nullable
 	public static FTBChunks instance;
 
 	public static final int TILES = 15;
@@ -119,7 +121,9 @@ public class FTBChunks {
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
 		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
-		EntityEvent.ENTER_SECTION.register(this::enterSection);
+		// this doesn't work - Arch hook missing?
+//		EntityEvent.ENTER_SECTION.register(this::enterSection);
+
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		EntityEvent.LIVING_HURT.register(this::onLivingHurt);
 

@@ -45,12 +45,14 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	private static final Long2ObjectMap<UUID> EMPTY_CHUNKS = Long2ObjectMaps.emptyMap();
 	protected static final String BYPASS_FTB_CHUNKS_PROTECTION = "BypassFTBChunksProtection";
 
+	@Nullable
 	private static ClaimedChunkManagerImpl instance;
 
 	private final TeamManager teamManager;
 	private final Map<UUID, ChunkTeamDataImpl> teamData;
 	private final Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
 	private final Path dataDirectory;
+	@Nullable
 	private Map<ResourceKey<Level>, Long2ObjectMap<UUID>> forceLoadedChunkCache;
 
 	public ClaimedChunkManagerImpl(TeamManager teamManager) {
@@ -75,8 +77,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 	}
 
+	public static boolean exists() {
+		return instance != null;
+	}
+
 	public static ClaimedChunkManagerImpl getInstance() {
-		return instance;
+		return Objects.requireNonNull(instance);
 	}
 
 	public static void init(TeamManager teamManager) {
@@ -142,6 +148,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	@Override
+	@Nullable
 	public ChunkTeamDataImpl getPersonalData(UUID id) {
 		return getTeamManager().getPlayerTeamForPlayerID(id)
 				.map(this::getOrCreateData)
@@ -149,6 +156,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	@Override
+	@Nullable
 	public ChunkTeamDataImpl getOrCreateData(ServerPlayer player) {
 		return getTeamManager().getTeamForPlayer(player)
 				.map(this::getOrCreateData)
@@ -159,12 +167,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		ChunkTeamDataImpl data = teamData.get(toDelete.getId());
 
 		if (data != null && toDelete.getMembers().isEmpty()) {
-			FTBChunks.LOGGER.debug("dropping references to empty team " + toDelete.getId());
+            FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
 			teamData.remove(toDelete.getId());
 			try {
 				Files.deleteIfExists(data.getFile());
 			} catch (IOException e) {
-				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.getFile(), e.getMessage()));
+				FTBChunks.LOGGER.error("can't delete file {}: {}", data.getFile(), e.getMessage());
 			}
 		}
 	}

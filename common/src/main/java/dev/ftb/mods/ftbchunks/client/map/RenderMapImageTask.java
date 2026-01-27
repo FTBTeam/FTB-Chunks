@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Random;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class RenderMapImageTask implements MapTask {
 	private static boolean alwaysRenderChunksOnMap = false;

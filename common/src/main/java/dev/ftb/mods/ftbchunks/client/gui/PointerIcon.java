@@ -7,8 +7,8 @@ import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -19,7 +19,7 @@ public class PointerIcon implements MapIcon {
     
     @Override
     public Vec3 getPos(float partialTick) {
-        Player player = Minecraft.getInstance().player;
+        Player player = ClientUtils.getClientPlayer();
         return partialTick >= 1F ? player.position() : player.getPosition(partialTick);
     }
 
@@ -35,7 +35,7 @@ public class PointerIcon implements MapIcon {
 
     @Override
     public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-        Player player = Minecraft.getInstance().player;
+        Player player = ClientUtils.getClientPlayer();
         graphics.pose().pushMatrix();
         graphics.pose().translate(x + w / 2f, y + h / 2f);
         float scale = mapType == MapType.LARGE_MAP ? 2.5F : 2F;

@@ -1,12 +1,10 @@
 package dev.ftb.mods.ftbchunks.util;
 
 import dev.ftb.mods.ftbchunks.CustomMinYRegistryImpl;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -17,7 +15,7 @@ import org.jspecify.annotations.Nullable;
 public class HeightUtils {
 	public static final int UNKNOWN = Short.MIN_VALUE + 1;
 
-	public static boolean isWater(BlockState state) {
+	public static boolean isWater(@Nullable BlockState state) {
 		if (state == null) {
 			// shouldn't happen, but https://github.com/FTBTeam/FTB-Mods-Issues/issues/1599
 			return false;
@@ -27,7 +25,7 @@ public class HeightUtils {
 			return true;
 		}
 
-		return state instanceof BlockStateFTBC ftbc ? ftbc.getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
+		return state instanceof BlockStateFTBC ftbc ? ftbc.ftbc$isWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
 	public static boolean skipBlock(Level level, BlockState state) {

@@ -17,7 +17,7 @@ public class MapTileWidget extends Widget {
 
 	@Override
 	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-		var regionTexture = region.regionTexture().getTexture();
+		var regionTexture = region.regionTexture().getTextureID();
 		if (regionTexture == null) {
 			return;
 		}

@@ -48,7 +48,7 @@ public interface MinimapInfoComponent {
      * @return The height of the component
      */
     default int height(MinimapContext context) {
-        return computeLineHeight(context.minecraft(), 1) + 1;
+        return computeLineHeight(context.minecraft(), 1);
     }
 
     /**
@@ -63,7 +63,7 @@ public interface MinimapInfoComponent {
      */
     default int computeLineHeight(Minecraft minecraft, int lines) {
         final float fontScale = FTBChunksClientConfig.MINIMAP_FONT_SCALE.get().floatValue();
-        return (int) ((minecraft.font.lineHeight + 2) * lines * fontScale);
+        return (int) ((minecraft.font.lineHeight + 1) * lines * fontScale);
     }
 
     /**

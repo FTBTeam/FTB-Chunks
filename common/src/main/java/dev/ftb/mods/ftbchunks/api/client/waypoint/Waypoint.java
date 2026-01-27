@@ -7,6 +7,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 
+import java.util.Optional;
+
 /**
  * A waypoint; these can be displayed on the minimap, the large fullscreen map, or as in-world icons. Waypoints can be
  * added by players, or automatically added on player death.
@@ -109,5 +111,5 @@ public interface Waypoint {
      *
      * @return the map icon
      */
-    WaypointIcon getMapIcon();
+    Optional<WaypointIcon> getMapIcon();
 }

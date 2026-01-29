@@ -33,8 +33,10 @@ import dev.ftb.mods.ftbchunks.client.gui.*;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.*;
+import dev.ftb.mods.ftbchunks.client.minimap.MaskedMinimapRenderState;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapRegionCutoutTexture;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
+import dev.ftb.mods.ftbchunks.core.mixin.GuiGraphicsMixin;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
@@ -63,6 +65,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -97,6 +100,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -679,17 +683,39 @@ public enum FTBChunksClient {
 //        ((GuiGraphicsMixin) graphics).getGuiRenderState().submitPicturesInPictureState(
 //                new MinimapRenderState(offX, offZ, zws, alpha, x + x0, x + x1, y + y0, y + y1, null)
 //        );
-        AbstractTexture texture = miniMapTexture.get().getTexture();
+        MinimapRegionCutoutTexture minimapTexture = miniMapTexture.get();
+        AbstractTexture texture = minimapTexture.getTexture();
         GpuTextureView textureView = texture.getTextureView();
         GpuSampler sampler = texture.getSampler();
-        graphics.submitBlit(
-                RenderPipelines.GUI_TEXTURED,
-                textureView,
-                sampler,
-                x0, y0, x1, y1,
-                u0, u1, v0, v1,
-                color
-        );
+        if (FTBChunksClientConfig.SQUARE_MINIMAP.get()) {
+            graphics.submitBlit(
+                    RenderPipelines.GUI_TEXTURED,
+                    textureView,
+                    sampler,
+                    x0, y0, x1, y1,
+                    u0, u1, v0, v1,
+                    color
+            );
+        } else {
+            AbstractTexture maskTexture = Minecraft.getInstance().getTextureManager().getTexture(CIRCLE_MASK);
+            TextureSetup textureSetup = TextureSetup.doubleTexture(
+                    textureView,
+                    sampler,
+                    maskTexture.getTextureView(),
+                    maskTexture.getSampler()
+            );
+            ((GuiGraphicsMixin) graphics).getGuiRenderState().submitGuiElement(
+                    new MaskedMinimapRenderState(
+                            ModRenderPipelines.MINIMAP_MASKED,
+                            textureSetup,
+                            new Matrix3x2f(poseStack),
+                            x0, y0, x1, y1,
+                            u0, u1, v0, v1,
+                            alpha,
+                            null
+                    )
+            );
+        }
 
 //        // Convert to the above!
 //        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);

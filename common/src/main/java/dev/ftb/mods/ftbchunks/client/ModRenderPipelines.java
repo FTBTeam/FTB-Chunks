@@ -1,45 +1,46 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.LayeringTransform;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 public class ModRenderPipelines {
-    public static final RenderPipeline.Snippet MASKED_SNIPPET = RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET)
-            .withVertexShader("core/position_tex_color")
-            .withFragmentShader("core/position_tex_color")
-            .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+    public static final RenderPipeline MINIMAP_MASKED = RenderPipeline.builder()
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withVertexShader(FTBChunksAPI.id("core/minimap_mask"))
+            .withFragmentShader(FTBChunksAPI.id("core/minimap_mask"))
             .withSampler("Sampler0")
-//            .withBlend(BlendFunction.TRANSLUCENT)
-//            .withColorWrite(true)
-//            .withDepthWrite(true)
-            .withCull(false)
-            .buildSnippet();
-
-    public static final RenderPipeline MASKED = RenderPipeline.builder(MASKED_SNIPPET)
-            .withLocation("ftb/pipeline/masked")
-            .withDepthTestFunction(DepthTestFunction.GREATER_DEPTH_TEST)
+            .withSampler("Sampler1")
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withLocation(FTBChunksAPI.id("pipeline/minimap_mask"))
             .build();
 
-    private static final Function<Identifier,RenderType> M = Util.memoize(texture ->
-            RenderType.create("masked", RenderSetup.builder(MASKED)
-                    .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
-                    .setLayeringTransform(LayeringTransform.NO_LAYERING)
-                    .createRenderSetup())
+    private static final BiFunction<Identifier, Identifier, RenderType> MINIMAP_MASKED_RENDER = Util.memoize(
+            (minimapTexture, maskTexture) -> RenderType.create(
+                    "ftbchunks_minimap_masked",
+                    RenderSetup.builder(MINIMAP_MASKED)
+                            .withTexture("Sampler0", minimapTexture)
+                            .withTexture("Sampler1", maskTexture)
+                            .setLayeringTransform(LayeringTransform.NO_LAYERING)
+                            .createRenderSetup()
+            )
     );
 
-    public static RenderType getMaskedRender(Identifier maskTexture) {
-        return M.apply(maskTexture);
+    public static RenderType getMinimapMaskedRender(Identifier minimapTexture, Identifier maskTexture) {
+        return MINIMAP_MASKED_RENDER.apply(minimapTexture, maskTexture);
     }
 }

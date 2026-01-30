@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
+import dev.ftb.mods.ftbchunks.client.minimap.MinimapBlurMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
@@ -15,6 +16,7 @@ import dev.ftb.mods.ftblibrary.config.value.EnumValue;
 import dev.ftb.mods.ftblibrary.config.value.IntValue;
 import dev.ftb.mods.ftblibrary.config.value.StringListValue;
 import dev.ftb.mods.ftblibrary.config.value.StringMapValue;
+import dev.ftb.mods.ftblibrary.util.PanelPositioning;
 import net.minecraft.resources.Identifier;
 
 import java.util.*;
@@ -58,34 +60,63 @@ public interface FTBChunksClientConfig {
     DoubleValue WAYPOINT_FOCUS_SCALE = WAYPOINTS.addDouble("waypoint_focus_scale", 2d, 1d, 10d).comment("How much do in-world waypoints enlarge when the player crosshair is close");
 
     Config MINIMAP = CONFIG.addGroup("minimap", 2);
-    BooleanValue MINIMAP_ENABLED = MINIMAP.addBoolean("enabled", !hasOtherMinimapMod()).comment("Enable minimap");
-    EnumValue<MinimapPosition> MINIMAP_POSITION = MINIMAP.addEnum("position", MinimapPosition.NAME_MAP).comment("Enables minimap to show up in corner");
-    DoubleValue MINIMAP_SCALE = MINIMAP.addDouble("scale", 1D, 0.25D, 4D).comment("Scale of minimap");
-    DoubleValue MINIMAP_FONT_SCALE = MINIMAP.addDouble("font_scale", 0.5, 0.1, 5.0).comment("Minimap font scaling (values not a multiple of 0.5 may look bad)");
-    DoubleValue MINIMAP_ZOOM = MINIMAP.addDouble("zoom", 1D, 1D, 4D).comment("Zoom distance of the minimap");
-    BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.addBoolean("locked_north", true).comment("Minimap will not rotate");
-    BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP.addBoolean("show_player_when_unlocked", true).comment("Always show player on minimap, even when rotation not locked");
-    BooleanValue MINIMAP_WAYPOINTS = MINIMAP.addBoolean("waypoints", true).comment("Show waypoints on minimap");
-    BooleanValue MINIMAP_PLAYER_HEADS = MINIMAP.addBoolean("player_heads", true).comment("Show player heads on minimap");
-    BooleanValue MINIMAP_ENTITIES = MINIMAP.addBoolean("entities", true).comment("Show entities on minimap");
-    BooleanValue MINIMAP_ENTITY_HEADS = MINIMAP.addBoolean("entity_heads", true).comment("Show entity heads on minimap");
-    BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.addBoolean("large_entities", false).comment("Entities in minimap will be larger");
-    EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.addEnum("blur_mode", MinimapBlurMode.NAME_MAP).comment("Blurs minimap");
-    BooleanValue MINIMAP_COMPASS = MINIMAP.addBoolean("compass", true).comment("Adds NWSE compass inside minimap");
-    BooleanValue MINIMAP_RETICLE = MINIMAP.addBoolean("reticle", true).comment("Draw reticle lines on minimap");
-    IntValue MINIMAP_VISIBILITY = MINIMAP.addInt("visibility", 255, 0, 255).comment("Minimap visibility");
-    IntValue MINIMAP_OFFSET_X = MINIMAP.addInt("position_offset_x", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
-    IntValue MINIMAP_OFFSET_Y = MINIMAP.addInt("position_offset_y", 0).comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
-    EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.addEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
-    BooleanValue SQUARE_MINIMAP = MINIMAP.addBoolean("square", false).comment("Draw a square minimap instead of a circular one");
-    BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true).comment("Size minimap proportional to screen width (and scale)");
-    StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList()).excludedFromGui().comment("Info displayed under minimap");
-    StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList()).excludedFromGui().comment("Info hidden under minimap");
-    StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new MinimapComponentConfig(MINIMAP, "info_settings", Collections.emptyMap())).comment("Settings for minimap info components");
-    EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap())).comment("Entity icons on minimap");
-    EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on full screen minimap");
-    EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP).comment("Mode for the pointer icon to render on minimap");
-    BooleanValue TEXT_ABOVE_MINIMAP = MINIMAP.addBoolean("text_above_minimap", false).comment("Show text above minimap");
+    BooleanValue MINIMAP_ENABLED = MINIMAP.addBoolean("enabled", !hasOtherMinimapMod())
+            .comment("Enable minimap");
+    EnumValue<PanelPositioning> MINIMAP_POSITION = MINIMAP.addEnum("position", PanelPositioning.NAME_MAP)
+            .comment("Minimap screen positioning");
+    DoubleValue MINIMAP_SCALE = MINIMAP.addDouble("scale", 1D, 0.25D, 4D)
+            .comment("Scale of minimap");
+    DoubleValue MINIMAP_FONT_SCALE = MINIMAP.addDouble("font_scale", 0.5, 0.1, 5.0)
+            .comment("Minimap font scaling (values not a multiple of 0.25 may look bad)");
+    DoubleValue MINIMAP_ZOOM = MINIMAP.addDouble("zoom", 1D, 1D, 4D)
+            .comment("Zoom distance of the minimap");
+    BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.addBoolean("locked_north", true)
+            .comment("Minimap will not rotate");
+    BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP.addBoolean("show_player_when_unlocked", true)
+            .comment("Always show player on minimap, even when rotation not locked");
+    BooleanValue MINIMAP_WAYPOINTS = MINIMAP.addBoolean("waypoints", true)
+            .comment("Show waypoints on minimap");
+    BooleanValue MINIMAP_PLAYER_HEADS = MINIMAP.addBoolean("player_heads", true)
+            .comment("Show player heads on minimap");
+    BooleanValue MINIMAP_ENTITIES = MINIMAP.addBoolean("entities", true)
+            .comment("Show entities on minimap");
+    BooleanValue MINIMAP_ENTITY_HEADS = MINIMAP.addBoolean("entity_heads", true)
+            .comment("Show entity heads on minimap");
+    BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.addBoolean("large_entities", false)
+            .comment("Entities in minimap will be larger");
+    EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.addEnum("blur_mode", MinimapBlurMode.NAME_MAP)
+            .comment("Blurs minimap");
+    BooleanValue MINIMAP_COMPASS = MINIMAP.addBoolean("compass", true)
+            .comment("Adds NWSE compass inside minimap");
+    BooleanValue MINIMAP_RETICLE = MINIMAP.addBoolean("reticle", true)
+            .comment("Draw reticle lines on minimap");
+    IntValue MINIMAP_ALPHA = MINIMAP.addInt("visibility", 255, 0, 255)
+            .comment("Minimap visibility");
+    IntValue MINIMAP_OFFSET_X = MINIMAP.addInt("position_offset_x", 5)
+            .comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
+    IntValue MINIMAP_OFFSET_Y = MINIMAP.addInt("position_offset_y", 5)
+            .comment("Changes the maps X offset from it's origin point. When on the Left, the map will be pushed out from the left, then from the right when on the right.");
+//    EnumValue<MinimapPosition.MinimapOffsetConditional> MINIMAP_POSITION_OFFSET_CONDITION = MINIMAP.addEnum("position_offset_condition", MinimapPosition.MinimapOffsetConditional.NAME_MAP).comment("Applied a conditional check to the offset. When set to anything other that None, the offset will apply only to the selected minimap position.", "When set to none and the maps offset is greater than 0, the offset will apply to all directions");
+    BooleanValue SQUARE_MINIMAP = MINIMAP.addBoolean("square", false)
+        .comment("Draw a square minimap instead of a circular one");
+    BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true)
+            .comment("Size minimap proportional to screen width (and scale)");
+    StringListValue MINIMAP_INFO_ORDER = MINIMAP.addStringList("info_order", Stream.of(PlayerPosInfoComponent.ID, BiomeComponent.ID, ZoneInfoComponent.ID, FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList())
+            .excludedFromGui()
+            .comment("Info displayed under minimap");
+    StringListValue MINIMAP_INFO_HIDDEN = MINIMAP.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList())
+            .excludedFromGui()
+            .comment("Info hidden under minimap");
+    StringMapValue MINIMAP_SETTINGS = MINIMAP.add(new MinimapComponentConfig(MINIMAP, "info_settings", Collections.emptyMap()))
+            .comment("Settings for minimap info components");
+    EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap()))
+            .comment("Entity icons on minimap");
+    EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP)
+            .comment("Mode for the pointer icon to render on full screen minimap");
+    EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP)
+            .comment("Mode for the pointer icon to render on minimap");
+    BooleanValue TEXT_ABOVE_MINIMAP = MINIMAP.addBoolean("text_above_minimap", false)
+            .comment("Show text above minimap");
 
     Config ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");

@@ -36,6 +36,7 @@ public record SendPlayerPositionPacket(ResolvableProfile profile, Optional<Block
     }
 
     public static void handle(SendPlayerPositionPacket message, NetworkManager.PacketContext context) {
-        FTBChunksClient.INSTANCE.updateTrackedPlayerPos(message.profile.partialProfile(), message.pos.orElse(null));
+        FTBChunksClient.INSTANCE.getLongRangePlayerTracker()
+                .updatePlayerPos(message.profile.partialProfile(), message.pos.orElse(null));
     }
 }

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
@@ -29,7 +29,7 @@ public class GameTimeComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         String setting = context.getSetting(this);
         if (setting.equals(ClockedTimeMode.CLOCK.name())) {
             IconHelper.renderIcon(CLOCK_ICON, graphics, -8, 0, 16, 16);
@@ -48,7 +48,7 @@ public class GameTimeComponent implements MinimapInfoComponent {
 
 
     @Override
-    public int height(MinimapContext context) {
+    public int height(MinimapComponentContext context) {
         String setting = context.getSetting(this);
         return setting.equals(ClockedTimeMode.CLOCK.name()) ? 10 : MinimapInfoComponent.super.height(context);
     }

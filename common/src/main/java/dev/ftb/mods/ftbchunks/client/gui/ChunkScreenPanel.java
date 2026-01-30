@@ -76,7 +76,7 @@ public class ChunkScreenPanel extends Panel {
 	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
 			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, ClientUtils.getClientLevel().getGameTime());
-			FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
+			FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
 		}
 	}
 

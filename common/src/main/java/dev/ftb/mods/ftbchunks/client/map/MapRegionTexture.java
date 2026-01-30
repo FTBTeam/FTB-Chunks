@@ -68,7 +68,7 @@ public class MapRegionTexture {
         }
         if (ClientUtils.getCurrentGuiAs(ChunkScreen.class) != null) {
             // make sure displayed claims get updated promptly in the chunk mgmt screen
-            FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
+            FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
         }
     }
 

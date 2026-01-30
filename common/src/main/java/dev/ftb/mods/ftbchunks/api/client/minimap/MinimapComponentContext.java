@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.api.client.minimap;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -21,7 +20,7 @@ import java.util.Objects;
  * @param playerPos the players pos
  * @param infoSettings raw settings for this component
  */
-public record MinimapContext(
+public record MinimapComponentContext(
    Minecraft minecraft,
    Player player,
    MapDimension mapDimension,

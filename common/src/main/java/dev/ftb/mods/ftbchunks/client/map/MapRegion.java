@@ -147,7 +147,7 @@ public class MapRegion implements MapTask {
 
 		// Update the region texture on the main thread
 		Minecraft.getInstance().execute(regionTexture::requestBake);
-		FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
+		FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
 	}
 
 	public MapRegion offset(int x, int z) {

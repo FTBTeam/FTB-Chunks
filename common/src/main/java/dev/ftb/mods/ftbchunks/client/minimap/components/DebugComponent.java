@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -32,7 +32,7 @@ public class DebugComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         List<Component> components = new ArrayList<>();
         long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
 
@@ -53,7 +53,7 @@ public class DebugComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public int height(MinimapContext context) {
+    public int height(MinimapComponentContext context) {
         return computeLineHeight(context.minecraft(), ChunkUpdateTask.getDebugLastTime() > 0L ? 5 : 4);// + context.minecraft().font.lineHeight;
     }
 }

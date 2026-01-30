@@ -16,12 +16,6 @@ public class FTBChunksClientImpl {
     public static void registerPlatform() {
 	}
 
-	@SubscribeEvent
-	public static void renderLevelStageForge(RenderLevelStageEvent.AfterParticles event) {
-        FTBChunksClient.INSTANCE.renderWorldLast(event.getPoseStack(), event.getModelViewMatrix(),
-				event.getLevelRenderState().cameraRenderState, Minecraft.getInstance().getDeltaTracker());
-	}
-
 	// arch expectplatform
 	@SuppressWarnings("unused")
     public static boolean doesKeybindMatch(@Nullable KeyMapping keyMapping, KeyEvent event) {

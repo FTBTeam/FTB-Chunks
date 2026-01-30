@@ -7,7 +7,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -22,14 +21,14 @@ public interface MinimapInfoComponent {
     /**
      * Render your component here, the {@link com.mojang.blaze3d.vertex.PoseStack} will already be scaled and
      * translated to the correct position (centered by default). We do not provide an X and Y position as
-     * 0, 0 is the center of the correct location. Use 0, 0 as the center of the component and {@link #height(MinimapContext)}
+     * 0, 0 is the center of the correct location. Use 0, 0 as the center of the component and {@link #height(MinimapComponentContext)}
      * to allocate the correct height for the component.
      *
      * @param context The minimap context
      * @param graphics The graphics object see {@link GuiGraphics}
      * @param font The font object
      */
-    void render(MinimapContext context, GuiGraphics graphics, Font font);
+    void render(MinimapComponentContext context, GuiGraphics graphics, Font font);
 
     /**
      * Set of Info {@link TranslatedOption} that are used to configure options for rendering the waypoint
@@ -47,14 +46,14 @@ public interface MinimapInfoComponent {
      * @param context The minimap context
      * @return The height of the component
      */
-    default int height(MinimapContext context) {
+    default int height(MinimapComponentContext context) {
         return computeLineHeight(context.minecraft(), 1);
     }
 
     /**
      * Checked on each render frame to determine if the height for the component should be allocated
      */
-    default boolean shouldRender(MinimapContext context) {
+    default boolean shouldRender(MinimapComponentContext context) {
         return true;
     }
 

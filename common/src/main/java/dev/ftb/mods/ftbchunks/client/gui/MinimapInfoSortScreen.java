@@ -247,7 +247,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         infoSortList.forEach(Identifier -> list.add(Identifier.toString()));
         FTBChunksClientConfig.MINIMAP_INFO_ORDER.set(list);
         FTBChunksClientConfig.saveConfig();
-        FTBChunksClient.INSTANCE.setupComponents();
+        FTBChunksClient.INSTANCE.getMinimapRenderer().setupComponents();
     }
 
     private boolean isComponentDisabled(MinimapInfoComponent component) {

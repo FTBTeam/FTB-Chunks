@@ -3,13 +3,14 @@ package dev.ftb.mods.ftbchunks.api;
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.event.TeamManagerEvent;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -17,7 +18,9 @@ public class FTBChunksAPI {
     public static final String MOD_ID = "ftbchunks";
     public static final String MOD_NAME = "FTB Chunks";
 
+    @Nullable
     private static API instance;
+    @Nullable
     private static FTBChunksClientAPI clientInstance;
 
     /**

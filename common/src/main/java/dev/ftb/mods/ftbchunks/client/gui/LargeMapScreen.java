@@ -286,9 +286,9 @@ public class LargeMapScreen extends BaseScreen {
                 settingsButton.onClicked(MouseButton.LEFT);
             }
             return true;
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key)) {
+        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key.event())) {
             waypointManagerButton.onClicked(MouseButton.LEFT);
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key) && Platform.isForgeLike()) {
+        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key.event()) && Platform.isForgeLike()) {
             // platform specific behaviour :(  why? ¯\_(ツ)_/¯
             closeGui(false);
             return true;

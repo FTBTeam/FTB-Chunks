@@ -2,31 +2,31 @@ package dev.ftb.mods.ftbchunks.client.minimap;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.ModRenderPipelines;
+import dev.ftb.mods.ftbchunks.client.minimap.layers.TerrainLayerRenderer;
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 
-public class MinimapPIPRenderer extends PictureInPictureRenderer<MinimapRenderState> {
+public class MinimapPIPRenderer extends PictureInPictureRenderer<MinimapPIPRenderState> {
     public MinimapPIPRenderer(MultiBufferSource.BufferSource bufferSource) {
         super(bufferSource);
     }
 
     @Override
-    public Class<MinimapRenderState> getRenderStateClass() {
-        return MinimapRenderState.class;
+    public Class<MinimapPIPRenderState> getRenderStateClass() {
+        return MinimapPIPRenderState.class;
     }
 
     @Override
-    protected void renderToTexture(MinimapRenderState state, PoseStack poseStack) {
+    protected void renderToTexture(MinimapPIPRenderState state, PoseStack poseStack) {
         var pose = poseStack.last().pose();
         float alpha = state.alpha();
         boolean square = FTBChunksClientConfig.SQUARE_MINIMAP.get();
         VertexConsumer buffer = square
                 ? bufferSource.getBuffer(RenderTypes.text(MinimapRegionCutoutTexture.ID))
-                : bufferSource.getBuffer(ModRenderPipelines.getMinimapMaskedRender(MinimapRegionCutoutTexture.ID, FTBChunksClient.CIRCLE_MASK));
+                : bufferSource.getBuffer(ModRenderPipelines.getMinimapMaskedRender(MinimapRegionCutoutTexture.ID, TerrainLayerRenderer.CIRCLE_MASK));
 
         float u0 = state.offX() - state.zws();
         float u1 = state.offX() + state.zws();

@@ -9,51 +9,25 @@ import org.joml.Matrix3x2f;
 import org.jspecify.annotations.Nullable;
 
 public record MaskedMinimapRenderState(
-        RenderPipeline pipeline,
-        TextureSetup textureSetup,
-        Matrix3x2f pose,
-        int x0,
-        int y0,
-        int x1,
-        int y1,
-        float u0,
-        float u1,
-        float v0,
-        float v1,
+        RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f pose,
+        int x0, int y0, int x1, int y1,
+        float u0, float u1, float v0, float v1,
         int alpha,
-        @Nullable ScreenRectangle scissorArea,
-        @Nullable ScreenRectangle bounds
+        @Nullable ScreenRectangle scissorArea, @Nullable ScreenRectangle bounds
 ) implements GuiElementRenderState {
     public MaskedMinimapRenderState(
-            RenderPipeline pipeline,
-            TextureSetup textureSetup,
-            Matrix3x2f pose,
-            int x0,
-            int y0,
-            int x1,
-            int y1,
-            float u0,
-            float u1,
-            float v0,
-            float v1,
+            RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f pose,
+            int x0, int y0, int x1, int y1,
+            float u0, float u1, float v0, float v1,
             int alpha,
             @Nullable ScreenRectangle scissorArea
     ) {
         this(
-                pipeline,
-                textureSetup,
-                pose,
-                x0,
-                y0,
-                x1,
-                y1,
-                u0,
-                u1,
-                v0,
-                v1,
+                pipeline, textureSetup, pose,
+                x0, y0, x1, y1,
+                u0, u1, v0, v1,
                 alpha,
-                scissorArea,
-                getBounds(x0, y0, x1, y1, pose, scissorArea)
+                scissorArea, getBounds(x0, y0, x1, y1, pose, scissorArea)
         );
     }
 

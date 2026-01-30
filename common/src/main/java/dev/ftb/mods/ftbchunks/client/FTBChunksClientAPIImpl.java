@@ -28,7 +28,7 @@ public class FTBChunksClientAPIImpl implements FTBChunksClientAPI {
 
     @Override
     public void requestMinimapIconRefresh() {
-        FTBChunksClient.INSTANCE.refreshMinimapIcons();
+        FTBChunksClient.INSTANCE.getMinimapRenderer().refreshIcons();
     }
 
     @Override
@@ -53,7 +53,7 @@ public class FTBChunksClientAPIImpl implements FTBChunksClientAPI {
             FTBChunksClientConfig.MINIMAP_INFO_HIDDEN.get().add(component.id().toString());
         }
         FTBChunksClientConfig.saveConfig();
-        FTBChunksClient.INSTANCE.setupComponents();
+        FTBChunksClient.INSTANCE.getMinimapRenderer().setupComponents();
     }
 
     @Override

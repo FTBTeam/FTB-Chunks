@@ -121,8 +121,8 @@ public class FTBChunks {
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
 		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
-		// this doesn't work - Arch hook missing?
-//		EntityEvent.ENTER_SECTION.register(this::enterSection);
+		// note: only seems to work for Fabric. Separate event handler added in FTBChunksNeoForge
+		EntityEvent.ENTER_SECTION.register(this::enterSection);
 
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		EntityEvent.LIVING_HURT.register(this::onLivingHurt);

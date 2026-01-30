@@ -14,29 +14,23 @@ import org.jspecify.annotations.Nullable;
 import java.util.Map;
 
 public class MinimapComponentConfig extends StringMapValue {
-
-    public MinimapComponentConfig(@Nullable Config c, String n, Map<String, String> def) {
-        super(c, n, def);
+    public MinimapComponentConfig(@Nullable Config parent, String name, Map<String, String> def) {
+        super(parent, name, def);
     }
 
     @Override
     protected @Nullable EditableConfigValue<?> fillClientConfig(EditableConfigGroup group) {
-        return group.add(key, new MinimapComponentConfigValue(), get(), stringBooleanMap -> {
-        }, defaultValue);
+        return group.add(key, new MinimapComponentConfigValue(), get(), stringBooleanMap -> {}, defaultValue);
     }
 
     public static class MinimapComponentConfigValue extends EditableConfigValue<Map<String, String>> {
-
         @Override
         public void onClicked(Widget clickedWidget, MouseButton button, ConfigCallback callback) {
             new MinimapInfoSortScreen().openGui();
         }
 
         @Override
-        public Component getStringForGUI(@Nullable Map<String, String> v) {
-            if (v == null) {
-                return super.getStringForGUI(null);
-            }
+        public Component getStringForGUI(Map<String, String> v) {
             return Component.translatable("ftbchunks.gui.sort_minimap_info");
         }
     }

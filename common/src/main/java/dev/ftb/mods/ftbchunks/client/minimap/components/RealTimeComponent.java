@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.client.gui.Font;
@@ -25,7 +25,7 @@ public class RealTimeComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         String setting = context.getSetting(this);
         LocalTime now = LocalTime.now();
         int hours = now.getHour();

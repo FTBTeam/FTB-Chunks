@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client;
+package dev.ftb.mods.ftbchunks.client.minimap;
 
 import dev.ftb.mods.ftblibrary.util.NameMap;
 

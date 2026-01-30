@@ -14,7 +14,7 @@ public abstract class GuiMixin {
     @Inject(method = "renderEffects", at = @At("HEAD"))
     public void onRenderEffectsEnter(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo info) {
         guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().translate((int) FTBChunksClient.getVanillaEffectsOffsetX(), 0);
+        guiGraphics.pose().translate((int) FTBChunksClient.INSTANCE.getMinimapRenderer().getVanillaEffectsOffsetX(), 0);
     }
 
     @Inject(method = "renderEffects", at = @At("RETURN"))

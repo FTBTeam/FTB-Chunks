@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,12 +23,12 @@ public class BiomeComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         drawCenteredText(context.minecraft().font, graphics, Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath()), 0);
     }
 
     @Override
-    public boolean shouldRender(MinimapContext context) {
+    public boolean shouldRender(MinimapComponentContext context) {
         Holder<Biome> biome = context.clientLevel().getBiome(context.clientPlayer().blockPosition());
         if (biome.unwrapKey().isPresent()) {
             biomeKey = biome.unwrapKey().get();

@@ -9,6 +9,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
+import dev.ftb.mods.ftblibrary.icon.EntityIconLoader.EntityIconSettings;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
@@ -49,7 +50,9 @@ public class EntityMapIcon implements MapIcon {
 
     @Override
     public double getIconScale(MapType mapType) {
-        return (entity instanceof AbstractClientPlayer || !mapType.isMinimap() || FTBChunksClientConfig.MINIMAP_LARGE_ENTITIES.get() ? 1D : (1D / 1.5D)) * EntityIconLoader.getSettings(entity.getType()).map(EntityIconLoader.EntityIconSettings::scale).orElse(1D);
+        boolean largeIcons = entity instanceof AbstractClientPlayer || !mapType.isMinimap() || FTBChunksClientConfig.MINIMAP_LARGE_ENTITIES.get();
+        double scale = EntityIconLoader.getSettings(entity.getType()).map(EntityIconSettings::scale).orElse(1D);
+        return largeIcons ? scale : scale / 1.5D;
     }
 
     @Override

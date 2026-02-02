@@ -1,12 +1,14 @@
-package dev.ftb.mods.ftbchunks;
+package dev.ftb.mods.ftbchunks.client;
 
 import com.google.gson.*;
+import dev.ftb.mods.ftbchunks.FTBCUtils;
+import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;

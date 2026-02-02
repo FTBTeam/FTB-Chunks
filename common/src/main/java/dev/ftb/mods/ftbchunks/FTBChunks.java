@@ -13,7 +13,10 @@ import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
-import dev.ftb.mods.ftbchunks.api.*;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
+import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.api.event.CustomMinYEvent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
@@ -27,7 +30,6 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.event.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -38,6 +40,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
+import net.minecraft.util.Util;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -59,6 +62,7 @@ import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
@@ -127,7 +131,7 @@ public class FTBChunks {
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		EntityEvent.LIVING_HURT.register(this::onLivingHurt);
 
-		ExplosionEvent.DETONATE.register(this::explosionDetonate);
+//		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 
@@ -179,7 +183,7 @@ public class FTBChunks {
 	}
 
 	private void serverLevelLoad(ServerLevel level) {
-		if (ClaimedChunkManagerImpl.getInstance() != null) {
+		if (ClaimedChunkManagerImpl.exists()) {
 			ClaimedChunkManagerImpl.getInstance().initForceLoadedChunks(level);
 		} else {
 			FTBChunks.LOGGER.warn("Level {} loaded before FTB Chunks manager was initialized! Unable to force-load chunks", level.dimension().identifier() );
@@ -197,6 +201,10 @@ public class FTBChunks {
 	private void loggedIn(PlayerLoggedInAfterTeamEvent event) {
 		ServerPlayer player = event.getPlayer();
 		ChunkTeamDataImpl data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
+		if (data == null) {
+			FTBChunks.LOGGER.error("couldn't get chunk team data for player {} on login?", player.getName().getString());
+			return;
+		}
 		data.updateLimits();
 
 		String playerId = event.getPlayer().getUUID().toString();
@@ -216,15 +224,14 @@ public class FTBChunks {
 					.add(ChunkSyncInfo.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
 		}
 
-		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
-			FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
-				ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
-				if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
-					SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
-					NetworkManager.sendToPlayer(player, packet);
-				}
-			});
-		});
+		chunksToSend.forEach((dimensionAndId, chunkPackets) ->
+				FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
+					ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
+					if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
+						SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
+						NetworkManager.sendToPlayer(player, packet);
+					}
+				}));
 		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
 
 		data.setLastLoginTime(now);
@@ -388,6 +395,8 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
+	// Architectury explosion event is of no use to us anymore because it doesn't report exploded block positions
+	// Need to use our own mixin here... ServerLevelMixin
 //	private boolean ignoreExplosion(Level level, Explosion explosion) {
 //		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
 //			return true;
@@ -395,8 +404,8 @@ public class FTBChunks {
 //
 //		return explosion.source == null && !FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS.get();
 //	}
-
-	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
+//
+//	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
 //		if (FTBChunksWorldConfig.DISABLE_PROTECTION.get() || ignoreExplosion(level, explosion)) {
 //			return;
 //		}
@@ -413,6 +422,17 @@ public class FTBChunks {
 //				explosion.getToBlow().add(pos);
 //			}
 //		}
+//	}
+
+	public void handleServerExplosion(ServerExplosion explosion, Set<BlockPos> posSet) {
+		var byChunk = posSet.stream().collect(Collectors.groupingBy(ChunkPos::new));
+
+        byChunk.forEach((chunkPos, posList) -> {
+			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(explosion.level().dimension(), chunkPos));
+			if (cc != null && !cc.allowExplosions()) {
+				posList.forEach(posSet::remove);
+			}
+		});
 	}
 
 	private void playerCloned(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean wonGame) {

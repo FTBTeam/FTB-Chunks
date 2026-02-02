@@ -3,15 +3,15 @@ package dev.ftb.mods.ftbchunks.client.map;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import net.minecraft.util.Util;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -31,6 +31,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	private static final Identifier AIR = Identifier.fromNamespaceAndPath("minecraft", "air");
 	private static long debugLastTime = 0L;
 
+	@Nullable
 	private MapManager manager;
 	private final Level level;
 	private final ChunkAccess chunkAccess;

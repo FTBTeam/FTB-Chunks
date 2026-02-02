@@ -1,13 +1,12 @@
-package dev.ftb.mods.ftbchunks.client.gui;
+package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
@@ -15,28 +14,18 @@ import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
 import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.client.gui.screens.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.client.gui.theme.NordTheme;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
-import dev.ftb.mods.ftblibrary.client.gui.widget.Button;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.client.gui.widget.DropDownMenu;
-import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
-import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
-import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
-import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
@@ -44,7 +33,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -57,9 +45,9 @@ import java.util.List;
 
 public class LargeMapScreen extends BaseScreen {
     private static final Color4I BACKGROUND_COLOR = Color4I.rgb(0x202225);
-    private static final Icon<?> MINIMAP_INFO = Icon.getIcon(FTBChunksAPI.id("textures/minimap_info.png"));
 
     private final RegionMapPanel regionPanel;
+    private final MapScreenButtonPanel buttonPanel;
     private int zoom = 256;
 
     MapDimension dimension;
@@ -69,14 +57,6 @@ public class LargeMapScreen extends BaseScreen {
     int grabbed = 0;
 
     private boolean movedToPlayer = false;
-    private Button claimChunksButton;
-    private Button dimensionButton;
-    private Button waypointManagerButton;
-    private Button infoButton;
-    private Button settingsButton;
-    private Button serverSettingsButton;
-    private Button clearDeathpointsButton;
-    private Button infoSortScreen;
     private boolean needIconRefresh;
     private final int minZoom;
 
@@ -86,6 +66,8 @@ public class LargeMapScreen extends BaseScreen {
         dimension = dim;
         regionPanel.setScrollX(0D);
         regionPanel.setScrollY(0D);
+
+        buttonPanel = new MapScreenButtonPanel(this);
 
         minZoom = determineMinZoom();
     }
@@ -107,7 +89,7 @@ public class LargeMapScreen extends BaseScreen {
         super.onClosed();
 
         int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
-        if (autoRelease > 0 && dimension != null) {
+        if (autoRelease > 0) {
             dimension.getManager().scheduleRegionPurge(dimension);
         }
     }
@@ -146,67 +128,23 @@ public class LargeMapScreen extends BaseScreen {
     @Override
     public void addWidgets() {
         add(regionPanel);
-
-        add(claimChunksButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.claimed_chunks"), Icons.MAP,
-                (b, m) -> ChunkScreen.openChunkScreen(),
-                Component.literal("[C]").withStyle(ChatFormatting.GRAY)));
-
-        Component tooltip = Component.literal("[")
-                .append(FTBChunksClient.INSTANCE.waypointManagerKey.getTranslatedKeyMessage())
-                .append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
-        add(waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
-                (b, m) -> new WaypointEditorScreen().openGui(), tooltip));
-        add(infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), MINIMAP_INFO,
-                (b, m) -> new MinimapInfoSortScreen().openGui(), tooltip));
-        add(infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
-                (b, m) -> new MapKeyReferenceScreen().openGui()));
-
-        add(clearDeathpointsButton = new ClearDeathPointButton(this));
-
-        Component dimName = TextComponentUtils.translatedDimension(dimension.dimension);
-        List<ContextMenuItem> dimItems = AddWaypointOverlay.createDimContextItems(key -> {
-            dimension = dimension.getManager().getDimension(key);
-            refreshWidgets();
-            movedToPlayer = false;
-        });
-
-        add(dimensionButton = new SimpleButton(this, dimName, Icons.GLOBE,
-                (b, m) -> {
-                    DropDownMenu dropDownMenu = getGui().openDropdownMenu(dimItems);
-                    dropDownMenu.setPos(dimensionButton.getX() + dimensionButton.width, dimensionButton.getY() + dimensionButton.height - dropDownMenu.height);
-                }));
-
-        add(settingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
-                (b, m) -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
-                Component.literal("[S]").withStyle(ChatFormatting.GRAY))
-        );
-
-        if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
-            add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
-                    Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-                    (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
-                    Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
-            ));
-        }
+        add(buttonPanel);
     }
 
-    private WaypointManagerImpl getWaypointManager() {
+    void switchToDimension(ResourceKey<Level> key) {
+        dimension = dimension.getManager().getDimension(key);
+        refreshWidgets();
+        movedToPlayer = false;
+    }
+
+    WaypointManagerImpl getWaypointManager() {
         return MapManager.getInstance().orElseThrow().getDimension(dimension.dimension).getWaypointManager();
     }
 
     @Override
     public void alignWidgets() {
-        claimChunksButton.setPosAndSize(1, 1, 16, 16);
-        waypointManagerButton.setPosAndSize(1, 19, 16, 16);
-        infoButton.setPosAndSize(1, 37, 16, 16);
-        infoSortScreen.setPosAndSize(1, 55, 16, 16);
-        clearDeathpointsButton.setPosAndSize(1, 73, 16, 16);
-
-        dimensionButton.setPosAndSize(1, height - 36, 16, 16);
-        settingsButton.setPosAndSize(1, height - 18, 16, 16);
-        if (serverSettingsButton != null) {
-            serverSettingsButton.setPosAndSize(width - 18, height - 18, 16, 16);
-        }
+        buttonPanel.setPosAndSize(0, 0, 18, height);
+        buttonPanel.alignWidgets();
     }
 
     @Override
@@ -274,20 +212,6 @@ public class LargeMapScreen extends BaseScreen {
             FTBChunksClientConfig.saveConfig();
             dimension.getManager().updateAllRegions(false);
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_C)) {
-            claimChunksButton.onClicked(MouseButton.LEFT);
-            return true;
-        } else if (key.is(GLFW.GLFW_KEY_S)) {
-            if (Minecraft.getInstance().hasControlDown()) {
-                if (serverSettingsButton != null) {
-                    serverSettingsButton.onClicked(MouseButton.LEFT);
-                }
-            } else {
-                settingsButton.onClicked(MouseButton.LEFT);
-            }
-            return true;
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key.event())) {
-            waypointManagerButton.onClicked(MouseButton.LEFT);
         } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key.event()) && Platform.isForgeLike()) {
             // platform specific behaviour :(  why? ¯\_(ツ)_/¯
             closeGui(false);
@@ -454,51 +378,4 @@ public class LargeMapScreen extends BaseScreen {
             return 1;
         }
     }
-
-    private static class SimpleTooltipButton extends SimpleButton {
-        private final List<Component> tooltipLines;
-
-        public SimpleTooltipButton(Panel panel, Component text, Icon icon, Callback c, Component tooltipLine) {
-            super(panel, text, icon, c);
-            this.tooltipLines = List.of(tooltipLine);
-        }
-
-        @Override
-        public void addMouseOverText(TooltipList list) {
-            super.addMouseOverText(list);
-            tooltipLines.forEach(list::add);
-        }
-    }
-
-    private static class MapKeyReferenceScreen extends KeyReferenceScreen {
-        public MapKeyReferenceScreen() {
-            super("ftbchunks.gui.large_map_info.text");
-        }
-
-        @Override
-        public Component getTitle() {
-            return Component.translatable("ftbchunks.gui.large_map_info");
-        }
-    }
-
-    private class ClearDeathPointButton extends SimpleButton {
-        public ClearDeathPointButton(Panel panel) {
-            super(panel, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CANCEL, (b, m) -> {
-                if (getWaypointManager().removeIf(wp -> wp.getType() == WaypointType.DEATH)) {
-                    refreshWidgets();
-                }
-            });
-        }
-
-        @Override
-        public boolean shouldDraw() {
-            return super.shouldDraw() && getWaypointManager().hasDeathpoint();
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return shouldDraw();
-        }
-    }
-
 }

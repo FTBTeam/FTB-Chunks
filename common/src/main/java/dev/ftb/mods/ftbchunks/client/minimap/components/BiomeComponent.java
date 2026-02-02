@@ -7,8 +7,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 
 public class BiomeComponent implements MinimapInfoComponent {
@@ -24,7 +24,8 @@ public class BiomeComponent implements MinimapInfoComponent {
 
     @Override
     public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
-        drawCenteredText(context.minecraft().font, graphics, Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath()), 0);
+        drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.minimap.biome").append(": ")
+                .append(Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath())), 0);
     }
 
     @Override

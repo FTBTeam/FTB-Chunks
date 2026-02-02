@@ -19,11 +19,12 @@ public class PlayerPosInfoComponent implements MinimapInfoComponent {
 
     @Override
     public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
-        var text = Component.literal(
-                Mth.floor(context.playerPos().x()) + " " +
-                        Mth.floor(context.playerPos().y()) + " " +
-                        Mth.floor(context.playerPos().z())
-        );
+        var text = Component.translatable("minimap.info.ftbchunks.player_pos.title").append(": ")
+                .append(
+                        Mth.floor(context.playerPos().x()) + " " +
+                                Mth.floor(context.playerPos().y()) + " " +
+                                Mth.floor(context.playerPos().z())
+                );
         drawCenteredText(font, graphics, text, 0);
     }
 }

@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ClaimResult.StandardProblem;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.gui.ChunkScreenPanel;
+import dev.ftb.mods.ftbchunks.client.gui.map.ChunkScreenPanel;
 import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;

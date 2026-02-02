@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
+import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -30,7 +30,7 @@ public class RealTimeComponent implements MinimapInfoComponent {
         LocalTime now = LocalTime.now();
         int hours = now.getHour();
         int minutes = now.getMinute();
-        drawCenteredText(font, graphics, Component.literal(createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(font, graphics, Component.translatable("ftbchunks.real_time", createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name()))), 0);
     }
 
     @Override

@@ -4,7 +4,10 @@ import dev.ftb.mods.ftblibrary.config.value.AbstractListValue;
 import dev.ftb.mods.ftblibrary.config.value.Config;
 import net.minecraft.world.level.ChunkPos;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ChunkPosCustomYSetValue extends AbstractListValue<ChunkPosWithMinY> {
     private final HashMap<Long, Integer> lookup = new HashMap<>();

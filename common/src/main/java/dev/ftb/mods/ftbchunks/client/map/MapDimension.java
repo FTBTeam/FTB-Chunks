@@ -13,12 +13,14 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
@@ -30,7 +32,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DeflaterOutputStream;
 
-public class MapDimension implements MapTask {
+public class MapDimension implements MapTask, Comparable<MapDimension> {
 	private static final Logger LOGGER = LogManager.getLogger();
 	@Nullable
 	private static MapDimension currentDimension;
@@ -238,5 +240,17 @@ public class MapDimension implements MapTask {
 
 	public void updateLoadedChunkView(Long2IntMap chunks) {
 		loadedChunkView = chunks;
+	}
+
+	@Override
+	public int compareTo(@NotNull MapDimension other) {
+		Identifier dim1id = this.dimension.identifier();
+		Identifier dim2id = other.dimension.identifier();
+		if (dim1id.getNamespace().equals("minecraft") && !dim2id.getNamespace().equals("minecraft")) {
+			// put vanilla dimensions first
+			return -1;
+		}
+		int i = dim1id.getNamespace().compareTo(dim2id.getNamespace());
+		return i == 0 ? dim1id.getPath().compareTo(dim2id.getPath()) : i;
 	}
 }

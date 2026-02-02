@@ -3,9 +3,9 @@ package dev.ftb.mods.ftbchunks.client.mapicon;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
-import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointAddScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointShareMenu;
+import dev.ftb.mods.ftbchunks.client.gui.map.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
@@ -104,7 +104,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 
         Player player = ClientUtils.getClientPlayer();
 
-        WaypointShareMenu.makeShareMenu(player, waypoint).ifPresent(contextMenu::add);
+        WaypointShareMenu.build(player, waypoint).ifPresent(contextMenu::add);
 
         contextMenu.add(new ContextMenuItem(Component.translatable("gui.rename"), Icons.CHAT, b -> {
             EditableString config = new EditableString();

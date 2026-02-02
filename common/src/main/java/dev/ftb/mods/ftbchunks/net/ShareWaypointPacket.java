@@ -16,7 +16,10 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 public record ShareWaypointPacket(String name, GlobalPos position, ShareType shareType, List<UUID> targets) implements CustomPacketPayload {
     public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.id("share_waypoint_packet"));

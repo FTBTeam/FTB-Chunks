@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
-import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
+import dev.ftb.mods.ftbchunks.client.gui.map.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;

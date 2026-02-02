@@ -23,11 +23,11 @@ import net.minecraft.world.entity.player.Player;
 import java.util.*;
 
 public class WaypointShareMenu {
-    public static Optional<ContextMenuItem> makeShareMenu(Player sharingPlayer, Waypoint waypoint) {
+    public static Optional<ContextMenuItem> build(Player sharingPlayer, Waypoint waypoint) {
         List<ContextMenuItem> items = new ArrayList<>();
 
         if (FTBChunksWorldConfig.WAYPOINT_SHARING_SERVER.get()) {
-            items.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.server"), Icons.BEACON,
+            items.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.server"), Icons.GLOBE,
                     b -> shareWaypoint(waypoint, ShareWaypointPacket.ShareType.SERVER, List.of())));
         }
         if (FTBChunksWorldConfig.WAYPOINT_SHARING_PARTY.get()) {
@@ -48,7 +48,7 @@ public class WaypointShareMenu {
 
         return items.isEmpty() ?
                 Optional.empty() :
-                Optional.of(ContextMenuItem.subMenu(Component.translatable("ftbchunks.waypoint.share"), Icons.INFO, items));
+                Optional.of(ContextMenuItem.subMenu(Component.translatable("ftbchunks.waypoint.share"), Icons.FRIENDS_GROUP, items));
     }
 
     private static void shareWaypoint(Waypoint waypoint, ShareWaypointPacket.ShareType type, List<UUID> targets) {

@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.client.minimap.layers;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.client.icon.Color4IRenderer;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;

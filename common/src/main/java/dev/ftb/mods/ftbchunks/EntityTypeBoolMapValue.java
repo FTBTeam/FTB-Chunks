@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks;
 
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Codec;
 import dev.ftb.mods.ftbchunks.client.gui.EntityIconSettingsScreen;
 import dev.ftb.mods.ftblibrary.client.config.ConfigCallback;
 import dev.ftb.mods.ftblibrary.client.config.EditableConfigGroup;
@@ -9,12 +10,11 @@ import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
 import dev.ftb.mods.ftblibrary.config.value.AbstractMapValue;
 import dev.ftb.mods.ftblibrary.config.value.Config;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -30,22 +30,17 @@ public class EntityTypeBoolMapValue extends AbstractMapValue<Boolean> {
 
     @Override
     protected @Nullable EditableConfigValue<?> fillClientConfig(EditableConfigGroup group) {
-        return group.add(key, new EntityTypeBoolMapConfigValue(), get(), stringBooleanMap -> {
-        }, defaultValue);
+        return group.add(key, new EntityTypeBoolMapConfigValue(), get(), stringBooleanMap -> {}, defaultValue);
     }
 
     public static class EntityTypeBoolMapConfigValue extends EditableConfigValue<Map<String, Boolean>> {
-
         @Override
         public void onClicked(Widget clickedWidget, MouseButton button, ConfigCallback callback) {
             new EntityIconSettingsScreen(false).openGui();
         }
 
         @Override
-        public Component getStringForGUI(@Nullable Map<String, Boolean> v) {
-            if (v == null) {
-                return super.getStringForGUI(null);
-            }
+        public Component getStringForGUI(Map<String, Boolean> v) {
             MutableInt enabled = new MutableInt();
             MutableInt disabled = new MutableInt();
             for (String entityTypeResourceKey : v.keySet()) {

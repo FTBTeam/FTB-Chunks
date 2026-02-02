@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client.gui;
+package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
@@ -42,7 +42,7 @@ public class MapIconWidget extends Widget {
 
 	@Override
 	public boolean mousePressed(MouseButton button) {
-		if (isMouseOver() && width > 0 && height > 0 && mapIcon.onMousePressed(regionMapPanel.largeMap, button)) {
+		if (isMouseOver() && width > 0 && height > 0 && mapIcon.onMousePressed(regionMapPanel.largeMapScreen, button)) {
 			return true;
 		}
 
@@ -51,7 +51,7 @@ public class MapIconWidget extends Widget {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (isMouseOver() && width > 0 && height > 0 && mapIcon.onKeyPressed(regionMapPanel.largeMap, key)) {
+		if (isMouseOver() && width > 0 && height > 0 && mapIcon.onKeyPressed(regionMapPanel.largeMapScreen, key)) {
 			return true;
 		}
 
@@ -59,7 +59,7 @@ public class MapIconWidget extends Widget {
 	}
 
 	public void updatePosition(float delta) {
-		int size = regionMapPanel.largeMap.getRegionTileSize();
+		int size = regionMapPanel.largeMapScreen.getRegionTileSize();
 		Vec3 pos = mapIcon.getPos(delta);
 		double qx = pos.x / 512D;
 		double qy = pos.z / 512D;

@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.minimap.layers;
 
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.PointerIconMode;
 import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityMapIcon;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;

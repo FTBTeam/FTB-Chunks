@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client.gui;
+package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -26,17 +26,20 @@ import net.minecraft.server.permissions.Permissions;
 import org.jspecify.annotations.Nullable;
 
 public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
-
     private final MapDimension dimension;
+    @Nullable
     private final Team openedAs;
-    private ChunkScreenPanel chunkScreenPanel;
-    private SimpleButton largeMapButton;
+    private final SimpleButton largeMapButton;
 
-    private ChunkScreen(MapDimension dimension, Team openedAs) {
+    private ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
         this.dimension = dimension;
         this.openedAs = openedAs;
         showCloseButton(true);
         showScrollBar(false);
+
+        largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
+                (simpleButton, mouseButton) -> LargeMapScreen.openMap()
+        );
     }
 
     @Override
@@ -59,14 +62,11 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         return true;
     }
 
-
     @Override
     public void addWidgets() {
         super.addWidgets();
 
-        add(largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
-                (simpleButton, mouseButton) -> LargeMapScreen.openMap()
-        ));
+        add(largeMapButton);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     }
 
     public ChunkScreenPanel getChunkScreen() {
-        return chunkScreenPanel;
+        return mainPanel;
     }
 
     @Override
@@ -98,7 +98,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     protected void doAccept() {
-
     }
 
     @Override
@@ -113,8 +112,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     protected ChunkScreenPanel createMainPanel() {
-        chunkScreenPanel = new ChunkScreenPanel(this);
-        return chunkScreenPanel;
+        return new ChunkScreenPanel(this);
     }
 
     @Override
@@ -122,6 +120,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         return new CustomTopPanel();
     }
 
+    @Nullable
     public Team getOpenedAs() {
         return openedAs;
     }
@@ -150,9 +149,9 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
             removeAllClaims = new SimpleButton(this, Component.translatable("ftbchunks.gui.unclaim_all"), Icons.BIN,
                     (btn, mb) -> {
                         if (isShiftKeyDown()) {
-                            chunkScreenPanel.removeAllClaims();
+                            mainPanel.removeAllClaims();
                         } else {
-                            getGui().openYesNo(Component.translatable("ftbchunks.gui.unclaim_all"), Component.translatable("ftbchunks.gui.unclaim_all.description"), () -> chunkScreenPanel.removeAllClaims());
+                            getGui().openYesNo(Component.translatable("ftbchunks.gui.unclaim_all"), Component.translatable("ftbchunks.gui.unclaim_all.description"), mainPanel::removeAllClaims);
                         }
                     })
                     .setForceButtonSize(false);
@@ -187,7 +186,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         }
 
         private class AdminButton extends ToggleableButton {
-
             private static final Component DISABLED = Component.translatable("ftbchunks.gui.admin_mode_disabled");
             private static final Component ENABLED = Component.translatable("ftbchunks.gui.admin_mode_enabled");
             private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info").withStyle(ChatFormatting.GRAY);

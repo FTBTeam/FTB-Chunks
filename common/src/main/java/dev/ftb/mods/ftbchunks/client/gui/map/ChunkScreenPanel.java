@@ -1,13 +1,14 @@
-package dev.ftb.mods.ftbchunks.client.gui;
+package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
+import dev.ftb.mods.ftbchunks.api.ClaimResult.StandardProblem;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
@@ -35,7 +36,6 @@ import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
@@ -43,6 +43,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
 
+import java.text.DateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,13 +57,14 @@ public class ChunkScreenPanel extends Panel {
 	private final Set<XZ> selectedChunks = new HashSet<>();
 	private final List<ChunkButtonPos> chunkedPosList = new ArrayList<>();
 	public boolean isAdminEnabled;
-	private ChunkScreenPanel.ChunkUpdateInfo updateInfo;
+	private ChunkScreenPanel.ChunkUpdateInfo updateInfo = ChunkUpdateInfo.NONE;
 	public int tileSizeX = 16;
 	public int tileSizeY = 16;
 	private final ChunkScreen chunkScreen;
 
 	public ChunkScreenPanel(ChunkScreen panel) {
 		super(panel);
+
 		this.chunkScreen = panel;
 		RenderMapImageTask.setAlwaysRenderChunksOnMap(true);
 
@@ -73,7 +75,7 @@ public class ChunkScreenPanel extends Panel {
 		alignWidgets();
 	}
 
-	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
+	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<StandardProblem, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
 			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, ClientUtils.getClientLevel().getGameTime());
 			FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
@@ -151,7 +153,7 @@ public class ChunkScreenPanel extends Panel {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player) && (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C))) {
+		if (FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer()) && (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C))) {
 			LargeMapScreen.openMap();
 			return true;
 		}
@@ -190,11 +192,11 @@ public class ChunkScreenPanel extends Panel {
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
 		IconHelper.renderIcon(FaceIcon.getFace(player.getGameProfile(), true), graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);
 
-		if (updateInfo != null && updateInfo.shouldDisplay()) {
+		if (updateInfo.shouldDisplay()) {
 			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
 			int line = 1;
-			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
-				ClaimResult.StandardProblem problem = entry.getKey();
+			for (Map.Entry<StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
+				StandardProblem problem = entry.getKey();
 				int count = entry.getValue();
 				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
@@ -249,55 +251,52 @@ public class ChunkScreenPanel extends Panel {
 		}
 
 		@Override
-		@SuppressWarnings("deprecation")
 		public void addMouseOverText(TooltipList list) {
-			if (chunk == null) {
-				return;
-			}
 			chunk.getTeam().ifPresent(team -> {
 				list.add(team.getName().copy().withStyle(ChatFormatting.WHITE));
 
 				Date date = new Date();
 
+				boolean altPressed = Minecraft.getInstance().hasAltDown();
+
 				chunk.getClaimedDate().ifPresent(claimedDate -> {
-					if (Minecraft.getInstance().hasAltDown()) {
-						list.add(Component.literal(claimedDate.toLocaleString()).withStyle(ChatFormatting.GRAY));
+					if (altPressed) {
+						list.add(Component.literal("  " + DateFormat.getDateTimeInstance().format(claimedDate)).withStyle(ChatFormatting.GRAY));
 					} else {
-						list.add(Component.literal(TimeUtils.prettyTimeString((date.getTime() - claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
+						list.add(Component.literal("  " + TimeUtils.prettyTimeString((date.getTime() - claimedDate.getTime()) / 1000L) + " ago").withStyle(ChatFormatting.GRAY));
 					}
 				});
 
 				chunk.getForceLoadedDate().ifPresent(forceLoadedDate -> {
 					list.add(Component.translatable("ftbchunks.gui.force_loaded").withStyle(ChatFormatting.YELLOW));
 
-					String loadStr = Minecraft.getInstance().hasAltDown() ?
-							"  " + forceLoadedDate.toLocaleString() :
+					String loadStr = altPressed ?
+							"  " + DateFormat.getDateTimeInstance().format(forceLoadedDate) :
 							"  " + TimeUtils.prettyTimeString((date.getTime() - forceLoadedDate.getTime()) / 1000L) + " ago";
 					list.add(Component.literal(loadStr).withStyle(ChatFormatting.GRAY));
 
 					chunk.getForceLoadExpiryDate().ifPresent(expiryDate -> {
 						list.add(Component.translatable("ftbchunks.gui.force_load_expires").withStyle(ChatFormatting.GOLD));
-						String expireStr = Minecraft.getInstance().hasAltDown() ?
-								"  " + expiryDate.toLocaleString() :
+						String expireStr = altPressed ?
+								"  " + DateFormat.getDateTimeInstance().format(expiryDate) :
 								"  " + TimeUtils.prettyTimeString((expiryDate.getTime() - date.getTime()) / 1000L) + " from now";
 						list.add(Component.literal(expireStr).withStyle(ChatFormatting.GRAY));
 					});
-
-					if (!Minecraft.getInstance().hasAltDown()) {
-						list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
-					}
 					if (team.getRankForPlayer(ClientUtils.getClientPlayer().getUUID()).isMemberOrBetter()){
 						list.add(Component.translatable("ftbchunks.gui.mouse_wheel_expiry").withStyle(ChatFormatting.DARK_GRAY));
 					}
 				});
+
+                if (!altPressed && (chunk.getClaimedDate().isPresent() || chunk.getForceLoadedDate().isPresent())) {
+                    list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
+                }
 			});
 		}
 
 		@Override
 		public boolean mouseScrolled(double scroll) {
 			return chunk.getForceLoadedDate().map(forceLoadedDate -> {
-				LocalPlayer player = Minecraft.getInstance().player;
-				boolean teamMember = chunk.isTeamMember(player);
+				boolean teamMember = chunk.isTeamMember(ClientUtils.getClientPlayer());
 				if (isMouseOver && (canChangeAsAdmin() || teamMember)) {
 					int dir = (int) Math.signum(scroll);
 					long now = System.currentTimeMillis();
@@ -349,8 +348,14 @@ public class ChunkScreenPanel extends Panel {
 		}
 	}
 
-	public record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems, long timestamp) {
+	public record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<StandardProblem, Integer> problems, long timestamp) {
+		private static final ChunkUpdateInfo NONE = new ChunkUpdateInfo(
+				0, 0, new EnumMap<>(StandardProblem.class), 0L
+		);
+
 		public boolean shouldDisplay() {
+			if (timestamp == 0L) return false;
+
 			// display for 3 seconds + 1 second per line of problem data
 			long timeout = 60L + 20L * problems.size();
 			return ClientUtils.getClientLevel().getGameTime() - timestamp < timeout;

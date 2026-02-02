@@ -2,18 +2,15 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.gui.ChunkScreen;
+import dev.ftb.mods.ftbchunks.client.gui.map.ChunkScreen;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.world.entity.player.Player;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {

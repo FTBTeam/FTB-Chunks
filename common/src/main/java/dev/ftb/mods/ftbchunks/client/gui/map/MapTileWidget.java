@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client.gui;
+package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;

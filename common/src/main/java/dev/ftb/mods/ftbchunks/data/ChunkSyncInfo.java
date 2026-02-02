@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.data;
 import com.google.common.primitives.Ints;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import org.jspecify.annotations.Nullable;

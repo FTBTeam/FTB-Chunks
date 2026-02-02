@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks.client.gui;
+package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RegionMapPanel extends Panel {
-	final LargeMapScreen largeMap;
+	final LargeMapScreen largeMapScreen;
 	double regionX = 0;
 	double regionZ = 0;
 	int regionMinX, regionMinZ, regionMaxX, regionMaxZ;
@@ -36,9 +36,9 @@ public class RegionMapPanel extends Panel {
 	int blockIndex = 0;
 	private final List<MapIcon> mapIcons;
 
-	public RegionMapPanel(LargeMapScreen panel) {
-		super(panel);
-		largeMap = panel;
+	public RegionMapPanel(LargeMapScreen largeMapScreen) {
+		super(largeMapScreen);
+		this.largeMapScreen = largeMapScreen;
 		mapIcons = new ArrayList<>();
 	}
 
@@ -80,26 +80,26 @@ public class RegionMapPanel extends Panel {
 		double dx = (regionMaxX - regionMinX);
 		double dy = (regionMaxZ - regionMinZ);
 
-		setScrollX((x - regionMinX) / dx * largeMap.scrollWidth - width / 2D);
-		setScrollY((y - regionMinZ) / dy * largeMap.scrollHeight - height / 2D);
+		setScrollX((x - regionMinX) / dx * largeMapScreen.scrollWidth - width / 2D);
+		setScrollY((y - regionMinZ) / dy * largeMapScreen.scrollHeight - height / 2D);
 	}
 
 	public void resetScroll() {
 		alignWidgets();
-		setScrollX((largeMap.scrollWidth - width) / 2D);
-		setScrollY((largeMap.scrollHeight - height) / 2D);
+		setScrollX((largeMapScreen.scrollWidth - width) / 2D);
+		setScrollY((largeMapScreen.scrollHeight - height) / 2D);
 	}
 
 	@Override
 	public void addWidgets() {
-		for (MapRegion region : largeMap.dimension.getRegions().values()) {
+		for (MapRegion region : largeMapScreen.dimension.getRegions().values()) {
 			add(new MapTileWidget(this, region));
 		}
 
 		Player player = ClientUtils.getClientPlayer();
 
 		mapIcons.clear();
-		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMap.dimension.dimension, mapIcons, MapType.LARGE_MAP));
+		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMapScreen.dimension.dimension, mapIcons, MapType.LARGE_MAP));
 
 		if (mapIcons.size() >= 2) {
 			mapIcons.sort(new MapIconComparator(player.position(), 1F));
@@ -111,20 +111,20 @@ public class RegionMapPanel extends Panel {
 			}
 		}
 
-		alignWidgets();
+//		alignWidgets();
 	}
 
 	@Override
 	public void alignWidgets() {
-		largeMap.scrollWidth = 0;
-		largeMap.scrollHeight = 0;
+		largeMapScreen.scrollWidth = 0;
+		largeMapScreen.scrollHeight = 0;
 
 		updateMinMax();
 
-		int buttonSize = largeMap.getRegionTileSize();
+		int buttonSize = largeMapScreen.getRegionTileSize();
 
-		largeMap.scrollWidth = (regionMaxX - regionMinX) * buttonSize;
-		largeMap.scrollHeight = (regionMaxZ - regionMinZ) * buttonSize;
+		largeMapScreen.scrollWidth = (regionMaxX - regionMinX) * buttonSize;
+		largeMapScreen.scrollHeight = (regionMaxZ - regionMinZ) * buttonSize;
 
 		for (Widget w : widgets) {
 			if (w instanceof MapTileWidget tileWidget) {
@@ -162,14 +162,14 @@ public class RegionMapPanel extends Panel {
 		double px = getScrollX() - getX();
 		double py = getScrollY() - getY();
 
-		regionX = (parent.getMouseX() + px) / (double) largeMap.scrollWidth * dx + regionMinX;
-		regionZ = (parent.getMouseY() + py) / (double) largeMap.scrollHeight * dy + regionMinZ;
+		regionX = (parent.getMouseX() + px) / (double) largeMapScreen.scrollWidth * dx + regionMinX;
+		regionZ = (parent.getMouseY() + py) / (double) largeMapScreen.scrollHeight * dy + regionMinZ;
 		blockX = Mth.floor(regionX * 512D);
 		blockZ = Mth.floor(regionZ * 512D);
 		blockIndex = (blockX & 511) + (blockZ & 511) * 512;
 		blockY = HeightUtils.UNKNOWN;
 
-		MapRegion region = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+		MapRegion region = largeMapScreen.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
 		if (region != null) {
 			MapRegionData data = region.getData();
 			if (data != null) {
@@ -182,7 +182,7 @@ public class RegionMapPanel extends Panel {
 	public void addMouseOverText(TooltipList list) {
 		super.addMouseOverText(list);
 
-		MapRegion mapRegion = largeMap.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
+		MapRegion mapRegion = largeMapScreen.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
 		if (mapRegion != null) {
 			MapRegionData data = mapRegion.getData();
 			if (data != null) {
@@ -202,9 +202,9 @@ public class RegionMapPanel extends Panel {
 		}
 
 		if (button.isLeft() && isMouseOver()) {
-			largeMap.prevMouseX = getMouseX();
-			largeMap.prevMouseY = getMouseY();
-			largeMap.grabbed = 1;
+			largeMapScreen.prevMouseX = getMouseX();
+			largeMapScreen.prevMouseY = getMouseY();
+			largeMapScreen.grabbed = 1;
 			return true;
 		}
 
@@ -214,13 +214,13 @@ public class RegionMapPanel extends Panel {
 	@Override
 	public void mouseReleased(MouseButton button) {
 		super.mouseReleased(button);
-		largeMap.grabbed = 0;
+		largeMapScreen.grabbed = 0;
 	}
 
 	@Override
 	public boolean scrollPanel(double scroll) {
 		if (isMouseOver()) {
-			largeMap.addZoom(scroll);
+			largeMapScreen.addZoom(scroll);
 			return true;
 		}
 

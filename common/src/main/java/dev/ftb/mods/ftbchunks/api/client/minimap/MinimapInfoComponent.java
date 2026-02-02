@@ -73,7 +73,6 @@ public interface MinimapInfoComponent {
         graphics.drawString(font, text, -textWidth / 2, y, 0xFFFFFFFF, true);
     }
 
-
     /**
      * @return display name render in the Minimap Info Settings GUI
      */

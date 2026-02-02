@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
-import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
+import dev.ftb.mods.ftbchunks.client.gui.map.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.mapicon.TrackedPlayerMapIcon;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import net.minecraft.core.BlockPos;

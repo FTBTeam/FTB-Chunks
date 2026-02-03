@@ -1,8 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.minimap;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -25,7 +29,16 @@ public class MinimapRegionCutoutTexture {
         image = new NativeImage(NativeImage.Format.RGBA, size, size, true);
         image.fillRect(0, 0, size, size, 0);
 
-        texture = new DynamicTexture(ID::toString, image);
+        texture = new DynamicTexture(ID::toString, image) {
+            @Override
+            public void upload() {
+                MinimapBlurMode blurMode = FTBChunksClientConfig.MINIMAP_BLUR_MODE.get();
+                boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (FTBChunksClientConfig.MINIMAP_ZOOM.get() < 1.5) : blurMode == MinimapBlurMode.ON;
+                FilterMode filter = minimapBlur ? FilterMode.LINEAR : FilterMode.NEAREST;
+                this.sampler = RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, filter, filter, false);
+                super.upload();
+            }
+        };
         Minecraft.getInstance().getTextureManager().register(ID, texture);
     }
 

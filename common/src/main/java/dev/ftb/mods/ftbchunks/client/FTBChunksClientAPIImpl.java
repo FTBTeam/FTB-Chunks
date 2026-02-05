@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
@@ -9,21 +8,23 @@ import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class FTBChunksClientAPIImpl implements FTBChunksClientAPI {
-    private static final List<MinimapInfoComponent> minimapComponents = new ArrayList<>();
+    // thread-safe list here
+    private static final List<MinimapInfoComponent> minimapComponents = new CopyOnWriteArrayList<>();
 
     @Override
     public Optional<WaypointManager> getWaypointManager() {
-        return MapDimension.getCurrent().flatMap(d -> Optional.ofNullable(d.getWaypointManager()));
+        return MapDimension.getCurrent().flatMap(d -> Optional.of(d.getWaypointManager()));
     }
 
     @Override
     public Optional<WaypointManager> getWaypointManager(ResourceKey<Level> dimension) {
-        return MapManager.getInstance().flatMap(manager -> Optional.ofNullable(manager.getDimension(dimension).getWaypointManager()));
+        return MapManager.getInstance().flatMap(manager -> Optional.of(manager.getDimension(dimension).getWaypointManager()));
     }
 
     @Override
@@ -57,7 +58,7 @@ public class FTBChunksClientAPIImpl implements FTBChunksClientAPI {
     }
 
     @Override
-    public ImmutableList<MinimapInfoComponent> getMinimapComponents() {
-        return ImmutableList.copyOf(minimapComponents);
+    public List<MinimapInfoComponent> getMinimapComponents() {
+        return Collections.unmodifiableList(minimapComponents);
     }
 }

@@ -2,8 +2,6 @@ package dev.ftb.mods.ftbchunks.neoforge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.minimap.MinimapPIPRenderer;
-import dev.ftb.mods.ftbchunks.client.minimap.MinimapPIPRenderState;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -15,19 +13,17 @@ import net.neoforged.neoforge.common.NeoForge;
 
 @Mod(value = FTBChunks.MOD_ID, dist = Dist.CLIENT)
 public class FTBChunksNeoForgeClient {
+    private final FTBChunksClient client;
+
     public FTBChunksNeoForgeClient(IEventBus modBus) {
-        modBus.addListener(this::registerPIPRenderers);
+        client = FTBChunksClient.INSTANCE.init();
 
         NeoForge.EVENT_BUS.addListener(this::onRenderLevelStage);
         NeoForge.EVENT_BUS.addListener(this::onFrameGraphSetup);
     }
 
-    private void registerPIPRenderers(RegisterPictureInPictureRenderersEvent event) {
-        event.register(MinimapPIPRenderState.class, MinimapPIPRenderer::new);
-    }
-
     private void onRenderLevelStage(RenderLevelStageEvent.AfterParticles event) {
-        FTBChunksClient.INSTANCE.renderLevelStage(
+        client.getInWorldIconRenderer().renderLevelStage(
                 event.getModelViewMatrix(),
                 event.getLevelRenderState().cameraRenderState.pos,
                 Minecraft.getInstance().getDeltaTracker()
@@ -35,6 +31,6 @@ public class FTBChunksNeoForgeClient {
     }
 
     private void onFrameGraphSetup(FrameGraphSetupEvent event) {
-        FTBChunksClient.INSTANCE.copyProjectionMatrix(event.getProjectionMatrix());
+        client.getInWorldIconRenderer().copyProjectionMatrix(event.getProjectionMatrix());
     }
 }

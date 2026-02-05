@@ -55,13 +55,11 @@ public class WaypointAddScreen extends BaseScreen {
                     FTBChunksAPI.clientApi().getWaypointManager(waypointLocation.dimension())
                             .ifPresent(mgr -> mgr.removeWaypointAt(waypointLocation.pos()));
                 }
-                Waypoint wp = FTBChunksClient.addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba());
-                if (wp != null) {
-                    ClientUtils.getClientPlayer().displayClientMessage(
-                            Component.translatable("ftbchunks.waypoint_added",
-                                    wp.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)
-                            ), true);
-                }
+                FTBChunksClient.addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba()).ifPresent(wp ->
+                        ClientUtils.getClientPlayer().displayClientMessage(
+                                Component.translatable("ftbchunks.waypoint_added",
+                                        wp.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)
+                                ), true));
             }
         }) {
             @Override

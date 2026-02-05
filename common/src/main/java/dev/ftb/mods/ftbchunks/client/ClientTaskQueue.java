@@ -47,12 +47,6 @@ public class ClientTaskQueue {
         }
     }
 
-    public static void dumpTaskInfo() {
-        FTBChunks.LOGGER.info("=== Task Queue: {}", taskQueue.size());
-        taskQueue.stream().map(Object::toString).forEach(FTBChunks.LOGGER::info);
-        FTBChunks.LOGGER.info("===");
-    }
-
     public static int queueSize() {
         return taskQueue.size();
     }

@@ -28,19 +28,4 @@ public class ModRenderPipelines {
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withLocation(FTBChunksAPI.id("pipeline/minimap_mask"))
             .build();
-
-    private static final BiFunction<Identifier, Identifier, RenderType> MINIMAP_MASKED_RENDER = Util.memoize(
-            (minimapTexture, maskTexture) -> RenderType.create(
-                    "ftbchunks_minimap_masked",
-                    RenderSetup.builder(MINIMAP_MASKED)
-                            .withTexture("Sampler0", minimapTexture)
-                            .withTexture("Sampler1", maskTexture)
-                            .setLayeringTransform(LayeringTransform.NO_LAYERING)
-                            .createRenderSetup()
-            )
-    );
-
-    public static RenderType getMinimapMaskedRender(Identifier minimapTexture, Identifier maskTexture) {
-        return MINIMAP_MASKED_RENDER.apply(minimapTexture, maskTexture);
-    }
 }

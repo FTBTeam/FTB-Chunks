@@ -87,9 +87,11 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 		for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
 			if (entry.getValue().isJsonPrimitive()) {
 				BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
-
 				if (col != null) {
-					BLOCK_ID_TO_COLOR_MAP.put(Identifier.tryParse(entry.getKey()), col);
+					Identifier key = Identifier.tryParse(entry.getKey());
+					if (key != null) {
+						BLOCK_ID_TO_COLOR_MAP.put(key, col);
+					}
 				}
 			}
 		}

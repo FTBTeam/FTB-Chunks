@@ -107,7 +107,7 @@ class MapScreenButtonPanel extends Panel {
         int yOff = ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) ? 18 : 0;
         dimensionButton.setPosAndSize(1, height - 36 - yOff, 16, 16);
         settingsButton.setPosAndSize(1, height - 18 - yOff, 16, 16);
-        serverSettingsButton.setPosAndSize(width - 18, height - 18, 16, 16);
+        serverSettingsButton.setPosAndSize(1, height - 18, 16, 16);
     }
 
     @Override

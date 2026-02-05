@@ -3,17 +3,17 @@ package dev.ftb.mods.ftbchunks.client.minimap;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent.PositionedLayer;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.*;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
 import dev.ftb.mods.ftbchunks.client.minimap.layers.*;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.util.Lazy;
 import dev.ftb.mods.ftblibrary.util.PanelPositioning;
@@ -23,12 +23,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3x2fStack;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class MinimapRenderer {
     private static final float ZOOM_FUDGE_FACTOR = 3.5F;
@@ -46,16 +48,41 @@ public class MinimapRenderer {
     // kludge to move potion effects left to avoid rendering over/under minimap in top right of screen
     private double vanillaEffectsOffsetX;
     private int cachedComponentHeight = -1;  // <0 means recalculate
+    private final List<PositionedLayer> layerRenderers = new ArrayList<>();
 
-    // TODO add API to dynamically register layer renderers
-    private final List<MinimapLayerRenderer> layerRenderers = List.of(
-            TerrainLayerRenderer.INSTANCE,
-            CrosshairsLayerRenderer.INSTANCE,
-            CompassLayerRenderer.INSTANCE,
-            IconLayerRenderer.INSTANCE,
-            PlayerIconLayerRenderer.INSTANCE,
-            InfoLayerRenderer.INSTANCE
-    );
+    public MinimapRenderer() {
+        addBuiltinRenderLayer(DefaultRenderLayers.TERRAIN, TerrainLayerRenderer.INSTANCE);
+        addBuiltinRenderLayer(DefaultRenderLayers.CROSSHAIRS, CrosshairsLayerRenderer.INSTANCE);
+        addBuiltinRenderLayer(DefaultRenderLayers.COMPASS, CompassLayerRenderer.INSTANCE);
+        addBuiltinRenderLayer(DefaultRenderLayers.ICONS, IconLayerRenderer.INSTANCE);
+        addBuiltinRenderLayer(DefaultRenderLayers.PLAYER, PlayerIconLayerRenderer.INSTANCE);
+        addBuiltinRenderLayer(DefaultRenderLayers.INFO, InfoLayerRenderer.INSTANCE);
+    }
+
+    public void addExtraRenderLayers() {
+        List<PositionedLayer> toAdd = new ArrayList<>();
+        MinimapLayerEvent.ADD_LAYERS.invoker().accept(new MinimapLayerEvent(toAdd::add));
+        toAdd.forEach(this::addRenderLayer);
+    }
+
+    private void addRenderLayer(PositionedLayer layer) {
+        int insertPos;
+        Identifier other = layer.order().otherLayer();
+        if (other == null) {
+            insertPos = layer.order().after() ? layerRenderers.size() : 0;
+        } else {
+            int otherIndex = IntStream.range(0, layerRenderers.size())
+                    .filter(i -> layerRenderers.get(i).id().equals(other))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Attempted to order against unregistered layer " + other));
+            insertPos = otherIndex + (layer.order().after() ? 1 : 0);
+        }
+        layerRenderers.add(insertPos, layer);
+    }
+
+    private void addBuiltinRenderLayer(Identifier id, MinimapLayerRenderer renderer) {
+        addRenderLayer(new PositionedLayer(id, renderer, MinimapLayerEvent.Order.atEnd()));
+    }
 
     public void tick(Minecraft mc) {
         if (mc.player != null) {
@@ -67,46 +94,21 @@ public class MinimapRenderer {
     public void render(GuiGraphics graphics, DeltaTracker tickDelta) {
         Minecraft mc = Minecraft.getInstance();
 
-        if (mc.player == null || mc.level == null || MapManager.getInstance().isEmpty() || MapDimension.getCurrent().isEmpty()) {
+        if (shouldSkipMinimapRendering(mc)) {
             return;
         }
 
-        float partialTicks = tickDelta.getGameTimeDeltaPartialTick(false);
+        Player player = ClientUtils.getClientPlayer();
+        MapDimension dim = MapDimension.getCurrent().orElseThrow();
+        float partialTick = tickDelta.getGameTimeDeltaPartialTick(false);
+        Vec3 playerPos = prevPlayerPos.lerp(currentPlayerPos, partialTick);
 
-        Vec3 playerPos = prevPlayerPos.lerp(currentPlayerPos, partialTicks);
+        refreshMinimapTextureIfNeeded(playerPos, dim);
+        refreshIconsIfNeeded(playerPos, partialTick, dim);
 
-        MapDimension dim = MapDimension.getCurrent().get();
-
-        XZ playerChunkPos = new XZ(Mth.floor(playerPos.x) >> 4, Mth.floor(playerPos.z) >> 4);
-        if (!playerChunkPos.equals(currentPlayerChunk) || textureRefreshRequested) {
-            textureRefreshRequested = false;
-            currentPlayerChunk = playerChunkPos;
-            miniMapTexture.get().update(dim.dimension, currentPlayerChunk);
-        }
-
-        if (mc.options.hideGui || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_ALPHA.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
-            return;
-        }
-
-        // TODO: [21.8] Figure out how to do this. Game already supports bluring so we can likely figure it out from there!
-//        MinimapBlurMode blurMode = FTBChunksClientConfig.MINIMAP_BLUR_MODE.get();
-//        boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (baseZoom < 1.5F) : blurMode == MinimapBlurMode.ON;
-//        int filter = minimapBlur ? GL11.GL_LINEAR : GL11.GL_NEAREST;
-//        RenderSystem.bindTextureForSetup(minimapTextureId);
-//        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, filter);
-//        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, filter);
-
-        float guiScale = mc.getWindow().getGuiScale();
         int scaledWidth = mc.getWindow().getGuiScaledWidth();
         int scaledHeight = mc.getWindow().getGuiScaledHeight();
-
-        refreshMinimapIconsIfNeeded(playerPos, tickDelta, dim);
-
-        float minimapScale = calculateMinimapScale(guiScale, scaledWidth);
-
-        boolean rotationLocked = FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() || FTBChunksClientConfig.SQUARE_MINIMAP.get();
-        float minimapRotation = (rotationLocked ? 180F : -mc.player.getYRot()) % 360F;
-
+        float minimapScale = calculateMinimapScale(mc.getWindow().getGuiScale(), scaledWidth);
         int minimapSize = (int) (64F * minimapScale);
 
         PanelPositioning.PanelPos minimapPos = FTBChunksClientConfig.MINIMAP_POSITION.get().getPanelPos(
@@ -115,13 +117,7 @@ public class MinimapRenderer {
                 FTBChunksClientConfig.MINIMAP_OFFSET_X.get(), FTBChunksClientConfig.MINIMAP_OFFSET_Y.get()
         );
 
-        // a bit of a kludge here: vanilla renders active mobeffects in the top-right; move them to the left of the minimap if necessary
-        // see GuiMixin for where this is used
-        if (!mc.player.getActiveEffects().isEmpty() && minimapPos.y() <= 50 && minimapPos.x() + minimapSize > scaledWidth - 50) {
-            vanillaEffectsOffsetX = -(scaledWidth - minimapPos.x()) - 5;
-        } else {
-            vanillaEffectsOffsetX = 0;
-        }
+        updateVanillaEffectsOffsetX(player, minimapPos, minimapSize, scaledWidth);
 
         int componentsHeight = getMinimapComponentsTotalHeight(dim, playerPos);
         var componentContext = new MinimapComponentContext(
@@ -130,6 +126,9 @@ public class MinimapRenderer {
         );
         int yAdjust = adjustMinimapYForComponents(minimapPos.y(), minimapSize, componentsHeight, scaledHeight);
         minimapPos = new PanelPositioning.PanelPos(minimapPos.x(), minimapPos.y() + yAdjust);
+
+        boolean rotationLocked = FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() || FTBChunksClientConfig.SQUARE_MINIMAP.get();
+        float minimapRotation = (rotationLocked ? 180F : -player.getYRot()) % 360F;
 
         MinimapRenderContext minimapCtx = new MinimapRenderContext(
                 minimapPos, minimapSize,
@@ -146,19 +145,46 @@ public class MinimapRenderer {
         // all minimap rendering happens with a translation to the centre of the minimap
         poseStack.translate(minimapPos.x() + minimapSize / 2F, minimapPos.y() + minimapSize / 2F);
         layerRenderers.forEach(r -> {
-            if (r.shouldRender(minimapCtx)) {
-                r.renderLayer(graphics, poseStack, minimapCtx);
+            if (r.renderer().shouldRender(minimapCtx)) {
+                r.renderer().renderLayer(graphics, poseStack, minimapCtx);
             }
         });
         poseStack.popMatrix();
+    }
+
+    private static boolean shouldSkipMinimapRendering(Minecraft mc) {
+        return mc.player == null || mc.level == null || mc.options.hideGui
+                || MapManager.getInstance().isEmpty()
+                || MapDimension.getCurrent().isEmpty()
+                || !FTBChunksClientConfig.MINIMAP_ENABLED.get()
+                || FTBChunksClientConfig.MINIMAP_ALPHA.get() == 0
+                || !FTBChunksWorldConfig.shouldShowMinimap(mc.player);
+    }
+
+    private void refreshMinimapTextureIfNeeded(Vec3 playerPos, MapDimension dim) {
+        XZ playerChunkPos = new XZ(Mth.floor(playerPos.x) >> 4, Mth.floor(playerPos.z) >> 4);
+        if (!playerChunkPos.equals(currentPlayerChunk) || textureRefreshRequested) {
+            textureRefreshRequested = false;
+            currentPlayerChunk = playerChunkPos;
+            miniMapTexture.get().update(dim.dimension, currentPlayerChunk);
+        }
     }
 
     public void requestTextureRefresh() {
         textureRefreshRequested = true;
     }
 
-    // See GuiMixin
-    // This moves the vanilla potion effects rendering to the left of the minimap if it's in the top-right
+    private void updateVanillaEffectsOffsetX(Player player, PanelPositioning.PanelPos minimapPos, int minimapSize, int scaledWidth) {
+        // A bit of a kludge here: vanilla renders active mobeffects in the top-right; move them to the left of the minimap if necessary
+        // - see GuiMixin for where it's used
+        if (!player.getActiveEffects().isEmpty() && minimapPos.y() <= 50 && minimapPos.x() + minimapSize > scaledWidth - 50) {
+            vanillaEffectsOffsetX = -(scaledWidth - minimapPos.x()) - 5;
+        } else {
+            vanillaEffectsOffsetX = 0;
+        }
+    }
+
+    // See above
     public double getVanillaEffectsOffsetX() {
         return vanillaEffectsOffsetX;
     }
@@ -167,23 +193,6 @@ public class MinimapRenderer {
         prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
         lastZoomTime = Util.getEpochMillis();
         FTBChunksClientConfig.MINIMAP_ZOOM.set(Mth.clamp(prevZoom + (zoomIn ? 1D : -1D), 1D, 4D));
-    }
-
-    public float getInterpolatedZoom() {
-        float zoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
-
-        if (prevZoom != zoom) {
-            // interpolated for smooth zooming in/out
-            long maxTime = (long) (400F / zoom);
-            long zoomTime = Mth.clamp(Util.getEpochMillis() - lastZoomTime, 0L, maxTime);
-            if (zoomTime == maxTime) {
-                lastZoomTime = 0L;
-                return zoom;
-            }
-            return Mth.lerp(zoomTime / (float) maxTime, prevZoom, zoom);
-        }
-
-        return zoom;
     }
 
     public Collection<MapIcon> getMapIcons() {
@@ -195,7 +204,25 @@ public class MinimapRenderer {
     }
 
     public void setupComponents() {
-        computeOrderedComponents();
+        sortedComponents.clear();
+        cachedComponentHeight = -1;
+
+        Map<Identifier, MinimapInfoComponent> componentMap = FTBChunksAPI.clientApi().getMinimapComponents().stream()
+                .collect(Collectors.toMap(MinimapInfoComponent::id, Function.identity()));
+
+        List<Identifier> order = FTBChunksClientConfig.MINIMAP_INFO_ORDER.get()
+                .stream()
+                .map(Identifier::parse)
+                .collect(Collectors.toCollection(ArrayList::new));  // needs to be mutable
+
+        addMissingComponents(componentMap, order);
+
+        for (Identifier id : order) {
+            MinimapInfoComponent minimapInfoComponent = componentMap.get(id);
+            if (minimapInfoComponent != null && FTBChunksAPI.clientApi().isMinimapComponentEnabled(minimapInfoComponent)) {
+                sortedComponents.add(minimapInfoComponent);
+            }
+        }
     }
 
     private static float calculateMinimapScale(float guiScale, int scaledWidth) {
@@ -226,7 +253,24 @@ public class MinimapRenderer {
         return 0;
     }
 
-    private void refreshMinimapIconsIfNeeded(Vec3 playerPos, DeltaTracker tickDelta, MapDimension dim) {
+    private float getInterpolatedZoom() {
+        float zoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
+
+        if (prevZoom != zoom) {
+            // interpolated for smooth zooming in/out
+            long maxTime = (long) (400F / zoom);
+            long zoomTime = Mth.clamp(Util.getEpochMillis() - lastZoomTime, 0L, maxTime);
+            if (zoomTime == maxTime) {
+                lastZoomTime = 0L;
+                return zoom;
+            }
+            return Mth.lerp(zoomTime / (float) maxTime, prevZoom, zoom);
+        }
+
+        return zoom;
+    }
+
+    private void refreshIconsIfNeeded(Vec3 playerPos, float partialTick, MapDimension dim) {
         long now = Util.getEpochMillis();
         if (now - lastMapIconUpdate >= FTBChunksClientConfig.MINIMAP_ICON_UPDATE_TIMER.get()) {
             lastMapIconUpdate = now;
@@ -235,7 +279,7 @@ public class MinimapRenderer {
             MapIconEvent.MINIMAP.invoker().accept(new MapIconEvent(dim.dimension, mapIcons, MapType.MINIMAP));
 
             if (mapIcons.size() >= 2) {
-                mapIcons.sort(new MapIconComparator(playerPos, tickDelta.getGameTimeDeltaPartialTick(false)));
+                mapIcons.sort(new MapIconComparator(playerPos, partialTick));
             }
         }
     }
@@ -252,31 +296,6 @@ public class MinimapRenderer {
             cachedComponentHeight = sum;
         }
         return cachedComponentHeight;
-    }
-
-    /**
-     * Handles the headache of sorting logic
-     */
-    private void computeOrderedComponents() {
-        sortedComponents.clear();
-        cachedComponentHeight = -1;
-
-        Map<Identifier, MinimapInfoComponent> componentMap = FTBChunksAPI.clientApi().getMinimapComponents().stream()
-                .collect(Collectors.toMap(MinimapInfoComponent::id, Function.identity()));
-
-        List<Identifier> order = FTBChunksClientConfig.MINIMAP_INFO_ORDER.get()
-                .stream()
-                .map(Identifier::parse)
-                .collect(Collectors.toCollection(ArrayList::new));  // needs to be mutable
-
-        addMissingComponents(componentMap, order);
-
-        for (Identifier id : order) {
-            MinimapInfoComponent minimapInfoComponent = componentMap.get(id);
-            if (minimapInfoComponent != null && FTBChunksAPI.clientApi().isMinimapComponentEnabled(minimapInfoComponent)) {
-                sortedComponents.add(minimapInfoComponent);
-            }
-        }
     }
 
     private static void addMissingComponents(Map<Identifier, MinimapInfoComponent> componentMap, List<Identifier> order) {

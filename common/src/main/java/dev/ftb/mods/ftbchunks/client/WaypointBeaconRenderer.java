@@ -34,7 +34,7 @@ public class WaypointBeaconRenderer {
         }
     }
 
-    static void drawWaypointBeacons(Minecraft mc, List<WaypointIcon> waypoints, Vec3 cameraPos) {
+    private static void drawWaypointBeacons(Minecraft mc, List<WaypointIcon> waypoints, Vec3 cameraPos) {
         PoseStack poseStack = new PoseStack();
         poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
@@ -91,7 +91,7 @@ public class WaypointBeaconRenderer {
         poseStack.popPose();
     }
 
-    static List<WaypointIcon> findVisibleBeacons(Player player, DeltaTracker tickDelta) {
+    private static List<WaypointIcon> findVisibleBeacons(Player player, DeltaTracker tickDelta) {
         return MapManager.getInstance().map(manager -> {
             List<WaypointIcon> visibleWaypoints = new ArrayList<>();
 

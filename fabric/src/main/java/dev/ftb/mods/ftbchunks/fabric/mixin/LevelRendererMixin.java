@@ -27,6 +27,6 @@ public class LevelRendererMixin {
                             Vector4f vector4f,
                             boolean bl2,
                             CallbackInfo ci) {
-        FTBChunksClient.INSTANCE.copyProjectionMatrix(matrix4f2);
+        FTBChunksClient.INSTANCE.getInWorldIconRenderer().copyProjectionMatrix(matrix4f2);
     }
 }

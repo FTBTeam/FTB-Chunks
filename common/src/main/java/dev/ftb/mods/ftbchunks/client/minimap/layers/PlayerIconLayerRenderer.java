@@ -27,7 +27,7 @@ public enum PlayerIconLayerRenderer implements MinimapLayerRenderer {
         if (ctx.rotationLocked()) {
             poseStack.rotate((player.getVisualRotationYInDegrees() + 180F) * Mth.DEG_TO_RAD);
         }
-        poseStack.scale(ctx.size() / 16F, ctx.size() / 16F);
+        poseStack.scale(ctx.size() / 24F, ctx.size() / 24F);
 
         PointerIconMode mode = FTBChunksClientConfig.POINTER_ICON_MODE_MINIMAP.get();
         if (mode.showPointer()) {

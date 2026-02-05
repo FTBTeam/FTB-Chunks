@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
@@ -60,6 +60,6 @@ public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, Li
 	}
 
 	public static void handle(SendManyChunksPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClient.INSTANCE.updateChunksFromServer(message.dimension, message.teamId, message.chunks));
+		context.queue(() -> FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, message.chunks));
 	}
 }

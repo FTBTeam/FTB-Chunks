@@ -110,8 +110,6 @@ public class RegionMapPanel extends Panel {
 				add(new MapIconWidget(this, icon));
 			}
 		}
-
-//		alignWidgets();
 	}
 
 	@Override

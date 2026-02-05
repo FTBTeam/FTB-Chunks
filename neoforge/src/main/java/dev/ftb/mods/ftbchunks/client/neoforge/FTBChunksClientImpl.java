@@ -1,23 +1,13 @@
 package dev.ftb.mods.ftbchunks.client.neoforge;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.common.NeoForge;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+// arch ExpectPlatform
+@SuppressWarnings("unused")
 public class FTBChunksClientImpl {
-	// arch expectplatform
-	@SuppressWarnings("unused")
-    public static void registerPlatform() {
-	}
-
-	// arch expectplatform
-	@SuppressWarnings("unused")
     public static boolean doesKeybindMatch(@Nullable KeyMapping keyMapping, KeyEvent event) {
 		if (keyMapping != null && keyMapping.matches(event)) {
 			return switch (keyMapping.getKeyModifier()) {

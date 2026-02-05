@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DebugComponent implements MinimapInfoComponent {
-
     public static final Identifier ID = FTBChunksAPI.id("debug");
 
     public DebugComponent() {
@@ -39,7 +38,7 @@ public class DebugComponent implements MinimapInfoComponent {
         components.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
         components.add(Component.literal("Rgn: " + XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).withStyle(ChatFormatting.GRAY));
         components.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
-        components.add(Component.literal("Updates: " + FTBChunksClient.INSTANCE.getRenderedDebugCount()).withStyle(ChatFormatting.GRAY));
+        components.add(Component.literal("Updates: " + FTBChunksClient.INSTANCE.getRerenderTracker().getRerenderCount()).withStyle(ChatFormatting.GRAY));
         if (ChunkUpdateTask.getDebugLastTime() > 0L) {
             components.add(Component.literal(String.format("Last: %,d ns", ChunkUpdateTask.getDebugLastTime())).withStyle(ChatFormatting.GRAY));
         }

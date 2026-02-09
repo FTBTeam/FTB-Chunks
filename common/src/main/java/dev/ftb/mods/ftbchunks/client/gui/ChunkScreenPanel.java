@@ -5,10 +5,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
@@ -20,11 +20,7 @@ import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
-import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
@@ -44,14 +40,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
@@ -69,6 +58,7 @@ public class ChunkScreenPanel extends Panel {
 	public int tileSizeX = 16;
 	public int tileSizeY = 16;
 	private final ChunkScreen chunkScreen;
+	private Button lastButtonDragged = null;
 
 	public ChunkScreenPanel(ChunkScreen panel) {
 		super(panel);
@@ -146,6 +136,7 @@ public class ChunkScreenPanel extends Panel {
 			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
 			firstSelectedChunk = null;
+			lastButtonDragged = null;
 			playClickSound();
 		}
 	}
@@ -256,11 +247,14 @@ public class ChunkScreenPanel extends Panel {
 		@Override
 		public boolean mouseDragged(int button, double dragX, double dragY) {
 			if (isMouseOver() && (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))) {
-				if (ChunkScreen.claimMode != ChunkScreen.ClaimMode.FREEHAND && firstSelectedChunk != null) {
-					addChunksToSelection();
+				if (FTBChunksClientConfig.CLAIM_MODE.get() != GuiClaimMode.FREEHAND && firstSelectedChunk != null) {
+					if (lastButtonDragged != this) {
+						addChunksToSelection();
+					}
 				} else {
 					selectedChunks.add(chunkPos);
 				}
+				lastButtonDragged = this;
 			}
 			return super.mouseDragged(button, dragX, dragY);
 		}
@@ -275,7 +269,7 @@ public class ChunkScreenPanel extends Panel {
 			for (int x = x1; x <= x2; x++) {
 				for (int z = z1; z <= z2; z++) {
 					XZ xz = new XZ(x, z);
-					if (ChunkScreen.claimMode == ChunkScreen.ClaimMode.RECTANGLE
+					if (FTBChunksClientConfig.CLAIM_MODE.get() == GuiClaimMode.RECTANGLE
 							|| distance(xz, centre) - 0.5f <= Math.min(centre.x() - x1, centre.z() - z1))
 					{
 						selectedChunks.add(xz);

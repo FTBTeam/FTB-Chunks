@@ -1,12 +1,11 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
@@ -27,8 +26,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     private final Team openedAs;
     private ChunkScreenPanel chunkScreenPanel;
     private SimpleButton largeMapButton;
-
-    static ClaimMode claimMode = ClaimMode.FREEHAND; // persist across invocations
 
     private ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
         this.dimension = dimension;
@@ -213,10 +210,11 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
         private class ClaimModeButton extends SimpleButton {
             public ClaimModeButton() {
-                super(CustomTopPanel.this, claimMode.description(), claimMode.icon(), (widget, button) -> {
-                    claimMode = claimMode.next();
-                    widget.setIcon(claimMode.icon());
-                    widget.setTitle(claimMode.description());
+                super(CustomTopPanel.this, FTBChunksClientConfig.CLAIM_MODE.get().description(), FTBChunksClientConfig.CLAIM_MODE.get().icon(), (widget, button) -> {
+                    GuiClaimMode newClaimMode = FTBChunksClientConfig.CLAIM_MODE.get().next();
+                    widget.setIcon(newClaimMode.icon());
+                    widget.setTitle(newClaimMode.description());
+                    FTBChunksClientConfig.CLAIM_MODE.set(newClaimMode);
                 });
             }
         }
@@ -280,29 +278,4 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         }
     }
 
-    enum ClaimMode {
-        FREEHAND("freehand", Icon.getIcon(FTBChunksAPI.rl("textures/freehand.png"))),
-        RECTANGLE("rectangle", Icon.getIcon(FTBChunksAPI.rl("textures/rectangle.png"))),
-        CIRCLE("circle", Icon.getIcon(FTBChunksAPI.rl("textures/circle.png")));
-
-        private final String key;
-        private final Icon icon;
-
-        ClaimMode(String key, Icon icon) {
-            this.key = key;
-            this.icon = icon;
-        }
-
-        Component description() {
-            return Component.translatable("ftbchunks.claim_mode." + key);
-        }
-
-        public Icon icon() {
-            return icon;
-        }
-
-        public ClaimMode next() {
-            return ClaimMode.values()[(ordinal() + 1) % ClaimMode.values().length];
-        }
-    }
 }

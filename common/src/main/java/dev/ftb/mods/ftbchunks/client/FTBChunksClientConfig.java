@@ -56,6 +56,8 @@ public interface FTBChunksClientConfig {
             .excludedFromGui().comment("Advanced option. Grass darkness");
     IntValue FOLIAGE_DARKNESS = APPEARANCE.addInt("foliage_darkness", 50, 0, 255)
             .excludedFromGui().comment("Advanced option. Foliage darkness");
+    EnumValue<PointerIconMode> POINTER_ICON_MODE = APPEARANCE.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP)
+            .comment("Mode for the pointer icon to render on full screen map");
 
     Config WAYPOINTS = CONFIG.addGroup("waypoints", 1);
     BooleanValue IN_WORLD_WAYPOINTS = WAYPOINTS.addBoolean("in_world_waypoints", true)
@@ -85,17 +87,7 @@ public interface FTBChunksClientConfig {
     DoubleValue MINIMAP_ZOOM = MINIMAP.addDouble("zoom", 1D, 1D, 4D)
             .comment("Zoom distance of the minimap");
     BooleanValue MINIMAP_LOCKED_NORTH = MINIMAP.addBoolean("locked_north", true)
-            .comment("When true, inimap rotation is locked to North = Up");
-    BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP.addBoolean("show_player_when_unlocked", true)
-            .comment("Always show player on minimap, even when rotation not locked");
-    BooleanValue MINIMAP_WAYPOINTS = MINIMAP.addBoolean("waypoints", true)
-            .comment("Show waypoints on minimap");
-    BooleanValue MINIMAP_PLAYER_HEADS = MINIMAP.addBoolean("player_heads", true)
-            .comment("Show player heads on minimap");
-    BooleanValue MINIMAP_ENTITIES = MINIMAP.addBoolean("entities", true)
-            .comment("Show entities on minimap");
-    BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP.addBoolean("large_entities", false)
-            .comment("Entitie icons on the minimap will be larger");
+            .comment("When true, minimap rotation is locked to North = Up");
     EnumValue<MinimapBlurMode> MINIMAP_BLUR_MODE = MINIMAP.addEnum("blur_mode", MinimapBlurMode.NAME_MAP)
             .comment("Blurs minimap");
     BooleanValue MINIMAP_COMPASS = MINIMAP.addBoolean("compass", true)
@@ -112,12 +104,22 @@ public interface FTBChunksClientConfig {
         .comment("Draw a square minimap instead of a circular one (also enforces rotation locking)");
     BooleanValue MINIMAP_PROPORTIONAL = MINIMAP.addBoolean("proportional", true)
             .comment("Size minimap proportional to screen width (and scale)");
-    EntityTypeBoolMapValue ENTITY_ICON = MINIMAP.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap()))
+
+    Config MINIMAP_ICONS = MINIMAP.addGroup("icons");
+    EntityTypeBoolMapValue ENTITY_ICON = MINIMAP_ICONS.add(new EntityTypeBoolMapValue(MINIMAP, "entity_icon", Collections.emptyMap()))
             .comment("Entity icons on minimap");
-    EnumValue<PointerIconMode> POINTER_ICON_MODE = MINIMAP.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP)
-            .comment("Mode for the pointer icon to render on full screen minimap");
-    EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP)
+    EnumValue<PointerIconMode> POINTER_ICON_MODE_MINIMAP = MINIMAP_ICONS.addEnum("pointer_icon_mode_minimap", PointerIconMode.NAME_MAP)
             .comment("Mode for the pointer icon to render on minimap");
+    BooleanValue MINIMAP_ENTITIES = MINIMAP_ICONS.addBoolean("entities", true)
+            .comment("Show entity icons on the minimap");
+    BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP_ICONS.addBoolean("large_entities", false)
+            .comment("Make entity icons on the minimap larger");
+    BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP_ICONS.addBoolean("show_player_when_unlocked", true)
+            .comment("Always show player icon on minimap, even when rotation not locked");
+    BooleanValue MINIMAP_WAYPOINTS = MINIMAP_ICONS.addBoolean("waypoints", true)
+            .comment("Show waypoint icons on minimap");
+    BooleanValue MINIMAP_PLAYER_HEADS = MINIMAP_ICONS.addBoolean("player_heads", true)
+            .comment("Show other player heads on minimap");
 
     Config MINIMAP_INFO = MINIMAP.addGroup("info");
     DoubleValue MINIMAP_FONT_SCALE = MINIMAP_INFO.addDouble("font_scale", 0.5, 0.1, 5.0)
@@ -151,5 +153,10 @@ public interface FTBChunksClientConfig {
 
     static void saveConfig() {
         ConfigManager.getInstance().save(KEY);
+    }
+
+    static boolean shouldBlurTexture(double zoom) {
+        MinimapBlurMode blurMode = MINIMAP_BLUR_MODE.get();
+        return blurMode == MinimapBlurMode.AUTO ? zoom < 1.5 : blurMode == MinimapBlurMode.ON;
     }
 }

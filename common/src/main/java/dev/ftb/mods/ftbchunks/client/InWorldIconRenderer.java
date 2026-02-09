@@ -50,9 +50,12 @@ public class InWorldIconRenderer {
             if (icon.isVisible(MapType.WORLD_ICON, playerDist, false)) {
                 Vector4f v = new Vector4f((float) (pos.x - cameraPos.x), (float) (pos.y - cameraPos.y), (float) (pos.z - cameraPos.z), 1F);
                 double lookAngle = player.getLookAngle().dot(new Vec3(v.x(), v.y(), v.z()).normalize());
-                if (lookAngle > 0) {  // icon in front of the player
+                if (lookAngle > 0) {  // icon in front of the player?
+                    // transform the icon's camera-relative coords into clip space (-1.0 -> 1.0, -1.0 -> 1.0)
+                    // (worldMatrix is a combination of the model-view and projection matrices)
                     worldMatrix.transform(v);
                     v.div(v.w());
+                    // get the actual screen coordinates
                     float ix = halfScreenW + v.x() * halfScreenW;
                     float iy = halfScreenH - v.y() * halfScreenH;
                     double mouseDist = MathUtils.dist(ix, iy, halfScreenW, halfScreenH);

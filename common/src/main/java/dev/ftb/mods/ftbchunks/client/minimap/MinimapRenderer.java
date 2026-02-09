@@ -192,7 +192,12 @@ public class MinimapRenderer {
     public void changeZoom(boolean zoomIn) {
         prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
         lastZoomTime = Util.getEpochMillis();
-        FTBChunksClientConfig.MINIMAP_ZOOM.set(Mth.clamp(prevZoom + (zoomIn ? 1D : -1D), 1D, 4D));
+        double newZoom = Mth.clamp(prevZoom + (zoomIn ? 1D : -1D), 1D, 4D);
+        FTBChunksClientConfig.MINIMAP_ZOOM.set(newZoom);
+
+        if (FTBChunksClientConfig.shouldBlurTexture(newZoom) != FTBChunksClientConfig.shouldBlurTexture(prevZoom)) {
+            requestTextureRefresh();
+        }
     }
 
     public Collection<MapIcon> getMapIcons() {

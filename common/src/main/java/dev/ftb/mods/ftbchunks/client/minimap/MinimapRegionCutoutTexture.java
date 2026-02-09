@@ -18,8 +18,8 @@ import net.minecraft.world.level.Level;
 
 public class MinimapRegionCutoutTexture {
     public static final Identifier ID = FTBChunksAPI.id("minimap_region_cutout_texture");
-    private final NativeImage image;
 
+    private final NativeImage image;
     private final DynamicTexture texture;
 
     public MinimapRegionCutoutTexture() {
@@ -32,10 +32,12 @@ public class MinimapRegionCutoutTexture {
         texture = new DynamicTexture(ID::toString, image) {
             @Override
             public void upload() {
-                MinimapBlurMode blurMode = FTBChunksClientConfig.MINIMAP_BLUR_MODE.get();
-                boolean minimapBlur = blurMode == MinimapBlurMode.AUTO ? (FTBChunksClientConfig.MINIMAP_ZOOM.get() < 1.5) : blurMode == MinimapBlurMode.ON;
-                FilterMode filter = minimapBlur ? FilterMode.LINEAR : FilterMode.NEAREST;
-                this.sampler = RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, filter, filter, false);
+                FilterMode filter = FTBChunksClientConfig.shouldBlurTexture(FTBChunksClientConfig.MINIMAP_ZOOM.get()) ?
+                        FilterMode.LINEAR :
+                        FilterMode.NEAREST;
+                sampler = RenderSystem.getSamplerCache().getSampler(
+                        AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, filter, filter, false
+                );
                 super.upload();
             }
         };
@@ -86,13 +88,5 @@ public class MinimapRegionCutoutTexture {
         }
 
         texture.upload();
-    }
-
-    public DynamicTexture getTexture() {
-        return texture;
-    }
-
-    public Identifier identifier() {
-        return ID;
     }
 }

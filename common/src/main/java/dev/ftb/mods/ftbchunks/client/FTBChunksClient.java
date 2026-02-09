@@ -170,6 +170,7 @@ public enum FTBChunksClient {
     }
 
     private static void renderTestMinimapLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
+        // only in dev mode: testing minimap layer registration event
         if (ClientUtils.getClientPlayer().isCrouching()) {
             poseStack.pushMatrix();
             poseStack.translate(-ctx.size() / 2f + 2, -ctx.size() / 2f + 2);
@@ -180,7 +181,7 @@ public enum FTBChunksClient {
     }
 
     private void onWaypointManagerAvailable(WaypointManager mgr) {
-        // only called in dev mode, testing transient waypoints
+        // only in dev mode: testing transient waypoints
         if (ClientUtils.getClientLevel().dimension().equals(Level.OVERWORLD)) {
             mgr.addTransientWaypointAt(new BlockPos(0, 65, 0), "Transient Dev-Mode Waypoint").setColor(0x808080);
         }
@@ -253,11 +254,11 @@ public enum FTBChunksClient {
     }
 
     private void onRenderHUD(GuiGraphics graphics, DeltaTracker tickDelta) {
-        minimapRenderer.render(graphics, tickDelta);
-
         if (FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
             inWorldIconRenderer.renderInWorldIcons(graphics, tickDelta, ClientUtils.getClientPlayer().position(), minimapRenderer.getMapIcons());
         }
+
+        minimapRenderer.render(graphics, tickDelta);
     }
 
     private EventResult onGuiInit(Screen screen, ScreenAccess access) {
@@ -324,7 +325,7 @@ public enum FTBChunksClient {
 
         if (mc.level == null || mc.player == null || MapDimension.getCurrent().isEmpty()) return;
 
-        MapDimension mapDimension = MapDimension.getCurrent().get();
+        MapDimension mapDimension = MapDimension.getCurrent().orElseThrow();
 
         if (FTBChunksClientConfig.MINIMAP_WAYPOINTS.get()) {
             for (Waypoint w : mapDimension.getWaypointManager()) {

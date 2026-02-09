@@ -67,17 +67,15 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 			case UNLOAD -> pos -> data.unForceLoad(source, pos.dim(player.level()), false, message.tryAdminChanges);
 		};
 
-		EnumMap<ClaimResult.StandardProblem, Integer> problems = new EnumMap<>(ClaimResult.StandardProblem.class);
+		Map<String,Integer> problems = new HashMap<>();
+
 		int changed = 0;
 		for (XZ pos : message.chunks) {
-			ClaimResult result = consumer.apply(pos);
-			if (!result.isSuccess()) {
+			ClaimResult r = consumer.apply(pos);
+			if (!r.isSuccess()) {
 				FTBChunks.LOGGER.debug("{} tried to {} @ {}:{}:{} but got result {}",
-						player.getScoreboardName(), message.action.name, player.level().dimension().identifier(),
-						pos.x(), pos.z(), result);
-				if (result instanceof ClaimResult.StandardProblem problem) {
-					problems.put(problem, problems.getOrDefault(problem, 0) + 1);
-				}
+						player.getScoreboardName(), message.action.name, player.level().dimension().identifier(), pos.x(), pos.z(), r);
+				problems.put(r.getResultId(), problems.getOrDefault(r.getResultId(), 0) + 1);
 			} else {
 				changed++;
 			}

@@ -33,7 +33,9 @@ public interface ClaimResult {
 	 *
 	 * @return the message to be displayed
 	 */
-	MutableComponent getMessage();
+	default MutableComponent getMessage() {
+		return Component.translatable(getResultId());
+	}
 
 	/**
 	 * Create a custom claim failure result. This may be of use to mods which add extra checks to claiming/forcing/etc.
@@ -76,23 +78,19 @@ public interface ClaimResult {
 
 		public static final NameMap<StandardProblem> NAME_MAP = NameMap.of(NOT_OWNER, values()).baseNameKey("ftbchunks.standard_problem").create();
 
-		private final String resultName;
+		private final String resultId;
 
-		StandardProblem(String resultName) {
-			this.resultName = resultName;
+		StandardProblem(String resultId) {
+			this.resultId = "ftbchunks.claim_result." + resultId;
 		}
 
 		public static Optional<StandardProblem> forName(String name) {
 			return Optional.ofNullable(NAME_MAP.getNullable(name));
 		}
 
-		public MutableComponent getMessage() {
-			return Component.translatable("ftbchunks.claim_result." + getResultId());
-		}
-
 		@Override
 		public String getResultId() {
-			return resultName;
+			return resultId;
 		}
 	}
 
@@ -102,20 +100,15 @@ public interface ClaimResult {
 	 * Use {@link ClaimResult#customProblem(String)} to create instances of this class.
 	 */
 	class CustomProblem implements ClaimResult {
-		private final String name;
+		private final String translationKey;
 
-		private CustomProblem(String name) {
-			this.name = name;
+		private CustomProblem(String translationKey) {
+			this.translationKey = translationKey;
 		}
 
 		@Override
 		public String getResultId() {
-			return name;
-		}
-
-		@Override
-		public MutableComponent getMessage() {
-			return Component.translatable(name);
+			return translationKey;
 		}
 	}
 }

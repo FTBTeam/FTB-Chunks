@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.api.ClaimResult.StandardProblem;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -38,6 +37,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -75,7 +75,7 @@ public class ChunkScreenPanel extends Panel {
 		alignWidgets();
 	}
 
-	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<StandardProblem, Integer> problems) {
+	public static void notifyChunkUpdates(int totalChunks, int changedChunks, Map<String, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
 			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, ClientUtils.getClientLevel().getGameTime());
 			FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
@@ -195,10 +195,10 @@ public class ChunkScreenPanel extends Panel {
 		if (updateInfo.shouldDisplay()) {
 			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
 			int line = 1;
-			for (Map.Entry<StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
-				StandardProblem problem = entry.getKey();
+			for (Map.Entry<String, Integer> entry : updateInfo.problems.entrySet()) {
+				MutableComponent problem = Component.translatable(entry.getKey());
 				int count = entry.getValue();
-				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
+				theme.drawString(graphics, problem.append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
 		}
 	}
@@ -348,11 +348,10 @@ public class ChunkScreenPanel extends Panel {
 		}
 	}
 
-	public record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<StandardProblem, Integer> problems, long timestamp) {
+	public record ChunkUpdateInfo(int totalChunks, int changedChunks, Map<String, Integer> problems, long timestamp) {
 		private static final ChunkUpdateInfo NONE = new ChunkUpdateInfo(
-				0, 0, new EnumMap<>(StandardProblem.class), 0L
+				0, 0, Map.of(), 0L
 		);
-
 		public boolean shouldDisplay() {
 			if (timestamp == 0L) return false;
 

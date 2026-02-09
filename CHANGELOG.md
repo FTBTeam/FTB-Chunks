@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2101.1.15]
 
 ### Added
+* Added a "Claim Mode" client setting to the claim management screen
+  * Allows freehand claiming (as before), as well as ability to drag rectangular and circular areas on the chunk claim screen
+  * See the new claim mode at the top right of the chunk claiming screen
 * Added some FTB Backups 3 integration: the `local/ftbchunks` clientside directory is now automatically backed up
 * Added ability for non-admin players to see (but not change!) the server config
 * (API) added new `ChunksUpdatedFromServerEvent` - aggregates multiple chunk info updates into one event for efficiency

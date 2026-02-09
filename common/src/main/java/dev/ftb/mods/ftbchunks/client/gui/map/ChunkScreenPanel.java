@@ -39,6 +39,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.permissions.Permissions;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
@@ -54,6 +55,7 @@ public class ChunkScreenPanel extends Panel {
 	private static final ImageIcon CHECKERED_ICON = new ImageIcon(FTBChunksAPI.id("textures/checkered.png"));
 
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
+	private XZ firstSelectedChunk = null;
 	private final Set<XZ> selectedChunks = new HashSet<>();
 	private final List<ChunkButtonPos> chunkedPosList = new ArrayList<>();
 	public boolean isAdminEnabled;
@@ -124,11 +126,11 @@ public class ChunkScreenPanel extends Panel {
 
 		this.tileSizeX = maxWidth / FTBChunks.TILES;
 		this.tileSizeY = maxHeight / FTBChunks.TILES;
-        for (ChunkButtonPos chunkedPos : chunkedPosList) {
-            chunkedPos.button.setPos(xPos + tileSizeX * chunkedPos.x, yPos + tileSizeY * chunkedPos.y);
-            chunkedPos.button.setSize(tileSizeX, tileSizeY);
-        }
-    }
+		for (ChunkButtonPos chunkedPos : chunkedPosList) {
+			chunkedPos.button.setPos(xPos + tileSizeX * chunkedPos.x, yPos + tileSizeY * chunkedPos.y);
+			chunkedPos.button.setSize(tileSizeX, tileSizeY);
+		}
+	}
 
 	@Override
 	public void mouseReleased(MouseButton button) {
@@ -138,6 +140,7 @@ public class ChunkScreenPanel extends Panel {
 			Optional<UUID> teamId = Optional.ofNullable(chunkScreen.getOpenedAs()).map(Team::getTeamId);
 			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
+			firstSelectedChunk = null;
 			playClickSound();
 		}
 	}
@@ -145,9 +148,9 @@ public class ChunkScreenPanel extends Panel {
 	public void removeAllClaims() {
 		Optional<UUID> teamId = Optional.ofNullable(chunkScreen.getOpenedAs()).map(Team::getTeamId);
 		Set<XZ> allChunks = chunkedPosList.stream()
-						.map(ChunkButtonPos::button)
-						.map(ChunkButton::getChunkPos)
-						.collect(Collectors.toSet());
+				.map(ChunkButtonPos::button)
+				.map(ChunkButton::getChunkPos)
+				.collect(Collectors.toSet());
 		NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.UNCLAIM, allChunks, canChangeAsAdmin(), teamId));
 	}
 
@@ -223,6 +226,10 @@ public class ChunkScreenPanel extends Panel {
 
 		@Override
 		public void onClicked(MouseButton mouseButton) {
+			if (selectedChunks.isEmpty()) {
+				firstSelectedChunk = chunkPos;
+			}
+
 			selectedChunks.add(chunkPos);
 		}
 
@@ -244,10 +251,37 @@ public class ChunkScreenPanel extends Panel {
 
 		@Override
 		public boolean mouseDragged(int button, double dragX, double dragY) {
-            if (isMouseOver() && (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))) {
-                selectedChunks.add(chunkPos);
-            }
+			if (isMouseOver() && (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))) {
+				if (ChunkScreen.claimMode != ChunkScreen.ClaimMode.FREEHAND && firstSelectedChunk != null) {
+					addChunksToSelection();
+				} else {
+					selectedChunks.add(chunkPos);
+				}
+			}
 			return super.mouseDragged(button, dragX, dragY);
+		}
+
+		private void addChunksToSelection() {
+			int x1 = Math.min(firstSelectedChunk.x(), chunkPos.x());
+			int x2 = Math.max(firstSelectedChunk.x(), chunkPos.x());
+			int z1 = Math.min(firstSelectedChunk.z(), chunkPos.z());
+			int z2 = Math.max(firstSelectedChunk.z(), chunkPos.z());
+			XZ centre = new XZ((x1 + x2) / 2, (z1 + z2) / 2);
+			selectedChunks.clear();
+			for (int x = x1; x <= x2; x++) {
+				for (int z = z1; z <= z2; z++) {
+					XZ xz = new XZ(x, z);
+					if (ChunkScreen.claimMode == ChunkScreen.ClaimMode.RECTANGLE
+							|| distance(xz, centre) - 0.5f <= Math.min(centre.x() - x1, centre.z() - z1))
+					{
+						selectedChunks.add(xz);
+					}
+				}
+			}
+		}
+
+		private float distance(XZ xz1, XZ xz2) {
+			return Mth.sqrt((xz2.x() - xz1.x()) * (xz2.x() - xz1.x()) + (xz2.z() - xz1.z()) * (xz2.z() - xz1.z()));
 		}
 
 		@Override
@@ -287,9 +321,9 @@ public class ChunkScreenPanel extends Panel {
 					}
 				});
 
-                if (!altPressed && (chunk.getClaimedDate().isPresent() || chunk.getForceLoadedDate().isPresent())) {
-                    list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
-                }
+				if (!altPressed && (chunk.getClaimedDate().isPresent() || chunk.getForceLoadedDate().isPresent())) {
+					list.add(Component.translatable("ftbchunks.gui.hold_alt_for_dates").withStyle(ChatFormatting.DARK_GRAY));
+				}
 			});
 		}
 

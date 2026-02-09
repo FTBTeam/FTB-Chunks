@@ -335,5 +335,8 @@
   "ftbchunks.command.bypass_protection_enabled": "Bypass Protection: Enabled",
   "ftbchunks.command.bypass_protection_disabled": "Bypass Protection: Disabled",
   "ftbchunks.command.view_loaded": "Chunks Loaded: %d. Check the map to see loaded chunks",
-  "ftbchunks.command.waypoint_added": "Added waypoint '%s'"
+  "ftbchunks.command.waypoint_added": "Added waypoint '%s'",
+  "ftbchunks.claim_mode.freehand": "Freehand Claiming",
+  "ftbchunks.claim_mode.rectangle": "Rectangular Claiming",
+  "ftbchunks.claim_mode.circle": "Circular Claiming"
 }

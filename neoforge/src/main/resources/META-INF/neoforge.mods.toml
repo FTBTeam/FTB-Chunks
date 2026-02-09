@@ -51,3 +51,10 @@ type = "required"
 versionRange = "[${ftbteamsversion},)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.ftbchunks]]
+modId = "ftbbackups3"
+type = "optional"
+versionRange = "[${ftbbackupsversion},)"
+ordering = "AFTER"
+side = "BOTH"

@@ -7,12 +7,14 @@ import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftbchunks.neoforge.integration.FTBBackups3Integration;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayer;
@@ -26,6 +28,10 @@ public class FTBChunksNeoForge {
 		NeoForge.EVENT_BUS.addListener(this::entityInteractSpecific);
 		NeoForge.EVENT_BUS.addListener(this::mobGriefing);
 		NeoForge.EVENT_BUS.addListener(this::enteringSection);
+
+		if (ModList.get().isLoaded("ftbbackups3")) {
+			FTBBackups3Integration.init();
+		}
 
 		ForceLoading.setup(modEventBus);
 

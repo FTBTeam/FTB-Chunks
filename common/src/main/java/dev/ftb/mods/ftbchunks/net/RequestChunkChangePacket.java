@@ -20,11 +20,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boolean tryAdminChanges, Optional<UUID> teamId) implements CustomPacketPayload {
@@ -68,16 +64,15 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 			case UNLOAD -> pos -> data.unForceLoad(source, pos.dim(player.level()), false, message.tryAdminChanges);
 		};
 
-		EnumMap<ClaimResult.StandardProblem, Integer> problems = new EnumMap<>(ClaimResult.StandardProblem.class);
+		Map<String,Integer> problems = new HashMap<>();
+
 		int changed = 0;
 		for (XZ pos : message.chunks) {
 			ClaimResult r = consumer.apply(pos);
 			if (!r.isSuccess()) {
-				FTBChunks.LOGGER.debug(String.format("%s tried to %s @ %s:%d:%d but got result %s", player.getScoreboardName(),
-						message.action.name, player.level().dimension().location(), pos.x(), pos.z(), r));
-				if (r instanceof ClaimResult.StandardProblem cr) {
-					problems.put(cr, problems.getOrDefault(cr, 0) + 1);
-				}
+				FTBChunks.LOGGER.debug("{} tried to {} @ {}:{}:{} but got result {}",
+						player.getScoreboardName(), message.action.name, player.level().dimension().location(), pos.x(), pos.z(), r);
+				problems.put(r.getResultId(), problems.getOrDefault(r.getResultId(), 0) + 1);
 			} else {
 				changed++;
 			}

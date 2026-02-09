@@ -38,13 +38,13 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +80,7 @@ public class ChunkScreenPanel extends Panel {
 		alignWidgets();
 	}
 
-	public static void notifyChunkUpdates(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems) {
+	public static void notifyChunkUpdates(int totalChunks, int changedChunks, Map<String, Integer> problems) {
 		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
 			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
@@ -200,10 +200,10 @@ public class ChunkScreenPanel extends Panel {
 		if (updateInfo != null && updateInfo.shouldDisplay()) {
 			theme.drawString(graphics, updateInfo.summary(), sx + 2, sy + 2, Theme.SHADOW);
 			int line = 1;
-			for (Map.Entry<ClaimResult.StandardProblem, Integer> entry : updateInfo.problems.entrySet()) {
-				ClaimResult.StandardProblem problem = entry.getKey();
+			for (Map.Entry<String, Integer> entry : updateInfo.problems.entrySet()) {
+				MutableComponent problem = Component.translatable(entry.getKey());
 				int count = entry.getValue();
-				theme.drawString(graphics, problem.getMessage().append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
+				theme.drawString(graphics, problem.append(": " + count), sx + 2, sy + 5 + theme.getFontHeight() * line++, Theme.SHADOW);
 			}
 		}
 	}
@@ -355,7 +355,7 @@ public class ChunkScreenPanel extends Panel {
 		}
 	}
 
-	public record ChunkUpdateInfo(int totalChunks, int changedChunks, EnumMap<ClaimResult.StandardProblem, Integer> problems, long timestamp) {
+	public record ChunkUpdateInfo(int totalChunks, int changedChunks, Map<String, Integer> problems, long timestamp) {
 		public boolean shouldDisplay() {
 			// display for 3 seconds + 1 second per line of problem data
 			long timeout = 60L + 20L * problems.size();

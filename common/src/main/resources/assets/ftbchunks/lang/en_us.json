@@ -11,6 +11,7 @@
   "ftbchunks.appearance.own_claimed_chunks_on_map": "Show your own claimed chunks on map",
   "ftbchunks.appearance.map_mode": "Map mode",
   "ftbchunks.appearance.biome_blend": "Biome blend",
+  "ftbchunks.appearance.claim_mode": "Chunk claiming mode",
   "ftbchunks.biome_blend.none": "None (Fastest)",
   "ftbchunks.biome_blend.blend_3x3": "Blend 3x3",
   "ftbchunks.biome_blend.blend_5x5": "Blend 5x5",

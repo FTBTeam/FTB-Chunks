@@ -7,7 +7,9 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
@@ -63,6 +65,7 @@ public class ChunkScreenPanel extends Panel {
 	public int tileSizeX = 16;
 	public int tileSizeY = 16;
 	private final ChunkScreen chunkScreen;
+	private Button lastButtonDragged = null;
 
 	public ChunkScreenPanel(ChunkScreen panel) {
 		super(panel);
@@ -141,6 +144,7 @@ public class ChunkScreenPanel extends Panel {
 			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
 			firstSelectedChunk = null;
+			lastButtonDragged = null;
 			playClickSound();
 		}
 	}
@@ -252,11 +256,14 @@ public class ChunkScreenPanel extends Panel {
 		@Override
 		public boolean mouseDragged(int button, double dragX, double dragY) {
 			if (isMouseOver() && (isMouseButtonDown(MouseButton.LEFT) || isMouseButtonDown(MouseButton.RIGHT))) {
-				if (ChunkScreen.claimMode != ChunkScreen.ClaimMode.FREEHAND && firstSelectedChunk != null) {
-					addChunksToSelection();
+				if (FTBChunksClientConfig.CLAIM_MODE.get() != GuiClaimMode.FREEHAND && firstSelectedChunk != null) {
+					if (lastButtonDragged != this) {
+						addChunksToSelection();
+					}
 				} else {
 					selectedChunks.add(chunkPos);
 				}
+				lastButtonDragged = this;
 			}
 			return super.mouseDragged(button, dragX, dragY);
 		}
@@ -271,7 +278,7 @@ public class ChunkScreenPanel extends Panel {
 			for (int x = x1; x <= x2; x++) {
 				for (int z = z1; z <= z2; z++) {
 					XZ xz = new XZ(x, z);
-					if (ChunkScreen.claimMode == ChunkScreen.ClaimMode.RECTANGLE
+					if (FTBChunksClientConfig.CLAIM_MODE.get() == GuiClaimMode.RECTANGLE
 							|| distance(xz, centre) - 0.5f <= Math.min(centre.x() - x1, centre.z() - z1))
 					{
 						selectedChunks.add(xz);

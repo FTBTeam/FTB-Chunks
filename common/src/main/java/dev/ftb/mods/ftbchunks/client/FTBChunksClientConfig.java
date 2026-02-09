@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapBlurMode;
@@ -58,6 +59,8 @@ public interface FTBChunksClientConfig {
             .excludedFromGui().comment("Advanced option. Foliage darkness");
     EnumValue<PointerIconMode> POINTER_ICON_MODE = APPEARANCE.addEnum("pointer_icon_mode", PointerIconMode.NAME_MAP)
             .comment("Mode for the pointer icon to render on full screen map");
+    EnumValue<GuiClaimMode> CLAIM_MODE = APPEARANCE.addEnum("claim_mode", GuiClaimMode.NAME_MAP)
+            .comment("Claim mode for the chunk claiming screen");
 
     Config WAYPOINTS = CONFIG.addGroup("waypoints", 1);
     BooleanValue IN_WORLD_WAYPOINTS = WAYPOINTS.addBoolean("in_world_waypoints", true)

@@ -23,6 +23,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 import org.lwjgl.glfw.GLFW;
@@ -75,9 +76,10 @@ class MapScreenButtonPanel extends Panel {
                 mb -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
                 TextComponentUtils.hotkeyTooltip("S"));
 
+        boolean adminPlayer = ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
         serverSettingsButton = SimpleTextButton.create(this, Component.translatable("ftbchunks.gui.settings.server"),
                 Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-                mb -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
+                mb -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY, !adminPlayer),
                 TextComponentUtils.hotkeyTooltip("Ctrl + S"));
     }
 

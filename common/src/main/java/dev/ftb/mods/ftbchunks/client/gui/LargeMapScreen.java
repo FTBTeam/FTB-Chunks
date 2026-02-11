@@ -32,6 +32,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
@@ -178,13 +179,12 @@ public class LargeMapScreen extends BaseScreen {
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );
 
-        if (Minecraft.getInstance().player.hasPermissions(2)) {
-            add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
-                    Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-                    (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY),
-                    Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
-            ));
-        }
+        boolean adminPlayer = Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS);
+        add(serverSettingsButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
+                Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
+                (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY, !adminPlayer),
+                Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
+        ));
     }
 
     private WaypointManagerImpl getWaypointManager() {

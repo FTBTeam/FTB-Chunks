@@ -2,15 +2,12 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -30,7 +27,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     private ChunkScreenPanel chunkScreenPanel;
     private SimpleButton largeMapButton;
 
-    private ChunkScreen(MapDimension dimension, Team openedAs) {
+    private ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
         this.dimension = dimension;
         this.openedAs = openedAs;
         showCloseButton(true);
@@ -49,10 +46,10 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     public boolean onInit() {
-        int size = (int) (getScreen().getGuiScaledHeight() * 0.85f);
+        int size = (int) (getWindow().getGuiScaledHeight() * 0.85f);
 
-        setWidth(Math.min(size + 2, getScreen().getGuiScaledWidth() - 2));
-        setHeight(Math.min(size + getTopPanelHeight() + getBottomPanelHeight(), getScreen().getGuiScaledHeight() - 2));
+        setWidth(Math.min(size + 2, getWindow().getGuiScaledWidth() - 2));
+        setHeight(Math.min(size + getTopPanelHeight() + getBottomPanelHeight(), getWindow().getGuiScaledHeight() - 2));
 
         return true;
     }
@@ -133,6 +130,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         private final Button removeAllClaims;
         private final Button adminButton;
         private final Button mouseReferenceButton;
+        private final Button claimModeButton;
 
         public CustomTopPanel() {
             super(ChunkScreen.this);
@@ -158,6 +156,8 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                     .setForceButtonSize(false);
 
             adminButton = new AdminButton().setForceButtonSize(false);
+
+            claimModeButton = new ClaimModeButton();
         }
 
         @Override
@@ -168,6 +168,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                 add(adminButton);
             }
             add(mouseReferenceButton);
+            add(claimModeButton);
         }
 
         @Override
@@ -177,7 +178,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
             closeButton.setPosAndSize(width - 16, 2, 12, 12);
             mouseReferenceButton.setPosAndSize(width - 32, 2, 12, 12);
-
+            claimModeButton.setPosAndSize(width - 48, 2, 12, 12);
         }
 
         @Override
@@ -206,6 +207,17 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                 list.add(MORE_INFO);
             }
         }
+
+        private class ClaimModeButton extends SimpleButton {
+            public ClaimModeButton() {
+                super(CustomTopPanel.this, FTBChunksClientConfig.CLAIM_MODE.get().description(), FTBChunksClientConfig.CLAIM_MODE.get().icon(), (widget, button) -> {
+                    GuiClaimMode newClaimMode = FTBChunksClientConfig.CLAIM_MODE.get().next();
+                    widget.setIcon(newClaimMode.icon());
+                    widget.setTitle(newClaimMode.description());
+                    FTBChunksClientConfig.CLAIM_MODE.set(newClaimMode);
+                });
+            }
+        }
     }
 
     private static class ChunkMouseReferenceScreen extends KeyReferenceScreen {
@@ -220,7 +232,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     }
 
     private class CustomBottomPanel extends Panel {
-
         public CustomBottomPanel() {
             super(ChunkScreen.this);
         }
@@ -266,4 +277,5 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
             }
         }
     }
+
 }

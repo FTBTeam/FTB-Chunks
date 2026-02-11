@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.15]
+
+### Added
+* Added a "Claim Mode" client setting to the claim management screen
+  * Allows freehand claiming (as before), as well as ability to drag rectangular and circular areas on the chunk claim screen
+  * See the new claim mode at the top right of the chunk claiming screen
+* Added some FTB Backups 3 integration: the `local/ftbchunks` clientside directory is now automatically backed up
+* Added ability for non-admin players to see (but not change!) the server config
+* (API) added new `ChunksUpdatedFromServerEvent` - aggregates multiple chunk info updates into one event for efficiency
+  * This event can be listened for on the client to integrate FTB Chunks claim info into other mods without needing mixins
+
+### Changed
+* Updated pt_br translation (thanks @PrincessStelllar)
+
+### Fixed
+* Fixed custom chunk claim problems not being reported in the claim GUI
+* Hopefully fixed a race condition with purging stale regions
+
 ## [2101.1.13]
 
 ### Added

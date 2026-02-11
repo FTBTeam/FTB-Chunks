@@ -5,16 +5,10 @@ import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
-import dev.ftb.mods.ftbchunks.util.ChunkPosCustomYSetValue;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
+import dev.ftb.mods.ftblibrary.snbt.config.*;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import net.minecraft.server.level.ServerPlayer;
@@ -124,13 +118,6 @@ public interface FTBChunksWorldConfig {
 			.comment("Default long-range player visibility on map");
 	BooleanValue DEF_PVP = TEAM_PROP_DEFAULTS.addBoolean("def_pvp", true)
 			.comment("Default PvP setting in claimed chunks");
-
-    SNBTConfig CUSTOM_BEHAVIOUR = CONFIG.addGroup("custom_behaviour").excluded();
-
-    BooleanValue OVERRIDE_MIN_Y_LEVEL = CUSTOM_BEHAVIOUR.addBoolean("use_custom_min_y_level", false).excluded().comment("Override minimum Y level used when rendering map");
-    IntValue OVERRIDE_MIN_Y_LEVEL_VALUE = CUSTOM_BEHAVIOUR.addInt("custom_min_y_level", Short.MIN_VALUE, Short.MIN_VALUE, Short.MAX_VALUE).excluded().comment("Custom minimum Y level to scan when rendering map, used if use_custom_min_y_level is true");
-
-    ChunkPosCustomYSetValue CHUNKS_WITH_CUSTOM_Y = CUSTOM_BEHAVIOUR.add(new ChunkPosCustomYSetValue(CUSTOM_BEHAVIOUR, "chunks_with_custom_y", Collections.emptySet())).excluded().comment("Set of chunks with custom minimum Y levels, used if use_custom_min_y_level is true");
 
     SNBTConfig DEV = CONFIG.addGroup("dev");
 	BooleanValue DEV_COMMANDS = DEV.addBoolean("commands", false)

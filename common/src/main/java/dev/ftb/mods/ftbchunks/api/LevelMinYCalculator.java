@@ -14,5 +14,13 @@ import java.util.OptionalInt;
  */
 @FunctionalInterface
 public interface LevelMinYCalculator {
+    /**
+     * Return the minimum effective mapping level for a given level and block position.
+     *
+     * @param level the level
+     * @param pos the block position
+     * @return the minimum Y level, below which no mapping will be done, or {@code OptionalInt.empty()} if this method
+     * doesn't care about the given level and position
+     */
     OptionalInt getLevelMinY(Level level, BlockPos pos);
 }

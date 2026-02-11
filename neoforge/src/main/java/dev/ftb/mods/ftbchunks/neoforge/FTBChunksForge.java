@@ -5,9 +5,11 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksTags;
 import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftbchunks.neoforge.integration.FTBBackups3Integration;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.world.InteractionResult;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityMobGriefingEvent;
@@ -18,6 +20,10 @@ public class FTBChunksForge {
 	public FTBChunksForge(IEventBus modEventBus) {
 		NeoForge.EVENT_BUS.addListener(this::entityInteractSpecific);
 		NeoForge.EVENT_BUS.addListener(this::mobGriefing);
+
+		if (ModList.get().isLoaded("ftbbackups3")) {
+			FTBBackups3Integration.init();
+		}
 
 		ForceLoading.setup(modEventBus);
 

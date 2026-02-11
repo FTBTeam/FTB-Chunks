@@ -3,6 +3,7 @@ package dev.ftb.mods.ftbchunks.client;
 import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
 import dev.ftb.mods.ftbchunks.client.map.MapMode;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
@@ -41,6 +42,7 @@ public interface FTBChunksClientConfig {
     IntValue WATER_VISIBILITY = APPEARANCE.addInt("water_visibility", 220, 0, 255).excluded().comment("Advanced option. Water visibility");
     IntValue GRASS_DARKNESS = APPEARANCE.addInt("grass_darkness", 50, 0, 255).excluded().comment("Advanced option. Grass darkness");
     IntValue FOLIAGE_DARKNESS = APPEARANCE.addInt("foliage_darkness", 50, 0, 255).excluded().comment("Advanced option. Foliage darkness");
+    EnumValue<GuiClaimMode> CLAIM_MODE = APPEARANCE.addEnum("claim_mode", GuiClaimMode.NAME_MAP).comment("Claim mode for the chunk claiming screen");
 
     SNBTConfig WAYPOINTS = CONFIG.addGroup("waypoints", 1);
     BooleanValue IN_WORLD_WAYPOINTS = WAYPOINTS.addBoolean("in_world_waypoints", true).comment("Show waypoints in world");

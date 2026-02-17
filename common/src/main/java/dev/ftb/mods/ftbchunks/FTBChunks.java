@@ -503,6 +503,7 @@ public class FTBChunks {
 			}
 
 			partyData.deleteMemberData(event.getPlayerId());
+			partyData.updateLimits();
 
 			if (event.getPlayer() != null) {
 				PlayerVisibilityPacket.syncToLevel(event.getPlayer().level());

@@ -7,9 +7,9 @@ import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
@@ -44,7 +44,6 @@ import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
-import org.lwjgl.glfw.GLFW;
 
 import java.text.DateFormat;
 import java.util.*;
@@ -160,7 +159,7 @@ public class ChunkScreenPanel extends Panel {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		if (FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer()) && (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C))) {
+		if (FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer()) && (key.is(InputConstants.KEY_M) || key.is(InputConstants.KEY_C))) {
 			LargeMapScreen.openMap();
 			return true;
 		}
@@ -183,7 +182,7 @@ public class ChunkScreenPanel extends Panel {
 
 		graphics.blit(RenderPipelines.GUI_TEXTURED, MinimapRegionCutoutTexture.ID, sx, sy, 0, 0, maxWidth, maxHeight, maxWidth, maxHeight);
 
-		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_TAB)) {
+		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_TAB)) {
 			// grid overlay
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
 				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSizeY, 0x64464646);
@@ -239,7 +238,7 @@ public class ChunkScreenPanel extends Panel {
 
 		@Override
 		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-			if (chunk.getForceLoadedDate().isPresent() && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_TAB)) {
+			if (chunk.getForceLoadedDate().isPresent() && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_TAB)) {
 				chunk.getTeam().ifPresent(team -> {
 					Color4I teamColor = team.getProperties().get(TeamProperties.COLOR);
 					float[] hsb = Color4I.RGBtoHSB(teamColor.redi(), teamColor.greeni(), teamColor.bluei(), null);

@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
@@ -30,7 +31,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -226,7 +226,7 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
 
         @Override
         public boolean keyPressed(Key key) {
-            if (key.is(GLFW.GLFW_KEY_DELETE)) {
+            if (key.is(InputConstants.KEY_DELETE)) {
                 deleteWaypoint(!isShiftKeyDown());
                 return true;
             } else {

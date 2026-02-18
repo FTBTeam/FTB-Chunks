@@ -60,7 +60,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.joml.Matrix3x2fStack;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -138,7 +137,7 @@ public enum FTBChunksClient {
 
     private void registerKeyMappings() {
         // Keybinding to open Large map screen
-        openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, KEY_CATEGORY);
+        openMapKey = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, InputConstants.KEY_M, KEY_CATEGORY);
         KeyMappingRegistry.register(openMapKey);
 
         // Keybinding to toggle the minimap
@@ -150,10 +149,10 @@ public enum FTBChunksClient {
         KeyMappingRegistry.register(openClaimManagerKey);
 
         // Keybindings to zoom in minimap
-        zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, KEY_CATEGORY);
+        zoomInKey = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, InputConstants.KEY_EQUALS, KEY_CATEGORY);
         KeyMappingRegistry.register(zoomInKey);
 
-        zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, KEY_CATEGORY);
+        zoomOutKey = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, InputConstants.KEY_MINUS, KEY_CATEGORY);
         KeyMappingRegistry.register(zoomOutKey);
 
         // Keybinding to quick-add waypoint at current position
@@ -206,7 +205,7 @@ public enum FTBChunksClient {
     }
 
     private EventResult onKeyPressedRaw(Minecraft client, int action, KeyEvent keyEvent) {
-        if (action != GLFW.GLFW_PRESS
+        if (action != InputConstants.PRESS
                 || client.screen != null
                 || !FTBChunksWorldConfig.playerHasMapStage(ClientUtils.getClientPlayer())
                 || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F3))

@@ -38,7 +38,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -200,14 +199,14 @@ public class LargeMapScreen extends BaseScreen {
     public boolean keyPressed(Key key) {
         if (super.keyPressed(key)) {
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_SPACE)) {
+        } else if (key.is(InputConstants.KEY_SPACE)) {
             movedToPlayer = false;
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_T)) {
+        } else if (key.is(InputConstants.KEY_T)) {
             NetworkManager.sendToServer(new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension));
             closeGui(false);
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_F3)) {
+        } else if (key.is(InputConstants.KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F3)) {
             FTBChunksClientConfig.CHUNK_GRID.toggle();
             FTBChunksClientConfig.saveConfig();
             dimension.getManager().updateAllRegions(false);

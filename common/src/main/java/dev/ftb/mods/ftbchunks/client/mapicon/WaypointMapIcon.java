@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
@@ -28,7 +29,6 @@ import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -171,7 +171,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
     public boolean onKeyPressed(BaseScreen screen, Key key) {
         if (super.onKeyPressed(screen, key)) {
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_DELETE) && screen instanceof LargeMapScreen lms) {
+        } else if (key.is(InputConstants.KEY_DELETE) && screen instanceof LargeMapScreen lms) {
             waypoint.removeFromManager();
             lms.refreshIcons();
             return true;

@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -23,10 +24,8 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -114,10 +113,10 @@ class MapScreenButtonPanel extends Panel {
 
     @Override
     public boolean keyPressed(Key key) {
-        if (key.is(GLFW.GLFW_KEY_C)) {
+        if (key.is(InputConstants.KEY_C)) {
             claimChunksButton.onClicked(MouseButton.LEFT);
             return true;
-        } else if (key.is(GLFW.GLFW_KEY_S)) {
+        } else if (key.is(InputConstants.KEY_S)) {
             if (Minecraft.getInstance().hasControlDown()) {
                 if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
                     serverSettingsButton.onClicked(MouseButton.LEFT);

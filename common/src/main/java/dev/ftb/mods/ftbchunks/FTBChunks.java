@@ -488,6 +488,7 @@ public class FTBChunks {
 
 			if (event.getPlayer() != null) {
 				PlayerVisibilityPacket.syncToLevel(event.getPlayer().level());
+				SendGeneralDataPacket.send(playerData, event.getPlayer());
 			}
 		});
 	}

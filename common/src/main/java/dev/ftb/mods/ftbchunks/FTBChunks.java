@@ -134,9 +134,6 @@ public class FTBChunks {
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 
 		TickEvent.SERVER_POST.register(this::serverTickPost);
-//		TickEvent.PLAYER_POST.register(this::playerTickPost);
-
-//		EnvExecutor.runInEnv(Env.CLIENT, () -> FTBChunksClient.INSTANCE::init);
 
 		LifecycleEvent.SETUP.register(() ->
 				CustomMinYEvent.REGISTER.invoker().register(CustomMinYRegistryImpl.getInstance(Platform.getEnvironment() == Env.CLIENT))
@@ -173,12 +170,6 @@ public class FTBChunks {
 		ClaimedChunk cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(player.level(), player.blockPosition()));
 		return cc != null && (mode == PvPMode.NEVER || !cc.getTeamData().allowPVP());
 	}
-
-//	private void playerTickPost(Player player) {
-//		if (player.level().isClientSide() && player.level().getGameTime() % 20 == 0) {
-//			FTBChunksClient.INSTANCE.maybeClearDeathpoint(player);
-//		}
-//	}
 
 	private void serverLevelLoad(ServerLevel level) {
 		if (ClaimedChunkManagerImpl.exists()) {

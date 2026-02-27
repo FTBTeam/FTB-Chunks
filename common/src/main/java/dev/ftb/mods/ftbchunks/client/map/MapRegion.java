@@ -1,18 +1,16 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.ChunkPos;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -25,29 +23,23 @@ public class MapRegion implements MapTask {
 	public final MapDimension dimension;
 	public final XZ pos;
 
+	@Nullable
 	private MapRegionData data;
 	private long lastDataAccess; // time of last access, so stale regions can be released to save memory
 	private boolean isLoadingData;
 	private boolean shouldSave;
-	private NativeImage renderedMapImage;
-	private boolean updateRenderedMapImage;
-	private boolean updateRenderedMapTexture;
-	private int renderedMapImageTextureId;
-	private boolean mapImageLoaded;
-	private boolean renderingMapImage;
-	private final Map<XZ, MapChunk> chunks = new HashMap<>();
 
-	public MapRegion(MapDimension d, XZ p) {
-		dimension = d;
-		pos = p;
+	private final Map<XZ, MapChunk> chunks = new HashMap<>();
+	private final MapRegionTexture regionTexture;
+
+	public MapRegion(MapDimension dimension, XZ pos) {
+		this.dimension = dimension;
+		this.pos = pos;
+
 		data = null;
 		isLoadingData = false;
 		shouldSave = false;
-		renderedMapImage = null;
-		updateRenderedMapImage = true;
-		updateRenderedMapTexture = true;
-		renderedMapImageTextureId = -1;
-		mapImageLoaded = false;
+		regionTexture = new MapRegionTexture(this);
 	}
 
 	public void created() {
@@ -61,26 +53,21 @@ public class MapRegion implements MapTask {
 	public long getLastDataAccess() {
 		return lastDataAccess;
 	}
-
-	public boolean isMapImageLoaded() {
-		return mapImageLoaded;
-	}
-
-	@NotNull
+	
+	@NonNull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.getManager().lock) {
 			return getDataBlockingNoSync();
 		}
 	}
 
-	@NotNull
 	public MapRegionData getDataBlockingNoSync() {
 		if (data == null) {
 			data = new MapRegionData(this);
 			try {
 				data.read();
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				FTBChunks.LOGGER.error("can't read map region data for {}/{}: {}", dimension.dimension.identifier(), pos, ex.getMessage());
 			}
 		}
 
@@ -102,54 +89,12 @@ public class MapRegion implements MapTask {
 		return data;
 	}
 
-	public NativeImage getRenderedMapImage() {
-		synchronized (dimension.getManager().lock) {
-			if (renderedMapImage == null) {
-				renderedMapImage = new NativeImage(NativeImage.Format.RGBA, 512, 512, true);
-				renderedMapImage.fillRect(0, 0, 512, 512, 0);
-				update(false);
-			}
-		}
-
-		if (updateRenderedMapImage && !renderingMapImage) {
-			updateRenderedMapImage = false;
-			mapImageLoaded = false;
-			renderingMapImage = true;
-			FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this));
-		}
-
-		return renderedMapImage;
-	}
-
-	public int getRenderedMapImageTextureId() {
-		if (renderedMapImageTextureId == -1) {
-			renderedMapImageTextureId = FTBChunksClient.INSTANCE.generateTextureId(512, 512);
-		}
-
-		getRenderedMapImage();
-
-		if (updateRenderedMapTexture) {
-			mapImageLoaded = false;
-
-			Minecraft.getInstance().submit(() -> {
-				RenderSystem.bindTexture(renderedMapImageTextureId);
-				uploadRenderedMapImage();
-				mapImageLoaded = true;
-				FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
-			});
-
-			updateRenderedMapTexture = false;
-		}
-
-		return renderedMapImageTextureId;
-	}
-
 	public void release(boolean releaseMapChunks) {
 		if (shouldSave && data != null) {
 			try {
 				data.write();
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				FTBChunks.LOGGER.error("can't write map region data for {}/{}: {}", dimension.dimension.identifier(), pos, ex.getMessage());
 			}
 		}
 
@@ -162,11 +107,11 @@ public class MapRegion implements MapTask {
 
 	public void releaseIfStale(long now, long releaseIntervalMillis) {
 		if (now - lastDataAccess > releaseIntervalMillis && data != null) {
-			if (pos.equals(XZ.regionFromChunk(Minecraft.getInstance().player.chunkPosition()))) {
+			if (pos.equals(XZ.regionFromChunk(ClientUtils.getClientPlayer().chunkPosition()))) {
 				FTBChunks.LOGGER.debug("not releasing region {} / {} - player present", this, pos);
 				return;  // don't release region where the player is
 			}
-			for (ChunkPos cp : FTBChunksClient.INSTANCE.getPendingRerender()) {
+			for (ChunkPos cp : FTBChunksClient.INSTANCE.getRerenderTracker().getPendingRerender()) {
 				if (XZ.regionFromChunk(cp).equals(pos)) {
 					FTBChunks.LOGGER.debug("not releasing region {} / {} - re-render pending", this, pos);
 					return;  // don't release regions that have a re-render pending
@@ -178,19 +123,9 @@ public class MapRegion implements MapTask {
 	}
 
 	public void releaseMapImage() {
-		synchronized (dimension.getManager().lock) {
-			if (renderedMapImage != null) {
-				renderedMapImage.close();
-				renderedMapImage = null;
-			}
+		if (regionTexture.isOpen()) {
+			regionTexture.close();
 		}
-
-		if (renderedMapImageTextureId != -1) {
-			GlStateManager._deleteTexture(renderedMapImageTextureId);
-			renderedMapImageTextureId = -1;
-		}
-
-		mapImageLoaded = false;
 	}
 
 	@Override
@@ -200,24 +135,8 @@ public class MapRegion implements MapTask {
 		}
 	}
 
-	public void setRenderedMapImageRGBA(int x, int z, int col) {
-		synchronized (dimension.getManager().lock) {
-			getRenderedMapImage().setPixelRGBA(x, z, col);
-		}
-	}
-
-	private void uploadRenderedMapImage() {
-		synchronized (dimension.getManager().lock) {
-			getRenderedMapImage().upload(0, 0, 0, false);
-		}
-	}
-
-	public void afterImageRenderTask() {
-		synchronized (dimension.getManager().lock) {
-			updateRenderedMapTexture = true;
-			FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
-			renderingMapImage = false;
-		}
+	public MapRegionTexture regionTexture() {
+		return regionTexture;
 	}
 
 	public void update(boolean save) {
@@ -226,9 +145,9 @@ public class MapRegion implements MapTask {
 			dimension.markDirty();
 		}
 
-		updateRenderedMapImage = true;
-		updateRenderedMapTexture = true;
-		FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
+		// Update the region texture on the main thread
+		Minecraft.getInstance().execute(regionTexture::requestBake);
+		FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
 	}
 
 	public MapRegion offset(int x, int z) {
@@ -239,15 +158,12 @@ public class MapRegion implements MapTask {
 		return new RegionSyncKey(dimension.dimension, pos.x(), pos.z(), MathUtils.RAND.nextInt());
 	}
 
-	public double distToPlayer() {
-		return MathUtils.distSq(pos.x() * 512D + 256D, pos.z() * 512D + 256D, Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getZ());
-	}
-
 	@Override
 	public String toString() {
 		return pos.toRegionString();
 	}
 
+	@Nullable
 	public MapChunk getMapChunk(XZ xz) {
 		return chunks.get(xz);
 	}

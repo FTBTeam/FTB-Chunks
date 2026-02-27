@@ -9,10 +9,11 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -32,7 +33,7 @@ public class PistonHelper {
      * @return true if the piston should be prevented from moving, false to let it move
      */
     public static boolean shouldPreventPistonMovement(Level level, BlockPos pistonPos, PistonStructureResolver resolver) {
-        if (!level.isClientSide && FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
+        if (!level.isClientSide() && FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
             PrivacyProperty editProp = Platform.isFabric() ?
                     FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
                     FTBChunksProperties.BLOCK_EDIT_MODE;
@@ -62,7 +63,7 @@ public class PistonHelper {
         return false;
     }
 
-    private static boolean prevent(PrivacyProperty editProp, ClaimedChunk srcClaim, ClaimedChunk dstClaim) {
+    private static boolean prevent(PrivacyProperty editProp, @Nullable ClaimedChunk srcClaim, @Nullable ClaimedChunk dstClaim) {
         if (srcClaim != dstClaim && dstClaim != null) {
             UUID srcId = srcClaim == null ? Util.NIL_UUID : srcClaim.getTeamData().getTeam().getTeamId();
             UUID dstId = dstClaim.getTeamData().getTeam().getTeamId();

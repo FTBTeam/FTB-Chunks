@@ -1,8 +1,10 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WaypointType {
@@ -14,8 +16,8 @@ public class WaypointType {
 			= WaypointType.builder().build("death");
 
 	private final String id;
-	private final Icon icon;
-	private final Icon outsideIcon;
+	private final Icon<?> icon;
+	private final Icon<?> outsideIcon;
 	private final boolean canChangeColor;
 
 	public static Builder builder() {
@@ -30,7 +32,7 @@ public class WaypointType {
 		this.id = id;
 
 		icon = Icon.getIcon("ftbchunks:textures/waypoint_" + this.id + ".png");
-		outsideIcon = builder.outsideIcon == null ? icon : builder.outsideIcon;
+		outsideIcon = Objects.requireNonNullElse(builder.outsideIcon, icon);
 		canChangeColor = builder.canChangeColor;
 	}
 
@@ -38,7 +40,7 @@ public class WaypointType {
 		return id;
 	}
 
-	public Icon getOutsideIcon() {
+	public Icon<?> getOutsideIcon() {
 		return outsideIcon;
 	}
 
@@ -46,12 +48,13 @@ public class WaypointType {
 		return canChangeColor;
 	}
 
-	public Icon getIcon() {
+	public Icon<?> getIcon() {
 		return icon;
 	}
 
 	public static class Builder {
-		private Icon outsideIcon = null;
+		@Nullable
+		private Icon<?> outsideIcon = null;
 		private boolean canChangeColor = false;
 
 		public Builder withOutsideIcon(String icon) {
@@ -59,7 +62,7 @@ public class WaypointType {
 			return this;
 		}
 
-		public Builder withOutsideIcon(Icon icon) {
+		public Builder withOutsideIcon(Icon<?> icon) {
 			outsideIcon = icon;
 			return this;
 		}

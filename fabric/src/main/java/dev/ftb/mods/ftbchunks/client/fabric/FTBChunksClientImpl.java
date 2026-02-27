@@ -1,21 +1,13 @@
 package dev.ftb.mods.ftbchunks.client.fabric;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.input.KeyEvent;
 
+// arch expectplatform
+@SuppressWarnings("unused")
 public class FTBChunksClientImpl {
-	public static void registerPlatform() {
-		WorldRenderEvents.AFTER_TRANSLUCENT.register(FTBChunksClientImpl::renderWorldLastFabric);
-	}
-
-	private static void renderWorldLastFabric(WorldRenderContext context) {
-		FTBChunksClient.INSTANCE.renderWorldLast(context.matrixStack(), context.projectionMatrix(), context.positionMatrix(), context.camera(), context.tickCounter());
-	}
-
-	public static boolean doesKeybindMatch(KeyMapping keyMapping, int keyCode, int scanCode, int modifiers) {
+	public static boolean doesKeybindMatch(KeyMapping keyMapping, KeyEvent keyEvent) {
 		// TODO how can we handle key modifiers on Fabric?
-		return keyMapping.matches(keyCode, scanCode);
+		return keyMapping.matches(keyEvent);
 	}
 }

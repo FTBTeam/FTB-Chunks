@@ -6,9 +6,8 @@ import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
@@ -35,10 +34,10 @@ public class TeamMemberData {
     }
 
     public static TeamMemberData deserializeNBT(CompoundTag tag) {
-        int maxClaims = tag.getInt("max_claimed_chunks");
-        int maxForced = tag.getInt("max_force_loaded_chunks");
-        boolean offline = tag.getBoolean("offline_force_loader");
-        Set<ChunkDimPos> orig = readOriginalClaims(tag.getCompound("original_claims"));
+        int maxClaims = tag.getInt("max_claimed_chunks").orElse(FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS.get());
+        int maxForced = tag.getInt("max_force_loaded_chunks").orElse(FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS.get());
+        boolean offline = tag.getBoolean("offline_force_loader").orElse(false);
+        Set<ChunkDimPos> orig = tag.getCompound("original_claims").map(TeamMemberData::readOriginalClaims).orElse(Set.of());
 
         return new TeamMemberData(maxClaims, maxForced, offline, orig);
     }
@@ -69,7 +68,7 @@ public class TeamMemberData {
 
         Map<String, ListTag> perDimensionTags = new HashMap<>();
         originalClaims.forEach(cdp -> {
-            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension().location().toString(), k -> new ListTag());
+            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension().identifier().toString(), k -> new ListTag());
             SNBTCompoundTag cdpTag = new SNBTCompoundTag();
             cdpTag.singleLine();
             cdpTag.putInt("x", cdp.x());
@@ -83,13 +82,14 @@ public class TeamMemberData {
 
     private static Set<ChunkDimPos> readOriginalClaims(CompoundTag tag) {
         Set<ChunkDimPos> res = new HashSet<>();
-        for (String dimStr : tag.getAllKeys()) {
+        for (String dimStr : tag.keySet()) {
             try {
-                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(dimStr));
+                Identifier id = Identifier.parse(dimStr);
+                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, id);
                 Set<ChunkDimPos> cdpSet = new HashSet<>();
-                tag.getList(dimStr, Tag.TAG_COMPOUND).forEach(el -> {
+                tag.getList(dimStr).orElse(new ListTag()).forEach(el -> {
                     if (el instanceof CompoundTag c) {
-                        cdpSet.add(new ChunkDimPos(dimKey, c.getInt("x"), c.getInt("z")));
+                        cdpSet.add(new ChunkDimPos(dimKey, c.getInt("x").orElseThrow(), c.getInt("z").orElseThrow()));
                     }
                 });
                 res.addAll(cdpSet);

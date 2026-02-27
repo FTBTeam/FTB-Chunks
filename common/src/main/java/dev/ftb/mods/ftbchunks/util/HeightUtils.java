@@ -1,19 +1,23 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.CustomMinYRegistryImpl;
+import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.client.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.material.Fluids;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class HeightUtils {
 	public static final int UNKNOWN = Short.MIN_VALUE + 1;
 
-	public static boolean isWater(BlockState state) {
+	public static boolean isWater(@Nullable BlockState state) {
 		if (state == null) {
 			// shouldn't happen, but https://github.com/FTBTeam/FTB-Mods-Issues/issues/1599
 			return false;
@@ -23,15 +27,20 @@ public class HeightUtils {
 			return true;
 		}
 
-		return state instanceof BlockStateFTBC ftbc ? ftbc.getFTBCIsWater() : state.getFluidState().getType().isSame(Fluids.WATER);
+		return state instanceof BlockStateFTBC ftbc ? ftbc.ftbc$isWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
 	public static boolean skipBlock(Level level, BlockState state) {
-		if (level.isClientSide) {
-			return state.isAir() || FTBChunksClient.INSTANCE.skipBlock(state);
+		if (level.isClientSide()) {
+			return state.isAir() || shouldSkipBlock(state);
 		} else {
 			return false;
 		}
+	}
+
+	private static boolean shouldSkipBlock(BlockState state) {
+		Identifier id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
+		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
 	}
 
 	public static int getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos) {
@@ -39,7 +48,9 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-		int bottomY = chunkAccess.getMinBuildHeight();
+		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide()).getMinYAt(level, pos);
+		int bottomY = Mth.clamp(startY, chunkAccess.getMinY(), chunkAccess.getMaxY());
+
 		int topY = pos.getY();
 		boolean hasCeiling = level.dimensionType().hasCeiling();
 		int currentWaterY = UNKNOWN;

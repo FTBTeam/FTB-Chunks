@@ -1,10 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
+import dev.ftb.mods.ftbchunks.api.client.event.ChunksUpdatedFromServerEvent;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
+import org.jspecify.annotations.Nullable;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -23,6 +25,7 @@ public class MapChunk {
 
 	private long modified;
 	private int version;
+	@Nullable
 	private Team team;
 	private DateInfo dateInfo;
 
@@ -92,7 +95,8 @@ public class MapChunk {
 		return Optional.ofNullable(team);
 	}
 
-	public boolean connects(MapChunk chunk) {
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean connects(MapChunk chunk) {
 		return Objects.equals(getTeam(), chunk.getTeam());
 	}
 
@@ -114,6 +118,8 @@ public class MapChunk {
 		team = FTBTeamsAPI.api().getClientManager().getTeamByID(teamId).orElse(null);
 		dateInfo = packet.getDateInfo(team != null, now.getTime());
 		region.update(false);
+
+		MapManager.getInstance().ifPresent(mgr -> mgr.addPendingUpdateEvent(team, getActualPos().dim(region.dimension.dimension), dateInfo));
 	}
 
 	public void updateForceLoadExpiryDate(long now, long offset) {
@@ -124,8 +130,8 @@ public class MapChunk {
 		return team != null && team.getRankForPlayer(player.getUUID()).isMemberOrBetter();
 	}
 
-	public record DateInfo(Date claimed, Date forceLoaded, Date expiry) {
-		public DateInfo withExpiryDate(Date newExpiry) {
+	public record DateInfo(@Nullable Date claimed, @Nullable Date forceLoaded, @Nullable Date expiry) {
+		public DateInfo withExpiryDate(@Nullable Date newExpiry) {
 			return new DateInfo(claimed, forceLoaded, newExpiry);
 		}
 	}

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.util.StringRepresentable;
 
 import java.util.Arrays;

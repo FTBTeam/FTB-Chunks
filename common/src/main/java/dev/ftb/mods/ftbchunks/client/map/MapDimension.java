@@ -6,16 +6,22 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
+import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,8 +32,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DeflaterOutputStream;
 
-public class MapDimension implements MapTask {
+public class MapDimension implements MapTask, Comparable<MapDimension> {
 	private static final Logger LOGGER = LogManager.getLogger();
+	@Nullable
 	private static MapDimension currentDimension;
 
 	private final MapManager manager;
@@ -35,7 +42,9 @@ public class MapDimension implements MapTask {
 	private final String safeDimensionId;
 	public final Path directory;
 
+	@Nullable
 	private Map<XZ, MapRegion> regions;
+	@Nullable
 	private WaypointManagerImpl waypointManager;
 	private boolean needsSave;
 	private Long2IntMap loadedChunkView;
@@ -44,7 +53,7 @@ public class MapDimension implements MapTask {
 		this.manager = manager;
 		this.dimension = dimension;
 
-		safeDimensionId = this.dimension.location().toString().replace(':', '_');
+		safeDimensionId = this.dimension.identifier().toString().replace(':', '_');
 		this.directory = directory.resolve(safeDimensionId);
 		needsSave = false;
 		loadedChunkView = new Long2IntOpenHashMap();
@@ -68,14 +77,10 @@ public class MapDimension implements MapTask {
 			if (level == null) {
 				return Optional.empty();
 			}
-			currentDimension = MapManager.getInstance()
-					.map(m -> m.getDimension(level.dimension()))
-					.orElse(null);
+			currentDimension = MapManager.getInstance().orElseThrow().getDimension(level.dimension());
 
-			if (currentDimension != null) {
-				WaypointManagerEvent.AVAILABLE.invoker().onAvailable(currentDimension.getWaypointManager());
-			}
-		}
+            WaypointManagerEvent.AVAILABLE.invoker().onAvailable(currentDimension.getWaypointManager());
+        }
 
 		return Optional.ofNullable(currentDimension);
 	}
@@ -108,7 +113,7 @@ public class MapDimension implements MapTask {
 
 				if (!MapIOUtils.read(directory.resolve("dimension.regions"), stream -> {
 					stream.readByte();
-					int version = stream.readByte();
+					/*int versionIgnored =*/ stream.readByte();
 					int s = stream.readShort();
 
 					for (int i = 0; i < s; i++) {
@@ -127,7 +132,7 @@ public class MapDimension implements MapTask {
 		}
 	}
 
-	public int[] getColors(int x, int z, ColorsFromRegion colors) {
+	public int @Nullable[] getColors(int x, int z, ColorsFromRegion colors) {
 		MapRegion region = getRegions().get(XZ.of(x, z));
 		if (region == null) {
 			return null;
@@ -179,8 +184,7 @@ public class MapDimension implements MapTask {
 				try {
 					writeData(waypoints, regionList);
 				} catch (Exception ex) {
-					FTBChunks.LOGGER.error("Failed to write map dimension " + this + ":");
-					ex.printStackTrace();
+                    FTBChunks.LOGGER.error("Failed to write map dimension {}: {}", this, ex.getMessage());
 				}
 			});
 		}
@@ -207,7 +211,14 @@ public class MapDimension implements MapTask {
 
 	public void sync() {
 		long now = System.currentTimeMillis();
-		getRegions().values().stream().sorted(Comparator.comparingDouble(MapRegion::distToPlayer)).forEach(region -> ClientTaskQueue.queue(new SyncTXTask(region, now)));
+		getRegions().values().stream()
+				.sorted(Comparator.comparingDouble(MapDimension::distToPlayer))
+				.forEach(region -> ClientTaskQueue.queue(new SyncTXTask(region, now)));
+	}
+
+	private static double distToPlayer(MapRegion mapRegion) {
+		Player player = ClientUtils.getClientPlayer();
+		return MathUtils.distSq(mapRegion.pos.x() * 512D + 256D, mapRegion.pos.z() * 512D + 256D, player.getX(), player.getZ());
 	}
 
 	public void releaseStaleRegionData(long now, long releaseIntervalMillis) {
@@ -229,5 +240,17 @@ public class MapDimension implements MapTask {
 
 	public void updateLoadedChunkView(Long2IntMap chunks) {
 		loadedChunkView = chunks;
+	}
+
+	@Override
+	public int compareTo(@NotNull MapDimension other) {
+		Identifier dim1id = this.dimension.identifier();
+		Identifier dim2id = other.dimension.identifier();
+		if (dim1id.getNamespace().equals("minecraft") && !dim2id.getNamespace().equals("minecraft")) {
+			// put vanilla dimensions first
+			return -1;
+		}
+		int i = dim1id.getNamespace().compareTo(dim2id.getNamespace());
+		return i == 0 ? dim1id.getPath().compareTo(dim2id.getPath()) : i;
 	}
 }

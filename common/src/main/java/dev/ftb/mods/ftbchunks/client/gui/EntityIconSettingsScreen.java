@@ -1,15 +1,17 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
-import dev.ftb.mods.ftbchunks.client.mapicon.EntityIcons;
+import dev.ftb.mods.ftbchunks.client.mapicon.EntityIconUtils;
+import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractGroupedButtonListScreen;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
+import dev.ftb.mods.ftblibrary.client.gui.widget.SimpleButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.TextField;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ToggleableButton;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
-import dev.ftb.mods.ftblibrary.ui.misc.AbstractGroupedButtonListScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -21,6 +23,7 @@ import net.minecraft.world.entity.MobCategory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<MobCategory, EntityType<?>> {
     private final boolean showCreationButton;
@@ -31,12 +34,12 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
     }
 
     @Override
-    protected List<GroupData<MobCategory, EntityType<?>>> getGroups() {
+    protected List<GroupData<MobCategory, EntityType<?>>> buildGroupData() {
         List<GroupData<MobCategory, EntityType<?>>> groups = new ArrayList<>();
         for (MobCategory mobCategory : MobCategory.values()) {
             List<EntityType<?>> entityTypes = new ArrayList<>();
             for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
-                if (entityType.getCategory() == mobCategory && EntityIcons.canTypeRenderer(entityType)) {
+                if (entityType.getCategory() == mobCategory && EntityIconUtils.canTypeRender(entityType)) {
                     entityTypes.add(entityType);
                 }
             }
@@ -51,52 +54,53 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
     }
 
     private class RowPanel extends AbstractGroupedButtonListScreen<MobCategory, EntityType<?>>.RowPanel {
-
-        private TextField nameField;
-        private SimpleButton hideButton;
-        private SimpleButton createButton;
-        private final Icon icon;
+        private final TextField nameField;
+        private final SimpleButton hideButton;
+        private final SimpleButton createButton;
+        private final Icon<?> icon;
         private final ResourceKey<EntityType<?>> resourceKey;
 
         public RowPanel(Panel panel, EntityType<?> entityType) {
             super(panel, entityType);
-            this.icon = EntityIcons.getIcon(entityType);
+            this.icon = EntityIconLoader.getIcon(entityType);
             this.resourceKey = ResourceKey.create(Registries.ENTITY_TYPE, BuiltInRegistries.ENTITY_TYPE.getKey(entityType));
             setHeight(18);
-        }
 
-        @Override
-        public void addWidgets() {
-            boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey, true);
-            add(hideButton = new ToggleableButton(this, hiddenState, Icons.ACCEPT, Icons.ACCEPT_GRAY, (hideButton, hidden) -> {
-                FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey, hidden);
+            boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey.identifier().toString(), true);
+            hideButton = new ToggleableButton(this, hiddenState, Icons.ACCEPT, Icons.ACCEPT_GRAY, (hideButton, hidden) -> {
+                FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey.identifier().toString(), hidden);
                 FTBChunksClientConfig.saveConfig();
-            }));
+            });
 
-            if (showCreationButton) {
-                boolean isDynamicTexture = EntityIcons.IS_USING_NEW_JSON.getOrDefault(value, false);
-                Icon icon = isDynamicTexture ? Icons.BOOK_RED : Icons.BOOK;
-                add(createButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.open_creation_gui"), icon, (widget, button) -> new SliceCreationGUI(value).openGui()));
-            }
+            Icon<?> btnIcon = EntityIconLoader.isDynamicTexture(value) ? Icons.BOOK_RED : Icons.BOOK;
+            createButton = new SimpleButton(this, Component.empty(), btnIcon, (widget, button) -> new SliceCreationGUI(value).openGui());
+            var entityIconSettings = EntityIconLoader.getSettings(value).orElseThrow();
 
-            EntityIcons.EntityIconSettings entityIconSettings = EntityIcons.getSettings(value).orElseThrow();
-            add(nameField = new TextField(this) {
+            nameField = new TextField(this) {
                 @Override
                 public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-                    graphics.pose().pushPose();
-                    graphics.pose().translate(x - 16, y - 2, 0);
-                    graphics.pose().scale(0.75F, 0.75F, 0);
-                    icon.draw(graphics, 0, 0, entityIconSettings.widthHeight().width(), entityIconSettings.widthHeight().height());
-                    graphics.pose().popPose();
+                    graphics.pose().pushMatrix();
+                    graphics.pose().translate(x - 16, y - 2);
+                    graphics.pose().scale(0.75F, 0.75F);
+                    IconHelper.renderIcon(icon, graphics, 0, 0, entityIconSettings.widthHeight().width(), entityIconSettings.widthHeight().height());
+                    graphics.pose().popMatrix();
                     super.draw(graphics, theme, x, y, w, h);
                 }
 
                 @Override
                 public void addMouseOverText(TooltipList list) {
-                    list.add(Component.literal(value.arch$registryName().toString()));
+                    list.add(Component.literal(Objects.requireNonNull(value.arch$registryName()).toString()));
                 }
-            }.setTrim().addFlags(Theme.SHADOW));
+            }.setTrim().addFlags(Theme.SHADOW);
+        }
 
+        @Override
+        public void addWidgets() {
+            add(hideButton);
+            if (showCreationButton) {
+                add(createButton);
+            }
+            add(nameField);
         }
 
         @Override

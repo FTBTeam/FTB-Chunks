@@ -1,25 +1,25 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import com.mojang.math.Axis;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
+import dev.ftb.mods.ftblibrary.client.gui.input.Key;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public class PointerIcon implements MapIcon {
-
-    private static final Icon POINTER = Icon.getIcon(FTBChunksAPI.rl("textures/player.png"));
+    public static final Icon<?> POINTER = Icon.getIcon(FTBChunksAPI.id("textures/player.png"));
     
     @Override
     public Vec3 getPos(float partialTick) {
-        Player player = Minecraft.getInstance().player;
+        Player player = ClientUtils.getClientPlayer();
         return partialTick >= 1F ? player.position() : player.getPosition(partialTick);
     }
 
@@ -35,13 +35,13 @@ public class PointerIcon implements MapIcon {
 
     @Override
     public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-        Player player = Minecraft.getInstance().player;
-        graphics.pose().pushPose();
-        graphics.pose().translate(x + w / 2f, y + h / 2f, 0F);
+        Player player = ClientUtils.getClientPlayer();
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x + w / 2f, y + h / 2f);
         float scale = mapType == MapType.LARGE_MAP ? 2.5F : 2F;
-        graphics.pose().scale(scale, scale, scale);
-        graphics.pose().mulPose(Axis.ZP.rotationDegrees(player.getYRot() + 180F));
-        POINTER.draw(graphics, - w / 2, -h / 2, w, h);
-        graphics.pose().popPose();
+        graphics.pose().scale(scale, scale);
+        graphics.pose().rotate((player.getYRot() + 180F) * Mth.DEG_TO_RAD);
+        IconHelper.renderIcon(POINTER, graphics, - w / 2, -h / 2, w, h);
+        graphics.pose().popMatrix();
     }
 }

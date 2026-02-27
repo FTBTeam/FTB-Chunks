@@ -30,8 +30,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,12 +45,14 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	private static final Long2ObjectMap<UUID> EMPTY_CHUNKS = Long2ObjectMaps.emptyMap();
 	protected static final String BYPASS_FTB_CHUNKS_PROTECTION = "BypassFTBChunksProtection";
 
+	@Nullable
 	private static ClaimedChunkManagerImpl instance;
 
 	private final TeamManager teamManager;
 	private final Map<UUID, ChunkTeamDataImpl> teamData;
 	private final Map<ChunkDimPos, ClaimedChunkImpl> claimedChunks;
 	private final Path dataDirectory;
+	@Nullable
 	private Map<ResourceKey<Level>, Long2ObjectMap<UUID>> forceLoadedChunkCache;
 
 	public ClaimedChunkManagerImpl(TeamManager teamManager) {
@@ -75,8 +77,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 	}
 
+	public static boolean exists() {
+		return instance != null;
+	}
+
 	public static ClaimedChunkManagerImpl getInstance() {
-		return instance;
+		return Objects.requireNonNull(instance);
 	}
 
 	public static void init(TeamManager teamManager) {
@@ -104,19 +110,24 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 		level.getChunkSource().save(false);
 
-		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().location()));
+		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().identifier()));
 	}
 
 	private ChunkTeamDataImpl loadTeamData(Team team) {
 		Path path = dataDirectory.resolve(team.getId() + ".snbt");
 		ChunkTeamDataImpl data = new ChunkTeamDataImpl(this, path, team);
-		CompoundTag dataFile = SNBT.read(path);
 
-		if (dataFile != null) {
-			data.deserializeNBT(dataFile);
-			teamData.put(team.getId(), data);
-			return data;
-		}
+        try {
+            CompoundTag dataFile = SNBT.tryRead(path);
+
+            if (dataFile != null) {
+                data.deserializeNBT(dataFile);
+                teamData.put(team.getId(), data);
+                return data;
+            }
+        } catch (Exception ex) {
+            FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
+        }
 
 		return data;
 	}
@@ -126,17 +137,18 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	@Override
-	public ChunkTeamDataImpl getOrCreateData(@NotNull Team team) {
+	public ChunkTeamDataImpl getOrCreateData(@NonNull Team team) {
 		ChunkTeamDataImpl data = teamData.get(team.getId());
 		if (data == null) {
-			data = loadTeamData(team);
-			teamData.put(team.getId(), data);
+            data = loadTeamData(team);
+            teamData.put(team.getId(), data);
 		}
 
 		return data;
 	}
 
 	@Override
+	@Nullable
 	public ChunkTeamDataImpl getPersonalData(UUID id) {
 		return getTeamManager().getPlayerTeamForPlayerID(id)
 				.map(this::getOrCreateData)
@@ -144,6 +156,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	@Override
+	@Nullable
 	public ChunkTeamDataImpl getOrCreateData(ServerPlayer player) {
 		return getTeamManager().getTeamForPlayer(player)
 				.map(this::getOrCreateData)
@@ -154,12 +167,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		ChunkTeamDataImpl data = teamData.get(toDelete.getId());
 
 		if (data != null && toDelete.getMembers().isEmpty()) {
-			FTBChunks.LOGGER.debug("dropping references to empty team " + toDelete.getId());
+            FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
 			teamData.remove(toDelete.getId());
 			try {
 				Files.deleteIfExists(data.getFile());
 			} catch (IOException e) {
-				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.getFile(), e.getMessage()));
+				FTBChunks.LOGGER.error("can't delete file {}: {}", data.getFile(), e.getMessage());
 			}
 		}
 	}
@@ -186,7 +199,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	@Override
 	public boolean getBypassProtection(UUID player) {
 		return teamManager.getPlayerTeamForPlayerID(player)
-				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION))
+				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION).orElse(false))
 				.orElse(false);
 		}
 
@@ -258,7 +271,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		return Collections.unmodifiableMap(forceLoadedChunkCache);
 	}
 
-	@NotNull
+	@NonNull
 	@Override
 	public Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension) {
 		return getForceLoadedChunks().getOrDefault(dimension, EMPTY_CHUNKS);

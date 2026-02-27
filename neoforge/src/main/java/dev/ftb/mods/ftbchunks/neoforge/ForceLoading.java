@@ -23,37 +23,29 @@ public class ForceLoading {
     }
 
     private static void registerTicketController(RegisterTicketControllersEvent event) {
-        ticketController = new TicketController(FTBChunksAPI.rl("default"), ForceLoading::validateLoadedChunks);
+        ticketController = new TicketController(FTBChunksAPI.id("default"), ForceLoading::validateLoadedChunks);
 
         event.register(ticketController);
     }
 
     private static void validateLoadedChunks(ServerLevel level, TicketHelper ticketHelper) {
-        FTBChunks.LOGGER.debug("validating chunk tickets for level {}", level.dimension().location());
+        FTBChunks.LOGGER.debug("validating chunk tickets for level {}", level.dimension().identifier());
 
         ticketHelper.getEntityTickets().forEach((id, chunks) -> {
-            FTBChunks.LOGGER.debug("validating {} ticking chunk tickets for {}", chunks.ticking().size(), id);
-
-            // non-ticking tickets - shouldn't have any of these; purge just in case (older releases of Chunks registered them)
-            Set<Long> toRemoveNon = new HashSet<>(chunks.nonTicking());
-            if (!toRemoveNon.isEmpty()) {
-                toRemoveNon.forEach(l -> ticketHelper.removeTicket(id, l, false));
-                FTBChunks.LOGGER.info("purged {} non-ticking Forge chunkloading tickets for team ID {} in dimension {}",
-                        toRemoveNon.size(), id, level.dimension().location());
-            }
+            FTBChunks.LOGGER.debug("validating {} ticking chunk tickets for {}", chunks.normal().size(), id);
 
             // ticking tickets - purge if the chunk is either unclaimed or should not be offline-force-loaded
             Set<Long> toRemove = new HashSet<>();
-            chunks.ticking().forEach(l -> {
-                ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(l)));
+            chunks.normal().forEach(longChunkPos -> {
+                ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(longChunkPos)));
                 if (cc == null || !cc.getTeamData().getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
-                    toRemove.add(l);
+                    toRemove.add(longChunkPos);
                 }
             });
             if (!toRemove.isEmpty()) {
                 toRemove.forEach(l -> ticketHelper.removeTicket(id, l, true));
                 FTBChunks.LOGGER.info("cleaned up {} stale ticking Forge chunkloading tickets for team ID {} in dimension {}",
-                        toRemove.size(), id, level.dimension().location());
+                        toRemove.size(), id, level.dimension().identifier());
             }
         });
     }

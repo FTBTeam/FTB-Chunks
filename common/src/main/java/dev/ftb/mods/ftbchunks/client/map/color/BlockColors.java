@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.client.map.color;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 
@@ -25,7 +25,7 @@ public class BlockColors {
 	@Nullable
 	public static BlockColor getFromType(String value) {
 		if (value.indexOf('#') == 0) {
-			return new CustomBlockColor(Color4I.fromString(value));
+			return new CustomBlockColor(Color4I.parse(value));
 		} else {
 			return TYPE_MAP.get(value);
 		}

@@ -7,10 +7,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Tracks which players are visible to this client player based on their team privacy settings
+ */
 public final class VisibleClientPlayers {
 	private static final Set<UUID> CLIENT_LIST = new HashSet<>();
 
 	public static void updatePlayerList(List<UUID> uuids) {
+		// see PlayerVisibilityPacket
 		CLIENT_LIST.clear();
 		CLIENT_LIST.addAll(uuids);
 	}

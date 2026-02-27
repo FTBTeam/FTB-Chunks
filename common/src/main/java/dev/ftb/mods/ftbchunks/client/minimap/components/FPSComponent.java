@@ -1,29 +1,29 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class FPSComponent implements MinimapInfoComponent {
 
-    public static final ResourceLocation ID = FTBChunksAPI.rl("fps");
+    public static final Identifier ID = FTBChunksAPI.id("fps");
 
     public FPSComponent() {
         super();
     }
 
     @Override
-    public ResourceLocation id() {
+    public Identifier id() {
         return ID;
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()), 0);
     }
 

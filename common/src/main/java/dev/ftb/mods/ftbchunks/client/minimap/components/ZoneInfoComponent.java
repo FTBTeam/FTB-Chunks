@@ -1,17 +1,18 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
-import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -19,18 +20,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ZoneInfoComponent implements MinimapInfoComponent {
-    public static final ResourceLocation ID = FTBChunksAPI.rl("zone");
+    public static final Identifier ID = FTBChunksAPI.id("zone");
     public static final Component WILDNESS = Component.translatable("wilderness").withStyle(s -> s.withColor(ChatFormatting.DARK_GREEN).withItalic(true));
 
+    @Nullable
     private Team team;
 
     @Override
-    public ResourceLocation id() {
+    public Identifier id() {
         return ID;
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         String setting = context.getSetting(this);
 
         if (team != null) {
@@ -41,7 +43,7 @@ public class ZoneInfoComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public boolean shouldRender(MinimapContext context) {
+    public boolean shouldRender(MinimapComponentContext context) {
         var data = context.mapDimension().getRegion(XZ.regionFromChunk(context.mapChunksPos().x(), context.mapChunksPos().z())).getData();
 
         team = null;

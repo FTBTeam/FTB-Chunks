@@ -1,26 +1,29 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.architectury.platform.Platform;
-import dev.ftb.mods.ftbchunks.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
+import dev.ftb.mods.ftbchunks.client.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.api.Team;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.IdentifierException;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +36,7 @@ public class MapManager implements MapTask {
 	// - 1MB each for foliage, grass & water
 	public static final long MEMORY_PER_REGION = 4L * 1024L * 1024L;
 
+	@Nullable
 	private static MapManager instance;
 
 	public final Object lock = new Object();
@@ -43,13 +47,15 @@ public class MapManager implements MapTask {
 	private final Map<ResourceKey<Level>, MapDimension> dimensions;
 
 	private boolean needsSave;
+	@Nullable
 	private MapDimension pendingRegionPurge = null;
 
-	private final Int2ObjectOpenHashMap<ResourceLocation> blockColorIndexMap;
-	private final Object2IntOpenHashMap<ResourceLocation> blockColorIndexMapReverse;
+	private final Int2ObjectOpenHashMap<Identifier> blockColorIndexMap;
+	private final Object2IntOpenHashMap<Identifier> blockColorIndexMapReverse;
 	private final Int2ObjectOpenHashMap<ResourceKey<Biome>> biomeColorIndexMap;
 	private final Int2ObjectOpenHashMap<BlockColor> blockIdToColCache;
 	private final List<BiomeFTBC> biomesToRelease;
+	private final PendingUpdateEvents pendingUpdateEvents;
 
 	private MapManager(UUID serverId, Path directory) {
 		this.serverId = serverId;
@@ -60,7 +66,7 @@ public class MapManager implements MapTask {
 		needsSave = false;
 
 		blockColorIndexMap = new Int2ObjectOpenHashMap<>();
-		blockColorIndexMap.defaultReturnValue(ResourceLocation.fromNamespaceAndPath("minecraft", "air"));
+		blockColorIndexMap.defaultReturnValue(Identifier.fromNamespaceAndPath("minecraft", "air"));
 		blockColorIndexMapReverse = new Object2IntOpenHashMap<>();
 		blockColorIndexMapReverse.defaultReturnValue(0);
 		biomeColorIndexMap = new Int2ObjectOpenHashMap<>();
@@ -70,34 +76,41 @@ public class MapManager implements MapTask {
 
 		biomesToRelease = new ArrayList<>();
 
+		pendingUpdateEvents = new PendingUpdateEvents();
+
 		try {
 			Path dimFile = this.directory.resolve("dimensions.txt");
-
 			if (Files.exists(dimFile)) {
 				for (String s : Files.readAllLines(dimFile)) {
 					s = s.trim();
-
 					if (s.length() >= 3) {
-						ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(s));
-						dimensions.put(key, new MapDimension(this, key, directory));
-					}
+						try {
+							Identifier dimId = Identifier.parse(s);
+							ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, dimId);
+							dimensions.put(key, new MapDimension(this, key, directory));
+						} catch (IdentifierException e) {
+							FTBChunks.LOGGER.warn("skipping invalid entry '{}' in dimensions.txt", s);
+						}
+                    }
 				}
 			} else {
 				needsSave = true;
 			}
 
 			Path blockFile = this.directory.resolve("block_map.txt");
-
 			if (Files.exists(blockFile)) {
 				for (String s : Files.readAllLines(blockFile)) {
 					s = s.trim();
-
 					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
-						int i = Integer.decode(s1[0]);
-						ResourceLocation loc = ResourceLocation.tryParse(s1[1]);
-						blockColorIndexMap.put(i, loc);
-						blockColorIndexMapReverse.put(loc, i);
+						try {
+							int i = Integer.decode(s1[0]);
+							Identifier loc = Identifier.parse(s1[1]);
+							blockColorIndexMap.put(i, loc);
+							blockColorIndexMapReverse.put(loc, i);
+						} catch (NumberFormatException | IdentifierException e) {
+							FTBChunks.LOGGER.warn("skipping invalid entry '{}' in block_map.txt", s);
+						}
 					}
 				}
 			} else {
@@ -105,23 +118,26 @@ public class MapManager implements MapTask {
 			}
 
 			Path biomeFile = this.directory.resolve("biome_map.txt");
-
 			if (Files.exists(biomeFile)) {
 				for (String s : Files.readAllLines(biomeFile)) {
 					s = s.trim();
-
 					if (!s.isEmpty()) {
 						String[] s1 = s.split(" ", 2);
-						int i = Integer.decode(s1[0]);
-						ResourceLocation loc = ResourceLocation.tryParse(s1[1]);
-						ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, loc);
-						biomeColorIndexMap.put(i, key);
-					}
+						try {
+							int i = Integer.decode(s1[0]);
+							Identifier loc = Identifier.parse(s1[1]);
+							ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, loc);
+							biomeColorIndexMap.put(i, key);
+						} catch (NumberFormatException | IdentifierException e) {
+							FTBChunks.LOGGER.warn("skipping invalid entry '{}' in biome_map.txt", s);
+						}
+                    }
 				}
 			} else {
 				needsSave = true;
 			}
 		} catch (Exception ex) {
+			FTBChunks.LOGGER.error("errors detecting loading map manager data from {}", directory);
 			ex.printStackTrace();
 		}
 	}
@@ -182,7 +198,6 @@ public class MapManager implements MapTask {
 		}
 	}
 
-	@NotNull
 	public synchronized MapDimension getDimension(ResourceKey<Level> dim) {
 		return getDimensions().computeIfAbsent(dim, dimKey -> {
 			needsSave = true;
@@ -200,7 +215,7 @@ public class MapManager implements MapTask {
 		}
 
 		for (BiomeFTBC b : biomesToRelease) {
-			b.setFTBCBiomeColorIndex(-1);
+			b.ftbc$setBiomeColorIndex(-1);
 		}
 
 		biomesToRelease.clear();
@@ -215,7 +230,7 @@ public class MapManager implements MapTask {
 			}
 		}
 
-		FTBChunksClient.INSTANCE.scheduleMinimapUpdate();
+		FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
 	}
 
 	@Override
@@ -223,7 +238,7 @@ public class MapManager implements MapTask {
 		List<String> dimensionsList = dimensions
 				.keySet()
 				.stream()
-				.map(key -> key.location().toString())
+				.map(key -> key.identifier().toString())
 				.collect(Collectors.toList());
 
 		List<String> blockColorIndexMapList = blockColorIndexMap
@@ -236,8 +251,8 @@ public class MapManager implements MapTask {
 		List<String> biomeColorIndexMapList = biomeColorIndexMap
 				.int2ObjectEntrySet()
 				.stream()
-				.sorted(Comparator.comparing(o -> o.getValue().location()))
-				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().location()))
+				.sorted(Comparator.comparing(o -> o.getValue().identifier()))
+				.map(key -> String.format("#%03X %s", key.getIntKey(), key.getValue().identifier()))
 				.collect(Collectors.toList());
 
 		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
@@ -251,7 +266,7 @@ public class MapManager implements MapTask {
 		});
 	}
 
-	public int getBlockColorIndex(ResourceLocation id) {
+	public int getBlockColorIndex(Identifier id) {
 		int i = blockColorIndexMapReverse.getInt(id);
 
 		if (i == 0) {
@@ -277,33 +292,33 @@ public class MapManager implements MapTask {
 			return 0;
 		}
 
-		int i = b.getFTBCBiomeColorIndex();
+		int i = b.ftbc$getBiomeColorIndex();
 
 		if (i == -1) {
 			ResourceKey<Biome> key = biomes.getResourceKey(biome).orElse(null);
 
 			if (key == null) {
-				b.setFTBCBiomeColorIndex(0);
+				b.ftbc$setBiomeColorIndex(0);
 				return 0;
 			}
 
 			for (Int2ObjectOpenHashMap.Entry<ResourceKey<Biome>> entry : biomeColorIndexMap.int2ObjectEntrySet()) {
 				if (entry.getValue() == key) {
 					i = entry.getIntKey();
-					b.setFTBCBiomeColorIndex(i);
+					b.ftbc$setBiomeColorIndex(i);
 					return i;
 				}
 			}
 
-			Random random = new Random((long) key.location().getNamespace().hashCode() & 4294967295L | ((long) key.location().getPath().hashCode() & 4294967295L) << 32);
-			i = key.location().hashCode() & 0b111_11111111;
+			Random random = new Random((long) key.identifier().getNamespace().hashCode() & 4294967295L | ((long) key.identifier().getPath().hashCode() & 4294967295L) << 32);
+			i = key.identifier().hashCode() & 0b111_11111111;
 
 			while (i == 0 || biomeColorIndexMap.containsKey(i)) {
 				i = random.nextInt() & 0b111_11111111;
 			}
 
 			biomeColorIndexMap.put(i, key);
-			b.setFTBCBiomeColorIndex(i);
+			b.ftbc$setBiomeColorIndex(i);
 			needsSave = true;
 			biomesToRelease.add(b);
 		}
@@ -312,8 +327,8 @@ public class MapManager implements MapTask {
 	}
 
 	public Block getBlock(int id) {
-		ResourceLocation rl = blockColorIndexMap.get(id & 0xFFFFFF);
-		Block block = rl == null ? null : FTBChunks.BLOCK_REGISTRY.get(rl);
+		Identifier rl = blockColorIndexMap.get(id & 0xFFFFFF);
+		Block block = FTBChunks.BLOCK_REGISTRY.get(rl);
 		return block == null ? Blocks.AIR : block;
 	}
 
@@ -351,17 +366,27 @@ public class MapManager implements MapTask {
 
 	public void checkForRegionPurge() {
 		if (pendingRegionPurge != null) {
-			int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
-			List<MapRegion> dataLoadedRegions = pendingRegionPurge.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).toList();
-			long nLoaded = dataLoadedRegions.size();
-			autoRelease = Math.max(4, autoRelease);  // not useful to release regions which will be reloaded pretty much immediately
-			if (nLoaded > autoRelease) {
-				dataLoadedRegions.stream()
-						.sorted(Comparator.comparingLong(MapRegion::getLastDataAccess))
-						.limit(nLoaded - autoRelease)
-						.forEach(r -> r.release(false));
+			synchronized (lock) {
+				int autoRelease = FTBChunksClientConfig.AUTORELEASE_ON_MAP_CLOSE.get();
+				List<MapRegion> dataLoadedRegions = pendingRegionPurge.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).toList();
+				long nLoaded = dataLoadedRegions.size();
+				autoRelease = Math.max(4, autoRelease);  // not useful to release regions which will be reloaded pretty much immediately
+				if (nLoaded > autoRelease) {
+					dataLoadedRegions.stream()
+							.sorted(Comparator.comparingLong(MapRegion::getLastDataAccess))
+							.limit(nLoaded - autoRelease)
+							.forEach(r -> r.release(false));
+				}
+				pendingRegionPurge = null;
 			}
-			pendingRegionPurge = null;
 		}
+	}
+
+	public void addPendingUpdateEvent(Team team, ChunkDimPos dim, MapChunk.DateInfo dateInfo) {
+		pendingUpdateEvents.addPending(team, dim, dateInfo);
+	}
+
+	public void firePendingUpdateEvents() {
+		pendingUpdateEvents.fireEvents();
 	}
 }

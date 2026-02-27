@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.registries.Registries;
@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 public record LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap chunks) implements CustomPacketPayload {
-	public static final Type<LoadedChunkViewPacket> TYPE = new Type<>(FTBChunksAPI.rl("loaded_chunk_view_packet"));
+	public static final Type<LoadedChunkViewPacket> TYPE = new Type<>(FTBChunksAPI.id("loaded_chunk_view_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, LoadedChunkViewPacket> STREAM_CODEC = StreamCodec.composite(
 			ResourceKey.streamCodec(Registries.DIMENSION), LoadedChunkViewPacket::dimension,
@@ -31,6 +31,6 @@ public record LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap ch
 	}
 
 	public static void handle(LoadedChunkViewPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClient.INSTANCE.syncLoadedChunkViewFromServer(message.dimension, message.chunks));
+		context.queue(() -> FTBChunksClientNet.handleLoadedChunkViewPacket(message.dimension, message.chunks));
 	}
 }

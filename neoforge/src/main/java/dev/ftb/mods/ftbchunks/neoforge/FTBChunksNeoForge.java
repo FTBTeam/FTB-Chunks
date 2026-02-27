@@ -1,0 +1,79 @@
+package dev.ftb.mods.ftbchunks.neoforge;
+
+import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.FTBChunksTags;
+import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftbchunks.neoforge.integration.FTBBackups3Integration;
+import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.event.entity.EntityEvent;
+import net.neoforged.neoforge.event.entity.EntityMobGriefingEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+
+@Mod(FTBChunks.MOD_ID)
+public class FTBChunksNeoForge {
+	public FTBChunksNeoForge(IEventBus modEventBus) {
+		NeoForge.EVENT_BUS.addListener(this::entityInteractSpecific);
+		NeoForge.EVENT_BUS.addListener(this::mobGriefing);
+		NeoForge.EVENT_BUS.addListener(this::enteringSection);
+
+		if (ModList.get().isLoaded("ftbbackups3")) {
+			FTBBackups3Integration.init();
+		}
+
+		ForceLoading.setup(modEventBus);
+
+		FTBChunks.instance = new FTBChunks();
+	}
+
+	/**
+	 * Temporary hack until Architectury hopefully adds direct support for this. Needed to prevent interaction
+	 * with Armor Stands (and probably anything where the specific interaction position is important). NOTE:
+	 * currently broken in 1.18.2 due to a Forge bug:
+	 * <a href="https://github.com/MinecraftForge/MinecraftForge/issues/8143">...</a>
+	 *
+	 * @param event the event
+	 */
+	private void entityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
+		if (!event.getEntity().level().isClientSide() && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(event.getEntity(), event.getHand(), event.getEntity().blockPosition(), Protection.INTERACT_ENTITY, event.getTarget())) {
+			event.setCancellationResult(InteractionResult.FAIL);
+			event.setCanceled(true);
+		}
+	}
+
+	private void mobGriefing(EntityMobGriefingEvent event) {
+		// we could do this for all mob griefing but that's arguably OP (could trivialize wither fights, for example)
+		// expose this as a tag so pack makers can change to what they want (default tag with only enderman)
+		// due to current limitations on fabric this tag will only work on NeoForge, while fabric only supports endman
+		// Note: explicit check for server-side needed due to Optifine brain-damage
+		if (event.getEntity().getType().is(FTBChunksTags.Entities.ENTITY_MOB_GRIEFING_BLACKLIST_TAG) && !event.getEntity().level().isClientSide()) {
+			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(event.getEntity()));
+
+			if (cc != null && !cc.allowMobGriefing()) {
+				event.setCanGrief(false);
+			}
+		}
+	}
+
+	private void enteringSection(EntityEvent.EnteringSection event) {
+		if (event.getEntity() instanceof ServerPlayer sp && !(event.getEntity() instanceof FakePlayer)
+				&& event.didChunkChange() && FTBTeamsAPI.api().isManagerLoaded() && FTBChunksAPI.api().isManagerLoaded()) {
+			FTBTeamsAPI.api().getManager().getTeamForPlayerID(event.getEntity().getUUID()).ifPresent(team -> {
+				ChunkTeamDataImpl data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
+				data.checkForChunkChange(sp, event.getNewPos().x(), event.getNewPos().z());
+			});
+		}
+	}
+}

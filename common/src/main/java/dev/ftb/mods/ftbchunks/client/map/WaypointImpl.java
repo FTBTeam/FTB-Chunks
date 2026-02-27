@@ -9,8 +9,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class WaypointImpl implements Waypoint {
 	private final MapDimension mapDimension;
@@ -23,6 +25,7 @@ public class WaypointImpl implements Waypoint {
 	private boolean hidden = false;
 	private String name = "";
 	private int color = 0xFFFFFF;
+	@Nullable
 	private WaypointMapIcon mapIcon;
 	private boolean isTransient;
 
@@ -104,8 +107,8 @@ public class WaypointImpl implements Waypoint {
 	}
 
 	@Override
-	public WaypointIcon getMapIcon() {
-		return mapIcon;
+	public Optional<WaypointIcon> getMapIcon() {
+		return Optional.ofNullable(mapIcon);
 	}
 
 	public void refreshIcon() {

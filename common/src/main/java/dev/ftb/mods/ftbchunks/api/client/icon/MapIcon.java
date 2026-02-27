@@ -1,11 +1,12 @@
 package dev.ftb.mods.ftbchunks.api.client.icon;
 
+import dev.ftb.mods.ftblibrary.client.gui.input.Key;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -84,8 +85,10 @@ public interface MapIcon {
      */
     default void addTooltip(TooltipList list) {
         Player player = Minecraft.getInstance().player;
-        Vec3 pos = getPos(1F);
-        list.styledString(String.format("%,d m", Mth.ceil(MathUtils.dist(player.getX(), player.getZ(), pos.x, pos.z))), ChatFormatting.GRAY);
+        if (player != null) {
+            Vec3 pos = getPos(1F);
+            list.styledString(String.format("%,d m", Mth.ceil(MathUtils.dist(player.getX(), player.getZ(), pos.x, pos.z))), ChatFormatting.GRAY);
+        }
     }
 
     /**
@@ -124,9 +127,9 @@ public interface MapIcon {
      */
     class SimpleMapIcon implements MapIcon {
         protected final Vec3 pos;
-        protected Icon icon;
+        protected Icon<?> icon;
 
-        public SimpleMapIcon(Vec3 pos, Icon icon) {
+        public SimpleMapIcon(Vec3 pos, Icon<?> icon) {
             this.pos = pos;
             this.icon = icon;
         }
@@ -140,18 +143,18 @@ public interface MapIcon {
             return pos;
         }
 
-        public Icon getIcon() {
+        public Icon<?> getIcon() {
             return icon;
         }
 
-        public void setIcon(Icon icon) {
+        public void setIcon(Icon<?> icon) {
             this.icon = icon;
         }
 
         @Override
         public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
             if (!icon.isEmpty()) {
-                icon.draw(graphics, x, y, w, h);
+                IconHelper.renderIcon(icon, graphics, x, y, w, h);
             }
         }
 

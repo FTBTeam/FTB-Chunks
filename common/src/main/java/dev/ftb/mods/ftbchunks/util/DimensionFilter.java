@@ -1,9 +1,10 @@
 package dev.ftb.mods.ftbchunks.util;
 
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftblibrary.util.Lazy;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
 import java.util.Collection;
@@ -11,56 +12,50 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class DimensionFilter {
-    private static WildcardedRLMatcher dimensionMatcherB = null;
-    private static WildcardedRLMatcher dimensionMatcherW = null;
-    private static WildcardedRLMatcher noWilderness = null;
+    private static final Lazy<WildcardedRLMatcher> DIMENSION_MATCHER_B
+            = Lazy.of(() -> new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST.get()));
+    private static final Lazy<WildcardedRLMatcher> DIMENSION_MATCHER_W
+            = Lazy.of(() -> new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_WHITELIST.get()));
+    private static final Lazy<WildcardedRLMatcher> NO_WILDERNESS
+            = Lazy.of(() -> new WildcardedRLMatcher(FTBChunksWorldConfig.NO_WILDERNESS_DIMENSIONS.get()));
 
     public static boolean isDimensionOK(ResourceKey<Level> levelKey) {
-        ResourceLocation name = levelKey.location();
+        Identifier name = levelKey.identifier();
         return !getDimensionBlacklist().test(name) && (getDimensionWhitelist().isEmpty() || getDimensionWhitelist().test(name));
     }
 
     public static boolean isNoWildernessDimension(ResourceKey<Level> levelKey) {
-        return getNoWildernessList().test(levelKey.location());
+        return getNoWildernessList().test(levelKey.identifier());
     }
 
     private static WildcardedRLMatcher getDimensionWhitelist() {
-        if (dimensionMatcherW == null) {
-            dimensionMatcherW = new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_WHITELIST.get());
-        }
-        return dimensionMatcherW;
+        return DIMENSION_MATCHER_W.get();
     }
 
     private static WildcardedRLMatcher getDimensionBlacklist() {
-        if (dimensionMatcherB == null) {
-            dimensionMatcherB = new WildcardedRLMatcher(FTBChunksWorldConfig.CLAIM_DIMENSION_BLACKLIST.get());
-        }
-        return dimensionMatcherB;
+        return DIMENSION_MATCHER_B.get();
     }
 
     private static WildcardedRLMatcher getNoWildernessList() {
-        if (noWilderness == null) {
-            noWilderness = new WildcardedRLMatcher(FTBChunksWorldConfig.NO_WILDERNESS_DIMENSIONS.get());
-        }
-        return noWilderness;
+        return NO_WILDERNESS.get();
     }
 
     public static void clearMatcherCaches() {
-        dimensionMatcherB = null;
-        dimensionMatcherW = null;
-        noWilderness = null;
+        DIMENSION_MATCHER_B.invalidate();
+        DIMENSION_MATCHER_W.invalidate();
+        NO_WILDERNESS.invalidate();
     }
 
-    private static class WildcardedRLMatcher implements Predicate<ResourceLocation> {
+    private static class WildcardedRLMatcher implements Predicate<Identifier> {
         private final Set<String> namespaces = new ObjectOpenHashSet<>();
-        private final Set<ResourceLocation> reslocs = new ObjectOpenHashSet<>();
+        private final Set<Identifier> reslocs = new ObjectOpenHashSet<>();
 
         public WildcardedRLMatcher(Collection<String> toMatch) {
-            ResourceLocation location;
+            Identifier location;
             for (String s : toMatch) {
                 if (s.endsWith(":*")) {
                     namespaces.add(s.split(":")[0]);
-                } else if ((location = ResourceLocation.tryParse(s)) != null) {
+                } else if ((location = Identifier.tryParse(s)) != null) {
                     reslocs.add(location);
                 }
             }
@@ -71,8 +66,8 @@ public class DimensionFilter {
         }
 
         @Override
-        public boolean test(ResourceLocation resourceLocation) {
-            return reslocs.contains(resourceLocation) || namespaces.contains(resourceLocation.getNamespace());
+        public boolean test(Identifier Identifier) {
+            return reslocs.contains(Identifier) || namespaces.contains(Identifier.getNamespace());
         }
     }
 }

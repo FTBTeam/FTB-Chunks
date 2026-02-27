@@ -6,14 +6,9 @@ import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
-import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.config.value.*;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
-import dev.ftb.mods.ftblibrary.snbt.config.BooleanValue;
-import dev.ftb.mods.ftblibrary.snbt.config.DoubleValue;
-import dev.ftb.mods.ftblibrary.snbt.config.EnumValue;
-import dev.ftb.mods.ftblibrary.snbt.config.IntValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
+import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,7 +19,7 @@ import java.util.Collections;
 public interface FTBChunksWorldConfig {
 	String KEY = FTBChunks.MOD_ID + "-world";
 
-	SNBTConfig CONFIG = SNBTConfig.create(KEY)
+	Config CONFIG = Config.create(KEY)
 			.comment("Server-specific configuration for FTB Chunks",
 					"Modpack defaults should be defined in <instance>/config/" + KEY + ".snbt",
 					"  (may be overwritten on modpack update)",
@@ -55,13 +50,13 @@ public interface FTBChunksWorldConfig {
 	BooleanValue PISTON_PROTECTION = CONFIG.addBoolean("piston_protection", true)
 			.comment("If true, pistons are prevented from pushing/pulling blocks across claims owned by different teams (unless the target claim has public 'edit block' permissions defined). If 'disable_protection' is set to true, this setting is ignored.");
 
-	SNBTConfig FAKE_PLAYERS = CONFIG.addGroup("fake_players");
+	Config FAKE_PLAYERS = CONFIG.addGroup("fake_players");
 	EnumValue<ProtectionPolicy> ALLOW_FAKE_PLAYERS = FAKE_PLAYERS.addEnum("fake_players", NameMap.of(ProtectionPolicy.CHECK, ProtectionPolicy.values()).create())
 			.comment("Override to disable/enable fake players like miners and auto-clickers globally.","Default will check this setting for each team");
 	IntValue MAX_PREVENTED_LOG_AGE = FAKE_PLAYERS.addInt("max_prevented_log_age", 7, 1, Integer.MAX_VALUE)
 			.comment("Maximum time in days to keep logs of prevented fakeplayer access to a team's claims.");
 
-	SNBTConfig CLAIMING = CONFIG.addGroup("claiming");
+	Config CLAIMING = CONFIG.addGroup("claiming");
 	IntValue MAX_CLAIMED_CHUNKS = CLAIMING.addInt("max_claimed_chunks", 500)
 			.comment("Max claimed chunks.", "You can override this with FTB Ranks 'ftbchunks.max_claimed' permission");
 	StringListValue CLAIM_DIMENSION_BLACKLIST = CLAIMING.addStringList("claim_dimension_blacklist", Collections.emptyList())
@@ -72,12 +67,15 @@ public interface FTBChunksWorldConfig {
 			.comment("Maximum time (in real-world days) where if no player in a team logs in, the team automatically loses their claims.", "Prevents chunks being claimed indefinitely by teams who no longer play.","Default of 0 means no automatic loss of claims.");
 	IntValue HARD_TEAM_CLAIM_LIMIT = CLAIMING.addInt("hard_team_claim_limit", 0, 0, Integer.MAX_VALUE)
 			.comment("Hard limit for the number of chunks a team can claim, regardless of how many members. Default of 0 means no hard limit.");
-	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CLAIMING.addEnum("party_limit_mode", PartyLimitMode.NAME_MAP)
+	EnumValue<PartyLimitMode> PARTY_LIMIT_MODE = CLAIMING
+			.addEnum("party_limit_mode", PartyLimitMode.NAME_MAP)
 			.comment("Method by which party claim & force-load limits are calculated.","LARGEST: use the limits of the member with the largest limits","SUM: add up all the members' limits","OWNER: use the party owner's limits only","AVERAGE: use the average of all members' limits.");
 
-	SNBTConfig FORCE_LOADING = CONFIG.addGroup("force_loading");
-	EnumValue<ForceLoadMode> FORCE_LOAD_MODE = FORCE_LOADING.addEnum("force_load_mode", ForceLoadMode.NAME_MAP)
+	Config FORCE_LOADING = CONFIG.addGroup("force_loading");
+	EnumValue<ForceLoadMode> FORCE_LOAD_MODE = FORCE_LOADING
+			.addEnum("force_load_mode", ForceLoadMode.NAME_MAP)
 			.comment("Control how force-loaded chunks work.","NEVER: only allow chunk force-loading if the owning team has at least one online player.","ALWAYS: always allow force-loading, even if no players are online.","DEFAULT: allow force-loading IF the team has at least one player with the 'ftbchunks.chunk_load_offline' FTB Ranks permission.");
+
 	IntValue MAX_FORCE_LOADED_CHUNKS = FORCE_LOADING.addInt("max_force_loaded_chunks", 25)
 			.comment("Max force loaded chunks.", "You can override this with FTB Ranks 'ftbchunks.max_force_loaded' permission");
 	DoubleValue MAX_IDLE_DAYS_BEFORE_UNFORCE = FORCE_LOADING.addDouble("max_idle_days_before_unforce", 0D, 0D, 3650D)
@@ -85,7 +83,7 @@ public interface FTBChunksWorldConfig {
 	IntValue HARD_TEAM_FORCE_LIMIT = FORCE_LOADING.addInt("hard_team_force_limit", 0, 0, Integer.MAX_VALUE)
 			.comment("Hard limit for the number of chunks a team can force-load, regardless of how many members. Default of 0 means no hard limit.");
 
-	SNBTConfig WAYPOINT_SHARING = CONFIG.addGroup("waypoint_sharing");
+	Config WAYPOINT_SHARING = CONFIG.addGroup("waypoint_sharing");
 	BooleanValue WAYPOINT_SHARING_SERVER = WAYPOINT_SHARING.addBoolean("waypoint_sharing_server", true)
 			.comment("Allow players to share waypoints with the entire server.");
 	BooleanValue WAYPOINT_SHARING_PARTY = WAYPOINT_SHARING.addBoolean("waypoint_sharing_party", true)
@@ -93,7 +91,7 @@ public interface FTBChunksWorldConfig {
 	BooleanValue WAYPOINT_SHARING_PLAYERS = WAYPOINT_SHARING.addBoolean("waypoint_sharing_players", true)
 			.comment("Allow players to share waypoints with other players.");
 
-	SNBTConfig TEAM_PROP_DEFAULTS = CONFIG.addGroup("team_prop_defaults");
+	Config TEAM_PROP_DEFAULTS = CONFIG.addGroup("team_prop_defaults");
 	BooleanValue DEF_ALLOW_FAKE_PLAYERS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_players", false)
 			.comment("Default allow-fake-player setting for team properties");
 	BooleanValue DEF_ALLOW_FAKE_PLAYER_IDS = TEAM_PROP_DEFAULTS.addBoolean("def_fake_player_ids", true)
@@ -104,13 +102,13 @@ public interface FTBChunksWorldConfig {
 			.comment("Default mode for entity interaction in claimed chunks");
 	EnumValue<PrivacyMode> DEF_BLOCK_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_block_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for block interaction (right-click) in claimed chunks (NeoForge only)")
-			.enabled(Platform::isForgeLike);
+			.enabledForEdit(Platform::isForgeLike);
 	EnumValue<PrivacyMode> DEF_BLOCK_EDIT = TEAM_PROP_DEFAULTS.addEnum("def_block_edit", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for block breaking and placing in claimed chunks (NeoForge only)")
-			.enabled(Platform::isForgeLike);
+			.enabledForEdit(Platform::isForgeLike);
 	EnumValue<PrivacyMode> DEF_BLOCK_EDIT_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_block_edit_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for block interaction, breaking and placing in claimed chunks (Fabric only)")
-			.enabled(Platform::isFabric);
+			.enabledForEdit(Platform::isFabric);
 	EnumValue<PrivacyMode> DEF_NONLIVING_ENTITY_ATTACK = TEAM_PROP_DEFAULTS.addEnum("def_entity_attack", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for left-clicking non-living entities (armor stands, item frames...) in claimed chunks");
 	BooleanValue DEF_ALLOW_EXPLOSIONS = TEAM_PROP_DEFAULTS.addBoolean("def_allow_explosions", false)
@@ -124,9 +122,9 @@ public interface FTBChunksWorldConfig {
 	BooleanValue DEF_PVP = TEAM_PROP_DEFAULTS.addBoolean("def_pvp", true)
 			.comment("Default PvP setting in claimed chunks");
 
-	SNBTConfig DEV = CONFIG.addGroup("dev");
+	Config DEV = CONFIG.addGroup("dev");
 	BooleanValue DEV_COMMANDS = DEV.addBoolean("commands", false)
-			.excluded()
+			.excludedFromGui()
 			.comment("Enable dev commands");
 
 	static int getMaxClaimedChunks(ChunkTeamData playerData, ServerPlayer player) {

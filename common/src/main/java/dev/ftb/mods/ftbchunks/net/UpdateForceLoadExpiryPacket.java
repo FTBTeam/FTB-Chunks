@@ -3,19 +3,20 @@ package dev.ftb.mods.ftbchunks.net;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Date;
 
 public record UpdateForceLoadExpiryPacket(ChunkDimPos pos, long relativeExpiryTime) implements CustomPacketPayload {
-    public static final Type<UpdateForceLoadExpiryPacket> TYPE = new Type<>(FTBChunksAPI.rl("update_force_load_expiry_packet"));
+    public static final Type<UpdateForceLoadExpiryPacket> TYPE = new Type<>(FTBChunksAPI.id("update_force_load_expiry_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, UpdateForceLoadExpiryPacket> STREAM_CODEC = StreamCodec.composite(
             ChunkDimPos.STREAM_CODEC, UpdateForceLoadExpiryPacket::pos,
@@ -23,7 +24,7 @@ public record UpdateForceLoadExpiryPacket(ChunkDimPos pos, long relativeExpiryTi
             UpdateForceLoadExpiryPacket::new
     );
 
-    public UpdateForceLoadExpiryPacket(ChunkDimPos pos, Date expiryDate) {
+    public UpdateForceLoadExpiryPacket(ChunkDimPos pos, @Nullable Date expiryDate) {
         this(pos, expiryDate == null ? 0L : Math.max(0L, expiryDate.getTime() - System.currentTimeMillis()));
     }
 

@@ -1,8 +1,9 @@
 package dev.ftb.mods.ftbchunks.api;
 
-import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -32,7 +33,9 @@ public interface ClaimResult {
 	 *
 	 * @return the message to be displayed
 	 */
-	MutableComponent getMessage();
+	default MutableComponent getMessage() {
+		return Component.translatable(getResultId());
+	}
 
 	/**
 	 * Create a custom claim failure result. This may be of use to mods which add extra checks to claiming/forcing/etc.
@@ -55,6 +58,7 @@ public interface ClaimResult {
 	 *
 	 * @return a successful outcome
 	 */
+	@Nullable
 	static ClaimResult success() {
 		return null;
 	}
@@ -74,23 +78,19 @@ public interface ClaimResult {
 
 		public static final NameMap<StandardProblem> NAME_MAP = NameMap.of(NOT_OWNER, values()).baseNameKey("ftbchunks.standard_problem").create();
 
-		private final String resultName;
+		private final String resultId;
 
-		StandardProblem(String resultName) {
-			this.resultName = resultName;
+		StandardProblem(String resultId) {
+			this.resultId = "ftbchunks.claim_result." + resultId;
 		}
 
 		public static Optional<StandardProblem> forName(String name) {
-			return Optional.ofNullable(NAME_MAP.get(name));
-		}
-
-		public MutableComponent getMessage() {
-			return Component.translatable("ftbchunks.claim_result." + getResultId());
+			return Optional.ofNullable(NAME_MAP.getNullable(name));
 		}
 
 		@Override
 		public String getResultId() {
-			return resultName;
+			return resultId;
 		}
 	}
 
@@ -100,20 +100,15 @@ public interface ClaimResult {
 	 * Use {@link ClaimResult#customProblem(String)} to create instances of this class.
 	 */
 	class CustomProblem implements ClaimResult {
-		private final String name;
+		private final String translationKey;
 
-		private CustomProblem(String name) {
-			this.name = name;
+		private CustomProblem(String translationKey) {
+			this.translationKey = translationKey;
 		}
 
 		@Override
 		public String getResultId() {
-			return name;
-		}
-
-		@Override
-		public MutableComponent getMessage() {
-			return Component.translatable(name);
+			return translationKey;
 		}
 	}
 }

@@ -16,13 +16,13 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 public record ShareWaypointPacket(String name, GlobalPos position, ShareType shareType, List<UUID> targets) implements CustomPacketPayload {
-    public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.rl("share_waypoint_packet"));
+    public static final Type<ShareWaypointPacket> TYPE = new Type<>(FTBChunksAPI.id("share_waypoint_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, ShareWaypointPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.STRING_UTF8, ShareWaypointPacket::name,
@@ -40,19 +40,12 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
     public static void handle(ShareWaypointPacket message, NetworkManager.PacketContext context) {
         context.queue(() -> {
             ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
-            PlayerList playerList = serverPlayer.getServer().getPlayerList();
-            List<ServerPlayer> playersToSend = switch (message.shareType) {
+            PlayerList playerList = serverPlayer.level().getServer().getPlayerList();
+            Collection<ServerPlayer> playersToSend = switch (message.shareType) {
                 case SERVER -> playerList.getPlayers();
-                case PARTY -> {
-                    Optional<Team> teamForPlayer = FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer);
-                    if (teamForPlayer.isPresent()) {
-                        Team team = teamForPlayer.get();
-                        yield team.getMembers().stream().map(playerList::getPlayer)
-                                .filter(Objects::nonNull).toList();
-                    } else {
-                        yield List.of(serverPlayer);
-                    }
-                }
+                case PARTY -> FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer)
+                        .map(Team::getOnlineMembers)
+                        .orElse(List.of(serverPlayer));
                 case PLAYER -> message.targets.stream()
                         .map(playerList::getPlayer)
                         .filter(Objects::nonNull).toList();
@@ -62,17 +55,17 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
 
             for (ServerPlayer playerListPlayer : playersToSend) {
                 String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
-                String dim = message.position.dimension().location().toString();
+                String dim = message.position.dimension().identifier().toString();
 
-                Component waypointText = Component.literal(message.name)
+                Component waypointText = Component.translatable(message.name)
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.AQUA)
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(dim + " " + cords))));
+                                .withHoverEvent(new HoverEvent.ShowText(Component.literal(dim + " " + cords))));
 
                 playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
                         .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
                                 .withStyle(style ->
-                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
+                                        style.withClickEvent(new ClickEvent.RunCommand("/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
             }
         });
     }

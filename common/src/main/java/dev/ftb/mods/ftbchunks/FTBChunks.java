@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import dev.architectury.event.CompoundEventResult;
+import com.google.gson.Strictness;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
 import dev.architectury.hooks.level.entity.PlayerHooks;
@@ -11,14 +11,15 @@ import dev.architectury.platform.Platform;
 import dev.architectury.registry.registries.Registrar;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.utils.Env;
-import dev.architectury.utils.EnvExecutor;
 import dev.architectury.utils.value.IntValue;
-import dev.ftb.mods.ftbchunks.api.*;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
+import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.api.event.CustomMinYEvent;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.net.*;
-import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -27,7 +28,6 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.event.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -38,18 +38,17 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
+import net.minecraft.util.Util;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BaseSpawner;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -58,21 +57,24 @@ import net.minecraft.world.phys.HitResult;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FTBChunks {
 	public static final String MOD_ID = "ftbchunks";
 	public static final Logger LOGGER = LogManager.getLogger("FTB Chunks");
-	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setLenient().create();
+	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setStrictness(Strictness.LENIENT).create();
 
+	@Nullable
 	public static FTBChunks instance;
 
 	public static final int TILES = 15;
 	public static final int TILE_SIZE = 16;
 	public static final int TILE_OFFSET = TILES / 2;
 	public static final int MINIMAP_SIZE = TILE_SIZE * TILES;
+
 	public static final XZ[] RELATIVE_SPIRAL_POSITIONS = new XZ[TILES * TILES];
 
 	public static final Registrar<Block> BLOCK_REGISTRY = RegistrarManager.get(MOD_ID).get(Registries.BLOCK);
@@ -82,8 +84,8 @@ public class FTBChunks {
 
 		FTBChunksNet.init();
 
-		ConfigManager.getInstance().registerServerConfig(FTBChunksWorldConfig.CONFIG, MOD_ID, true, FTBChunksWorldConfig::onConfigChanged);
-		ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID);
+		ConfigManager.getInstance().registerServerConfig(FTBChunksWorldConfig.CONFIG, MOD_ID + ".config.server", true, FTBChunksWorldConfig::onConfigChanged);
+		ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID + ".config.client");
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
 			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);
@@ -121,18 +123,21 @@ public class FTBChunks {
 		PlayerEvent.CHANGE_DIMENSION.register(this::playerChangedDimension);
 		PlayerEvent.ATTACK_ENTITY.register(this::playerAttackEntity);
 
+		// note: only seems to work for Fabric. Separate event handler added in FTBChunksNeoForge
 		EntityEvent.ENTER_SECTION.register(this::enterSection);
+
 		EntityEvent.LIVING_CHECK_SPAWN.register(this::checkSpawn);
 		EntityEvent.LIVING_HURT.register(this::onLivingHurt);
 
-		ExplosionEvent.DETONATE.register(this::explosionDetonate);
+//		ExplosionEvent.DETONATE.register(this::explosionDetonate);
 
 		CommandRegistrationEvent.EVENT.register(FTBChunksCommands::registerCommands);
 
 		TickEvent.SERVER_POST.register(this::serverTickPost);
-		TickEvent.PLAYER_POST.register(this::playerTickPost);
 
-		EnvExecutor.runInEnv(Env.CLIENT, () -> FTBChunksClient.INSTANCE::init);
+		LifecycleEvent.SETUP.register(() ->
+				CustomMinYEvent.REGISTER.invoker().register(CustomMinYRegistryImpl.getInstance(Platform.getEnvironment() == Env.CLIENT))
+		);
 	}
 
 	private EventResult playerAttackEntity(Player player, Level level, Entity entity, InteractionHand interactionHand, @Nullable EntityHitResult entityHitResult) {
@@ -166,17 +171,11 @@ public class FTBChunks {
 		return cc != null && (mode == PvPMode.NEVER || !cc.getTeamData().allowPVP());
 	}
 
-	private void playerTickPost(Player player) {
-		if (player.level().isClientSide && player.level().getGameTime() % 20 == 0) {
-			FTBChunksClient.INSTANCE.maybeClearDeathpoint(player);
-		}
-	}
-
 	private void serverLevelLoad(ServerLevel level) {
-		if (ClaimedChunkManagerImpl.getInstance() != null) {
+		if (ClaimedChunkManagerImpl.exists()) {
 			ClaimedChunkManagerImpl.getInstance().initForceLoadedChunks(level);
 		} else {
-			FTBChunks.LOGGER.warn("Level {} loaded before FTB Chunks manager was initialized! Unable to force-load chunks", level.dimension().location() );
+			FTBChunks.LOGGER.warn("Level {} loaded before FTB Chunks manager was initialized! Unable to force-load chunks", level.dimension().identifier() );
 		}
 	}
 
@@ -191,6 +190,10 @@ public class FTBChunks {
 	private void loggedIn(PlayerLoggedInAfterTeamEvent event) {
 		ServerPlayer player = event.getPlayer();
 		ChunkTeamDataImpl data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
+		if (data == null) {
+			FTBChunks.LOGGER.error("couldn't get chunk team data for player {} on login?", player.getName().getString());
+			return;
+		}
 		data.updateLimits();
 
 		String playerId = event.getPlayer().getUUID().toString();
@@ -210,15 +213,14 @@ public class FTBChunks {
 					.add(ChunkSyncInfo.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
 		}
 
-		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
-			FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
-				ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
-				if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
-					SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
-					NetworkManager.sendToPlayer(player, packet);
-				}
-			});
-		});
+		chunksToSend.forEach((dimensionAndId, chunkPackets) ->
+				FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
+					ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
+					if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
+						SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
+						NetworkManager.sendToPlayer(player, packet);
+					}
+				}));
 		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
 
 		data.setLastLoginTime(now);
@@ -252,7 +254,7 @@ public class FTBChunks {
 				data.updateChunkTickets(false);
 			}
 		} else {
-			FTBChunks.LOGGER.warn("on player disconnect: player '{}' has no team?", player.getGameProfile().getName());
+			FTBChunks.LOGGER.warn("on player disconnect: player '{}' has no team?", player.getGameProfile().name());
 		}
 	}
 
@@ -268,17 +270,17 @@ public class FTBChunks {
 		ClaimedChunkManagerImpl.getInstance().getOrCreateData(teamEvent.getTeam()).saveNow();
 	}
 
-	public EventResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
+	public InteractionResult blockLeftClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
 		if (player instanceof ServerPlayer && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockBreakProtection(), null)) {
-			return EventResult.interruptFalse();
+			return InteractionResult.FAIL;
 		}
 
-		return EventResult.pass();
+		return InteractionResult.PASS;
 	}
 
-	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
+	public InteractionResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
 		if (player instanceof ServerPlayer sp) {
@@ -290,20 +292,20 @@ public class FTBChunks {
 					|| blockItem && mgr.shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockPlaceProtection(), null))
 			{
 				FTBCUtils.forceHeldItemSync(sp, hand);
-				return EventResult.interruptFalse();
+				return InteractionResult.FAIL;
 			}
 		}
 
-		return EventResult.pass();
+		return InteractionResult.PASS;
 	}
 
-	public CompoundEventResult<ItemStack> itemRightClick(Player player, InteractionHand hand) {
+	public InteractionResult itemRightClick(Player player, InteractionHand hand) {
 		if (player instanceof ServerPlayer sp && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, BlockPos.containing(player.getEyePosition(1F)), Protection.RIGHT_CLICK_ITEM, null)) {
 			FTBCUtils.forceHeldItemSync(sp, hand);
-			return CompoundEventResult.interruptFalse(player.getItemInHand(hand));
+			return InteractionResult.FAIL;
 		}
 
-		return CompoundEventResult.pass();
+		return InteractionResult.PASS;
 	}
 
 
@@ -334,23 +336,23 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-	public CompoundEventResult<ItemStack> fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
+	public InteractionResult fillBucket(Player player, Level level, ItemStack emptyBucket, @Nullable HitResult target) {
 		if (player instanceof ServerPlayer && target instanceof BlockHitResult hitResult) {
 			InteractionHand hand = player.getUsedItemHand();
 			if (ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, hitResult.getBlockPos(), Protection.EDIT_FLUID, null)) {
-				return CompoundEventResult.interrupt(false, player.getItemInHand(hand));
+				return InteractionResult.FAIL;
 			}
 		}
 
-		return CompoundEventResult.pass();
+		return InteractionResult.PASS;
 	}
 
-	public EventResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, float distance, Entity entity) {
+	public InteractionResult farmlandTrample(Level world, BlockPos pos, BlockState blockState, double distance, Entity entity) {
 		if (entity instanceof ServerPlayer && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(entity, InteractionHand.MAIN_HAND, pos, Protection.EDIT_BLOCK, null)) {
-			return EventResult.interrupt(false);
+			return InteractionResult.FAIL;
 		}
 
-		return EventResult.pass();
+		return InteractionResult.PASS;
 	}
 
 	// This event is a nightmare, gets fired before login
@@ -367,7 +369,7 @@ public class FTBChunks {
 		});
 	}
 
-	public EventResult checkSpawn(LivingEntity entity, LevelAccessor levelAccessor, double x, double y, double z, MobSpawnType type, @Nullable BaseSpawner spawner) {
+	public EventResult checkSpawn(LivingEntity entity, LevelAccessor levelAccessor, double x, double y, double z, EntitySpawnReason type, @Nullable BaseSpawner spawner) {
 		if (!levelAccessor.isClientSide() && !(entity instanceof Player) && levelAccessor instanceof Level level) {
 			switch (type) {
 				case NATURAL, CHUNK_GENERATION, SPAWNER, STRUCTURE, JOCKEY, PATROL -> {
@@ -382,31 +384,44 @@ public class FTBChunks {
 		return EventResult.pass();
 	}
 
-	private boolean ignoreExplosion(Level level, Explosion explosion) {
-		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
-			return true;
-		}
+	// Architectury explosion event is of no use to us anymore because it doesn't report exploded block positions
+	// Need to use our own mixin here... ServerLevelMixin
+//	private boolean ignoreExplosion(Level level, Explosion explosion) {
+//		if (level.isClientSide() || explosion.getToBlow().isEmpty()) {
+//			return true;
+//		}
+//
+//		return explosion.source == null && !FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS.get();
+//	}
+//
+//	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
+//		if (FTBChunksWorldConfig.DISABLE_PROTECTION.get() || ignoreExplosion(level, explosion)) {
+//			return;
+//		}
+//
+//		List<BlockPos> list = new ArrayList<>(explosion.getToBlow());
+//		explosion.clearToBlow();
+//		Map<ChunkDimPos, Boolean> map = new HashMap<>();
+//
+//		for (BlockPos pos : list) {
+//			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
+//				ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(cpos);
+//				return chunk == null || chunk.allowExplosions();
+//			})) {
+//				explosion.getToBlow().add(pos);
+//			}
+//		}
+//	}
 
-		return explosion.source == null && !FTBChunksWorldConfig.PROTECT_UNKNOWN_EXPLOSIONS.get();
-	}
+	public void handleServerExplosion(ServerExplosion explosion, Set<BlockPos> posSet) {
+		var byChunk = posSet.stream().collect(Collectors.groupingBy(ChunkPos::new));
 
-	public void explosionDetonate(Level level, Explosion explosion, List<Entity> affectedEntities) {
-		if (FTBChunksWorldConfig.DISABLE_PROTECTION.get() || ignoreExplosion(level, explosion)) {
-			return;
-		}
-
-		List<BlockPos> list = new ArrayList<>(explosion.getToBlow());
-		explosion.clearToBlow();
-		Map<ChunkDimPos, Boolean> map = new HashMap<>();
-
-		for (BlockPos pos : list) {
-			if (map.computeIfAbsent(new ChunkDimPos(level, pos), cpos -> {
-				ClaimedChunkImpl chunk = ClaimedChunkManagerImpl.getInstance().getChunk(cpos);
-				return chunk == null || chunk.allowExplosions();
-			})) {
-				explosion.getToBlow().add(pos);
+        byChunk.forEach((chunkPos, posList) -> {
+			ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(explosion.level().dimension(), chunkPos));
+			if (cc != null && !cc.allowExplosions()) {
+				posList.forEach(posSet::remove);
 			}
-		}
+		});
 	}
 
 	private void playerCloned(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean wonGame) {
@@ -479,9 +494,11 @@ public class FTBChunks {
 			}
 
 			partyData.deleteMemberData(event.getPlayerId());
+			partyData.updateLimits();
 
 			if (event.getPlayer() != null) {
 				PlayerVisibilityPacket.syncToLevel(event.getPlayer().level());
+				SendGeneralDataPacket.send(playerData, event.getPlayer());
 			}
 		});
 	}
@@ -584,7 +601,7 @@ public class FTBChunks {
 		ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.getTeam());
 		List<ServerPlayer> players = new ArrayList<>();
 		event.getPlayers().forEach(profile -> {
-			ServerPlayer p = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getPlayerList().getPlayer(profile.getId());
+			ServerPlayer p = ClaimedChunkManagerImpl.getInstance().getMinecraftServer().getPlayerList().getPlayer(profile.id());
 			if (p != null) {
 				teamData.syncChunksToPlayer(p);
 				players.add(p);

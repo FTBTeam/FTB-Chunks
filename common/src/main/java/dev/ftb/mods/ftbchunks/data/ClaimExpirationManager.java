@@ -8,10 +8,10 @@ import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbteams.data.ServerTeam;
-import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
 
 import java.util.*;
@@ -88,7 +88,7 @@ public enum ClaimExpirationManager {
                     .filter(cc -> cc.isForceLoaded() && cc.hasForceLoadExpired(now))
                     .toList();
             if (!expired.isEmpty()) {
-                ChunkTeamData teamData = expired.get(0).getTeamData();
+                ChunkTeamData teamData = expired.getFirst().getTeamData();
                 CommandSourceStack sourceStack = server.createCommandSourceStack();
                 Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync = new HashMap<>();
                 expired.forEach(cc -> {

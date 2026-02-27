@@ -5,14 +5,14 @@ import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.net.ShareWaypointPacket;
+import dev.ftb.mods.ftblibrary.client.gui.SimpleToast;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractButtonListScreen;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ContextMenuItem;
+import dev.ftb.mods.ftblibrary.client.gui.widget.NordButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.NordButton;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen;
-import dev.ftb.mods.ftblibrary.ui.misc.SimpleToast;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.client.KnownClientPlayer;
 import net.minecraft.ChatFormatting;
@@ -23,11 +23,11 @@ import net.minecraft.world.entity.player.Player;
 import java.util.*;
 
 public class WaypointShareMenu {
-    public static Optional<ContextMenuItem> makeShareMenu(Player sharingPlayer, Waypoint waypoint) {
+    public static Optional<ContextMenuItem> build(Player sharingPlayer, Waypoint waypoint) {
         List<ContextMenuItem> items = new ArrayList<>();
 
         if (FTBChunksWorldConfig.WAYPOINT_SHARING_SERVER.get()) {
-            items.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.server"), Icons.BEACON,
+            items.add(new ContextMenuItem(Component.translatable("ftbchunks.waypoint.share.server"), Icons.GLOBE,
                     b -> shareWaypoint(waypoint, ShareWaypointPacket.ShareType.SERVER, List.of())));
         }
         if (FTBChunksWorldConfig.WAYPOINT_SHARING_PARTY.get()) {
@@ -39,7 +39,7 @@ public class WaypointShareMenu {
                 Collection<KnownClientPlayer> knownClientPlayers = FTBTeamsAPI.api().getClientManager().knownClientPlayers();
                 List<GameProfile> list = knownClientPlayers.stream()
                         .filter(KnownClientPlayer::online)
-                        .filter(p -> !p.id().equals(sharingPlayer.getGameProfile().getId()))
+                        .filter(p -> !p.id().equals(sharingPlayer.getGameProfile().id()))
                         .map(KnownClientPlayer::profile).toList();
                 List<GameProfile> selectedProfiles = new ArrayList<>();
                 new ShareWaypointButtonList(selectedProfiles, waypoint, list).openGui();
@@ -48,13 +48,13 @@ public class WaypointShareMenu {
 
         return items.isEmpty() ?
                 Optional.empty() :
-                Optional.of(ContextMenuItem.subMenu(Component.translatable("ftbchunks.waypoint.share"), Icons.INFO, items));
+                Optional.of(ContextMenuItem.subMenu(Component.translatable("ftbchunks.waypoint.share"), Icons.FRIENDS_GROUP, items));
     }
 
     private static void shareWaypoint(Waypoint waypoint, ShareWaypointPacket.ShareType type, List<UUID> targets) {
         GlobalPos waypointPos = new GlobalPos(waypoint.getDimension(), waypoint.getPos());
         NetworkManager.sendToServer(new ShareWaypointPacket(waypoint.getName(), waypointPos, type, targets));
-        SimpleToast.info(Component.translatable("ftbchunks.waypoint.shared_by_you", waypoint.getName()), Component.empty());
+        SimpleToast.info(Component.translatable("ftbchunks.waypoint.shared_by_you", waypoint.getDisplayName()), Component.empty());
     }
 
     private static class ShareWaypointButtonList extends AbstractButtonListScreen {
@@ -75,7 +75,7 @@ public class WaypointShareMenu {
 
         @Override
         protected void doAccept() {
-            List<UUID> toShare = selectedProfiles.stream().map(GameProfile::getId).toList();
+            List<UUID> toShare = selectedProfiles.stream().map(GameProfile::id).toList();
             if (!toShare.isEmpty()) {
                 shareWaypoint(waypoint, ShareWaypointPacket.ShareType.PLAYER, toShare);
             }
@@ -85,9 +85,9 @@ public class WaypointShareMenu {
         @Override
         public void addButtons(Panel panel) {
             for (GameProfile gameProfile : gameProfiles) {
-                Component unchecked = (Component.literal("☐ ")).append(gameProfile.getName());
-                Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.getName());
-                NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile)) {
+                Component unchecked = (Component.literal("☐ ")).append(gameProfile.name());
+                Component checked = (Component.literal("☑ ").withStyle(ChatFormatting.GREEN)).append(gameProfile.name());
+                NordButton widget = new NordButton(panel, unchecked, FaceIcon.getFace(gameProfile, true)) {
                     @Override
                     public void onClicked(MouseButton button) {
                         if (selectedProfiles.contains(gameProfile)) {

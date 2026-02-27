@@ -13,7 +13,6 @@ public class FTBCUtils {
 		throw new AssertionError();
 	}
 
-
 	/**
 	 * Used after various events have been cancelled server-side; client may already have updated the held item for the
 	 * player, but it needs to be brought back in sync with the server.
@@ -24,7 +23,7 @@ public class FTBCUtils {
 	public static void forceHeldItemSync(ServerPlayer sp, InteractionHand hand) {
 		if (sp.connection != null) {
 			switch (hand) {
-				case MAIN_HAND -> sp.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, sp.getInventory().selected, sp.getItemInHand(hand)));
+				case MAIN_HAND -> sp.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, sp.getInventory().getSelectedSlot(), sp.getItemInHand(hand)));
 				case OFF_HAND -> sp.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, Inventory.SLOT_OFFHAND, sp.getItemInHand(hand)));
 			}
 		}

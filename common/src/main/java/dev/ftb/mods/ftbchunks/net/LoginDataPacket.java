@@ -2,8 +2,7 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -12,7 +11,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import java.util.UUID;
 
 public record LoginDataPacket(UUID serverId) implements CustomPacketPayload {
-	public static final Type<LoginDataPacket> TYPE = new Type<>(FTBChunksAPI.rl("login_data_packet"));
+	public static final Type<LoginDataPacket> TYPE = new Type<>(FTBChunksAPI.id("login_data_packet"));
 
 	public static final StreamCodec<FriendlyByteBuf, LoginDataPacket> STREAM_CODEC = StreamCodec.composite(
 			UUIDUtil.STREAM_CODEC, LoginDataPacket::serverId,
@@ -25,6 +24,6 @@ public record LoginDataPacket(UUID serverId) implements CustomPacketPayload {
 	}
 
 	public static void handle(LoginDataPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClient.INSTANCE.handlePlayerLogin(message.serverId));
+		context.queue(() -> FTBChunksClientNet.handleLoginDataPacket(message.serverId));
 	}
 }

@@ -22,7 +22,7 @@ public abstract class ChunkMapMixin {
 	private void anyPlayerCloseEnoughForSpawningFTBC(ChunkPos pos, CallbackInfoReturnable<Boolean> ci) {
 		// it's possible for the claim manager to be null at this point, depending on what other mixins are in play...
 		// https://github.com/FTBTeam/FTB-Mods-Issues/issues/1020
-		if (!ci.getReturnValue() && ClaimedChunkManagerImpl.getInstance() != null
+		if (!ci.getReturnValue() && ClaimedChunkManagerImpl.exists()
 				&& ClaimedChunkManagerImpl.getInstance().isChunkForceLoaded(new ChunkDimPos(level.dimension(), pos))) {
 			ci.setReturnValue(true);
 		}

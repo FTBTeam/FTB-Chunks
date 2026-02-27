@@ -8,7 +8,6 @@ import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
-import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -16,10 +15,11 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class ClaimedChunkImpl implements ClaimedChunk {
 	private ChunkTeamDataImpl teamData;
@@ -42,7 +42,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return teamData;
 	}
 
-	public void setTeamData(@NotNull ChunkTeamDataImpl teamData) {
+	public void setTeamData(@NonNull ChunkTeamDataImpl teamData) {
 		teamData.clearClaimCaches();
 		this.teamData.clearClaimCaches();
 		this.teamData = teamData;
@@ -113,13 +113,13 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 			}
 
 			ServerChunkCache cache = level.getChunkSource();
-			ChunkPos chunkPos = pos.chunkPos();
 
 			if (cache != null) {
+				ChunkPos chunkPos = pos.chunkPos();
 				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
 				cache.save(false);
 			} else {
-				FTBChunks.LOGGER.warn("Failed to force-load chunk " + pos.x() + ", " + pos.z() + " @ " + pos.dimension().location() + "!");
+                FTBChunks.LOGGER.warn("Failed to force-load chunk {}, {} @ {}!", pos.x(), pos.z(), pos.dimension().identifier());
 			}
 		}
 	}
@@ -204,10 +204,10 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	}
 
 	public static ClaimedChunkImpl deserializeNBT(ChunkTeamDataImpl data, ResourceKey<Level> dimKey, CompoundTag tag) {
-		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.getInt("x"), tag.getInt("z")));
-		chunk.time = tag.getLong("time");
-		chunk.forceLoaded = tag.getLong("force_loaded");
-		chunk.forceLoadExpiryTime = tag.getLong("expiry_time");
+		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.getInt("x").orElseThrow(), tag.getInt("z").orElseThrow()));
+		chunk.time = tag.getLong("time").orElse(System.currentTimeMillis());
+		chunk.forceLoaded = tag.getLong("force_loaded").orElse(0L);
+		chunk.forceLoadExpiryTime = tag.getLong("expiry_time").orElse(0L);
 		return chunk;
 	}
 

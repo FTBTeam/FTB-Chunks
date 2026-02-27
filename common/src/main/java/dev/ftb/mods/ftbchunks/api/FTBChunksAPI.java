@@ -3,13 +3,14 @@ package dev.ftb.mods.ftbchunks.api;
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.event.TeamManagerEvent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -17,7 +18,9 @@ public class FTBChunksAPI {
     public static final String MOD_ID = "ftbchunks";
     public static final String MOD_NAME = "FTB Chunks";
 
+    @Nullable
     private static API instance;
+    @Nullable
     private static FTBChunksClientAPI clientInstance;
 
     /**
@@ -26,8 +29,7 @@ public class FTBChunksAPI {
      * @return the API handler
      * @throws NullPointerException if called before initialised
      */
-    @NotNull
-    public static FTBChunksAPI.API api() {
+    public static FTBChunksAPI.@NonNull API api() {
         return Objects.requireNonNull(instance);
     }
 
@@ -37,7 +39,7 @@ public class FTBChunksAPI {
      * @return the client API handler
      * @throws NullPointerException if called before initialised, or on the server
      */
-    @NotNull
+    @NonNull
     public static FTBChunksClientAPI clientApi() {
         return Objects.requireNonNull(clientInstance);
     }
@@ -48,8 +50,8 @@ public class FTBChunksAPI {
      * @param path the resource location path component
      * @return a new resource location
      */
-    public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     /**

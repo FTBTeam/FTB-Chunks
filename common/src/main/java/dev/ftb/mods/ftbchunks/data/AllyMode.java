@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.util.NameMap;
 
 public enum AllyMode {
 	DEFAULT,

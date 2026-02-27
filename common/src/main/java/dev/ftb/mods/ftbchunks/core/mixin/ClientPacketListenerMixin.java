@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.core.mixin;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
@@ -14,16 +14,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ClientPacketListenerMixin {
 	@Inject(method = "handleChunkBlocksUpdate", at = @At("RETURN"))
 	public void handleChunkBlocksUpdateFTBC(ClientboundSectionBlocksUpdatePacket packet, CallbackInfo ci) {
-		FTBChunksClient.INSTANCE.handlePacket(packet);
+		FTBChunksClientNet.handleVanillaPacket(packet);
 	}
 
 	@Inject(method = "handleLevelChunkWithLight", at = @At("RETURN"))
 	public void handleLevelChunkFTBC(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci) {
-		FTBChunksClient.INSTANCE.handlePacket(packet);
+		FTBChunksClientNet.handleVanillaPacket(packet);
 	}
 
 	@Inject(method = "handleBlockUpdate", at = @At("RETURN"))
 	public void handleBlockUpdateFTBC(ClientboundBlockUpdatePacket packet, CallbackInfo ci) {
-		FTBChunksClient.INSTANCE.handlePacket(packet);
+		FTBChunksClientNet.handleVanillaPacket(packet);
 	}
 }

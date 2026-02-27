@@ -1,25 +1,18 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
-import dev.ftb.mods.ftblibrary.config.ColorConfig;
-import dev.ftb.mods.ftblibrary.config.ConfigCallback;
-import dev.ftb.mods.ftblibrary.config.ConfigFromString;
-import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
+import dev.ftb.mods.ftblibrary.client.config.ConfigCallback;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableStringifiedConfig;
+import dev.ftb.mods.ftblibrary.client.config.gui.EditStringConfigOverlay;
+import dev.ftb.mods.ftblibrary.client.gui.GuiHelper;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.*;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.ColorSelectorPanel;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.DropDownMenu;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.IntTextBox;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.TextBox;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,10 +20,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,18 +39,17 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     private final Button dropDownButton;
     private final GlobalPosConfig pos;
 
-    public AddWaypointOverlay(Panel panel, Component title, GlobalPosConfig pos, ConfigFromString<String> config, ColorConfig colorConfig, ConfigCallback callback) {
+    public AddWaypointOverlay(Panel panel, Component title, GlobalPosConfig pos, EditableStringifiedConfig<String> config, EditableColor colorConfig, ConfigCallback callback) {
         super(panel, config, callback, title);
         this.pos = pos;
-        colorButton = new ColorButton(colorConfig.getValue(), (btn, mb) -> {
-            ColorSelectorPanel.popupAtMouse(getGui(), colorConfig, accepted -> {
-                if (accepted) {
-                    btn.setIcon(colorConfig.getValue());
-                } else {
-                    colorConfig.setValue(((ColorButton) btn).getIcon());
-                }
-            });
-        });
+        colorButton = new ColorButton(colorConfig.getValue(), (btn, mb) ->
+                ColorSelectorPanel.popupAtMouse(getGui(), colorConfig, accepted -> {
+                    if (accepted) {
+                        btn.setIcon(colorConfig.getValue());
+                    } else {
+                        colorConfig.setValue(((ColorButton) btn).getIcon());
+                    }
+                }));
         this.dimension = new TextBox(this) {
             @Override
             public boolean allowInput() {
@@ -65,7 +57,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
             }
         };
         List<ContextMenuItem> contextMenuItems = createDimContextItems(key -> {
-            dimension.setText(key.location().toString());
+            dimension.setText(key.identifier().toString());
             getGui().closeContextMenu();
         });
         this.dropDownButton = new SimpleButton(this, Component.empty(), Icons.DROPDOWN_OUT, (widget, mouseButton) -> {
@@ -87,7 +79,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         this.y.setLabel(Component.literal("Y"));
         this.z.setLabel(Component.literal("Z"));
 
-        this.dimension.setText(pos.getValue().dimension().location().toString());
+        this.dimension.setText(pos.getValue().dimension().identifier().toString());
         this.x.setAmount(pos.getValue().pos().getX());
         this.y.setAmount(pos.getValue().pos().getY());
         this.z.setAmount(pos.getValue().pos().getZ());
@@ -143,7 +135,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     }
 
     private void updatePos() {
-        ResourceLocation dimension = ResourceLocation.parse(this.dimension.getText());
+        Identifier dimension = Identifier.parse(this.dimension.getText());
         ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, dimension);
         if (x.getText().isBlank() || y.getText().isBlank() || z.getText().isBlank()) {
             return;
@@ -197,7 +189,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     }
 
     private class ColorButton extends SimpleButton {
-        public ColorButton(Icon icon, Callback c) {
+        public ColorButton(Color4I icon, Callback c) {
             super(AddWaypointOverlay.this, Component.empty(), icon, c);
         }
 
@@ -207,7 +199,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
 
         @Override
         public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-            icon.draw(graphics, x, y, w, h);
+            IconHelper.renderIcon(icon, graphics, x, y, w, h);
             Color4I shade = getIcon().addBrightness(-0.15f);
             GuiHelper.drawHollowRect(graphics, x, y, w, h, shade, false);
         }
@@ -234,7 +226,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         }
     }
 
-    public static class GlobalPosConfig extends ConfigFromString<GlobalPos> {
+    public static class GlobalPosConfig extends EditableStringifiedConfig<GlobalPos> {
         @Override
         public boolean parse(@Nullable Consumer<GlobalPos> callback, String string) {
             return false;

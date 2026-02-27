@@ -7,13 +7,15 @@
 		"BiomeMixin",
 		"BlockStateMixin",
 		"ChunkMapMixin",
-		"PistonBaseBlockMixin"
+		"PistonBaseBlockMixin",
+		"ServerExplosionMixin"
 	],
 	"client": [
-		"ClientPacketListenerMixin",
-		"GuiMixin",
-		"UtilMixin"
-	],
+      "ClientPacketListenerMixin",
+      "GuiGraphicsMixin",
+      "GuiMixin",
+      "UtilMixin"
+    ],
 	"injectors": {
 		"defaultRequire": 1
 	},

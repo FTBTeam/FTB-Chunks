@@ -1,43 +1,36 @@
 package dev.ftb.mods.ftbchunks.client.minimap;
 
 import dev.ftb.mods.ftbchunks.client.gui.MinimapInfoSortScreen;
-import dev.ftb.mods.ftblibrary.config.ConfigCallback;
-import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.config.ConfigValue;
-import dev.ftb.mods.ftblibrary.snbt.config.SNBTConfig;
-import dev.ftb.mods.ftblibrary.snbt.config.StringMapValue;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.config.ConfigCallback;
+import dev.ftb.mods.ftblibrary.client.config.EditableConfigGroup;
+import dev.ftb.mods.ftblibrary.client.config.editable.EditableConfigValue;
+import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
+import dev.ftb.mods.ftblibrary.config.value.Config;
+import dev.ftb.mods.ftblibrary.config.value.StringMapValue;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
 public class MinimapComponentConfig extends StringMapValue {
-
-    public MinimapComponentConfig(@Nullable SNBTConfig c, String n, Map<String, String> def) {
-        super(c, n, def);
+    public MinimapComponentConfig(@Nullable Config parent, String name, Map<String, String> def) {
+        super(parent, name, def);
     }
-
 
     @Override
-    public void createClientConfig(ConfigGroup group) {
-        group.add(key, new MinimapComponentConfigValue(), get(), stringBooleanMap -> {
-        }, defaultValue);
+    protected @Nullable EditableConfigValue<?> fillClientConfig(EditableConfigGroup group) {
+        return group.add(key, new MinimapComponentConfigValue(), get(), stringBooleanMap -> {}, defaultValue);
     }
 
-    public static class MinimapComponentConfigValue extends ConfigValue<Map<String, String>> {
-
+    public static class MinimapComponentConfigValue extends EditableConfigValue<Map<String, String>> {
         @Override
         public void onClicked(Widget clickedWidget, MouseButton button, ConfigCallback callback) {
             new MinimapInfoSortScreen().openGui();
         }
 
         @Override
-        public Component getStringForGUI(@Nullable Map<String, String> v) {
-            if (v == null) {
-                return super.getStringForGUI(null);
-            }
+        public Component getStringForGUI(Map<String, String> v) {
             return Component.translatable("ftbchunks.gui.sort_minimap_info");
         }
     }

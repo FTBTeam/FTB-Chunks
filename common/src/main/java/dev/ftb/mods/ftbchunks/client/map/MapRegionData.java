@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -109,9 +110,11 @@ public class MapRegionData {
 						case "grass.png" -> grassImage = ImageIO.read(zis);
 						case "water.png" -> waterImage = ImageIO.read(zis);
 						case "blocks.png" -> blocksImage = ImageIO.read(zis);
-						default -> FTBChunks.LOGGER.warn("Unknown file " + ze.getName() + " in " + file.toAbsolutePath());
+						default -> FTBChunks.LOGGER.warn("Unknown file {} in {}", ze.getName(), file.toAbsolutePath());
 					}
 				}
+
+				assert(dataImage != null && foliageImage != null && grassImage != null && waterImage != null);
 
 				for (int y = 0; y < 512; y++) {
 					for (int x = 0; x < 512; x++) {
@@ -163,15 +166,21 @@ public class MapRegionData {
 
 		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
 			try {
-				writeData(chunkList, dataImage, foliageImage, grassImage, waterImage, blocksImage);
-			} catch (Exception ex) {
-				FTBChunks.LOGGER.error("Failed to write map region " + region.dimension + ":" + region + ":");
-				ex.printStackTrace();
+				Map<String,BufferedImage> images = Map.of(
+						"data.png", dataImage,
+						"foliage.png", foliageImage,
+						"grass.png", grassImage,
+						"water.png", waterImage,
+						"blocks.png", blocksImage
+				);
+				writeData(chunkList, images);
+			} catch (IOException ex) {
+                FTBChunks.LOGGER.error("Failed to write map region {}:{}: {}", region.dimension, region, ex.getMessage());
 			}
 		});
 	}
 
-	private void writeData(Collection<MapChunk> chunkList, BufferedImage dataImage, BufferedImage foliageImage, BufferedImage grassImage, BufferedImage waterImage, BufferedImage blocksImage) throws IOException {
+	private void writeData(Collection<MapChunk> chunkList, Map<String,BufferedImage> images) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(baos);
@@ -188,25 +197,31 @@ public class MapRegionData {
 
 			out.closeEntry();
 
-			out.putNextEntry(new ZipEntry("data.png"));
-			ImageIO.write(dataImage, "PNG", out);
-			out.closeEntry();
+            for (Map.Entry<String, BufferedImage> entry : images.entrySet()) {
+                out.putNextEntry(new ZipEntry(entry.getKey()));
+                ImageIO.write(entry.getValue(), "PNG", out);
+                out.closeEntry();
+            }
 
-			out.putNextEntry(new ZipEntry("foliage.png"));
-			ImageIO.write(foliageImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("grass.png"));
-			ImageIO.write(grassImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("water.png"));
-			ImageIO.write(waterImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("blocks.png"));
-			ImageIO.write(blocksImage, "PNG", out);
-			out.closeEntry();
+//			out.putNextEntry(new ZipEntry("data.png"));
+//			ImageIO.write(dataImage, "PNG", out);
+//			out.closeEntry();
+//
+//			out.putNextEntry(new ZipEntry("foliage.png"));
+//			ImageIO.write(foliageImage, "PNG", out);
+//			out.closeEntry();
+//
+//			out.putNextEntry(new ZipEntry("grass.png"));
+//			ImageIO.write(grassImage, "PNG", out);
+//			out.closeEntry();
+//
+//			out.putNextEntry(new ZipEntry("water.png"));
+//			ImageIO.write(waterImage, "PNG", out);
+//			out.closeEntry();
+//
+//			out.putNextEntry(new ZipEntry("blocks.png"));
+//			ImageIO.write(blocksImage, "PNG", out);
+//			out.closeEntry();
 		}
 
 		if (Files.notExists(region.dimension.directory)) {

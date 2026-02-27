@@ -9,7 +9,7 @@ import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -131,7 +131,7 @@ public class WaypointManagerImpl implements Iterable<WaypointImpl>, WaypointMana
         return waypoints.isEmpty();
     }
 
-    @NotNull
+    @NonNull
     @Override
     public Iterator<WaypointImpl> iterator() {
         return waypoints.iterator();

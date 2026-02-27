@@ -1,14 +1,14 @@
 package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
-import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapContext;
+import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
-import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
+import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -17,20 +17,20 @@ import java.util.stream.Collectors;
 
 public class RealTimeComponent implements MinimapInfoComponent {
 
-    public static final ResourceLocation ID = FTBChunksAPI.rl("real_time");
+    public static final Identifier ID = FTBChunksAPI.id("real_time");
 
     @Override
-    public ResourceLocation id() {
+    public Identifier id() {
         return ID;
     }
 
     @Override
-    public void render(MinimapContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
         String setting = context.getSetting(this);
         LocalTime now = LocalTime.now();
         int hours = now.getHour();
         int minutes = now.getMinute();
-        drawCenteredText(font, graphics, Component.literal(createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(font, graphics, Component.translatable("ftbchunks.real_time", createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name()))), 0);
     }
 
     @Override

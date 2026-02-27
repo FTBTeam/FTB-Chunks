@@ -1,42 +1,34 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
+import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractThreePanelScreen;
+import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
+import dev.ftb.mods.ftblibrary.client.gui.widget.*;
+import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
+import dev.ftb.mods.ftblibrary.client.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.ContextMenuItem;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.ToggleableButton;
-import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoSortScreen.MinimapInfoSortEntry> {
 
-    private List<ResourceLocation> infoSortList = new LinkedList<>();
+    private List<Identifier> infoSortList = new LinkedList<>();
 
     public MinimapInfoSortScreen() {
         super();
         setHeight(200);
         setWidth(200);
-        FTBChunksClientConfig.MINIMAP_INFO_ORDER.get().forEach(s -> infoSortList.add(ResourceLocation.parse(s)));
+        FTBChunksClientConfig.MINIMAP_INFO_ORDER.get().forEach(s -> infoSortList.add(Identifier.parse(s)));
         showBottomPanel(false);
         setRenderBlur(false);
     }
@@ -84,7 +76,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
 
     public class MinimapInfoSortEntry extends Panel {
 
-        private final Map<ResourceLocation, InfoEntry> entryMap = new HashMap<>();
+        private final Map<Identifier, InfoEntry> entryMap = new HashMap<>();
 
         public MinimapInfoSortEntry(Panel panel) {
             super(panel);
@@ -101,7 +93,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         @Override
         public void alignWidgets() {
             int height = 0;
-            for (ResourceLocation id : infoSortList) {
+            for (Identifier id : infoSortList) {
                 InfoEntry infoEntry = entryMap.get(id);
                 if (infoEntry != null) {
                     infoEntry.setPosAndSize(0, height, width, 24);
@@ -183,7 +175,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawWidget(graphics, x, y, w, h, getWidgetType());
             if (isMouseOver()) {
-                Color4I.WHITE.withAlpha(33).draw(graphics, x, y, w, h);
+                IconHelper.renderIcon(Color4I.WHITE.withAlpha(33), graphics, x, y, w, h);
             }
             super.draw(graphics, theme, x, y, w, h);
         }
@@ -194,7 +186,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
          * @param end true if the current value is the last value in the list and false if it is not
          */
         private void move(boolean forward, boolean end) {
-            List<ResourceLocation> list = new LinkedList<>(infoSortList);
+            List<Identifier> list = new LinkedList<>(infoSortList);
             if (end) {
                 if (forward) {
                     list.remove(infoComponent.id());
@@ -243,10 +235,10 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
 
     private void saveConfig() {
         List<String> list = new LinkedList<>();
-        infoSortList.forEach(resourceLocation -> list.add(resourceLocation.toString()));
+        infoSortList.forEach(Identifier -> list.add(Identifier.toString()));
         FTBChunksClientConfig.MINIMAP_INFO_ORDER.set(list);
         FTBChunksClientConfig.saveConfig();
-        FTBChunksClient.INSTANCE.setupComponents();
+        FTBChunksClient.INSTANCE.getMinimapRenderer().setupComponents();
     }
 
     private boolean isComponentDisabled(MinimapInfoComponent component) {

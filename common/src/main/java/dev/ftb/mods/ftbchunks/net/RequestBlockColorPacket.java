@@ -2,15 +2,15 @@ package dev.ftb.mods.ftbchunks.net;
 
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record RequestBlockColorPacket() implements CustomPacketPayload {
-    public static final Type<RequestBlockColorPacket> TYPE = new Type<>(FTBChunksAPI.rl("request_block_color_packet"));
+public enum RequestBlockColorPacket implements CustomPacketPayload {
+    INSTANCE;
 
-    private static final RequestBlockColorPacket INSTANCE = new RequestBlockColorPacket();
+    public static final Type<RequestBlockColorPacket> TYPE = new Type<>(FTBChunksAPI.id("request_block_color_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, RequestBlockColorPacket> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 
@@ -20,6 +20,6 @@ public record RequestBlockColorPacket() implements CustomPacketPayload {
     }
 
     public static void handle(RequestBlockColorPacket message, NetworkManager.PacketContext context) {
-        context.queue(FTBChunksClient.INSTANCE::handleBlockColorRequest);
+        context.queue(FTBChunksClientNet::handleBlockColorRequestPacket);
     }
 }

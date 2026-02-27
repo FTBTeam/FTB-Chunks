@@ -11,10 +11,10 @@ public class FTBChunksClientImpl {
     public static boolean doesKeybindMatch(@Nullable KeyMapping keyMapping, KeyEvent event) {
 		if (keyMapping != null && keyMapping.matches(event)) {
 			return switch (keyMapping.getKeyModifier()) {
-				case NONE -> event.modifiers() == 0;
-				case SHIFT -> (event.modifiers() & InputConstants.MOD_SHIFT) != 0;
+                case SHIFT -> (event.modifiers() & InputConstants.MOD_SHIFT) != 0;
 				case CONTROL -> (event.modifiers() & InputConstants.MOD_CONTROL) != 0;
 				case ALT ->  (event.modifiers() & InputConstants.MOD_ALT) != 0;
+				default -> event.modifiers() == 0;
 			};
 		}
 		return false;

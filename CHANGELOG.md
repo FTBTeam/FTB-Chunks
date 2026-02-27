@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2111.1.0]
 
 ### Changed
+* Ported to Minecraft 1.21.11
 
 ## [2101.1.13]
 

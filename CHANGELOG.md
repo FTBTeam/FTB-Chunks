@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2111.1.1]
 
 ### Fixed
+* Fixed the chunk claim texture being missing when the minimap is disabled (e.g. using minimap from a different mod)
 * (Fabric) fixed a client-only mixin trying to be loaded on server too
 
 ## [2111.1.0]

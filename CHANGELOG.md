@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2111.1.1]
+
+### Fixed
+* Fixed the chunk claim texture being missing when the minimap is disabled (e.g. using minimap from a different mod)
+* (Fabric) fixed a client-only mixin trying to be loaded on server too
+
 ## [2111.1.0]
 
 ### Changed
+* Ported to Minecraft 1.21.11
 
 ## [2101.1.13]
 

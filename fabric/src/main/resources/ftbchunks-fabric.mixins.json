@@ -4,10 +4,10 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "EndermanLeaveBlockMixin",
-    "EndermanTakeBlockMixin",
-    "LevelRendererMixin"
+    "EndermanTakeBlockMixin"
   ],
   "client": [
+    "LevelRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

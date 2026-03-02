@@ -42,6 +42,11 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
                 (simpleButton, mouseButton) -> LargeMapScreen.openMap()
         );
+
+        // force a refresh of the minimap texture, which is what we use as the claim GUI background
+        // if player isn't rendering minimap for any reason, the dynamic texture may not be registered
+        FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
+        FTBChunksClient.INSTANCE.getMinimapRenderer().refreshMinimapTextureIfNeeded(ClientUtils.getClientPlayer().position(), dimension);
     }
 
     @Override

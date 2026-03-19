@@ -3,7 +3,7 @@ package dev.ftb.mods.ftbchunks.api.client.minimap;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -25,10 +25,10 @@ public interface MinimapInfoComponent {
      * to allocate the correct height for the component.
      *
      * @param context The minimap context
-     * @param graphics The graphics object see {@link GuiGraphics}
+     * @param graphics The graphics object see {@link GuiGraphicsExtractor}
      * @param font The font object
      */
-    void render(MinimapComponentContext context, GuiGraphics graphics, Font font);
+    void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font);
 
     /**
      * Set of Info {@link TranslatedOption} that are used to configure options for rendering the waypoint
@@ -68,9 +68,9 @@ public interface MinimapInfoComponent {
     /**
      * Helper method to draw centered text without the faff of calculating the width of the text
      */
-    default void drawCenteredText(Font font, GuiGraphics graphics, Component text, int y) {
+    default void drawCenteredText(Font font, GuiGraphicsExtractor graphics, Component text, int y) {
         int textWidth = font.width(text.getVisualOrderText());
-        graphics.drawString(font, text, -textWidth / 2, y, 0xFFFFFFFF, true);
+        graphics.text(font, text, -textWidth / 2, y, 0xFFFFFFFF, true);
     }
 
     /**

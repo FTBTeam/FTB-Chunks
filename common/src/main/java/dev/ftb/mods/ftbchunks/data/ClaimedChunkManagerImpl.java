@@ -1,7 +1,5 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import dev.architectury.hooks.level.entity.PlayerHooks;
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
@@ -11,7 +9,7 @@ import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import dev.ftb.mods.ftblibrary.snbt.SNBT;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.TeamManager;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -62,7 +60,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		claimedChunks = new HashMap<>();
 
 		dataDirectory = getMinecraftServer().getWorldPath(DATA_DIR);
-		Path localDirectory = Platform.getGameFolder().resolve("local/ftbchunks");
+		Path localDirectory = Platform.get().paths().gamePath().resolve("local/ftbchunks");
 
 		try {
 			if (Files.notExists(dataDirectory)) {
@@ -104,8 +102,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 
 		map.forEach((pos, id) -> {
-			ChunkPos chunkPos = new ChunkPos(pos);
-			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, id, chunkPos.x, chunkPos.z, true);
+			ChunkPos chunkPos = ChunkPos.unpack(pos);
+			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, id, chunkPos.x(), chunkPos.z(), true);
 		});
 
 		level.getChunkSource().save(false);
@@ -217,7 +215,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 			return false;
 		}
 
-		boolean isFake = PlayerHooks.isFake(player);
+		boolean isFake = Platform.get().misc().isFakePlayer(player);
 		if (isFake && FTBChunksWorldConfig.ALLOW_FAKE_PLAYERS.get().isOverride()) {
 			return FTBChunksWorldConfig.ALLOW_FAKE_PLAYERS.get().shouldPreventInteraction();
 		}
@@ -261,7 +259,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 			for (ClaimedChunkImpl chunk : getAllClaimedChunks()) {
 				if (chunk.isActuallyForceLoaded()) {
 					Long2ObjectMap<UUID> pos2idMap = forceLoadedChunkCache.computeIfAbsent(chunk.getPos().dimension(), k -> new Long2ObjectOpenHashMap<>());
-					pos2idMap.put(ChunkPos.asLong(chunk.getPos().x(), chunk.getPos().z()), chunk.getTeamData().getTeamId());
+					pos2idMap.put(ChunkPos.pack(chunk.getPos().x(), chunk.getPos().z()), chunk.getTeamData().getTeamId());
 				}
 			}
 
@@ -279,7 +277,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 	@Override
 	public boolean isChunkForceLoaded(ChunkDimPos chunkDimPos) {
-		return getForceLoadedChunks(chunkDimPos.dimension()).containsKey(chunkDimPos.chunkPos().toLong());
+		return getForceLoadedChunks(chunkDimPos.dimension()).containsKey(chunkDimPos.chunkPos().pack());
 	}
 
 	public void registerClaim(ChunkDimPos pos, ClaimedChunk chunk) {

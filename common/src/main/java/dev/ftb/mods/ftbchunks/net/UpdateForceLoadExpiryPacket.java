@@ -1,11 +1,12 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -33,16 +34,16 @@ public record UpdateForceLoadExpiryPacket(ChunkDimPos pos, long relativeExpiryTi
         return TYPE;
     }
 
-    public static void handle(UpdateForceLoadExpiryPacket message, NetworkManager.PacketContext context) {
+    public static void handle(UpdateForceLoadExpiryPacket message, PacketContext context) {
         ChunkDimPos pos = message.pos;
 
-        if (context.getPlayer() instanceof ServerPlayer sp && sp.level().dimension().equals(pos.dimension())) {
+        if (context.player() instanceof ServerPlayer sp && sp.level().dimension().equals(pos.dimension())) {
             ClaimedChunk chunk = ClaimedChunkManagerImpl.getInstance().getChunk(pos);
             if (chunk != null && chunk.getTeamData().getTeam().getRankForPlayer(sp.getUUID()).isMemberOrBetter() && chunk.isForceLoaded()) {
                 chunk.setForceLoadExpiryTime(message.relativeExpiryTime == 0L ? 0L : System.currentTimeMillis() + message.relativeExpiryTime);
                 SendChunkPacket packet = new SendChunkPacket(pos.dimension(), chunk.getTeamData().getTeam().getId(),
                         ChunkSyncInfo.create(System.currentTimeMillis(), chunk.getPos().x(), chunk.getPos().z(), chunk));
-                NetworkManager.sendToPlayer(sp, packet);
+                Server2PlayNetworking.send(sp, packet);
             }
         }
     }

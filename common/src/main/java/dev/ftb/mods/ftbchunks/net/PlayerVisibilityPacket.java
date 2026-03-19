@@ -1,12 +1,13 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -34,8 +35,8 @@ public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPa
 		return TYPE;
 	}
 
-	public static void handle(PlayerVisibilityPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> VisibleClientPlayers.updatePlayerList(message.uuids));
+	public static void handle(PlayerVisibilityPacket message, PacketContext context) {
+		context.enqueue(() -> VisibleClientPlayers.updatePlayerList(message.uuids));
 	}
 
 	public static void syncToLevel(Level level) {
@@ -70,7 +71,7 @@ public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPa
 				}
 			}
 
-			NetworkManager.sendToPlayer(recipient.player, new PlayerVisibilityPacket(playerIds));
+			Server2PlayNetworking.send(recipient.player, new PlayerVisibilityPacket(playerIds));
 		}
 	}
 

@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.registries.Registries;
@@ -30,7 +30,7 @@ public record LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap ch
 		return TYPE;
 	}
 
-	public static void handle(LoadedChunkViewPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClientNet.handleLoadedChunkViewPacket(message.dimension, message.chunks));
+	public static void handle(LoadedChunkViewPacket message, PacketContext context) {
+		context.enqueue(() -> FTBChunksClientNet.handleLoadedChunkViewPacket(message.dimension, message.chunks));
 	}
 }

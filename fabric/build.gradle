@@ -1,120 +1,43 @@
 plugins {
-	id "com.github.johnrengelman.shadow" version "7.0.0"
+	id 'net.fabricmc.fabric-loom'
 }
-
-architectury {
-	platformSetupLoomIde()
-	fabric()
-}
-
-configurations {
-	common
-	shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
-	compileClasspath.extendsFrom common
-	runtimeClasspath.extendsFrom common
-	developmentFabric.extendsFrom common
-	dev
-}
-
-def generatedResources = file("src/generated/resources")
-def accessWidenerFile = project(":common").file("src/main/resources/ftbchunks.accesswidener")
 
 loom {
-	accessWidenerPath = accessWidenerFile
-}
+	accessWidenerPath = project(":common").file("src/main/resources/${mod_id}.accesswidener")
 
-sourceSets {
-	main {
-		resources {
-			srcDir generatedResources
+	runs {
+		configureEach {
+			ideConfigGenerated = true
 		}
 	}
-}
 
-artifacts {
-	dev(jar)
-}
+	mods {
+		"${project.mod_id}" {
+			sourceSet sourceSets.main
+			sourceSet("main", project(":common"))
+		}
+	}
 
-//repositories {
-//	maven {
-//		url "https://maven.blamejared.com"
-//		content {
-//			includeGroup "com.faux.ingredientextension"
-//		}
-//	}
-//	maven {
-//		url "https://maven.nucleoid.xyz/"
-//		content {
-//			includeGroup "eu.pb4"
-//		}
-//	}
-//}
-
-dependencies {
-	modApi "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-	modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
-	modApi "dev.architectury:architectury-fabric:${rootProject.architectury_api_version}"
-
-	modImplementation("dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}")
-	modImplementation("dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}") { transitive = false }
-
-    modImplementation "curse.maven:atlasviewer-633577:6712181"
-
-	common(project(path: ":common", configuration: "dev")) { transitive false }
-	shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+	mixin {
+		useLegacyMixinAp = false
+	}
 }
 
 apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
 
-// The AW file is needed in :fabric project resources when the game is run.
-task copyAccessWidener(type: Copy) {
-	from accessWidenerFile
-	into generatedResources
-}
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-processResources {
-	dependsOn copyAccessWidener
-	inputs.property "version", project.version
+	api "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+	api "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
 
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version,
-				"archversion": project.architectury_api_version,
-				"fabricapiversionrange": project.fabric_api_version_range,
-				"mcversion": project.minecraft_version,
-				"ftblibraryversion": project.ftb_library_version,
-				"ftbteamsversion": project.ftb_teams_version
-	}
-}
-
-sourcesJar {
-	dependsOn copyAccessWidener
-}
-
-shadowJar {
-	configurations = [project.configurations.shadowCommon]
-	setArchiveClassifier("dev-shadow")
-}
-
-remapJar {
-	input.set shadowJar.archiveFile
-	dependsOn shadowJar
-	archiveBaseName.set "${rootProject.archives_base_name}-${project.name}"
-	archiveClassifier.set null
-}
-
-jar {
-	setArchiveClassifier("dev")
-}
-
-components.java {
-	withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-		skip()
-	}
+	implementation("dev.ftb.mods:ftb-library-fabric:${rootProject.ftb_library_version}")
+	implementation("dev.ftb.mods:ftb-teams-fabric:${rootProject.ftb_teams_version}") { transitive = false }
 }
 
 publishing {
 	publications {
-		mavenForge(MavenPublication) {
+		mavenFabric(MavenPublication) {
 			artifactId = "${rootProject.archives_base_name}-${project.name}"
 			version ftbPublishing.mavenVersion
 			from components.java

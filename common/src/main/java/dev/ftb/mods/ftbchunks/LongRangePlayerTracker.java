@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.net.SendPlayerPositionPacket;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -46,12 +46,12 @@ public enum LongRangePlayerTracker {
                         // send a tracking update to p1's client IF p2's pos has changed by more than 4 blocks
                         BlockPos lastPos = trackingMap.get(trackingPlayer.getUUID(), trackedPlayer.getUUID());
                         if (lastPos == null || trackedPlayer.blockPosition().distSqr(lastPos) > 16) {
-                            NetworkManager.sendToPlayer(trackingPlayer, SendPlayerPositionPacket.startTracking(trackedPlayer));
+                            Server2PlayNetworking.send(trackingPlayer, SendPlayerPositionPacket.startTracking(trackedPlayer));
                             trackingMap.put(trackingPlayer.getUUID(), trackedPlayer.getUUID(), trackedPlayer.blockPosition());
                         }
                     } else if (trackingMap.contains(trackingPlayer.getUUID(), trackedPlayer.getUUID())) {
                         // tell p1's client to stop tracking p2
-                        NetworkManager.sendToPlayer(trackingPlayer, SendPlayerPositionPacket.stopTracking(trackedPlayer));
+                        Server2PlayNetworking.send(trackingPlayer, SendPlayerPositionPacket.stopTracking(trackedPlayer));
                         trackingMap.remove(trackingPlayer.getUUID(), trackedPlayer.getUUID());
                     }
                 }
@@ -74,7 +74,7 @@ public enum LongRangePlayerTracker {
         toRemove.forEach((trackingId, disconnectedId) -> {
             ServerPlayer trackingPlayer = player.level().getServer().getPlayerList().getPlayer(trackingId);
             if (trackingPlayer != null) {
-                NetworkManager.sendToPlayer(trackingPlayer, SendPlayerPositionPacket.stopTracking(player));
+                Server2PlayNetworking.send(trackingPlayer, SendPlayerPositionPacket.stopTracking(player));
             }
             trackingMap.remove(trackingId, disconnectedId);
         });

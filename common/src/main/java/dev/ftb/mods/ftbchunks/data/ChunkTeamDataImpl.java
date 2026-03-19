@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.data;
 import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
@@ -16,6 +15,7 @@ import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -302,7 +302,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			return true;
 		}
 
-		if (PlayerHooks.isFake(player)) {
+		if (Platform.get().misc().isFakePlayer(player)) {
 			return canFakePlayerUse(player, mode);
 		} else if (mode == PrivacyMode.ALLIES) {
 			return isAlly(player.getUUID());

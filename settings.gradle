@@ -1,11 +1,13 @@
 pluginManagement {
 	repositories {
-		maven { url "https://maven.architectury.dev/" }
-		maven { url "https://maven.creeperhost.net/" }
+		mavenLocal()
 		gradlePluginPortal()
+
+		maven { url = 'https://maven.fabricmc.net' }
+		maven { url = 'https://maven.neoforged.net/releases' }
 	}
 }
 
 include "common", "fabric", "neoforge"
 
-rootProject.name = 'FTB-Chunks-1.21.11'
+rootProject.name = 'FTB-Chunks-26.1'

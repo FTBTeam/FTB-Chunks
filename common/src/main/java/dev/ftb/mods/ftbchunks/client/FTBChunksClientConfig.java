@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.EntityTypeBoolMapValue;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
@@ -11,6 +10,7 @@ import dev.ftb.mods.ftbchunks.client.minimap.MinimapComponentConfig;
 import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManager;
 import dev.ftb.mods.ftblibrary.config.value.*;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftblibrary.util.PanelPositioning;
 import net.minecraft.resources.Identifier;
 
@@ -151,7 +151,7 @@ public interface FTBChunksClientConfig {
     BooleanValue MAX_ZOOM_CONSTRAINT = MEMORY.addBoolean("max_zoom_constraint", true).comment("Constrain maximum map zoom-out based on number of explored regions and available memory");
 
     static boolean hasOtherMinimapMod() {
-        return Platform.isModLoaded("journeymap") || Platform.isModLoaded("voxelmap") || Platform.isModLoaded("antiqueatlas") || Platform.isModLoaded("xaerominimap");
+        return Platform.get().isModLoaded("journeymap") || Platform.get().isModLoaded("voxelmap") || Platform.get().isModLoaded("antiqueatlas") || Platform.get().isModLoaded("xaerominimap");
     }
 
     static void saveConfig() {

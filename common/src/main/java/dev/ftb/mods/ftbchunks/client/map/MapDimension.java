@@ -95,7 +95,7 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 	}
 
 	public int getLoadedView(MapRegion region, int cx, int cz) {
-		return loadedChunkView.get(ChunkPos.asLong((region.pos.x() << 5) + cx, (region.pos.z() << 5) + cz));
+		return loadedChunkView.get(ChunkPos.pack((region.pos.x() << 5) + cx, (region.pos.z() << 5) + cz));
 	}
 
 	public Map<XZ, MapRegion> getRegions() {

@@ -10,7 +10,7 @@ import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +32,7 @@ public class InWorldIconRenderer {
     @Nullable
     private Matrix4f savedProjectionMatrix;
 
-    public void renderInWorldIcons(GuiGraphics graphics, DeltaTracker tickDelta, Vec3 playerPos, Collection<MapIcon> miniMapIcons) {
+    public void renderInWorldIcons(GuiGraphicsExtractor graphics, DeltaTracker tickDelta, Vec3 playerPos, Collection<MapIcon> miniMapIcons) {
         if (worldMatrix == null) {
             return;
         }

@@ -1,10 +1,11 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,11 +35,11 @@ public record SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, ChunkSy
 			// only send to those players who are allies of the team
             SendChunkPacket hiddenPacket = new SendChunkPacket(dimension(), Util.NIL_UUID, chunk().hidden());
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                NetworkManager.sendToPlayer(player, teamData.isAlly(player.getUUID()) ? this : hiddenPacket);
+                Server2PlayNetworking.send(player, teamData.isAlly(player.getUUID()) ? this : hiddenPacket);
             }
         } else {
 			// just send to everyone
-            NetworkManager.sendToPlayers(server.getPlayerList().getPlayers(), this);
+            Server2PlayNetworking.sendToAllPlayers(server, this);
         }
     }
 
@@ -47,7 +48,7 @@ public record SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, ChunkSy
 		return TYPE;
 	}
 
-	public static void handle(SendChunkPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, List.of(message.chunk)));
+	public static void handle(SendChunkPacket message, PacketContext context) {
+		context.enqueue(() -> FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, List.of(message.chunk)));
 	}
 }

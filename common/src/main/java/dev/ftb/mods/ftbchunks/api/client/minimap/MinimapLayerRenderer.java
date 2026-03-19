@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.api.client.minimap;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.joml.Matrix3x2fStack;
 
 /**
@@ -17,12 +16,12 @@ public interface MinimapLayerRenderer {
      * @param poseStack the current pose
      * @param ctx the minimap context
      */
-    void renderLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx);
+    void extractLayer(GuiGraphicsExtractor graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx);
 
     /**
      * {@return true if this layer should be rendered at this time, false if not}
      */
-    default boolean shouldRender(MinimapRenderContext ctx) {
+    default boolean shouldExtract(MinimapRenderContext ctx) {
         return true;
     }
 }

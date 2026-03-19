@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.client.map.color;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockAndTintGetter;
 
 public class IgnoredBlockColor implements BlockColor {
 	@Override

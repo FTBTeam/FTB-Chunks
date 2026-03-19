@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksExpected;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
@@ -116,7 +116,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 
 			if (cache != null) {
 				ChunkPos chunkPos = pos.chunkPos();
-				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x, chunkPos.z, forceLoaded > 0L);
+				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x(), chunkPos.z(), forceLoaded > 0L);
 				cache.save(false);
 			} else {
                 FTBChunks.LOGGER.warn("Failed to force-load chunk {}, {} @ {}!", pos.x(), pos.z(), pos.dimension().identifier());
@@ -163,7 +163,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 
 		if (sync) {
 			SendChunkPacket packet = new SendChunkPacket(pos.dimension(), Util.NIL_UUID, ChunkSyncInfo.create(System.currentTimeMillis(), pos.x(), pos.z(), null));
-			NetworkManager.sendToPlayers(source.getServer().getPlayerList().getPlayers(), packet);
+			Server2PlayNetworking.sendToAllPlayers(source.getServer(), packet);
 		}
 	}
 

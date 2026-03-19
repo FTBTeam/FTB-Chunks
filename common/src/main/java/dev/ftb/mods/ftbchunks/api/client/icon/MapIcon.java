@@ -10,7 +10,7 @@ import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -119,7 +119,7 @@ public interface MapIcon {
      * @param outsideVisibleArea true if the icon is currently off the map's visible area
      * @param iconAlpha the alpha factor (0..255) for the icon
      */
-    void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha);
+    void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha);
 
     /**
      * A simple implementation of {@code MapIcon} with a static position and adjustable icon, which may be more convenient to
@@ -152,7 +152,7 @@ public interface MapIcon {
         }
 
         @Override
-        public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+        public void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
             if (!icon.isEmpty()) {
                 IconHelper.renderIcon(icon, graphics, x, y, w, h);
             }

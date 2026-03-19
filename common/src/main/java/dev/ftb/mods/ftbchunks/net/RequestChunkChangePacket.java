@@ -1,12 +1,13 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -38,8 +39,8 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 		return TYPE;
 	}
 
-	public static void handle(RequestChunkChangePacket message, NetworkManager.PacketContext context) {
-		ServerPlayer player = (ServerPlayer) context.getPlayer();
+	public static void handle(RequestChunkChangePacket message, PacketContext context) {
+		ServerPlayer player = (ServerPlayer) context.player();
 		CommandSourceStack source = player.createCommandSourceStack();
 
 		ChunkTeamData chunkTeamData = null;
@@ -81,7 +82,7 @@ public record RequestChunkChangePacket(ChunkChangeOp action, Set<XZ> chunks, boo
 			}
 		}
 
-		NetworkManager.sendToPlayer(player, new ChunkChangeResponsePacket(message.chunks.size(), changed, problems));
+		Server2PlayNetworking.send(player, new ChunkChangeResponsePacket(message.chunks.size(), changed, problems));
 
 		SendGeneralDataPacket.send(data, player);
 

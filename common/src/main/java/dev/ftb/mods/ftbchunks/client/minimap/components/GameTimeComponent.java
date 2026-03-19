@@ -10,7 +10,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
@@ -29,7 +29,7 @@ public class GameTimeComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         String setting = context.getSetting(this);
         if (setting.equals(ClockedTimeMode.CLOCK.name())) {
             IconHelper.renderIcon(CLOCK_ICON, graphics, -8, 0, 16, 16);

@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks;
 
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.*;
@@ -8,6 +7,7 @@ import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.value.*;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
@@ -102,13 +102,13 @@ public interface FTBChunksWorldConfig {
 			.comment("Default mode for entity interaction in claimed chunks");
 	EnumValue<PrivacyMode> DEF_BLOCK_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_block_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for block interaction (right-click) in claimed chunks (NeoForge only)")
-			.enabledForEdit(Platform::isForgeLike);
+			.enabledForEdit(Platform.get()::isNeoForge);
 	EnumValue<PrivacyMode> DEF_BLOCK_EDIT = TEAM_PROP_DEFAULTS.addEnum("def_block_edit", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for block breaking and placing in claimed chunks (NeoForge only)")
-			.enabledForEdit(Platform::isForgeLike);
+			.enabledForEdit(Platform.get()::isNeoForge);
 	EnumValue<PrivacyMode> DEF_BLOCK_EDIT_INTERACT = TEAM_PROP_DEFAULTS.addEnum("def_block_edit_interact", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for block interaction, breaking and placing in claimed chunks (Fabric only)")
-			.enabledForEdit(Platform::isFabric);
+			.enabledForEdit(Platform.get()::isFabric);
 	EnumValue<PrivacyMode> DEF_NONLIVING_ENTITY_ATTACK = TEAM_PROP_DEFAULTS.addEnum("def_entity_attack", PrivacyMode.NAME_MAP, PrivacyMode.ALLIES)
 			.comment("Default mode for left-clicking non-living entities (armor stands, item frames...) in claimed chunks");
 	BooleanValue DEF_ALLOW_EXPLOSIONS = TEAM_PROP_DEFAULTS.addBoolean("def_allow_explosions", false)

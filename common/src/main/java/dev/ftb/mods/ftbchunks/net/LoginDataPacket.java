@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -23,7 +23,7 @@ public record LoginDataPacket(UUID serverId) implements CustomPacketPayload {
 		return TYPE;
 	}
 
-	public static void handle(LoginDataPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClientNet.handleLoginDataPacket(message.serverId));
+	public static void handle(LoginDataPacket message, PacketContext context) {
+		context.enqueue(() -> FTBChunksClientNet.handleLoginDataPacket(message.serverId));
 	}
 }

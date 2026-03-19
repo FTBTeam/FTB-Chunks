@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -23,7 +23,7 @@ public record PlayerDeathPacket(GlobalPos pos, int number) implements CustomPack
 		return TYPE;
 	}
 
-	public static void handle(PlayerDeathPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClientNet.handlePlayerDeathPacket(message.pos, message.number));
+	public static void handle(PlayerDeathPacket message, PacketContext context) {
+		context.enqueue(() -> FTBChunksClientNet.handlePlayerDeathPacket(message.pos, message.number));
 	}
 }

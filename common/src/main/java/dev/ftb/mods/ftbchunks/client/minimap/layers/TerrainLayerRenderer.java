@@ -11,7 +11,7 @@ import dev.ftb.mods.ftbchunks.client.minimap.MinimapRegionCutoutTexture;
 import dev.ftb.mods.ftbchunks.core.mixin.GuiGraphicsMixin;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
@@ -27,7 +27,7 @@ public enum TerrainLayerRenderer implements MinimapLayerRenderer {
     public static final Identifier SQUARE_BORDER = FTBChunksAPI.id("textures/square_border.png");
 
     @Override
-    public void renderLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
+    public void extractLayer(GuiGraphicsExtractor graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
         poseStack.pushMatrix();
 
         poseStack.rotate(ctx.rotation() + Mth.PI);
@@ -53,7 +53,7 @@ public enum TerrainLayerRenderer implements MinimapLayerRenderer {
                     texture.getTextureView(), texture.getSampler(),
                     maskTexture.getTextureView(), maskTexture.getSampler()
             );
-            ((GuiGraphicsMixin) graphics).getGuiRenderState().submitGuiElement(
+            ((GuiGraphicsMixin) graphics).getGuiRenderState().addGuiElement(
                     new MaskedMinimapRenderState(
                             ModRenderPipelines.MINIMAP_MASKED,
                             textureSetup,

@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointAddScreen;
 import dev.ftb.mods.ftblibrary.client.config.editable.EditableString;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -27,8 +27,8 @@ public record AddWaypointPacket(String name, GlobalPos position, int color, bool
         return TYPE;
     }
 
-    public static void handle(AddWaypointPacket message, NetworkManager.PacketContext context) {
-        context.queue(() -> {
+    public static void handle(AddWaypointPacket message, PacketContext context) {
+        context.enqueue(() -> {
             if (message.useGui()) {
                 EditableString configName = new EditableString();
                 configName.setValue(message.name);

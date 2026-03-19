@@ -91,7 +91,7 @@ public interface Protection {
 	};
 
 	Protection INTERACT_ENTITY = (player, pos, hand, chunk, entity) -> {
-		if (entity != null && entity.getType().is(FTBChunksTags.Entities.ENTITY_INTERACT_WHITELIST_TAG)) {
+		if (entity != null && entity.typeHolder().is(FTBChunksTags.Entities.ENTITY_INTERACT_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
 		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.ENTITY_INTERACT_MODE)) {
 			return ProtectionPolicy.ALLOW;
@@ -101,7 +101,7 @@ public interface Protection {
 	};
 
 	Protection ATTACK_NONLIVING_ENTITY = (player, pos, hand, chunk, entity) -> {
-		if (entity != null && entity.getType().is(FTBChunksTags.Entities.NONLIVING_ENTITY_ATTACK_WHITELIST_TAG)) {
+		if (entity != null && entity.typeHolder().is(FTBChunksTags.Entities.NONLIVING_ENTITY_ATTACK_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
 		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.NONLIVING_ENTITY_ATTACK_MODE)) {
 			return ProtectionPolicy.ALLOW;

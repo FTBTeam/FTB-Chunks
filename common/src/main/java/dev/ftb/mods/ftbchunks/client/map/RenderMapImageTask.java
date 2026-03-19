@@ -1,7 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.mojang.blaze3d.platform.NativeImage;
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
@@ -10,12 +8,14 @@ import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -130,7 +130,7 @@ public class RenderMapImageTask implements MapTask {
 				}
 			}
 
-			var parent = Platform.getGameFolder().resolve("local/ftbchunks/debug/");
+			var parent = Platform.get().paths().gamePath().resolve("local/ftbchunks/debug/");
 			if (!Files.exists(parent)) {
 				try {
 					Files.createDirectories(parent);
@@ -139,7 +139,7 @@ public class RenderMapImageTask implements MapTask {
 				}
 			}
 
-			try (OutputStream stream = Files.newOutputStream(Platform.getGameFolder().resolve("local/ftbchunks/debug/" + region + "-" + getter.getName() + ".png"))) {
+			try (OutputStream stream = Files.newOutputStream(parent.resolve(region + "-" + getter.getName() + ".png"))) {
 				ImageIO.write(export, "PNG", stream);
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -211,7 +211,7 @@ public class RenderMapImageTask implements MapTask {
 
 		float[] hsb = new float[3];
 		Team ownTeam = FTBTeamsAPI.api().getClientManager().selfTeam();
-		Level world = Minecraft.getInstance().level;
+		ClientLevel world = Minecraft.getInstance().level;
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
 		MapMode mapMode = FTBChunksClientConfig.MAP_MODE.get();

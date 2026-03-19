@@ -19,7 +19,7 @@ import dev.ftb.mods.ftblibrary.util.Lazy;
 import dev.ftb.mods.ftblibrary.util.PanelPositioning;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
@@ -91,7 +91,7 @@ public class MinimapRenderer {
         }
     }
 
-    public void render(GuiGraphics graphics, DeltaTracker tickDelta) {
+    public void render(GuiGraphicsExtractor graphics, DeltaTracker tickDelta) {
         Minecraft mc = Minecraft.getInstance();
 
         if (shouldSkipMinimapRendering(mc)) {
@@ -145,8 +145,8 @@ public class MinimapRenderer {
         // all minimap rendering happens with a translation to the centre of the minimap
         poseStack.translate(minimapPos.x() + minimapSize / 2F, minimapPos.y() + minimapSize / 2F);
         layerRenderers.forEach(r -> {
-            if (r.renderer().shouldRender(minimapCtx)) {
-                r.renderer().renderLayer(graphics, poseStack, minimapCtx);
+            if (r.renderer().shouldExtract(minimapCtx)) {
+                r.renderer().extractLayer(graphics, poseStack, minimapCtx);
             }
         });
         poseStack.popMatrix();

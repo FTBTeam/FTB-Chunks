@@ -1,10 +1,11 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,18 +35,18 @@ public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, Li
         if (teamData.shouldHideClaims()) {
             SendManyChunksPacket hiddenPacket = hidden();
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                NetworkManager.sendToPlayer(player, teamData.isAlly(player.getUUID()) ? this : hiddenPacket);
+                Server2PlayNetworking.send(player, teamData.isAlly(player.getUUID()) ? this : hiddenPacket);
             }
         } else {
-            NetworkManager.sendToPlayers(server.getPlayerList().getPlayers(), this);
+            Server2PlayNetworking.sendToAllPlayers(server, this);
         }
     }
 
 	public void sendToPlayer(ServerPlayer player, ChunkTeamData teamData) {
         if (teamData.shouldHideClaims()) {
-            NetworkManager.sendToPlayer(player, teamData.isAlly(player.getUUID()) ? this : hidden());
+            Server2PlayNetworking.send(player, teamData.isAlly(player.getUUID()) ? this : hidden());
         } else {
-            NetworkManager.sendToPlayer(player, this);
+            Server2PlayNetworking.send(player, this);
         }
     }
 
@@ -59,7 +60,7 @@ public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, Li
 		return TYPE;
 	}
 
-	public static void handle(SendManyChunksPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, message.chunks));
+	public static void handle(SendManyChunksPacket message, PacketContext context) {
+		context.enqueue(() -> FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, message.chunks));
 	}
 }

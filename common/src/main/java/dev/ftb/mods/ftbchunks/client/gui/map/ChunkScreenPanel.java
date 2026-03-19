@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
@@ -30,13 +29,14 @@ import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -98,8 +98,8 @@ public class ChunkScreenPanel extends Panel {
 	@Override
 	public void addWidgets() {
 		ChunkPos chunkPos = ClientUtils.getClientPlayer().chunkPosition();
-		int startX = chunkPos.x - FTBChunks.TILE_OFFSET;
-		int startZ = chunkPos.z - FTBChunks.TILE_OFFSET;
+		int startX = chunkPos.x() - FTBChunks.TILE_OFFSET;
+		int startZ = chunkPos.z() - FTBChunks.TILE_OFFSET;
 
 		chunkButtons.clear();
 		for (int z = 0; z < FTBChunks.TILES; z++) {
@@ -112,9 +112,9 @@ public class ChunkScreenPanel extends Panel {
 
 		addAll(chunkButtons);
 
-		NetworkManager.sendToServer(new RequestMapDataPacket(
-				chunkPos.x - FTBChunks.TILE_OFFSET, chunkPos.z - FTBChunks.TILE_OFFSET,
-				chunkPos.x + FTBChunks.TILE_OFFSET, chunkPos.z + FTBChunks.TILE_OFFSET)
+		Play2ServerNetworking.send(new RequestMapDataPacket(
+				chunkPos.x() - FTBChunks.TILE_OFFSET, chunkPos.z() - FTBChunks.TILE_OFFSET,
+				chunkPos.x() + FTBChunks.TILE_OFFSET, chunkPos.z() + FTBChunks.TILE_OFFSET)
 		);
 
 	}
@@ -140,7 +140,7 @@ public class ChunkScreenPanel extends Panel {
 
 		if (!selectedChunks.isEmpty()) {
 			Optional<UUID> teamId = Optional.ofNullable(chunkScreen.getOpenedAs()).map(Team::getTeamId);
-			NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
+			Play2ServerNetworking.send(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
 			firstSelectedChunk = null;
 			lastButtonDragged = null;
@@ -154,7 +154,7 @@ public class ChunkScreenPanel extends Panel {
 				.map(ChunkButtonPos::button)
 				.map(ChunkButton::getChunkPos)
 				.collect(Collectors.toSet());
-		NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.UNCLAIM, allChunks, canChangeAsAdmin(), teamId));
+		Play2ServerNetworking.send(new RequestChunkChangePacket(ChunkChangeOp.UNCLAIM, allChunks, canChangeAsAdmin(), teamId));
 	}
 
 	@Override
@@ -168,7 +168,7 @@ public class ChunkScreenPanel extends Panel {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
 		Player player = ClientUtils.getClientPlayer();
 
 		// make sure the window is a multiple of the tile amount
@@ -185,10 +185,10 @@ public class ChunkScreenPanel extends Panel {
 		if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_TAB)) {
 			// grid overlay
 			for (int gy = 1; gy < FTBChunks.TILES; gy++) {
-				graphics.hLine(sx, sx + maxWidth - 1, sy +  gy * tileSizeY, 0x64464646);
+				graphics.horizontalLine(sx, sx + maxWidth - 1, sy +  gy * tileSizeY, 0x64464646);
 			}
 			for (int gx = 1; gx < FTBChunks.TILES; gx++) {
-				graphics.vLine(sx + gx * tileSizeX, sy - 1, sy + maxHeight, 0x64464646);
+				graphics.verticalLine(sx + gx * tileSizeX, sy - 1, sy + maxHeight, 0x64464646);
 			}
 		}
 
@@ -237,7 +237,7 @@ public class ChunkScreenPanel extends Panel {
 		}
 
 		@Override
-		public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+		public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
 			if (chunk.getForceLoadedDate().isPresent() && !InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_TAB)) {
 				chunk.getTeam().ifPresent(team -> {
 					Color4I teamColor = team.getProperties().get(TeamProperties.COLOR);
@@ -378,7 +378,7 @@ public class ChunkScreenPanel extends Panel {
 
 			if (lastAdjust > 0L && System.currentTimeMillis() - lastAdjust > 1000L) {
 				// send update to server, but not more than once a second - avoid flood of updates while adjusting mouse wheel
-				NetworkManager.sendToServer(new UpdateForceLoadExpiryPacket(chunkPos.dim(ClientUtils.getClientLevel()), chunk.getForceLoadExpiryDate().orElse(null)));
+				Play2ServerNetworking.send(new UpdateForceLoadExpiryPacket(chunkPos.dim(ClientUtils.getClientLevel()), chunk.getForceLoadExpiryDate().orElse(null)));
 				lastAdjust = 0L;
 			}
 		}

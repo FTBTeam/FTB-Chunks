@@ -19,6 +19,6 @@ public record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {
     }
 
     public long chunkPosAsLong() {
-        return asChunkPos().toLong();
+        return asChunkPos().pack();
     }
 }

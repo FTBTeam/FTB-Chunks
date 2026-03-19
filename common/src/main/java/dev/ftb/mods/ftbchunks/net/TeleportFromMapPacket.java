@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,9 +34,9 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 		return TYPE;
 	}
 
-	public static void handle(TeleportFromMapPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> {
-			ServerPlayer p = (ServerPlayer) context.getPlayer();
+	public static void handle(TeleportFromMapPacket message, PacketContext context) {
+		context.enqueue(() -> {
+			ServerPlayer p = (ServerPlayer) context.player();
 			ServerLevel level = p.level().getServer().getLevel(message.dimension);
 
 			if (level != null && p.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {

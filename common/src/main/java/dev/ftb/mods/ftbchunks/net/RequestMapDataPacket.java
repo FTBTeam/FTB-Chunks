@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -23,7 +23,7 @@ public record RequestMapDataPacket(int fromX, int fromZ, int toX, int toZ) imple
 		return TYPE;
 	}
 
-	public static void handle(RequestMapDataPacket message, NetworkManager.PacketContext context) {
+	public static void handle(RequestMapDataPacket message, PacketContext context) {
 		//FIXME: SendMapDataPacket.send(Objects.requireNonNull(context.get().getSender())));
 	}
 }

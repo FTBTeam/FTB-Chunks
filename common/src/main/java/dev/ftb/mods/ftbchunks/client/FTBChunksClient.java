@@ -43,7 +43,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -132,7 +132,7 @@ public enum FTBChunksClient {
     }
 
     private void addTestLayer(MinimapLayerEvent event) {
-        event.addLayer(FTBChunksAPI.id("test"), FTBChunksClient::renderTestMinimapLayer, MinimapLayerEvent.Order.atEnd());
+        event.addLayer(FTBChunksAPI.id("test"), (graphics, poseStack, ctx) -> renderTestMinimapLayer(graphics, poseStack, ctx), MinimapLayerEvent.Order.atEnd());
     }
 
     private void registerKeyMappings() {
@@ -168,13 +168,13 @@ public enum FTBChunksClient {
         minimapRenderer.setupComponents();
     }
 
-    private static void renderTestMinimapLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
+    private static void renderTestMinimapLayer(GuiGraphicsExtractor graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
         // only in dev mode: testing minimap layer registration event
         if (ClientUtils.getClientPlayer().isCrouching()) {
             poseStack.pushMatrix();
             poseStack.translate(-ctx.size() / 2f + 2, -ctx.size() / 2f + 2);
             poseStack.scale(ctx.scale() / 2f);
-            graphics.drawString(Minecraft.getInstance().font, "Crouch!", 0, 0, 0xFF80FF80);
+            graphics.text(Minecraft.getInstance().font, "Crouch!", 0, 0, 0xFF80FF80);
             poseStack.popMatrix();
         }
     }

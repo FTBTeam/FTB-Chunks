@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -21,9 +20,10 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 
@@ -134,9 +134,9 @@ class MapScreenButtonPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         graphics.fill(x, y, x + w, y + h, 0x30000000);
-        graphics.vLine(x + w, y - 1, y + h, 0x50000000);
+        graphics.verticalLine(x + w, y - 1, y + h, 0x50000000);
     }
 
     private static class SimpleTooltipButton extends SimpleButton {

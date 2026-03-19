@@ -8,7 +8,7 @@ import dev.ftb.mods.ftblibrary.client.icon.Color4IRenderer;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import org.joml.Matrix3x2fStack;
 
@@ -25,7 +25,7 @@ public enum CompassLayerRenderer implements MinimapLayerRenderer {
     );
 
     @Override
-    public void renderLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
+    public void extractLayer(GuiGraphicsExtractor graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
         // compass letters at the 4 cardinal points
         float dist = ctx.size() / 2.2F;
         float ws = ctx.size() / 32F;
@@ -39,7 +39,7 @@ public enum CompassLayerRenderer implements MinimapLayerRenderer {
     }
 
     @Override
-    public boolean shouldRender(MinimapRenderContext ctx) {
+    public boolean shouldExtract(MinimapRenderContext ctx) {
         return FTBChunksClientConfig.MINIMAP_COMPASS.get();
     }
 }

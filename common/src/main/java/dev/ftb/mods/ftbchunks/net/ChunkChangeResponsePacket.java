@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.gui.map.ChunkScreenPanel;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -29,7 +29,7 @@ public record ChunkChangeResponsePacket(
         return TYPE;
     }
 
-    public static void handle(ChunkChangeResponsePacket message, NetworkManager.PacketContext context) {
-        context.queue(() -> ChunkScreenPanel.notifyChunkUpdates(message.totalChunks, message.changedChunks, message.problems));
+    public static void handle(ChunkChangeResponsePacket message, PacketContext context) {
+        context.enqueue(() -> ChunkScreenPanel.notifyChunkUpdates(message.totalChunks, message.changedChunks, message.problems));
     }
 }

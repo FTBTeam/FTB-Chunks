@@ -10,7 +10,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UndashedUuid;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
@@ -22,6 +21,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.net.*;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.command.TeamArgument;
@@ -196,7 +196,7 @@ public class FTBChunksCommands {
                         .then(Commands.literal("block_color")
 //						.requires(source -> source.getServer().isSingleplayer())
                                         .executes(context -> {
-                                            NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), RequestBlockColorPacket.INSTANCE);
+                                            Server2PlayNetworking.send(context.getSource().getPlayerOrException(), RequestBlockColorPacket.INSTANCE);
                                             return Command.SINGLE_SUCCESS;
                                         })
                         )
@@ -241,7 +241,7 @@ public class FTBChunksCommands {
 
     private static int addWaypoint(CommandSourceStack source, String name, ServerLevel level, BlockPos position, ChatFormatting color, boolean useGui) throws CommandSyntaxException {
         if (color.getColor() != null) {
-            NetworkManager.sendToPlayer(source.getPlayerOrException(), new AddWaypointPacket(name, new GlobalPos(level.dimension(), position), color.getColor(), useGui));
+            Server2PlayNetworking.send(source.getPlayerOrException(), new AddWaypointPacket(name, new GlobalPos(level.dimension(), position), color.getColor(), useGui));
             source.sendSuccess(() -> Component.translatable("ftbchunks.command.waypoint_added", name), true);
         }
         return Command.SINGLE_SUCCESS;
@@ -274,7 +274,7 @@ public class FTBChunksCommands {
 
     private static int openClaimGuiAs(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Team team = TeamArgument.get(context, "team");
-        NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), new OpenClaimGUIPacket(team.getTeamId()));
+        Server2PlayNetworking.send(context.getSource().getPlayerOrException(), new OpenClaimGUIPacket(team.getTeamId()));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -568,13 +568,13 @@ public class FTBChunksCommands {
         }
 
         source.sendSuccess(() -> Component.translatable("ftbchunks.command.view_loaded", chunks.size()), false);
-        NetworkManager.sendToPlayer(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), chunks));
+        Server2PlayNetworking.send(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), chunks));
 
         return Command.SINGLE_SUCCESS;
     }
 
     private static int resetLoadedChunks(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
-        NetworkManager.sendToPlayer(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), Long2IntMaps.EMPTY_MAP));
+        Server2PlayNetworking.send(source.getPlayerOrException(), new LoadedChunkViewPacket(level.dimension(), Long2IntMaps.EMPTY_MAP));
         return Command.SINGLE_SUCCESS;
     }
 

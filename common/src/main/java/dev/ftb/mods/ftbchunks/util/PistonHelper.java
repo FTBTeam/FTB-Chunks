@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
 import net.minecraft.core.BlockPos;
@@ -34,7 +34,7 @@ public class PistonHelper {
      */
     public static boolean shouldPreventPistonMovement(Level level, BlockPos pistonPos, PistonStructureResolver resolver) {
         if (!level.isClientSide() && FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
-            PrivacyProperty editProp = Platform.isFabric() ?
+            PrivacyProperty editProp = Platform.get().isFabric() ?
                     FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
                     FTBChunksProperties.BLOCK_EDIT_MODE;
             ClaimedChunkManager mgr = FTBChunksAPI.api().getManager();

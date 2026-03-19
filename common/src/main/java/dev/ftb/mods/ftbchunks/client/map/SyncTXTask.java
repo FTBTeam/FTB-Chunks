@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,7 +44,7 @@ public class SyncTXTask implements MapTask {
 			 */
 		}
 
-		PartialPackets.REGION.write(region.getSyncKey(), out.toByteArray()).forEach(NetworkManager::sendToServer);
+		PartialPackets.REGION.write(region.getSyncKey(), out.toByteArray()).forEach(Play2ServerNetworking::send);
 	}
 
 	@Override

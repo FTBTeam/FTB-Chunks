@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
 import dev.ftb.mods.ftbchunks.CustomMinYRegistryImpl;
-import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
@@ -39,8 +38,8 @@ public class HeightUtils {
 	}
 
 	private static boolean shouldSkipBlock(BlockState state) {
-		Identifier id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
-		return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
+		Identifier identifier = state.getBlock().builtInRegistryHolder().key().identifier();
+		return ColorMapLoader.getBlockColor(identifier).isIgnored();
 	}
 
 	public static int getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos) {

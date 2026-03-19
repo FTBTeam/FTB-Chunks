@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -37,9 +37,9 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
         return TYPE;
     }
 
-    public static void handle(ShareWaypointPacket message, NetworkManager.PacketContext context) {
-        context.queue(() -> {
-            ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
+    public static void handle(ShareWaypointPacket message, PacketContext context) {
+        context.enqueue(() -> {
+            ServerPlayer serverPlayer = (ServerPlayer) context.player();
             PlayerList playerList = serverPlayer.level().getServer().getPlayerList();
             Collection<ServerPlayer> playersToSend = switch (message.shareType) {
                 case SERVER -> playerList.getPlayers();

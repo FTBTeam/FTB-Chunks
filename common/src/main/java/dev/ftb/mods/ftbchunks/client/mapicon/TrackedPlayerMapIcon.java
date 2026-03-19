@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
@@ -10,7 +9,8 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
@@ -55,7 +55,7 @@ public class TrackedPlayerMapIcon implements MapIcon {
     }
 
     @Override
-    public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+    public void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         if (mapType.isMinimap() || w < 4) {
             IconHelper.renderIcon(faceIcon, graphics, x, y, w, h);
         } else {

@@ -13,7 +13,7 @@ import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -78,7 +78,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
 
             nameField = new TextField(this) {
                 @Override
-                public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+                public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
                     graphics.pose().pushMatrix();
                     graphics.pose().translate(x - 16, y - 2);
                     graphics.pose().scale(0.75F, 0.75F);
@@ -89,7 +89,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
 
                 @Override
                 public void addMouseOverText(TooltipList list) {
-                    list.add(Component.literal(Objects.requireNonNull(value.arch$registryName()).toString()));
+                    list.add(Component.literal(Objects.requireNonNull(value.builtInRegistryHolder().key().identifier()).toString()));
                 }
             }.setTrim().addFlags(Theme.SHADOW);
         }

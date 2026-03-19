@@ -22,7 +22,7 @@ public class ChunkPosCustomYSetValue extends AbstractListValue<ChunkPosWithMinY>
 
         lookup.clear();
         for (ChunkPosWithMinY pos : value) {
-            lookup.put(ChunkPos.asLong(pos.chunkX(), pos.chunkZ()), pos.minY());
+            lookup.put(ChunkPos.pack(pos.chunkX(), pos.chunkZ()), pos.minY());
         }
     }
 

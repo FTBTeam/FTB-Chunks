@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -35,7 +35,7 @@ public record SendPlayerPositionPacket(ResolvableProfile profile, Optional<Block
         return TYPE;
     }
 
-    public static void handle(SendPlayerPositionPacket message, NetworkManager.PacketContext context) {
+    public static void handle(SendPlayerPositionPacket message, PacketContext context) {
         FTBChunksClient.INSTANCE.getLongRangePlayerTracker()
                 .updatePlayerPos(message.profile.partialProfile(), message.pos.orElse(null));
     }

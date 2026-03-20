@@ -15,6 +15,8 @@ import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.platform.Env;
+import dev.ftb.mods.ftblibrary.platform.Platform;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.event.*;
 import com.google.gson.Gson;
@@ -191,7 +193,7 @@ public class FTBChunks {
 				playerId, data.getTeamId());
 
 		UUID managerId = FTBTeamsAPI.api().getManager().getId();
-		NetworkManager.sendToPlayer(player, new LoginDataPacket(managerId));
+		Server2PlayNetworking.send(player, new LoginDataPacket(managerId));
 		SendGeneralDataPacket.send(data, player);
 		FTBChunks.LOGGER.debug("team data sent to {}", playerId);
 
@@ -208,7 +210,7 @@ public class FTBChunks {
 					ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
 					if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
 						SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
-						NetworkManager.sendToPlayer(player, packet);
+						Server2PlayNetworking.send(player, packet);
 					}
 				}));
 		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
@@ -348,7 +350,7 @@ public class FTBChunks {
 	// This event is a nightmare, gets fired before login
 	public void enterSection(Entity entity, int chunkX, int chunkY, int chunkZ, int prevX, int prevY, int prevZ) {
 		if (chunkX == prevX && chunkZ == prevZ && chunkY != prevY
-				|| !(entity instanceof ServerPlayer player) || PlayerHooks.isFake(player)
+				|| !(entity instanceof ServerPlayer player) || Platform.get().misc().isFakePlayer(player)
 				|| !FTBTeamsAPI.api().isManagerLoaded() || !FTBChunksAPI.api().isManagerLoaded()) {
 			return;
 		}
@@ -420,7 +422,7 @@ public class FTBChunks {
 		if (!wonGame) {
 			newPlayer.getLastDeathLocation().ifPresent(loc -> {
 				int num = newPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-				NetworkManager.sendToPlayer(newPlayer, new PlayerDeathPacket(loc, num));
+				Server2PlayNetworking.send(newPlayer, new PlayerDeathPacket(loc, num));
 			});
 		}
 	}
@@ -553,7 +555,7 @@ public class FTBChunks {
 
 			chunksToUnclaim.forEach((dimension, chunkPackets) -> {
 				if (!chunkPackets.isEmpty()) {
-					NetworkManager.sendToPlayers(sourceStack.getServer().getPlayerList().getPlayers(), new SendManyChunksPacket(dimension, Util.NIL_UUID, chunkPackets));
+					Server2PlayNetworking.sendToAllPlayers(sourceStack.getServer(), new SendManyChunksPacket(dimension, Util.NIL_UUID, chunkPackets));
 				}
 			});
 		}
@@ -608,7 +610,7 @@ public class FTBChunks {
 	}
 
 	public static boolean isDevMode() {
-		return Platform.isDevelopmentEnvironment() || FTBChunksWorldConfig.DEV_COMMANDS.get();
+		return Platform.get().isDev() || FTBChunksWorldConfig.DEV_COMMANDS.get();
 	}
 
 }

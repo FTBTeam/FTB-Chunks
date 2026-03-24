@@ -38,36 +38,34 @@ public record ShareWaypointPacket(String name, GlobalPos position, ShareType sha
     }
 
     public static void handle(ShareWaypointPacket message, PacketContext context) {
-        context.enqueue(() -> {
-            ServerPlayer serverPlayer = (ServerPlayer) context.player();
-            PlayerList playerList = serverPlayer.level().getServer().getPlayerList();
-            Collection<ServerPlayer> playersToSend = switch (message.shareType) {
-                case SERVER -> playerList.getPlayers();
-                case PARTY -> FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer)
-                        .map(Team::getOnlineMembers)
-                        .orElse(List.of(serverPlayer));
-                case PLAYER -> message.targets.stream()
-                        .map(playerList::getPlayer)
-                        .filter(Objects::nonNull).toList();
-            };
+        ServerPlayer serverPlayer = (ServerPlayer) context.player();
+        PlayerList playerList = serverPlayer.level().getServer().getPlayerList();
+        Collection<ServerPlayer> playersToSend = switch (message.shareType) {
+            case SERVER -> playerList.getPlayers();
+            case PARTY -> FTBTeamsAPI.api().getManager().getTeamForPlayer(serverPlayer)
+                    .map(Team::getOnlineMembers)
+                    .orElse(List.of(serverPlayer));
+            case PLAYER -> message.targets.stream()
+                    .map(playerList::getPlayer)
+                    .filter(Objects::nonNull).toList();
+        };
 
-            ChatType.Bound chatBound = ChatType.bind(ChatType.CHAT, serverPlayer).withTargetName(serverPlayer.getDisplayName());
+        ChatType.Bound chatBound = ChatType.bind(ChatType.CHAT, serverPlayer).withTargetName(serverPlayer.getDisplayName());
 
-            for (ServerPlayer playerListPlayer : playersToSend) {
-                String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
-                String dim = message.position.dimension().identifier().toString();
+        for (ServerPlayer playerListPlayer : playersToSend) {
+            String cords = message.position.pos().getX() + " " + message.position.pos().getY() + " " + message.position.pos().getZ();
+            String dim = message.position.dimension().identifier().toString();
 
-                Component waypointText = Component.translatable(message.name)
-                        .withStyle(style -> style
-                                .withColor(ChatFormatting.AQUA)
-                                .withHoverEvent(new HoverEvent.ShowText(Component.literal(dim + " " + cords))));
+            Component waypointText = Component.translatable(message.name)
+                    .withStyle(style -> style
+                            .withColor(ChatFormatting.AQUA)
+                            .withHoverEvent(new HoverEvent.ShowText(Component.literal(dim + " " + cords))));
 
-                playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
-                        .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
-                                .withStyle(style ->
-                                        style.withClickEvent(new ClickEvent.RunCommand("/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
-            }
-        });
+            playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
+                    .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
+                            .withStyle(style ->
+                                    style.withClickEvent(new ClickEvent.RunCommand("/ftbchunks waypoint add \"" + message.name + "\" " + cords + " " + dim + " white true"))))), false, chatBound);
+        }
     }
 
     public enum ShareType {

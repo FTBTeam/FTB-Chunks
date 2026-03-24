@@ -4,15 +4,18 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.ModRenderPipelines;
 import dev.ftb.mods.ftbchunks.client.minimap.MaskedMinimapRenderState;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapRegionCutoutTexture;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.core.mixin.GuiGraphicsMixin;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.BlitRenderState;
+import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -33,6 +36,18 @@ public enum TerrainLayerRenderer implements MinimapLayerRenderer {
         poseStack.rotate(ctx.rotation() + Mth.PI);
         poseStack.translate(-ctx.size() / 2f, -ctx.size() / 2f);
 
+        // draw the terrain background
+        GuiElementRenderState state = buildRenderState(poseStack, ctx);
+        ((GuiGraphicsMixin) graphics).getGuiRenderState().addGuiElement(state);
+
+        // draw the map border
+        var borderId = FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER;
+        graphics.blit(borderId, 0, 0, ctx.size(), ctx.size(), 0F, 1F, 0F, 1F);
+
+        poseStack.popMatrix();
+    }
+
+    private GuiElementRenderState buildRenderState(Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
         float offX = 0.5F + (float) ((MathUtils.mod(ctx.playerPos().x, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
         float offZ = 0.5F + (float) ((MathUtils.mod(ctx.playerPos().z, 16D) / 16D - 0.5D) / (double) FTBChunks.TILES);
         float zws = 2F / (FTBChunks.TILES * ctx.zoom());
@@ -43,32 +58,33 @@ public enum TerrainLayerRenderer implements MinimapLayerRenderer {
         float v1 = offZ + zws;
 
         int alpha = FTBChunksClientConfig.MINIMAP_ALPHA.get();
+        AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(MinimapRegionCutoutTexture.ID);
 
         if (FTBChunksClientConfig.SQUARE_MINIMAP.get()) {
-            graphics.blit(MinimapRegionCutoutTexture.ID, 0, 0, ctx.size(), ctx.size(), u0, u1, v0, v1);
+            TextureSetup textureSetup = TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler());
+            return new BlitRenderState(
+                    RenderPipelines.GUI_TEXTURED,
+                    textureSetup,
+                    new Matrix3x2f(poseStack),
+                    0, 0, ctx.size(), ctx.size(),
+                    u0, u1, v0, v1,
+                    alpha << 24 | 0xFFFFFF,
+                    null
+            );
         } else {
-            AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(MinimapRegionCutoutTexture.ID);
             AbstractTexture maskTexture = Minecraft.getInstance().getTextureManager().getTexture(CIRCLE_MASK);
             TextureSetup textureSetup = TextureSetup.doubleTexture(
                     texture.getTextureView(), texture.getSampler(),
                     maskTexture.getTextureView(), maskTexture.getSampler()
             );
-            ((GuiGraphicsMixin) graphics).getGuiRenderState().addGuiElement(
-                    new MaskedMinimapRenderState(
-                            ModRenderPipelines.MINIMAP_MASKED,
-                            textureSetup,
-                            new Matrix3x2f(poseStack),
-                            0, 0, ctx.size(), ctx.size(),
-                            u0, u1, v0, v1,
-                            alpha
-                    )
+            return new MaskedMinimapRenderState(
+                    ModRenderPipelines.MINIMAP_MASKED,
+                    textureSetup,
+                    new Matrix3x2f(poseStack),
+                    0, 0, ctx.size(), ctx.size(),
+                    u0, u1, v0, v1,
+                    alpha
             );
         }
-
-        // draw the map border
-        var borderId = FTBChunksClientConfig.SQUARE_MINIMAP.get() ? SQUARE_BORDER : CIRCLE_BORDER;
-        graphics.blit(borderId, 0, 0, ctx.size(), ctx.size(), 0F, 1F, 0F, 1F);
-
-        poseStack.popMatrix();
     }
 }

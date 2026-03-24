@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
@@ -15,6 +15,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3x2fStack;
@@ -45,7 +46,7 @@ public class EntityMapIcon implements MapIcon {
     public boolean isVisible(MapType mapType, double distanceToPlayer, boolean outsideVisibleArea) {
         return !mapType.isWorldIcon()
                 && (entity instanceof AbstractClientPlayer || !outsideVisibleArea)
-                && FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(entity.getType().arch$registryName().toString(), true);
+                && FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(), true);
     }
 
     @Override

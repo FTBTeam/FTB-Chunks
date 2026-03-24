@@ -1,24 +1,22 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksExpected;
+import de.marhali.json5.Json5Object;
+import dev.ftb.mods.ftbchunks.FTBChunksAPIImpl;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
+import dev.ftb.mods.ftbchunks.api.event.ChunkChangeEvent;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftblibrary.json5.Json5Util;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Util;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NonNull;
 
 public class ClaimedChunkImpl implements ClaimedChunk {
@@ -56,21 +54,6 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	@Override
 	public long getTimeClaimed() {
 		return time;
-	}
-
-	@Override
-	public String getResultId() {
-		return "ok";
-	}
-
-	@Override
-	public boolean isSuccess() {
-		return true;
-	}
-
-	@Override
-	public MutableComponent getMessage() {
-		return Component.literal("OK");
 	}
 
 	public void setClaimedTime(long t) {
@@ -112,19 +95,14 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 				level.getChunk(pos.x(), pos.z());
 			}
 
-			ServerChunkCache cache = level.getChunkSource();
-
-			if (cache != null) {
-				ChunkPos chunkPos = pos.chunkPos();
-				FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, this.teamData.getTeamId(), chunkPos.x(), chunkPos.z(), forceLoaded > 0L);
-				cache.save(false);
-			} else {
-                FTBChunks.LOGGER.warn("Failed to force-load chunk {}, {} @ {}!", pos.x(), pos.z(), pos.dimension().identifier());
-			}
-		}
+            ChunkPos chunkPos = pos.chunkPos();
+            FTBChunksAPIImpl.INSTANCE.getForceLoadHandler()
+                    .updateForceLoadingForChunk(level, this.teamData.getTeamId(), chunkPos.x(), chunkPos.z(), forceLoaded > 0L);
+            level.getChunkSource().save(false);
+        }
 	}
 
-	public boolean canEntitySpawn(Entity entity) {
+	public boolean canEntitySpawn(@UnknownNullability EntityType<?> entity) {
 		return true;
 	}
 
@@ -145,7 +123,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 	public void unload(CommandSourceStack source) {
 		if (isForceLoaded()) {
 			setForceLoadedTime(0L);
-			ClaimedChunkEvent.AFTER_UNLOAD.invoker().after(source, this);
+			NativeEventPosting.get().postEvent(new ChunkChangeEvent.Post.Data(source, this, ChunkChangeEvent.Operation.UNLOAD));
 			teamData.clearClaimCaches();
 			teamData.markDirty();
 			forceLoadExpiryTime = 0L;
@@ -157,7 +135,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		unload(source);
 
 		teamData.getManager().unregisterClaim(pos);
-		ClaimedChunkEvent.AFTER_UNCLAIM.invoker().after(source, this);
+		NativeEventPosting.get().postEvent(new ChunkChangeEvent.Post.Data(source, this, ChunkChangeEvent.Operation.UNCLAIM));
 		teamData.clearClaimCaches();
 		teamData.markDirty();
 
@@ -188,27 +166,26 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return "[ " + pos.toString() + " - " + teamData + " ]";
 	}
 
-	public CompoundTag serializeNBT() {
-		SNBTCompoundTag o = new SNBTCompoundTag();
-		o.singleLine();
-		o.putInt("x", getPos().x());
-		o.putInt("z", getPos().z());
-		o.putLong("time", getTimeClaimed());
+	public Json5Object toJson() {
+		Json5Object o = new Json5Object();
+//		o.singleLine();
+		o.addProperty("x", getPos().x());
+		o.addProperty("z", getPos().z());
+		o.addProperty("time", getTimeClaimed());
 		if (isForceLoaded()) {
-			o.putLong("force_loaded", getForceLoadedTime());
+			o.addProperty("force_loaded", getForceLoadedTime());
 		}
 		if (getForceLoadExpiryTime() > 0L) {
-			o.putLong("expiry_time", getForceLoadExpiryTime());
+			o.addProperty("expiry_time", getForceLoadExpiryTime());
 		}
 		return o;
 	}
 
-	public static ClaimedChunkImpl deserializeNBT(ChunkTeamDataImpl data, ResourceKey<Level> dimKey, CompoundTag tag) {
-		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.getInt("x").orElseThrow(), tag.getInt("z").orElseThrow()));
-		chunk.time = tag.getLong("time").orElse(System.currentTimeMillis());
-		chunk.forceLoaded = tag.getLong("force_loaded").orElse(0L);
-		chunk.forceLoadExpiryTime = tag.getLong("expiry_time").orElse(0L);
+	public static ClaimedChunkImpl fromJson(ChunkTeamDataImpl data, ResourceKey<Level> dimKey, Json5Object tag) {
+		ClaimedChunkImpl chunk = new ClaimedChunkImpl(data, new ChunkDimPos(dimKey, tag.get("x").getAsInt(), tag.get("z").getAsInt()));
+		chunk.time = Json5Util.getLong(tag, "time").orElse(System.currentTimeMillis());
+		chunk.forceLoaded = Json5Util.getLong(tag, "force_loaded").orElse(0L);
+		chunk.forceLoadExpiryTime = Json5Util.getLong(tag, "expiry_time").orElse(0L);
 		return chunk;
 	}
-
 }

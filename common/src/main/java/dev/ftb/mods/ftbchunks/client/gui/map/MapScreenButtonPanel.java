@@ -1,13 +1,14 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.gui.MinimapInfoSortScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.screens.KeyReferenceScreen;
@@ -20,7 +21,6 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -125,7 +125,7 @@ class MapScreenButtonPanel extends Panel {
                 settingsButton.onClicked(MouseButton.LEFT);
             }
             return true;
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key.event())) {
+        } else if (FTBChunksClient.waypointManagerKey.isDown()) {
             waypointManagerButton.onClicked(MouseButton.LEFT);
             return true;
         }

@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
+import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
@@ -9,7 +10,6 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;

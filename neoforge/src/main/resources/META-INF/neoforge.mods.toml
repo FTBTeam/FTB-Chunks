@@ -32,13 +32,6 @@ ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]
-modId = "architectury"
-type = "required"
-versionRange = "[${archversion},)"
-ordering = "AFTER"
-side = "BOTH"
-
-[[dependencies.ftbchunks]]
 modId = "ftblibrary"
 type = "required"
 versionRange = "[${ftblibraryversion},)"

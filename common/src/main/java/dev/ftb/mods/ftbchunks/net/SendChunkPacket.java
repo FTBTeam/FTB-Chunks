@@ -49,6 +49,6 @@ public record SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, ChunkSy
 	}
 
 	public static void handle(SendChunkPacket message, PacketContext context) {
-		context.enqueue(() -> FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, List.of(message.chunk)));
+		FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, List.of(message.chunk));
 	}
 }

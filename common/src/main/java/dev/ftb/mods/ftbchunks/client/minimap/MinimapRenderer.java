@@ -1,20 +1,21 @@
 package dev.ftb.mods.ftbchunks.client.minimap;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
-import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent;
-import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent.PositionedLayer;
+import dev.ftb.mods.ftbchunks.api.client.event.AddMapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.AddMinimapLayerEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.AddMinimapLayerEvent.PositionedLayer;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.minimap.*;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
 import dev.ftb.mods.ftbchunks.client.minimap.layers.*;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import dev.ftb.mods.ftblibrary.util.Lazy;
 import dev.ftb.mods.ftblibrary.util.PanelPositioning;
 import net.minecraft.client.DeltaTracker;
@@ -61,7 +62,7 @@ public class MinimapRenderer {
 
     public void addExtraRenderLayers() {
         List<PositionedLayer> toAdd = new ArrayList<>();
-        MinimapLayerEvent.ADD_LAYERS.invoker().accept(new MinimapLayerEvent(toAdd::add));
+        NativeEventPosting.get().postEvent(new AddMinimapLayerEvent.Data(toAdd::add));
         toAdd.forEach(this::addRenderLayer);
     }
 
@@ -81,7 +82,7 @@ public class MinimapRenderer {
     }
 
     private void addBuiltinRenderLayer(Identifier id, MinimapLayerRenderer renderer) {
-        addRenderLayer(new PositionedLayer(id, renderer, MinimapLayerEvent.Order.atEnd()));
+        addRenderLayer(new PositionedLayer(id, renderer, AddMinimapLayerEvent.Order.atEnd()));
     }
 
     public void tick(Minecraft mc) {
@@ -281,7 +282,7 @@ public class MinimapRenderer {
             lastMapIconUpdate = now;
 
             mapIcons.clear();
-            MapIconEvent.MINIMAP.invoker().accept(new MapIconEvent(dim.dimension, mapIcons, MapType.MINIMAP));
+            NativeEventPosting.get().postEvent(new AddMapIconEvent.Data(dim.dimension, mapIcons::add, MapType.MINIMAP));
 
             if (mapIcons.size() >= 2) {
                 mapIcons.sort(new MapIconComparator(playerPos, partialTick));

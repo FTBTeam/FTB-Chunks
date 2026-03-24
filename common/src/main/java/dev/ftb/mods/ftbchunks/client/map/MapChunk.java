@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.ftb.mods.ftbchunks.api.client.event.ChunksUpdatedFromServerEvent;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;

@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.util.Lazy;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.resources.Identifier;

@@ -1,22 +1,24 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.mapicon.InWorldMapIcon;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
@@ -26,14 +28,13 @@ import java.util.List;
 
 public class InWorldIconRenderer {
     private final List<InWorldMapIcon> inWorldMapIcons = new ArrayList<>();
-    private Vec3 cameraPos = Vec3.ZERO;
     @Nullable
-    private Matrix4f worldMatrix;
+    private Vec3 cameraPos = null;
     @Nullable
-    private Matrix4f savedProjectionMatrix;
+    private Matrix4f combinedMatrix = null;
 
     public void renderInWorldIcons(GuiGraphicsExtractor graphics, DeltaTracker tickDelta, Vec3 playerPos, Collection<MapIcon> miniMapIcons) {
-        if (worldMatrix == null) {
+        if (combinedMatrix == null || cameraPos == null) {
             return;
         }
 
@@ -52,8 +53,8 @@ public class InWorldIconRenderer {
                 double lookAngle = player.getLookAngle().dot(new Vec3(v.x(), v.y(), v.z()).normalize());
                 if (lookAngle > 0) {  // icon in front of the player?
                     // transform the icon's camera-relative coords into clip space (-1.0 -> 1.0, -1.0 -> 1.0)
-                    // (worldMatrix is a combination of the model-view and projection matrices)
-                    worldMatrix.transform(v);
+                    // (worldMatrix is a combination of the model/view and projection matrices)
+                    combinedMatrix.transform(v);
                     v.div(v.w());
                     // get the actual screen coordinates
                     float ix = halfScreenW + v.x() * halfScreenW;
@@ -96,22 +97,25 @@ public class InWorldIconRenderer {
         inWorldMapIcons.clear();
     }
 
-    public void copyProjectionMatrix(Matrix4f projectionMatrix) {
-        savedProjectionMatrix = new Matrix4f(projectionMatrix);
-    }
-
-    public void renderLevelStage(Matrix4fc modelViewMatrix, Vec3 cameraPosIn, DeltaTracker tickDelta) {
+    public void renderBeacons() {
         Minecraft mc = Minecraft.getInstance();
 
-        if (mc.options.hideGui || MapManager.getInstance().isEmpty() || mc.level == null || mc.player == null
-                || MapDimension.getCurrent().isEmpty() || !FTBChunksWorldConfig.playerHasMapStage(mc.player)) {
-            return;
+        if (!mc.options.hideGui
+                && mc.level != null
+                && mc.player != null
+                && cameraPos != null
+                && MapManager.getInstance().isPresent()
+                && MapDimension.getCurrent().isPresent()
+                && FTBChunksWorldConfig.playerHasMapStage(mc.player))
+        {
+            WaypointBeaconRenderer.renderBeacons(mc, mc.getDeltaTracker(), cameraPos);
         }
+    }
 
-        // save these for use by renderInWorldIcons()
-        worldMatrix = new Matrix4f(savedProjectionMatrix).mul(modelViewMatrix);
-        cameraPos = new Vec3(cameraPosIn.x, cameraPosIn.y, cameraPosIn.z);
-
-        WaypointBeaconRenderer.renderBeacons(mc, tickDelta, cameraPos);
+    public void extractRenderState(LevelRenderState renderState) {
+        // save cameraPos and combined view/projection matrices for use by renderInWorldIcons() and renderBeacons()
+        CameraRenderState cameraState = renderState.cameraRenderState;
+        combinedMatrix = new Matrix4f(cameraState.projectionMatrix).mul(cameraState.viewRotationMatrix);
+        cameraPos = new Vec3(cameraState.pos.x, cameraState.pos.y, cameraState.pos.z);
     }
 }

@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.client;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.MapTask;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 
 import java.util.ArrayDeque;
 

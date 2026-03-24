@@ -4,9 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.level.ChunkPos;
 
-/**
- * Helper record to store chunk position along with a minimum Y value.
- */
+/// Helper record to store chunk position along with a minimum Y value.
 public record ChunkPosWithMinY(int chunkX, int chunkZ, int minY) {
     public static final Codec<ChunkPosWithMinY> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.fieldOf("x").forGetter(ChunkPosWithMinY::chunkX),

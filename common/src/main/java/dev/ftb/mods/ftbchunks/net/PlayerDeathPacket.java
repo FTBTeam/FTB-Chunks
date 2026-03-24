@@ -24,6 +24,6 @@ public record PlayerDeathPacket(GlobalPos pos, int number) implements CustomPack
 	}
 
 	public static void handle(PlayerDeathPacket message, PacketContext context) {
-		context.enqueue(() -> FTBChunksClientNet.handlePlayerDeathPacket(message.pos, message.number));
+		FTBChunksClientNet.handlePlayerDeathPacket(message.pos, message.number);
 	}
 }

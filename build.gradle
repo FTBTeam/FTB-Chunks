@@ -139,7 +139,10 @@ subprojects {
 					"neoforgeversionrange": project.neoforge_version_range,
 					"neoforgeloaderversion": project.neoforge_loader_version,
 					"mcversion": fixedMcVersion,
-					"fabricapiversionrange": project.fabric_api_version_range
+					"fabricapiversionrange": project.fabric_api_version_range,
+					"ftblibraryversion": project.ftb_library_version,
+					"ftbteamsversion": project.ftb_teams_version,
+					"ftbbackupsversion": project.ftb_backups3_version
 		}
 	}
 }
@@ -174,7 +177,7 @@ publishMods {
 	def curseForgeOptions = curseforgeOptions {
 		accessToken = providers.environmentVariable("CURSEFORGE_KEY")
 		minecraftVersions.add("${minecraft_version}")
-		javaVersions.add(JavaVersion.VERSION_21)
+		javaVersions.add(JavaVersion.VERSION_25)
 	}
 
 	curseforge("curseforgeFabric") {

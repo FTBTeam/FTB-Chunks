@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.neoforge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksAPIImpl;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
@@ -14,18 +15,28 @@ import net.neoforged.neoforge.common.world.chunk.TicketHelper;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class ForceLoading {
     static TicketController ticketController;
 
-    static void setup(IEventBus modEventBus) {
+    static void init(IEventBus modEventBus) {
         modEventBus.addListener(ForceLoading::registerTicketController);
+
+        FTBChunksAPIImpl.INSTANCE.setForceLoadHandler(ForceLoading::handleForceLoading);
     }
 
     private static void registerTicketController(RegisterTicketControllersEvent event) {
         ticketController = new TicketController(FTBChunksAPI.id("default"), ForceLoading::validateLoadedChunks);
 
         event.register(ticketController);
+    }
+
+    private static void handleForceLoading(ServerLevel level, UUID owner, int chunkX, int chunkY, boolean add) {
+        boolean res = ticketController.forceChunk(level, owner, chunkX, chunkY, add, true);
+
+        FTBChunks.LOGGER.debug("force chunk (neoforge): id={} owner={}, c=({},{}), load={}, success={}",
+                ForceLoading.ticketController.id(), owner, chunkX, chunkY, add, res);
     }
 
     private static void validateLoadedChunks(ServerLevel level, TicketHelper ticketHelper) {
@@ -37,7 +48,7 @@ public class ForceLoading {
             // ticking tickets - purge if the chunk is either unclaimed or should not be offline-force-loaded
             Set<Long> toRemove = new HashSet<>();
             chunks.normal().forEach(longChunkPos -> {
-                ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(level.dimension(), new ChunkPos(longChunkPos)));
+                ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(level.dimension(), ChunkPos.unpack(longChunkPos)));
                 if (cc == null || !cc.getTeamData().getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
                     toRemove.add(longChunkPos);
                 }

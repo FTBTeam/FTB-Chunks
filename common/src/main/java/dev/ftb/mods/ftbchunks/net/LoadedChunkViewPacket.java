@@ -31,6 +31,6 @@ public record LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap ch
 	}
 
 	public static void handle(LoadedChunkViewPacket message, PacketContext context) {
-		context.enqueue(() -> FTBChunksClientNet.handleLoadedChunkViewPacket(message.dimension, message.chunks));
+		FTBChunksClientNet.handleLoadedChunkViewPacket(message.dimension, message.chunks);
 	}
 }

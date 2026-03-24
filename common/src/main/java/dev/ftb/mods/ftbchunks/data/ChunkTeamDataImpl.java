@@ -3,21 +3,25 @@ package dev.ftb.mods.ftbchunks.data;
 import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.marhali.json5.Json5Array;
+import de.marhali.json5.Json5Object;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksExpected;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.FTBChunksAPIImpl;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimResult;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
-import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
+import dev.ftb.mods.ftbchunks.api.event.ChunkChangeEvent;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
+import dev.ftb.mods.ftblibrary.json5.Json5Ops;
+import dev.ftb.mods.ftblibrary.json5.Json5Util;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.platform.Platform;
-import dev.ftb.mods.ftblibrary.snbt.SNBT;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
+import dev.ftb.mods.ftblibrary.util.result.DataOutcome;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.TeamManager;
 import dev.ftb.mods.ftbteams.api.TeamRank;
@@ -27,9 +31,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.IdentifierException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -40,7 +41,6 @@ import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -176,20 +176,18 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		}
 
 		chunk = new ClaimedChunkImpl(this, pos);
-		ClaimResult result = ClaimedChunkEvent.BEFORE_CLAIM.invoker().before(source, chunk).object();
-		if (result == null) {
-			result = chunk;
-		}
+		DataOutcome<ClaimResult> result = ChunkChangeEvent.Pre.TYPE.post(new ChunkChangeEvent.Pre.Data(source, chunk, ChunkChangeEvent.Operation.CLAIM));
 
-		if (checkOnly || !result.isSuccess()) {
-			return result;
-		}
+		if (result.isFail()) {
+			return result.data().orElseThrow();
+		} else if (!checkOnly) {
+			chunk.setClaimedTime(System.currentTimeMillis());
+			manager.registerClaim(pos, chunk);
 
-		chunk.setClaimedTime(System.currentTimeMillis());
-		manager.registerClaim(pos, chunk);
-		ClaimedChunkEvent.AFTER_CLAIM.invoker().after(source, chunk);
-		markDirty();
-		return chunk;
+			NativeEventPosting.get().postEvent(new ChunkChangeEvent.Post.Data(source, chunk, ChunkChangeEvent.Operation.CLAIM));
+			markDirty();
+		}
+		return ClaimResult.success();
 	}
 
 	@Override
@@ -199,21 +197,18 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		if (chunk == null) {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
 		} else if (chunk.getTeamData() != this && !(adminOverride && source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) && !source.getServer().isSingleplayer()) {
-            return ClaimResult.StandardProblem.NOT_OWNER;
-        }
-
-		ClaimResult result = ClaimedChunkEvent.BEFORE_UNCLAIM.invoker().before(source, chunk).object();
-		if (result == null) {
-			result = chunk;
+			return ClaimResult.StandardProblem.NOT_OWNER;
 		}
 
-		if (checkOnly || !result.isSuccess()) {
-			return result;
+		DataOutcome<ClaimResult> result = ChunkChangeEvent.Pre.TYPE.post(new ChunkChangeEvent.Pre.Data(source, chunk, ChunkChangeEvent.Operation.UNCLAIM));
+		if (result.isFail()) {
+			return result.data().orElseThrow();
+		} else if (!checkOnly) {
+			chunk.unclaim(source, true);
+			markDirty();
 		}
 
-		chunk.unclaim(source, true);
-		markDirty();
-		return chunk;
+		return ClaimResult.success();
 	}
 
 	@Override
@@ -230,19 +225,17 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			return ClaimResult.StandardProblem.NOT_ENOUGH_POWER;
 		}
 
-		ClaimResult result = ClaimedChunkEvent.BEFORE_LOAD.invoker().before(source, chunk).object();
-		if (result == null) {
-			result = chunk;
-		}
-		if (checkOnly || !result.isSuccess()) {
-			return result;
+		DataOutcome<ClaimResult> result = ChunkChangeEvent.Pre.TYPE.post(new ChunkChangeEvent.Pre.Data(source, chunk, ChunkChangeEvent.Operation.LOAD));
+		if (result.isFail()) {
+			return result.data().orElseThrow();
+		} else if (!checkOnly) {
+			chunk.setForceLoadedTime(System.currentTimeMillis());
+			NativeEventPosting.get().postEvent(new ChunkChangeEvent.Post.Data(source, chunk, ChunkChangeEvent.Operation.LOAD));
+			chunk.getTeamData().markDirty();
+			chunk.sendUpdateToAll();
 		}
 
-		chunk.setForceLoadedTime(System.currentTimeMillis());
-		ClaimedChunkEvent.AFTER_LOAD.invoker().after(source, chunk);
-		chunk.getTeamData().markDirty();
-		chunk.sendUpdateToAll();
-		return chunk;
+		return ClaimResult.success();
 	}
 
 	@Override
@@ -261,16 +254,14 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			return ClaimResult.StandardProblem.NOT_LOADED;
 		}
 
-		ClaimResult result = ClaimedChunkEvent.BEFORE_UNLOAD.invoker().before(source, chunk).object();
-		if (result == null) {
-			result = chunk;
-		}
-		if (checkOnly || !result.isSuccess()) {
-			return result;
+		DataOutcome<ClaimResult> result = ChunkChangeEvent.Pre.TYPE.post(new ChunkChangeEvent.Pre.Data(source, chunk, ChunkChangeEvent.Operation.UNLOAD));
+		if (result.isFail()) {
+			return result.data().orElseThrow();
+		} else if (!checkOnly) {
+			chunk.unload(source);
 		}
 
-		chunk.unload(source);
-		return chunk;
+		return ClaimResult.success();
 	}
 
 	public void markDirty() {
@@ -344,88 +335,83 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		fakePlayerNameCache = null;
 	}
 
-	public SNBTCompoundTag serializeNBT() {
-		SNBTCompoundTag tag = new SNBTCompoundTag();
-		tag.putInt("max_claim_chunks", getMaxClaimChunks());
-		tag.putInt("max_force_load_chunks", getMaxForceLoadChunks());
-		if (extraClaimChunks > 0 && !team.isPartyTeam()) tag.putInt("extra_claim_chunks", extraClaimChunks);
-		if (extraForceLoadChunks > 0 && !team.isPartyTeam()) tag.putInt("extra_force_load_chunks", extraForceLoadChunks);
-		tag.putLong("last_login_time", lastLoginTime);
+	public Json5Object toJson() {
+		Json5Object tag = new Json5Object();
+		tag.addProperty("max_claim_chunks", getMaxClaimChunks());
+		tag.addProperty("max_force_load_chunks", getMaxForceLoadChunks());
+		if (extraClaimChunks > 0 && !team.isPartyTeam()) tag.addProperty("extra_claim_chunks", extraClaimChunks);
+		if (extraForceLoadChunks > 0 && !team.isPartyTeam()) tag.addProperty("extra_force_load_chunks", extraForceLoadChunks);
+		tag.addProperty("last_login_time", lastLoginTime);
 
-		CompoundTag chunksTag = new CompoundTag();
+		Json5Object chunksJson = new Json5Object();
 		for (ClaimedChunkImpl chunk : getClaimedChunks()) {
 			String key = chunk.getPos().dimension().identifier().toString();
-			ListTag chunksListTag = chunksTag.getList(key).orElse(new ListTag());
-			if (chunksListTag.isEmpty()) {
-				chunksTag.put(key, chunksListTag);
+			Json5Array chunksList = Json5Util.getJson5Array(chunksJson, key).orElse(new Json5Array());
+			if (chunksList.isEmpty()) {
+				chunksJson.add(key, chunksList);
 			}
-			chunksListTag.add(chunk.serializeNBT());
+			chunksList.add(chunk.toJson());
 		}
-		tag.put("chunks", chunksTag);
+		tag.add("chunks", chunksJson);
 
-		CompoundTag memberTag = new CompoundTag();
-		memberData.forEach((id, data) -> memberTag.put(id.toString(), data.serializeNBT()));
-		if (!memberTag.isEmpty()) {
-			tag.put("member_data", memberTag);
+		Json5Object members = new Json5Object();
+		memberData.forEach((id, data) -> members.add(id.toString(), data.toJson()));
+		if (!members.isEmpty()) {
+			tag.add("member_data", members);
 		}
 
 		if (!preventedAccess.isEmpty()) {
-			SNBTCompoundTag p = new SNBTCompoundTag();
-			preventedAccess.forEach((id, element) -> p.put(id.toString(), PreventedAccess.CODEC.encodeStart(NbtOps.INSTANCE, element).result().orElseThrow()));
-			tag.put("prevented_access", p);
+			Json5Object p = new Json5Object();
+			preventedAccess.forEach((id, element) -> p.add(id.toString(), PreventedAccess.CODEC.encodeStart(Json5Ops.INSTANCE, element).result().orElseThrow()));
+			tag.add("prevented_access", p);
 		}
 
 		return tag;
 	}
 
-	public void deserializeNBT(CompoundTag tag) {
-		maxClaimChunks = tag.getInt("max_claim_chunks").orElse(-1);
-		maxForceLoadChunks = tag.getInt("max_force_load_chunks").orElse(-1);
-		extraClaimChunks = tag.getInt("extra_claim_chunks").orElse(0);
-		extraForceLoadChunks = tag.getInt("extra_force_load_chunks").orElse(0);
-		lastLoginTime = tag.getLong("last_login_time").orElse(0L);
+	public void deserializeNBT(Json5Object json) {
+		maxClaimChunks = Json5Util.getInt(json, "max_claim_chunks").orElse(-1);
+		maxForceLoadChunks = Json5Util.getInt(json, "max_force_load_chunks").orElse(-1);
+		extraClaimChunks = Json5Util.getInt(json, "extra_claim_chunks").orElse(0);
+		extraForceLoadChunks = Json5Util.getInt(json, "extra_force_load_chunks").orElse(0);
+		lastLoginTime = Json5Util.getLong(json, "last_login_time").orElse(0L);
 		canForceLoadChunks = null;
 		claimedChunkCache = null;
 		forcedChunkCache = null;
 
-		tag.getCompound("chunks").ifPresent(chunksTag -> {
-            for (String key : chunksTag.keySet()) {
-				try {
-					ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, Identifier.parse(key));
-					ListTag chunksListTag = chunksTag.getList(key).orElse(new ListTag());
-
-					for (int i = 0; i < chunksListTag.size(); i++) {
-						ClaimedChunkImpl chunk = ClaimedChunkImpl.deserializeNBT(this, dimKey, chunksListTag.getCompound(i).orElseThrow());
-						manager.registerClaim(chunk.getPos(), chunk);
+		Json5Util.getJson5Object(json, "chunks").ifPresent(chunksJson ->
+				chunksJson.asMap().forEach((key, el) -> {
+					try {
+						ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, Identifier.parse(key));
+						Json5Array chunksListTag = el.getAsJson5Array();
+						for (int i = 0; i < chunksListTag.size(); i++) {
+							ClaimedChunkImpl chunk = ClaimedChunkImpl.fromJson(this, dimKey, chunksListTag.get(i).getAsJson5Object());
+							manager.registerClaim(chunk.getPos(), chunk);
+						}
+					} catch (IdentifierException ex) {
+						FTBChunks.LOGGER.error("ignoring bad dimension key {}", key);
 					}
-				} catch (IdentifierException ex) {
-					FTBChunks.LOGGER.error("ignoring bad dimension key {}", key);
-				}
-            }
-        });
+				}));
 
 		memberData.clear();
-		tag.getCompound("member_data").ifPresent(memberTag -> {
-            for (String key : memberTag.keySet()) {
-                try {
-                    UUID id = UUID.fromString(key);
-                    if (id != Util.NIL_UUID) {
-                        memberData.put(id, TeamMemberData.deserializeNBT(memberTag.getCompound(key).orElseThrow()));
-                    }
-                } catch (IllegalArgumentException e) {
-					FTBChunks.LOGGER.error("ignoring bad UUID {}", key);
-                }
-            }
-        });
+		Json5Util.getJson5Object(json, "member_data").ifPresent(memberJson ->
+				memberJson.asMap().forEach((key, el) -> {
+					try {
+						UUID id = UUID.fromString(key);
+						if (id != Util.NIL_UUID) {
+							memberData.put(id, TeamMemberData.fromJson(el.getAsJson5Object()));
+						}
+					} catch (IllegalArgumentException e) {
+						FTBChunks.LOGGER.error("ignoring bad UUID {}", key);
+					}
+				}));
 
 		preventedAccess.clear();
-
-        tag.getCompound("prevented_access").ifPresent(accessTag -> {
-            for (String key : accessTag.keySet()) {
-                preventedAccess.put(UUID.fromString(key), PreventedAccess.CODEC.parse(NbtOps.INSTANCE, accessTag.getCompound(key).orElseThrow()).result().orElseThrow());
-            }
-            prunePreventedLog();
-        });
+		Json5Util.getJson5Object(json, "prevented_access").ifPresent(accessJson -> {
+			accessJson.asMap().forEach((key, el) ->
+					preventedAccess.put(UUID.fromString(key), PreventedAccess.CODEC.parse(Json5Ops.INSTANCE, el).result().orElseThrow()));
+			prunePreventedLog();
+		});
 	}
 
 	@Override
@@ -471,14 +457,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		return true;
 	}
 
-	@NonNull
-	private TeamMemberData getTeamMemberData(UUID id) {
-		if (id.equals(Util.NIL_UUID)) {
-			FTBChunks.LOGGER.warn("attempt to get member data for nil UUID");
-			new RuntimeException().printStackTrace();
+	private TeamMemberData getTeamMemberData(UUID memberId) {
+		if (memberId.equals(Util.NIL_UUID)) {
+			FTBChunks.LOGGER.warn("attempt to get member data for nil UUID in team {}", getTeamId());
 			return TeamMemberData.defaultData();
 		}
-		return memberData.computeIfAbsent(id, k -> TeamMemberData.defaultData());
+		return memberData.computeIfAbsent(memberId, ignored -> TeamMemberData.defaultData());
 	}
 
 	public void updateChunkTickets(boolean load) {
@@ -486,7 +470,8 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			if (chunk.isForceLoaded()) {
 				ServerLevel level = manager.getMinecraftServer().getLevel(chunk.getPos().dimension());
 				if (level != null) {
-					FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, getTeamId(), chunk.getPos().x(), chunk.getPos().z(), load);
+					FTBChunksAPIImpl.INSTANCE.getForceLoadHandler()
+							.updateForceLoadingForChunk(level, getTeamId(), chunk.getPos().x(), chunk.getPos().z(), load);
 				}
 			}
 		});
@@ -494,12 +479,12 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 	public void saveNow() {
 		if (shouldSave) {
-            try {
-                SNBT.tryWrite(file, serializeNBT());
-            	shouldSave = false;
-            } catch (IOException e) {
-                FTBChunks.LOGGER.error("Failed to save chunk team data for team {}", team.getId(), e);
-            }
+			try {
+				Json5Util.tryWrite(file, toJson());
+				shouldSave = false;
+			} catch (IOException e) {
+				FTBChunks.LOGGER.error("Failed to save chunk team data for team {}", team.getId(), e);
+			}
 		}
 	}
 
@@ -590,9 +575,9 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		updateMemberLimitData(!memberData.isEmpty());
 
 		int prevMaxClaimed = maxClaimChunks;
-        int prevMaxForced = maxForceLoadChunks;
+		int prevMaxForced = maxForceLoadChunks;
 
-        if (!team.isPartyTeam()) {
+		if (!team.isPartyTeam()) {
 			TeamMemberData m = getTeamMemberData(getTeam().getId());
 			maxClaimChunks = m.getMaxClaims();
 			maxForceLoadChunks = m.getMaxForceLoads();
@@ -718,9 +703,9 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			ClaimedChunk chunk = getManager().getChunk(new ChunkDimPos(player));
 			if (hasChunkChanged(chunk)) {
 				if (chunk != null) {
-					player.displayClientMessage(chunk.getTeamData().getTeam().getColoredName(), true);
+					player.sendOverlayMessage(chunk.getTeamData().getTeam().getColoredName());
 				} else {
-					player.displayClientMessage(Component.translatable("wilderness").withStyle(ChatFormatting.DARK_GREEN), true);
+					player.sendOverlayMessage(Component.translatable("wilderness").withStyle(ChatFormatting.DARK_GREEN));
 				}
 			}
 			prevChunkX = chunkX;

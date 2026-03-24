@@ -1,17 +1,11 @@
 package dev.ftb.mods.ftbchunks.api;
 
 public enum ProtectionPolicy {
-	/**
-	 * Carry out extra checks before deciding if the action should be permitted
-	 */
+	/// Carry out extra checks before deciding if the action should be permitted
 	CHECK,
-	/**
-	 * Unconditionally deny permission
-	 */
+	/// Unconditionally deny permission
 	DENY,
-	/**
-	 * Unconditionally grant permission
-	 */
+	/// Unconditionally grant permission
 	ALLOW;
 
 	public boolean isOverride() {

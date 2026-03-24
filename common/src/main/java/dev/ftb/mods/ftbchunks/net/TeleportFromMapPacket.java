@@ -35,38 +35,35 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 	}
 
 	public static void handle(TeleportFromMapPacket message, PacketContext context) {
-		context.enqueue(() -> {
-			ServerPlayer p = (ServerPlayer) context.player();
-			ServerLevel level = p.level().getServer().getLevel(message.dimension);
+		ServerPlayer p = (ServerPlayer) context.player();
+		ServerLevel level = p.level().getServer().getLevel(message.dimension);
 
-			if (level != null && p.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
-				int x1 = message.pos.getX();
-				int y1 = message.pos.getY();
-				int z1 = message.pos.getZ();
+		if (level != null && p.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+			int x1 = message.pos.getX();
+			int y1 = message.pos.getY();
+			int z1 = message.pos.getZ();
 
-				if (message.unknownY) {
-					ChunkAccess chunkAccess = level.getChunkAt(message.pos);
+			if (message.unknownY) {
+				ChunkAccess chunkAccess = level.getChunkAt(message.pos);
 
-					int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x1, z1);
-					if (topY == chunkAccess.getMinY() - 1) {
-						return;
-					}
-
-					BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x1, topY + 2, z1);
-					int water = HeightUtils.getHeight(level, chunkAccess, blockPos);
-
-					if (blockPos.getY() == HeightUtils.UNKNOWN) {
-						blockPos.setY(70);
-					} else if (water != HeightUtils.UNKNOWN) {
-						blockPos.setY(Math.max(blockPos.getY(), water));
-					}
-
-					y1 = blockPos.getY() + 1;
+				int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x1, z1);
+				if (topY == chunkAccess.getMinY() - 1) {
+					return;
 				}
 
-				p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), true);
-			}
-		});
-	}
+				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x1, topY + 2, z1);
+				int water = HeightUtils.getHeight(level, chunkAccess, blockPos);
 
+				if (blockPos.getY() == HeightUtils.UNKNOWN) {
+					blockPos.setY(70);
+				} else if (water != HeightUtils.UNKNOWN) {
+					blockPos.setY(Math.max(blockPos.getY(), water));
+				}
+
+				y1 = blockPos.getY() + 1;
+			}
+
+			p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), true);
+		}
+	}
 }

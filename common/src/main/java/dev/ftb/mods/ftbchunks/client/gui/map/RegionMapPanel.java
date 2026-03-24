@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
-import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.AddMapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
@@ -15,6 +15,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -99,7 +100,7 @@ public class RegionMapPanel extends Panel {
 		Player player = ClientUtils.getClientPlayer();
 
 		mapIcons.clear();
-		MapIconEvent.LARGE_MAP.invoker().accept(new MapIconEvent(largeMapScreen.dimension.dimension, mapIcons, MapType.LARGE_MAP));
+		NativeEventPosting.get().postEvent(new AddMapIconEvent.Data(largeMapScreen.dimension.dimension, mapIcons::add, MapType.LARGE_MAP));
 
 		if (mapIcons.size() >= 2) {
 			mapIcons.sort(new MapIconComparator(player.position(), 1F));

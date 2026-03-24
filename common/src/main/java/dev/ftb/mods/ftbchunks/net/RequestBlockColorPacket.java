@@ -20,6 +20,6 @@ public enum RequestBlockColorPacket implements CustomPacketPayload {
     }
 
     public static void handle(RequestBlockColorPacket message, PacketContext context) {
-        context.enqueue(FTBChunksClientNet::handleBlockColorRequestPacket);
+        FTBChunksClientNet.handleBlockColorRequestPacket();
     }
 }

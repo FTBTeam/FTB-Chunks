@@ -28,12 +28,11 @@ public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {
     }
 
     public static void handle(OpenClaimGUIPacket message, PacketContext context) {
-        context.enqueue(() ->
-                FTBTeamsAPI.api().getClientManager().getTeamByID(message.teamId).ifPresentOrElse(
-                        ChunkScreen::openChunkScreen,
-                        () -> context.player().sendSystemMessage(Component.translatable(
-                                "ftbteams.team_not_found", message.teamId, ChatFormatting.RED))
-                ));
+        FTBTeamsAPI.api().getClientManager().getTeamByID(message.teamId).ifPresentOrElse(
+                ChunkScreen::openChunkScreen,
+                () -> context.player().sendSystemMessage(Component.translatable(
+                        "ftbteams.team_not_found", message.teamId, ChatFormatting.RED))
+        );
     }
 
 }

@@ -10,11 +10,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
+import org.jspecify.annotations.Nullable;
 
 public class BiomeComponent implements MinimapInfoComponent {
-
     public static final Identifier ID = FTBChunksAPI.id("biome");
 
+    @Nullable
     private ResourceKey<Biome> biomeKey;
 
     @Override
@@ -24,8 +25,10 @@ public class BiomeComponent implements MinimapInfoComponent {
 
     @Override
     public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
-        drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.minimap.biome").append(": ")
-                .append(Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath())), 0);
+        if (biomeKey != null) {
+            drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.minimap.biome").append(": ")
+                    .append(Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath())), 0);
+        }
     }
 
     @Override

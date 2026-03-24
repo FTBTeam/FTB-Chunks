@@ -29,16 +29,14 @@ public record SyncTXPacket(RegionSyncKey key, int offset, int total, byte[] data
 	}
 
 	public static void handle(SyncTXPacket message, PacketContext context) {
-		context.enqueue(() -> {
-			ServerPlayer serverPlayer = (ServerPlayer) context.player();
-			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
-			if (teamData != null) {
-				for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
-					if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
-						Server2PlayNetworking.send(p1, message);
-					}
+		ServerPlayer serverPlayer = (ServerPlayer) context.player();
+		ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
+		if (teamData != null) {
+			for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
+				if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
+					Server2PlayNetworking.send(p1, message);
 				}
 			}
-		});
+		}
 	}
 }

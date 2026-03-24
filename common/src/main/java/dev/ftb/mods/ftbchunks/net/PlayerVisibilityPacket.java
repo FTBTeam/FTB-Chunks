@@ -1,10 +1,10 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.client.VisibleClientPlayers;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
@@ -36,7 +36,7 @@ public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPa
 	}
 
 	public static void handle(PlayerVisibilityPacket message, PacketContext context) {
-		context.enqueue(() -> VisibleClientPlayers.updatePlayerList(message.uuids));
+		VisibleClientPlayers.updatePlayerList(message.uuids);
 	}
 
 	public static void syncToLevel(Level level) {

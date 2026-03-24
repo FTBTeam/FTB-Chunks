@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 

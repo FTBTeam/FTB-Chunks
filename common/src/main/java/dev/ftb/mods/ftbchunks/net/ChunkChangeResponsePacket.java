@@ -30,6 +30,6 @@ public record ChunkChangeResponsePacket(
     }
 
     public static void handle(ChunkChangeResponsePacket message, PacketContext context) {
-        context.enqueue(() -> ChunkScreenPanel.notifyChunkUpdates(message.totalChunks, message.changedChunks, message.problems));
+        ChunkScreenPanel.notifyChunkUpdates(message.totalChunks, message.changedChunks, message.problems);
     }
 }

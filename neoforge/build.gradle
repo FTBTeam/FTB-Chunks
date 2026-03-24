@@ -38,11 +38,9 @@ repositories {
 	}
 }
 
-apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
-
 dependencies {
 	implementation("dev.ftb.mods:ftb-library-neoforge:${rootProject.ftb_library_version}")
-	implementation("dev.ftb.mods:ftb-teams-neoforge:${rootProject.ftb_teams_version}") { transitive = false }
+	implementation("dev.ftb.mods:ftb-teams-neoforge:${rootProject.ftb_teams_version}")
 //	compileOnly("dev.ftb.mods:ftb-backups-3:${rootProject.ftb_backups3_version}") { transitive = false }
 }
 

@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.minimap.layers;
 
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.joml.Matrix3x2fStack;
 

@@ -2,16 +2,15 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.api.client.event.ChunksUpdatedFromServerEvent;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import dev.ftb.mods.ftbteams.api.Team;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 
-/**
- * Aggregates update-from-server events to avoid firing many events for individual chunk updates. Events are
- * aggregated by team ID (incl. none) and claim/load/expiry times.
- */
+/// Aggregates update-from-server events to avoid firing many events for individual chunk updates. Events are
+/// aggregated by team ID (incl. none) and claim/load/expiry times.
 class PendingUpdateEvents {
     private final Map<MapKey, Set<ChunkDimPos>> pendingMap = new HashMap<>();
 
@@ -20,9 +19,9 @@ class PendingUpdateEvents {
     }
 
     void fireEvents() {
-        pendingMap.forEach((key, chunks) -> ChunksUpdatedFromServerEvent.UPDATED.invoker().accept(
-                new ChunksUpdatedFromServerEvent(chunks, key.team, key.claimed, key.forceLoaded, key.expiry)
-        ));
+        pendingMap.forEach((key, chunks) -> NativeEventPosting.get().postEvent(
+                new ChunksUpdatedFromServerEvent.Data(chunks, key.team, key.claimed, key.forceLoaded, key.expiry))
+        );
         pendingMap.clear();
     }
 

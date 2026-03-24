@@ -1,13 +1,12 @@
 package dev.ftb.mods.ftbchunks.data;
 
+import de.marhali.json5.Json5Object;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksExpected;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
-import dev.ftb.mods.ftbchunks.PlayerNotifier;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.api.Protection;
-import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
+import dev.ftb.mods.ftbchunks.FTBChunksAPIImpl;
+import dev.ftb.mods.ftbchunks.api.*;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.util.PlayerNotifier;
+import dev.ftb.mods.ftblibrary.json5.Json5Util;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -17,7 +16,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -28,7 +26,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -41,7 +38,6 @@ import java.util.stream.Collectors;
 public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public static final LevelResource DATA_DIR = new LevelResource("ftbchunks");
 	private static final Long2ObjectMap<UUID> EMPTY_CHUNKS = Long2ObjectMaps.emptyMap();
-	protected static final String BYPASS_FTB_CHUNKS_PROTECTION = "BypassFTBChunksProtection";
 
 	@Nullable
 	private static ClaimedChunkManagerImpl instance;
@@ -103,7 +99,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 		map.forEach((pos, id) -> {
 			ChunkPos chunkPos = ChunkPos.unpack(pos);
-			FTBChunksExpected.addChunkToForceLoaded(level, FTBChunks.MOD_ID, id, chunkPos.x(), chunkPos.z(), true);
+			FTBChunksAPIImpl.INSTANCE.getForceLoadHandler()
+					.updateForceLoadingForChunk(level, id, chunkPos.x(), chunkPos.z(), true);
 		});
 
 		level.getChunkSource().save(false);
@@ -115,17 +112,17 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		Path path = dataDirectory.resolve(team.getId() + ".snbt");
 		ChunkTeamDataImpl data = new ChunkTeamDataImpl(this, path, team);
 
-        try {
-            CompoundTag dataFile = SNBT.tryRead(path);
+		try {
+			Json5Object dataFile = Json5Util.tryRead(path);
 
-            if (dataFile != null) {
-                data.deserializeNBT(dataFile);
-                teamData.put(team.getId(), data);
-                return data;
-            }
-        } catch (Exception ex) {
-            FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
-        }
+			if (dataFile != null) {
+				data.deserializeNBT(dataFile);
+				teamData.put(team.getId(), data);
+				return data;
+			}
+		} catch (Exception ex) {
+			FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
+		}
 
 		return data;
 	}
@@ -135,11 +132,11 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	}
 
 	@Override
-	public ChunkTeamDataImpl getOrCreateData(@NonNull Team team) {
+	public ChunkTeamDataImpl getOrCreateData(Team team) {
 		ChunkTeamDataImpl data = teamData.get(team.getId());
 		if (data == null) {
-            data = loadTeamData(team);
-            teamData.put(team.getId(), data);
+			data = loadTeamData(team);
+			teamData.put(team.getId(), data);
 		}
 
 		return data;
@@ -165,7 +162,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		ChunkTeamDataImpl data = teamData.get(toDelete.getId());
 
 		if (data != null && toDelete.getMembers().isEmpty()) {
-            FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
+			FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
 			teamData.remove(toDelete.getId());
 			try {
 				Files.deleteIfExists(data.getFile());
@@ -197,21 +194,19 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	@Override
 	public boolean getBypassProtection(UUID player) {
 		return teamManager.getPlayerTeamForPlayerID(player)
-				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION).orElse(false))
+				.map(team -> team.getProperty(FTBChunksProperties.BYPASS_PROTECTION))
 				.orElse(false);
-		}
+	}
 
 	@Override
 	public void setBypassProtection(UUID player, boolean bypass) {
-		teamManager.getPlayerTeamForPlayerID(player).ifPresent(team -> {
-			team.getExtraData().putBoolean(BYPASS_FTB_CHUNKS_PROTECTION, bypass);
-			team.markDirty();
-		});
+		teamManager.getPlayerTeamForPlayerID(player).ifPresent(team ->
+				team.setProperty(FTBChunksProperties.BYPASS_PROTECTION, bypass));
 	}
 
 	@Override
 	public boolean shouldPreventInteraction(@Nullable Entity actor, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
-		if (!(actor instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level() == null) {
+		if (!(actor instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level() == null || getBypassProtection(player.getUUID())) {
 			return false;
 		}
 
@@ -226,7 +221,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 			boolean prevented = policy.isOverride() ?
 					policy.shouldPreventInteraction() :
 					!player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
-            if (prevented) {
+			if (prevented) {
 				PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.action_prevented").withStyle(ChatFormatting.GOLD), 2000);
 				if (isFake) {
 					chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
@@ -258,7 +253,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 			for (ClaimedChunkImpl chunk : getAllClaimedChunks()) {
 				if (chunk.isActuallyForceLoaded()) {
-					Long2ObjectMap<UUID> pos2idMap = forceLoadedChunkCache.computeIfAbsent(chunk.getPos().dimension(), k -> new Long2ObjectOpenHashMap<>());
+					Long2ObjectMap<UUID> pos2idMap = forceLoadedChunkCache.computeIfAbsent(chunk.getPos().dimension(), ignored -> new Long2ObjectOpenHashMap<>());
 					pos2idMap.put(ChunkPos.pack(chunk.getPos().x(), chunk.getPos().z()), chunk.getTeamData().getTeamId());
 				}
 			}
@@ -269,7 +264,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		return Collections.unmodifiableMap(forceLoadedChunkCache);
 	}
 
-	@NonNull
 	@Override
 	public Long2ObjectMap<UUID> getForceLoadedChunks(ResourceKey<Level> dimension) {
 		return getForceLoadedChunks().getOrDefault(dimension, EMPTY_CHUNKS);

@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityIconUtils;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractGroupedButtonListScreen;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;

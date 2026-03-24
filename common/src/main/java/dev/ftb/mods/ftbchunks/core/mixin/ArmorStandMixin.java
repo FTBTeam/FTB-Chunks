@@ -14,12 +14,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ArmorStand.class)
 public abstract class ArmorStandMixin {
-	@Inject(method = "interactAt", at = @At("HEAD"), cancellable = true)
-	public void onInteractAt(Player player, Vec3 vec3, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
-		// this is a hack, but necessary since Forge's PlayerInteractEvent.EntityInteractSpecific event is currently broken in 1.18.2 (as of 40.1.84)
-		//   and Architectury doesn't currently handle this event at all on Forge or Fabric
+	@Inject(method = "interact", at = @At("HEAD"), cancellable = true)
+	public void onInteractAt(Player player, InteractionHand hand, Vec3 location, CallbackInfoReturnable<InteractionResult> cir) {
 		ArmorStand armorStand = (ArmorStand) (Object) this;
-		if (!player.level().isClientSide() && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, interactionHand, armorStand.blockPosition(), Protection.INTERACT_ENTITY, armorStand)) {
+		if (!player.level().isClientSide() && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, armorStand.blockPosition(), Protection.INTERACT_ENTITY, armorStand)) {
 			cir.setReturnValue(InteractionResult.FAIL);
 		}
 	}

@@ -24,6 +24,6 @@ public record LoginDataPacket(UUID serverId) implements CustomPacketPayload {
 	}
 
 	public static void handle(LoginDataPacket message, PacketContext context) {
-		context.enqueue(() -> FTBChunksClientNet.handleLoginDataPacket(message.serverId));
+		FTBChunksClientNet.handleLoginDataPacket(message.serverId);
 	}
 }

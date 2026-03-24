@@ -23,8 +23,6 @@ loom {
 	}
 }
 
-apply from: "https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/extra-local-mods.gradle"
-
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 

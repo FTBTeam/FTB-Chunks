@@ -1,14 +1,16 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import de.marhali.json5.Json5Array;
+import de.marhali.json5.Json5Object;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
+import dev.ftb.mods.ftblibrary.json5.Json5Ops;
+import dev.ftb.mods.ftblibrary.json5.Json5Util;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
-import dev.ftb.mods.ftblibrary.snbt.SNBTCompoundTag;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
@@ -33,11 +35,11 @@ public class TeamMemberData {
         return new TeamMemberData(FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS.get(), FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS.get(), false, new HashSet<>());
     }
 
-    public static TeamMemberData deserializeNBT(CompoundTag tag) {
-        int maxClaims = tag.getInt("max_claimed_chunks").orElse(FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS.get());
-        int maxForced = tag.getInt("max_force_loaded_chunks").orElse(FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS.get());
-        boolean offline = tag.getBoolean("offline_force_loader").orElse(false);
-        Set<ChunkDimPos> orig = tag.getCompound("original_claims").map(TeamMemberData::readOriginalClaims).orElse(Set.of());
+    public static TeamMemberData fromJson(Json5Object json) {
+        int maxClaims = Json5Util.getInt(json, "max_claimed_chunks").orElse(FTBChunksWorldConfig.MAX_CLAIMED_CHUNKS.get());
+        int maxForced = Json5Util.getInt(json,"max_force_loaded_chunks").orElse(FTBChunksWorldConfig.MAX_FORCE_LOADED_CHUNKS.get());
+        boolean offline = Json5Util.getBoolean(json,"offline_force_loader").orElse(false);
+        Set<ChunkDimPos> orig = Json5Util.getJson5Object(json, "original_claims").map(TeamMemberData::readOriginalClaims).orElse(Set.of());
 
         return new TeamMemberData(maxClaims, maxForced, offline, orig);
     }
@@ -51,52 +53,46 @@ public class TeamMemberData {
         );
     }
 
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = new CompoundTag();
+    public Json5Object toJson() {
+        Json5Object tag = new Json5Object();
 
-        tag.putInt("max_claimed_chunks", maxClaims);
-        tag.putInt("max_force_loaded_chunks", maxForceLoads);
-        tag.putBoolean("offline_force_loader", offlineForceLoader);
-        CompoundTag origTag = writeOriginalClaims();
-        if (!origTag.isEmpty()) tag.put("original_claims", origTag);
+        tag.addProperty("max_claimed_chunks", maxClaims);
+        tag.addProperty("max_force_loaded_chunks", maxForceLoads);
+        tag.addProperty("offline_force_loader", offlineForceLoader);
+        Json5Object origTag = writeOriginalClaims();
+        if (!origTag.isEmpty()) tag.add("original_claims", origTag);
 
         return tag;
     }
 
-    private CompoundTag writeOriginalClaims() {
-        CompoundTag origTag = new CompoundTag();
+    private Json5Object writeOriginalClaims() {
+        Json5Object origTag = new Json5Object();
 
-        Map<String, ListTag> perDimensionTags = new HashMap<>();
+        Map<String, Json5Array> perDimensionTags = new HashMap<>();
         originalClaims.forEach(cdp -> {
-            ListTag l = perDimensionTags.computeIfAbsent(cdp.dimension().identifier().toString(), k -> new ListTag());
-            SNBTCompoundTag cdpTag = new SNBTCompoundTag();
-            cdpTag.singleLine();
-            cdpTag.putInt("x", cdp.x());
-            cdpTag.putInt("z", cdp.z());
-            l.add(cdpTag);
+            Json5Array l = perDimensionTags.computeIfAbsent(cdp.dimension().identifier().toString(), ignored -> new Json5Array());
+            l.add(ChunkPos.CODEC.encodeStart(Json5Ops.INSTANCE, cdp.chunkPos()).getOrThrow());
         });
-        perDimensionTags.forEach(origTag::put);
+        perDimensionTags.forEach(origTag::add);
 
         return origTag;
     }
 
-    private static Set<ChunkDimPos> readOriginalClaims(CompoundTag tag) {
+    private static Set<ChunkDimPos> readOriginalClaims(Json5Object tag) {
         Set<ChunkDimPos> res = new HashSet<>();
-        for (String dimStr : tag.keySet()) {
+        tag.asMap().forEach((dimStr, el) -> {
             try {
-                Identifier id = Identifier.parse(dimStr);
-                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, id);
+                ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, Identifier.parse(dimStr));
                 Set<ChunkDimPos> cdpSet = new HashSet<>();
-                tag.getList(dimStr).orElse(new ListTag()).forEach(el -> {
-                    if (el instanceof CompoundTag c) {
-                        cdpSet.add(new ChunkDimPos(dimKey, c.getInt("x").orElseThrow(), c.getInt("z").orElseThrow()));
-                    }
+                el.getAsJson5Array().forEach(member -> {
+                    ChunkPos cp = ChunkPos.CODEC.parse(Json5Ops.INSTANCE, member).getOrThrow();
+                    cdpSet.add(new ChunkDimPos(dimKey, cp));
                 });
                 res.addAll(cdpSet);
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
-        }
+        });
         return res;
     }
 

@@ -1,5 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import com.mojang.logging.LogUtils;
+import com.mojang.serialization.JsonOps;
 import dev.ftb.mods.ftblibrary.client.gui.SimpleToast;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.*;
@@ -7,8 +9,6 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.platform.Platform;
-import com.mojang.logging.LogUtils;
-import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.entity.EntityRenderer;

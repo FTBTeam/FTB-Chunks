@@ -14,17 +14,15 @@ import java.util.stream.StreamSupport;
 
 @FunctionalInterface
 public interface Protection {
-	/**
-	 * Get the protection policy for a specific action
-	 *
-	 * @param player player doing the action
-	 * @param pos blockpos at which the action occurs
-	 * @param hand the hand the player is using
-	 * @param chunk the claimed chunk in which the action is occurring, or null if not in a claimed chunk
-	 * @param entity the entity being acted on, if any
-	 *
-	 * @return the protection policy
-	 */
+	/// Get the protection policy for a specific action
+	///
+	/// @param player player doing the action
+	/// @param pos blockpos at which the action occurs
+	/// @param hand the hand the player is using
+	/// @param chunk the claimed chunk in which the action is occurring, or null if not in a claimed chunk
+	/// @param entity the entity being acted on, if any
+	///
+	/// @return the protection policy
 	ProtectionPolicy getProtectionPolicy(ServerPlayer player, BlockPos pos, InteractionHand hand, @Nullable ClaimedChunk chunk, @Nullable Entity entity);
 
 	Protection EDIT_BLOCK = (player, pos, hand, chunk, entity) -> {

@@ -26,6 +26,6 @@ public record SyncRXPacket(RegionSyncKey key, int offset, int total, byte[] data
 	}
 
 	public static void handle(SyncRXPacket message, PacketContext context) {
-		context.enqueue(() -> FTBChunksClientNet.handleSyncRegionFromServer(message.key, message.offset, message.total, message.data));
+		FTBChunksClientNet.handleSyncRegionFromServer(message.key, message.offset, message.total, message.data);
 	}
 }

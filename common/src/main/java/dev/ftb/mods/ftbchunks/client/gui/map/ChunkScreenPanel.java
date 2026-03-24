@@ -2,17 +2,17 @@ package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
 import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.RenderMapImageTask;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapRegionCutoutTexture;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket;
 import dev.ftb.mods.ftbchunks.net.RequestMapDataPacket;
 import dev.ftb.mods.ftbchunks.net.UpdateForceLoadExpiryPacket;
@@ -49,7 +49,7 @@ import java.text.DateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static dev.ftb.mods.ftbchunks.net.RequestChunkChangePacket.ChunkChangeOp;
+import static dev.ftb.mods.ftbchunks.api.event.ChunkChangeEvent.Operation;
 
 public class ChunkScreenPanel extends Panel {
 	private static final ImageIcon FORCE_LOAD_ICON = new ImageIcon(FTBChunksAPI.id("textures/force_loaded.png"));
@@ -140,7 +140,7 @@ public class ChunkScreenPanel extends Panel {
 
 		if (!selectedChunks.isEmpty()) {
 			Optional<UUID> teamId = Optional.ofNullable(chunkScreen.getOpenedAs()).map(Team::getTeamId);
-			Play2ServerNetworking.send(new RequestChunkChangePacket(ChunkChangeOp.create(button.isLeft(), isShiftKeyDown()), selectedChunks, canChangeAsAdmin(), teamId));
+			Play2ServerNetworking.send(new RequestChunkChangePacket(Operation.createOnClient(button.isLeft(), isShiftKeyDown()), Set.copyOf(selectedChunks), canChangeAsAdmin(), teamId));
 			selectedChunks.clear();
 			firstSelectedChunk = null;
 			lastButtonDragged = null;
@@ -154,7 +154,7 @@ public class ChunkScreenPanel extends Panel {
 				.map(ChunkButtonPos::button)
 				.map(ChunkButton::getChunkPos)
 				.collect(Collectors.toSet());
-		Play2ServerNetworking.send(new RequestChunkChangePacket(ChunkChangeOp.UNCLAIM, allChunks, canChangeAsAdmin(), teamId));
+		Play2ServerNetworking.send(new RequestChunkChangePacket(Operation.UNCLAIM, allChunks, canChangeAsAdmin(), teamId));
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public record SendGeneralDataPacket(GeneralChunkData data) implements CustomPack
 	}
 
     public static void handle(SendGeneralDataPacket message, PacketContext context) {
-		context.enqueue(() -> FTBChunksClient.INSTANCE.updateGeneralData(message.data));
+		FTBChunksClient.INSTANCE.updateGeneralData(message.data);
 	}
 
 	public static void send(ChunkTeamData teamData, ServerPlayer player) {

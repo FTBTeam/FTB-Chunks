@@ -3,12 +3,13 @@ package dev.ftb.mods.ftbchunks.client.map;
 import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerAvailableEvent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -79,7 +80,7 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 			}
 			currentDimension = MapManager.getInstance().orElseThrow().getDimension(level.dimension());
 
-            WaypointManagerEvent.AVAILABLE.invoker().onAvailable(currentDimension.getWaypointManager());
+			NativeEventPosting.get().postEvent(new WaypointManagerAvailableEvent.Data(currentDimension.getWaypointManager()));
         }
 
 		return Optional.ofNullable(currentDimension);

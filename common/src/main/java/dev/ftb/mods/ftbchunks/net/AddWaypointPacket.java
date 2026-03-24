@@ -28,14 +28,12 @@ public record AddWaypointPacket(String name, GlobalPos position, int color, bool
     }
 
     public static void handle(AddWaypointPacket message, PacketContext context) {
-        context.enqueue(() -> {
-            if (message.useGui()) {
-                EditableString configName = new EditableString();
-                configName.setValue(message.name);
-                new WaypointAddScreen(configName, message.position).openGui();
-            } else {
-                FTBChunksClient.addWaypoint(message.name, message.position, message.color);
-            }
-        });
+        if (message.useGui()) {
+            EditableString configName = new EditableString();
+            configName.setValue(message.name);
+            new WaypointAddScreen(configName, message.position).openGui();
+        } else {
+            FTBChunksClient.addWaypoint(message.name, message.position, message.color);
+        }
     }
 }

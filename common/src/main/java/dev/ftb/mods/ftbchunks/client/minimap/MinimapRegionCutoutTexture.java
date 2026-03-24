@@ -6,9 +6,9 @@ import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -70,9 +70,6 @@ public class MinimapRegionCutoutTexture {
                 }
 
                 NativeImage regionImage = dynamicTexture.getPixels();
-                if (regionImage == null) {
-                    continue;
-                }
 
                 int imgSize = regionImage.getWidth();
                 int chunksPerRegion = imgSize / 16;

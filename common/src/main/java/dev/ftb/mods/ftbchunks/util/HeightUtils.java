@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.ftb.mods.ftbchunks.CustomMinYRegistryImpl;
+import dev.ftb.mods.ftbchunks.CustomMinYRegistry;
 import dev.ftb.mods.ftbchunks.client.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;
@@ -47,7 +47,7 @@ public class HeightUtils {
 			return UNKNOWN;
 		}
 
-		int startY = CustomMinYRegistryImpl.getInstance(level.isClientSide()).getMinYAt(level, pos);
+		int startY = CustomMinYRegistry.getInstance(level.isClientSide()).getMinYAt(level, pos);
 		int bottomY = Mth.clamp(startY, chunkAccess.getMinY(), chunkAccess.getMaxY());
 
 		int topY = pos.getY();

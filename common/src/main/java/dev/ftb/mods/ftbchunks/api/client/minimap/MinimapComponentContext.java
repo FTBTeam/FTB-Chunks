@@ -10,14 +10,12 @@ import net.minecraft.world.phys.Vec3;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Minimal context for Minimap Info Components
- *
- * @param mapDimension The dimension of the players location
- * @param mapChunksPos The chunk for the players location
- * @param playerPos the players pos
- * @param infoSettings raw settings for this component
- */
+/// Minimal context for Minimap Info Components
+///
+/// @param mapDimension The dimension of the players location
+/// @param mapChunksPos The chunk for the players location
+/// @param playerPos the players pos
+/// @param infoSettings raw settings for this component
 public record MinimapComponentContext(
    MapDimension mapDimension,
    XZ mapChunksPos,

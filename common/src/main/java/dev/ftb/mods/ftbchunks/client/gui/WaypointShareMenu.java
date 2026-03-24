@@ -1,7 +1,8 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.net.ShareWaypointPacket;
 import dev.ftb.mods.ftblibrary.client.gui.SimpleToast;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
@@ -14,7 +15,6 @@ import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.client.KnownClientPlayer;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;

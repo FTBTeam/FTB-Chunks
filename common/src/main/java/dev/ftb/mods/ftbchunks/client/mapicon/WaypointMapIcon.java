@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointAddScreen;
@@ -20,7 +21,6 @@ import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.GlobalPos;

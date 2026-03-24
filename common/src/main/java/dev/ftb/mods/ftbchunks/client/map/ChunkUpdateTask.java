@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -124,8 +124,8 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 			// state shouldn't ever be null here, but yay threads
 			// https://github.com/FTBTeam/FTB-Mods-Issues/issues/811
-			@SuppressWarnings("ConstantValue") Identifier id = state == null ? AIR : FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
-			int blockIndex = manager.getBlockColorIndex(id == null ? AIR : id);
+			@SuppressWarnings("ConstantValue") Identifier id = state == null ? AIR : BuiltInRegistries.BLOCK.getKey(state.getBlock());
+			int blockIndex = manager.getBlockColorIndex(id);
 
 			// Biome biome = biomeManager.getBiome(blockPos);
 			Biome biome = getNoiseBiome(blockPos.getX() >> 2, blockPos.getY() >> 2, blockPos.getZ() >> 2).value();
@@ -171,7 +171,7 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 	@Override
 	public Holder<Biome> getNoiseBiome(int x, int y, int z) {
-		if ((x >> 2) == chunkPos.x && (z >> 2) == chunkPos.z) {
+		if ((x >> 2) == chunkPos.x() && (z >> 2) == chunkPos.z()) {
 			return chunkAccess.getNoiseBiome(x, y, z);
 			// return biomeContainer.getNoiseBiome(x, y, z);
 		}

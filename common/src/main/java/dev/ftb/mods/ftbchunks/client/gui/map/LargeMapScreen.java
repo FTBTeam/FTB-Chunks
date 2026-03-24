@@ -1,10 +1,11 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.map.*;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
@@ -22,10 +23,8 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
-import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.resources.language.I18n;
@@ -211,8 +210,7 @@ public class LargeMapScreen extends BaseScreen {
             FTBChunksClientConfig.saveConfig();
             dimension.getManager().updateAllRegions(false);
             return true;
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key.event()) && Platform.get().isNeoForge()) {
-            // platform specific behaviour :(  why? ¯\_(ツ)_/¯
+        } else if (FTBChunksClient.openMapKey.matches(key.event())) {
             closeGui(false);
             return true;
         }

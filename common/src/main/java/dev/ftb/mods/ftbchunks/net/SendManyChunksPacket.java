@@ -60,7 +60,7 @@ public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, Li
 		return TYPE;
 	}
 
-	public static void handle(SendManyChunksPacket message, PacketContext context) {
+	public static void handle(SendManyChunksPacket message, PacketContext ignoredContext) {
 		FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, message.chunks);
 	}
 }

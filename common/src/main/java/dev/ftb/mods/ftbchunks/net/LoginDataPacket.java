@@ -23,7 +23,7 @@ public record LoginDataPacket(UUID serverId) implements CustomPacketPayload {
 		return TYPE;
 	}
 
-	public static void handle(LoginDataPacket message, PacketContext context) {
+	public static void handle(LoginDataPacket message, PacketContext ignoredContext) {
 		FTBChunksClientNet.handleLoginDataPacket(message.serverId);
 	}
 }

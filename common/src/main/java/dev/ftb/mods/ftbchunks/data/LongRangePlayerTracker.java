@@ -59,8 +59,6 @@ public enum LongRangePlayerTracker {
     public void stopTracking(ServerPlayer player) {
         // called when a player logs out or changes dimension
 
-        if (player.level().getServer() == null) return;
-
         Map<UUID,UUID> toRemove = new HashMap<>();
         for (UUID trackingId : trackingMap.rowKeySet()) {
             if (trackingMap.contains(trackingId, player.getUUID())) {

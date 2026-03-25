@@ -35,10 +35,10 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 	}
 
 	public static void handle(TeleportFromMapPacket message, PacketContext context) {
-		ServerPlayer p = (ServerPlayer) context.player();
-		ServerLevel level = p.level().getServer().getLevel(message.dimension);
+		ServerPlayer serverPlayer = (ServerPlayer) context.player();
+		ServerLevel level = serverPlayer.level().getServer().getLevel(message.dimension);
 
-		if (level != null && p.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+		if (level != null && serverPlayer.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
 			int x1 = message.pos.getX();
 			int y1 = message.pos.getY();
 			int z1 = message.pos.getZ();
@@ -63,7 +63,12 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 				y1 = blockPos.getY() + 1;
 			}
 
-			p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), true);
+			serverPlayer.teleportTo(level,
+					x1 + 0.5D, y1 + 0.1D, z1 + 0.5D,
+					Set.of(),
+					serverPlayer.getYRot(), serverPlayer.getXRot(),
+					true
+			);
 		}
 	}
 }

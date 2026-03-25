@@ -9,7 +9,7 @@ import java.util.OptionalInt;
 /// Functional interface to allow custom minimum Y levels to be returned for a given dimension and block position.
 /// The intention of this is to allow for custom areas of a map to be concealed from FTB Chunks mapping.
 ///
-/// Listen to the Architectury [CustomMinYEvent] event to register this method, on both client and server.
+/// See [CustomMinYEvent] event for information about registering this method, on both client and server.
 @FunctionalInterface
 public interface LevelMinYCalculator {
     /// Return the minimum effective mapping level for a given level and block position.

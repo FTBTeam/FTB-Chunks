@@ -25,7 +25,7 @@ public record SyncRXPacket(RegionSyncKey key, int offset, int total, byte[] data
 		return TYPE;
 	}
 
-	public static void handle(SyncRXPacket message, PacketContext context) {
+	public static void handle(SyncRXPacket message, PacketContext ignoredContext) {
 		FTBChunksClientNet.handleSyncRegionFromServer(message.key, message.offset, message.total, message.data);
 	}
 }

@@ -28,7 +28,7 @@ public record SendGeneralDataPacket(GeneralChunkData data) implements CustomPack
         return TYPE;
 	}
 
-    public static void handle(SendGeneralDataPacket message, PacketContext context) {
+    public static void handle(SendGeneralDataPacket message, PacketContext ignoredContext) {
 		FTBChunksClient.INSTANCE.updateGeneralData(message.data);
 	}
 

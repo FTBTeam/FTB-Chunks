@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.ftb.mods.ftbchunks.CustomMinYRegistry;
+import dev.ftb.mods.ftbchunks.data.CustomMinYRegistry;
 import dev.ftb.mods.ftbchunks.api.LevelMinYCalculator;
 import dev.ftb.mods.ftbchunks.api.event.CustomMinYEvent;
 import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;

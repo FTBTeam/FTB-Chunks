@@ -48,7 +48,7 @@ public record SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, ChunkSy
 		return TYPE;
 	}
 
-	public static void handle(SendChunkPacket message, PacketContext context) {
+	public static void handle(SendChunkPacket message, PacketContext ignoredContext) {
 		FTBChunksClientNet.handleSendChunkPacket(message.dimension, message.teamId, List.of(message.chunk));
 	}
 }

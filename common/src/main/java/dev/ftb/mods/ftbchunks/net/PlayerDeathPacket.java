@@ -23,7 +23,7 @@ public record PlayerDeathPacket(GlobalPos pos, int number) implements CustomPack
 		return TYPE;
 	}
 
-	public static void handle(PlayerDeathPacket message, PacketContext context) {
+	public static void handle(PlayerDeathPacket message, PacketContext ignoredContext) {
 		FTBChunksClientNet.handlePlayerDeathPacket(message.pos, message.number);
 	}
 }

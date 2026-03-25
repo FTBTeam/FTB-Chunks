@@ -1,4 +1,4 @@
-package dev.ftb.mods.ftbchunks;
+package dev.ftb.mods.ftbchunks.data;
 
 import dev.ftb.mods.ftbchunks.api.LevelMinYCalculator;
 import net.minecraft.core.BlockPos;

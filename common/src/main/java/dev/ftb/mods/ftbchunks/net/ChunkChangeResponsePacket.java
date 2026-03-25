@@ -29,7 +29,7 @@ public record ChunkChangeResponsePacket(
         return TYPE;
     }
 
-    public static void handle(ChunkChangeResponsePacket message, PacketContext context) {
+    public static void handle(ChunkChangeResponsePacket message, PacketContext ignoredContext) {
         ChunkScreenPanel.notifyChunkUpdates(message.totalChunks, message.changedChunks, message.problems);
     }
 }

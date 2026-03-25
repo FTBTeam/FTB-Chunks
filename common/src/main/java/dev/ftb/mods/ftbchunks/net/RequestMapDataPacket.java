@@ -23,7 +23,7 @@ public record RequestMapDataPacket(int fromX, int fromZ, int toX, int toZ) imple
 		return TYPE;
 	}
 
-	public static void handle(RequestMapDataPacket message, PacketContext context) {
+	public static void handle(RequestMapDataPacket ignoredMessage, PacketContext ignoredContext) {
 		//FIXME: SendMapDataPacket.send(Objects.requireNonNull(context.get().getSender())));
 	}
 }

@@ -35,13 +35,13 @@ public record PlayerVisibilityPacket(List<UUID> uuids) implements CustomPacketPa
 		return TYPE;
 	}
 
-	public static void handle(PlayerVisibilityPacket message, PacketContext context) {
+	public static void handle(PlayerVisibilityPacket message, PacketContext ignoredContext) {
 		VisibleClientPlayers.updatePlayerList(message.uuids);
 	}
 
 	public static void syncToLevel(Level level) {
 		if (level instanceof ServerLevel serverLevel) {
-			syncToPlayers(serverLevel.getPlayers(p -> true));
+			syncToPlayers(serverLevel.getPlayers(_ -> true));
 		}
 	}
 

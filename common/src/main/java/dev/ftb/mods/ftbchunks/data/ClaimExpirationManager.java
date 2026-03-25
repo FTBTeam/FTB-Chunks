@@ -83,7 +83,7 @@ public enum ClaimExpirationManager {
     }
 
     private void checkForTemporaryClaims(MinecraftServer server, final long now, Map<UUID, Collection<ClaimedChunk>> chunkMap) {
-        chunkMap.forEach((teamId, chunks) -> {
+        chunkMap.values().forEach(chunks -> {
             List<ClaimedChunk> expired = chunks.stream()
                     .filter(cc -> cc.isForceLoaded() && cc.hasForceLoadExpired(now))
                     .toList();
@@ -102,12 +102,12 @@ public enum ClaimExpirationManager {
 
     private static void unclaimChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync, CommandSourceStack sourceStack) {
         c.unclaim(sourceStack, false);
-        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), null));
+        toSync.computeIfAbsent(c.getPos().dimension(), _ -> new ArrayList<>()).add(ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), null));
     }
 
     private static void unloadChunk(long now, ClaimedChunk c, Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync, CommandSourceStack sourceStack) {
         c.unload(sourceStack);
-        toSync.computeIfAbsent(c.getPos().dimension(), s -> new ArrayList<>()).add(ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), c));
+        toSync.computeIfAbsent(c.getPos().dimension(), _ -> new ArrayList<>()).add(ChunkSyncInfo.create(now, c.getPos().x(), c.getPos().z(), c));
     }
 
     private static void syncChunks(Map<ResourceKey<Level>, List<ChunkSyncInfo>> toSync, MinecraftServer server, UUID teamId) {

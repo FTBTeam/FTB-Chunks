@@ -30,7 +30,7 @@ public record LoadedChunkViewPacket(ResourceKey<Level> dimension, Long2IntMap ch
 		return TYPE;
 	}
 
-	public static void handle(LoadedChunkViewPacket message, PacketContext context) {
+	public static void handle(LoadedChunkViewPacket message, PacketContext ignoredContext) {
 		FTBChunksClientNet.handleLoadedChunkViewPacket(message.dimension, message.chunks);
 	}
 }

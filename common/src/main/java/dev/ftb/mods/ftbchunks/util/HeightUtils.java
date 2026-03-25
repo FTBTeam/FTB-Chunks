@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.ftb.mods.ftbchunks.CustomMinYRegistry;
+import dev.ftb.mods.ftbchunks.data.CustomMinYRegistry;
 import dev.ftb.mods.ftbchunks.client.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.core.BlockStateFTBC;
 import net.minecraft.core.BlockPos;

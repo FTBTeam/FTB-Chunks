@@ -59,15 +59,10 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		Path localDirectory = Platform.get().paths().gamePath().resolve("local/ftbchunks");
 
 		try {
-			if (Files.notExists(dataDirectory)) {
-				Files.createDirectories(dataDirectory);
-			}
-
-			if (Files.notExists(localDirectory)) {
-				Files.createDirectories(localDirectory);
-			}
+			Files.createDirectories(dataDirectory);
+			Files.createDirectories(localDirectory);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			FTBChunks.LOGGER.error("failed to create {} or {}: {}", dataDirectory, localDirectory, ex.getMessage());
 		}
 	}
 
@@ -93,7 +88,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 	public void initForceLoadedChunks(ServerLevel level) {
 		var map = getForceLoadedChunks(level.dimension());
-		if (map.isEmpty() || level.getChunkSource() == null) {
+		if (map.isEmpty()) {
 			return;
 		}
 
@@ -105,7 +100,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 		level.getChunkSource().save(false);
 
-		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().identifier()));
+		FTBChunks.LOGGER.info("Force-loaded {} chunks in {}", map.size(), level.dimension().identifier());
 	}
 
 	private ChunkTeamDataImpl loadTeamData(Team team) {
@@ -206,7 +201,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 	@Override
 	public boolean shouldPreventInteraction(@Nullable Entity actor, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
-		if (!(actor instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level() == null || getBypassProtection(player.getUUID())) {
+		if (!(actor instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || getBypassProtection(player.getUUID())) {
 			return false;
 		}
 

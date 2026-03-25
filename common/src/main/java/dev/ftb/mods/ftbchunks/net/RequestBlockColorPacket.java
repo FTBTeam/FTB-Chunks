@@ -19,7 +19,7 @@ public enum RequestBlockColorPacket implements CustomPacketPayload {
         return TYPE;
     }
 
-    public static void handle(RequestBlockColorPacket message, PacketContext context) {
+    public static void handle(RequestBlockColorPacket ignoredMessage, PacketContext ignoredContext) {
         FTBChunksClientNet.handleBlockColorRequestPacket();
     }
 }

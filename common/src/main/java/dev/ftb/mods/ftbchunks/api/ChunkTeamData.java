@@ -119,12 +119,10 @@ public interface ChunkTeamData {
     boolean isAlly(UUID playerId);
 
     /// Check if the given player is allowed to use the given privacy property of this team. In general this will be
-    /// true if
-    ///
+    /// true if:
     ///   - the player is a member of the team
     ///   - the player is an ally of the team, and the property has a value of [dev.ftb.mods.ftbteams.api.property.PrivacyMode#ALLIES] or [dev.ftb.mods.ftbteams.api.property.PrivacyMode#PUBLIC]
     ///   - the property has a value of [dev.ftb.mods.ftbteams.api.property.PrivacyMode#PUBLIC]
-    ///
     ///
     /// @param player the player being checked
     /// @param property the team property to check (see [FTBChunksProperties] for a list of team properties added by FTB Chunks)

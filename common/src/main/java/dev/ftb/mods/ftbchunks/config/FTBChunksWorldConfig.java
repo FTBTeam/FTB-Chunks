@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.config;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
@@ -20,13 +21,7 @@ import java.util.Collections;
 public interface FTBChunksWorldConfig {
 	String KEY = FTBChunks.MOD_ID + "-world";
 
-	Config CONFIG = Config.create(KEY)
-			.comment("Server-specific configuration for FTB Chunks",
-					"Modpack defaults should be defined in <instance>/config/" + KEY + ".snbt",
-					"  (may be overwritten on modpack update)",
-					"Server admins may locally override this by copying into <instance>/world/serverconfig/" + KEY + ".snbt",
-					"  (will NOT be overwritten on modpack update)"
-			);
+	Config CONFIG = Config.create(KEY).standardTopLevelComment(FTBChunksAPI.MOD_NAME, KEY, false);
 
 	BooleanValue DISABLE_PROTECTION = CONFIG.addBoolean("disable_protection", false)
 			.comment("Disables all land protection. Useful for private servers where everyone is trusted and claims are only used for force-loading");

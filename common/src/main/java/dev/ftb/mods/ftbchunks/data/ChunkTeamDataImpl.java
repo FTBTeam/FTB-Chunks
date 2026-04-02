@@ -44,6 +44,7 @@ import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 	private final Map<UUID,PreventedAccess> preventedAccess = new HashMap<>();
 
-	public ChunkTeamDataImpl(ClaimedChunkManagerImpl manager, Path file, Team team) {
+	private ChunkTeamDataImpl(ClaimedChunkManagerImpl manager, Path file, Team team) {
 		this.manager = manager;
 		this.file = file;
 		this.team = team;
@@ -88,6 +89,26 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		extraForceLoadChunks = 0;
 		lastLoginTime = 0L;
 		memberData = new HashMap<>();
+	}
+
+	public static ChunkTeamDataImpl loadFromFile(ClaimedChunkManagerImpl manager, Path dataDirectory, Team team) {
+		Path path = dataDirectory.resolve(team.getId() + Json5Util.FILE_EXT);
+		ChunkTeamDataImpl data = new ChunkTeamDataImpl(manager, path, team);
+
+		try {
+			if (Files.exists(path)) {
+				Json5Object dataFile = Json5Util.tryRead(path);
+				data.deserializeJson(dataFile);
+			} else {
+				data.markDirty();
+				data.saveNow();
+				FTBChunks.LOGGER.info("Created initial chunk team data file {}", path);
+			}
+		} catch (Exception ex) {
+			FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
+		}
+
+		return data;
 	}
 
 	@Override
@@ -369,7 +390,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 		return tag;
 	}
 
-	public void deserializeNBT(Json5Object json) {
+	public void deserializeJson(Json5Object json) {
 		maxClaimChunks = Json5Util.getInt(json, "max_claim_chunks").orElse(-1);
 		maxForceLoadChunks = Json5Util.getInt(json, "max_force_load_chunks").orElse(-1);
 		extraClaimChunks = Json5Util.getInt(json, "extra_claim_chunks").orElse(0);

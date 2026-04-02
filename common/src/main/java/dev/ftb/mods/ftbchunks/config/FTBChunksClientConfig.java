@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.config;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.PointerIconMode;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
@@ -21,13 +22,7 @@ import java.util.stream.Stream;
 public interface FTBChunksClientConfig {
     String KEY = FTBChunks.MOD_ID + "-client";
 
-    Config CONFIG = Config.create(KEY)
-            .comment("Client-specific configuration for FTB Chunks",
-                    "Modpack defaults should be defined in <instance>/config/" + KEY + ".snbt",
-                    "  (may be overwritten on modpack update)",
-                    "Players may locally override this by copying into <instance>/local/" + KEY + ".snbt",
-                    "  (will NOT be overwritten on modpack update)"
-            );
+    Config CONFIG = Config.create(KEY).standardTopLevelComment(FTBChunksAPI.MOD_NAME, KEY, true);
 
     Config APPEARANCE = CONFIG.addGroup("appearance", 0);
     DoubleValue NOISE = APPEARANCE.addDouble("noise", 0.05D, 0D, 0.5D)

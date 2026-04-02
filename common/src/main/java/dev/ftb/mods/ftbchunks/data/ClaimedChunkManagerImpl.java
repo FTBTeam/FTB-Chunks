@@ -1,12 +1,10 @@
 package dev.ftb.mods.ftbchunks.data;
 
-import de.marhali.json5.Json5Object;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksAPIImpl;
 import dev.ftb.mods.ftbchunks.api.*;
 import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.util.PlayerNotifier;
-import dev.ftb.mods.ftblibrary.json5.Json5Util;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -103,25 +101,6 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		FTBChunks.LOGGER.info("Force-loaded {} chunks in {}", map.size(), level.dimension().identifier());
 	}
 
-	private ChunkTeamDataImpl loadTeamData(Team team) {
-		Path path = dataDirectory.resolve(team.getId() + ".snbt");
-		ChunkTeamDataImpl data = new ChunkTeamDataImpl(this, path, team);
-
-		try {
-			Json5Object dataFile = Json5Util.tryRead(path);
-
-			if (dataFile != null) {
-				data.deserializeNBT(dataFile);
-				teamData.put(team.getId(), data);
-				return data;
-			}
-		} catch (Exception ex) {
-			FTBChunks.LOGGER.error("Failed to load data for team {}: {}", team.getId(), ex.getMessage());
-		}
-
-		return data;
-	}
-
 	public MinecraftServer getMinecraftServer() {
 		return teamManager.getServer();
 	}
@@ -130,7 +109,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public ChunkTeamDataImpl getOrCreateData(Team team) {
 		ChunkTeamDataImpl data = teamData.get(team.getId());
 		if (data == null) {
-			data = loadTeamData(team);
+			data = ChunkTeamDataImpl.loadFromFile(this, dataDirectory, team);
 			teamData.put(team.getId(), data);
 		}
 

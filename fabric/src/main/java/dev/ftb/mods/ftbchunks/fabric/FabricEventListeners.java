@@ -72,7 +72,6 @@ public enum FabricEventListeners {
 
         ServerPlayerEvents.LEAVE.register(mod::onPlayerLogout);
         ServerPlayerEvents.COPY_FROM.register(mod::playerCloned);
-        ServerPlayerEvents.COPY_FROM.register(mod::playerCloned);
 
         // TODO bucket filling mixin (do we need this?)
 //        PlayerEvent.FILL_BUCKET.register(this::fillBucket);

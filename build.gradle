@@ -85,34 +85,34 @@ subprojects {
 			}
 		}
 
-		maven {
-			url "https://maven.fabricmc.net/"
-			content {
-				includeGroup "net.fabricmc"
-				includeGroup "org.spongepowered"
-			}
-		}
+//		maven {
+//			url "https://maven.fabricmc.net/"
+//			content {
+//				includeGroup "net.fabricmc"
+//				includeGroup "org.spongepowered"
+//			}
+//		}
 
-		maven {
-			url "https://www.cursemaven.com"
-			content {
-				includeGroup "curse.maven"
-			}
-		}
-
-		maven {
-			name "ModMaven (JEI)"
-			url "https://modmaven.dev/"
-			content {
-				includeGroup "mezz.jei"
-			}
-		}
-
-		maven {
-			// Emi
-			name = "TerraformersMC"
-			url = "https://maven.terraformersmc.com/"
-		}
+//		maven {
+//			url "https://www.cursemaven.com"
+//			content {
+//				includeGroup "curse.maven"
+//			}
+//		}
+//
+//		maven {
+//			name "ModMaven (JEI)"
+//			url "https://modmaven.dev/"
+//			content {
+//				includeGroup "mezz.jei"
+//			}
+//		}
+//
+//		maven {
+//			// Emi
+//			name = "TerraformersMC"
+//			url = "https://maven.terraformersmc.com/"
+//		}
 	}
 
 	processResources {

@@ -222,7 +222,8 @@ public class LargeMapScreen extends BaseScreen {
 			prevMouseY = getMouseY();
 			return true;
 		} else if (button.isRight()) {
-			final BlockPos pos = new BlockPos(regionPanel.blockX, regionPanel.blockY, regionPanel.blockZ);
+			int fixedY = Math.max(regionPanel.blockY, Minecraft.getInstance().level.getMinBuildHeight());
+			final BlockPos pos = new BlockPos(regionPanel.blockX, fixedY, regionPanel.blockZ);
 			List<ContextMenuItem> list = new ArrayList<>();
 			list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD, btn -> {
 				StringConfig name = new StringConfig();

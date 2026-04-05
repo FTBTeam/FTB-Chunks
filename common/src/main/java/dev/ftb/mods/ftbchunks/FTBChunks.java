@@ -41,6 +41,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Explosion;
@@ -282,9 +283,17 @@ public class FTBChunks {
 	public EventResult blockRightClick(Player player, InteractionHand hand, BlockPos pos, Direction face) {
 		// calling architectury stub method
 		//noinspection ConstantConditions
-		if (player instanceof ServerPlayer sp && ClaimedChunkManagerImpl.getInstance().shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockInteractProtection(), null)) {
-			FTBCUtils.forceHeldItemSync(sp, hand);
-			return EventResult.interruptFalse();
+		if (player instanceof ServerPlayer sp) {
+			boolean blockItem = sp.getItemInHand(hand).getItem() instanceof BlockItem;
+			ClaimedChunkManagerImpl mgr = ClaimedChunkManagerImpl.getInstance();
+			// not ideal since it also prevents right-clicking *any* blocks if holding a block item when block placement is prevented
+			//   but necessary - https://github.com/FTBTeam/FTB-Mods-Issues/issues/1752
+			if (mgr.shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockInteractProtection(), null)
+					|| blockItem && mgr.shouldPreventInteraction(player, hand, pos, FTBChunksExpected.getBlockPlaceProtection(), null))
+			{
+				FTBCUtils.forceHeldItemSync(sp, hand);
+				return EventResult.interruptFalse();
+			}
 		}
 
 		return EventResult.pass();

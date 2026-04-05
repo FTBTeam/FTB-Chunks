@@ -89,7 +89,7 @@ public class ShareWaypointPacket extends BaseC2SMessage {
                 playerListPlayer.sendChatMessage(OutgoingChatMessage.create(PlayerChatMessage.system("")
                         .withUnsignedContent(Component.translatable("ftbchunks.waypoint.shared", waypointText)
                                 .withStyle(style ->
-                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add-dim " + name + " " + cords + " " + dim + " white true"))))), false, bound2);
+                                        style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ftbchunks waypoint add-dim \"" + name + "\" " + cords + " " + dim + " white true"))))), false, bound2);
             }
         });
     }

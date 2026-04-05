@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2001.3.7]
+
+### Fixed
+* Fixed added waypoint Y values being way out in void dimensions
+* Fixed a dupe bug under certain circumstances
+* Fixed waypoint sharing not working for waypoints with spaces in their names
+
 ## [2001.3.6]
 
 ### Added

@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.google.gson.*;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.platform.Platform;
+import com.google.gson.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 	private static final Map<Identifier, BlockColor> BLOCK_ID_TO_COLOR_MAP = new HashMap<>();
-	private static final String BLOCK_COLOR_FILE = "ftbchunks_block_colors.json5";
+	private static final String BLOCK_COLOR_FILE = "ftbchunks_block_colors.json";
 
 	@Override
 	protected JsonObject prepare(ResourceManager resourceManager, ProfilerFiller profiler) {

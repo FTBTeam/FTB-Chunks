@@ -100,13 +100,13 @@ subprojects {
 //			}
 //		}
 //
-//		maven {
-//			name "ModMaven (JEI)"
-//			url "https://modmaven.dev/"
-//			content {
-//				includeGroup "mezz.jei"
-//			}
-//		}
+		maven {
+			name "ModMaven (JEI)"
+			url "https://modmaven.dev/"
+			content {
+				includeGroup "mezz.jei"
+			}
+		}
 //
 //		maven {
 //			// Emi

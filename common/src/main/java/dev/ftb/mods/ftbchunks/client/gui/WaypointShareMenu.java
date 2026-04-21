@@ -1,9 +1,8 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.authlib.GameProfile;
-import dev.architectury.networking.NetworkManager;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.net.ShareWaypointPacket;
 import dev.ftb.mods.ftblibrary.client.gui.SimpleToast;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
@@ -13,6 +12,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.NordButton;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Panel;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.client.KnownClientPlayer;
 import net.minecraft.ChatFormatting;
@@ -53,7 +53,7 @@ public class WaypointShareMenu {
 
     private static void shareWaypoint(Waypoint waypoint, ShareWaypointPacket.ShareType type, List<UUID> targets) {
         GlobalPos waypointPos = new GlobalPos(waypoint.getDimension(), waypoint.getPos());
-        NetworkManager.sendToServer(new ShareWaypointPacket(waypoint.getName(), waypointPos, type, targets));
+        Play2ServerNetworking.send(new ShareWaypointPacket(waypoint.getName(), waypointPos, type, targets));
         SimpleToast.info(Component.translatable("ftbchunks.waypoint.shared_by_you", waypoint.getDisplayName()), Component.empty());
     }
 

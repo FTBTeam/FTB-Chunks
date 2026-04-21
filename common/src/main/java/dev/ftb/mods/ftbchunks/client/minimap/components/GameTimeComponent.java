@@ -8,9 +8,11 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import dev.ftb.mods.ftblibrary.icon.LazyIcon;
+import dev.ftb.mods.ftblibrary.util.Lazy;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
@@ -21,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class GameTimeComponent implements MinimapInfoComponent {
     public static final Identifier ID = FTBChunksAPI.id("game_time");
-    private static final Icon<?> CLOCK_ICON = ItemIcon.ofItem(Items.CLOCK);
+    private static final Icon<?> CLOCK_ICON = new LazyIcon(Lazy.of(() -> ItemIcon.ofItem(Items.CLOCK)));
 
     @Override
     public Identifier id() {
@@ -29,14 +31,14 @@ public class GameTimeComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         String setting = context.getSetting(this);
         if (setting.equals(ClockedTimeMode.CLOCK.name())) {
             IconHelper.renderIcon(CLOCK_ICON, graphics, -8, 0, 16, 16);
             return;
         }
 
-        long time = ClientUtils.getClientLevel().getDayTime() % 24000L;
+        long time = ClientUtils.getClientLevel().getDefaultClockTime() % 24000L;
         int hours = (int) (time / 1000L);
         int minutes = (int) ((time % 1000L) * 60L / 1000L);
         int hourTime = hours + 6;

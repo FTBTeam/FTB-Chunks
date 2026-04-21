@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.gui.map.ChunkScreen;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.UUIDUtil;
@@ -27,13 +27,12 @@ public record OpenClaimGUIPacket(UUID teamId) implements CustomPacketPayload {
         return TYPE;
     }
 
-    public static void handle(OpenClaimGUIPacket message, NetworkManager.PacketContext context) {
-        context.queue(() ->
-                FTBTeamsAPI.api().getClientManager().getTeamByID(message.teamId).ifPresentOrElse(
-                        ChunkScreen::openChunkScreen,
-                        () -> context.getPlayer().displayClientMessage(Component.translatable(
-                                "ftbteams.team_not_found", message.teamId, ChatFormatting.RED), false)
-                ));
+    public static void handle(OpenClaimGUIPacket message, PacketContext context) {
+        FTBTeamsAPI.api().getClientManager().getTeamByID(message.teamId).ifPresentOrElse(
+                ChunkScreen::openChunkScreen,
+                () -> context.player().sendSystemMessage(Component.translatable(
+                        "ftbteams.team_not_found", message.teamId, ChatFormatting.RED))
+        );
     }
 
 }

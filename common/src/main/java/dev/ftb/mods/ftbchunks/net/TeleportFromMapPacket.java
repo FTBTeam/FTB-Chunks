@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,39 +34,41 @@ public record TeleportFromMapPacket(BlockPos pos, boolean unknownY, ResourceKey<
 		return TYPE;
 	}
 
-	public static void handle(TeleportFromMapPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> {
-			ServerPlayer p = (ServerPlayer) context.getPlayer();
-			ServerLevel level = p.level().getServer().getLevel(message.dimension);
+	public static void handle(TeleportFromMapPacket message, PacketContext context) {
+		ServerPlayer serverPlayer = (ServerPlayer) context.player();
+		ServerLevel level = serverPlayer.level().getServer().getLevel(message.dimension);
 
-			if (level != null && p.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
-				int x1 = message.pos.getX();
-				int y1 = message.pos.getY();
-				int z1 = message.pos.getZ();
+		if (level != null && serverPlayer.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+			int x1 = message.pos.getX();
+			int y1 = message.pos.getY();
+			int z1 = message.pos.getZ();
 
-				if (message.unknownY) {
-					ChunkAccess chunkAccess = level.getChunkAt(message.pos);
+			if (message.unknownY) {
+				ChunkAccess chunkAccess = level.getChunkAt(message.pos);
 
-					int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x1, z1);
-					if (topY == chunkAccess.getMinY() - 1) {
-						return;
-					}
-
-					BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x1, topY + 2, z1);
-					int water = HeightUtils.getHeight(level, chunkAccess, blockPos);
-
-					if (blockPos.getY() == HeightUtils.UNKNOWN) {
-						blockPos.setY(70);
-					} else if (water != HeightUtils.UNKNOWN) {
-						blockPos.setY(Math.max(blockPos.getY(), water));
-					}
-
-					y1 = blockPos.getY() + 1;
+				int topY = chunkAccess.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x1, z1);
+				if (topY == chunkAccess.getMinY() - 1) {
+					return;
 				}
 
-				p.teleportTo(level, x1 + 0.5D, y1 + 0.1D, z1 + 0.5D, Set.of(), p.getYRot(), p.getXRot(), true);
-			}
-		});
-	}
+				BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(x1, topY + 2, z1);
+				int water = HeightUtils.getHeight(level, chunkAccess, blockPos);
 
+				if (blockPos.getY() == HeightUtils.UNKNOWN) {
+					blockPos.setY(70);
+				} else if (water != HeightUtils.UNKNOWN) {
+					blockPos.setY(Math.max(blockPos.getY(), water));
+				}
+
+				y1 = blockPos.getY() + 1;
+			}
+
+			serverPlayer.teleportTo(level,
+					x1 + 0.5D, y1 + 0.1D, z1 + 0.5D,
+					Set.of(),
+					serverPlayer.getYRot(), serverPlayer.getXRot(),
+					true
+			);
+		}
+	}
 }

@@ -3,11 +3,16 @@
   "package": "dev.ftb.mods.ftbchunks.fabric.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "BlockItemMixin",
     "EndermanLeaveBlockMixin",
-    "EndermanTakeBlockMixin"
+    "EndermanTakeBlockMixin",
+    "EntityMixin",
+    "FarmlandBlockMixin",
+    "LivingEntityMixin",
+    "ServerExplosionMixin",
+    "ServerPlayerMixin"
   ],
   "client": [
-    "LevelRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

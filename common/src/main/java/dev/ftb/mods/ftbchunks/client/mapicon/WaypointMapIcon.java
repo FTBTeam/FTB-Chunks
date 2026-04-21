@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointAddScreen;
@@ -20,9 +19,10 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.*;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
@@ -139,7 +139,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
 
         if (player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.ofItem(Items.ENDER_PEARL), b -> {
-                NetworkManager.sendToServer(new TeleportFromMapPacket(waypoint.getPos().above(), false, waypoint.getDimension()));
+                Play2ServerNetworking.send(new TeleportFromMapPacket(waypoint.getPos().above(), false, waypoint.getDimension()));
                 screen.closeGui(false);
             }));
         }
@@ -189,7 +189,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
     }
 
     @Override
-    public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+    public void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         checkIcon();
 
         Icon<?> toDraw = outsideVisibleArea || mapType.isWorldIcon() ? outsideIcon : icon;
@@ -207,8 +207,8 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
             int dw = mc.font.width(ds);
             IconHelper.renderIcon(Color4I.DARK_GRAY.withAlpha(200), graphics, x + (w - nw) / 2 - 2, y - 14, nw + 4, 12);
             IconHelper.renderIcon(Color4I.DARK_GRAY.withAlpha(200), graphics, x + (w - dw) / 2 - 2, y + 18, dw + 4, 12);
-            graphics.drawString(mc.font, waypoint.getDisplayName(), x + (w - nw) / 2, y - 12, 0xFFFFFFFF, true);
-            graphics.drawString(mc.font, ds, x + (w - dw) / 2, y + 20, 0xFFFFFFFF, true);
+            graphics.text(mc.font, waypoint.getDisplayName(), x + (w - nw) / 2, y - 12, 0xFFFFFFFF, true);
+            graphics.text(mc.font, ds, x + (w - dw) / 2, y + 20, 0xFFFFFFFF, true);
         }
     }
 }

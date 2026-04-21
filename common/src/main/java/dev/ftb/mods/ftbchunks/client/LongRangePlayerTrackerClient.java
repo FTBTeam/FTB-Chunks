@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.authlib.GameProfile;
-import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.AddMapIconEvent;
 import dev.ftb.mods.ftbchunks.client.gui.map.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.mapicon.TrackedPlayerMapIcon;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
@@ -13,10 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Allows for tracking players on the map who are outside of normal vanilla tracking range
- * (thus are not present on the client as entities to be tracked).
- */
+/// Allows for tracking players on the map who are outside of normal vanilla tracking range
+/// (thus are not present on the client as entities to be tracked).
 public class LongRangePlayerTrackerClient {
     private final Map<UUID, TrackedPlayerMapIcon> tracked = new HashMap<>();
 
@@ -30,7 +28,7 @@ public class LongRangePlayerTrackerClient {
         }
     }
 
-    public void addAllToEvent(MapIconEvent event) {
+    public void addAllToEvent(AddMapIconEvent.Data event) {
         tracked.values().forEach(event::add);
     }
 

@@ -27,15 +27,8 @@ side = "BOTH"
 [[dependencies.ftbchunks]]
 modId = "minecraft"
 type = "required"
-versionRange = "[${mcversion},)"
+versionRange = "${minecraft_version_range_maven}"
 ordering = "NONE"
-side = "BOTH"
-
-[[dependencies.ftbchunks]]
-modId = "architectury"
-type = "required"
-versionRange = "[${archversion},)"
-ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.ftbchunks]]

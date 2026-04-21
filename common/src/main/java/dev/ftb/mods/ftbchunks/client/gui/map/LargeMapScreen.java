@@ -1,13 +1,11 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.map.*;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.client.config.editable.EditableColor;
@@ -25,9 +23,10 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -203,7 +202,7 @@ public class LargeMapScreen extends BaseScreen {
             movedToPlayer = false;
             return true;
         } else if (key.is(InputConstants.KEY_T)) {
-            NetworkManager.sendToServer(new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension));
+            Play2ServerNetworking.send(new TeleportFromMapPacket(regionPanel.blockPos().above(), regionPanel.blockY == HeightUtils.UNKNOWN, dimension.dimension));
             closeGui(false);
             return true;
         } else if (key.is(InputConstants.KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F3)) {
@@ -211,8 +210,7 @@ public class LargeMapScreen extends BaseScreen {
             FTBChunksClientConfig.saveConfig();
             dimension.getManager().updateAllRegions(false);
             return true;
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.openMapKey, key.event()) && Platform.isForgeLike()) {
-            // platform specific behaviour :(  why? ¯\_(ツ)_/¯
+        } else if (FTBChunksClient.openMapKey.matches(key.event())) {
             closeGui(false);
             return true;
         }
@@ -231,7 +229,7 @@ public class LargeMapScreen extends BaseScreen {
     }
 
     @Override
-    public boolean drawDefaultBackground(GuiGraphics graphics) {
+    public boolean drawDefaultBackground(GuiGraphicsExtractor graphics) {
         if (!movedToPlayer) {
             Player p = ClientUtils.getClientPlayer();
             regionPanel.resetScroll();
@@ -244,7 +242,7 @@ public class LargeMapScreen extends BaseScreen {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         if (grabbed != 0) {
             int mx = getMouseX();
             int my = getMouseY();
@@ -274,15 +272,15 @@ public class LargeMapScreen extends BaseScreen {
         double oy = -regionPanel.getScrollY() % s;
 
         for (int gx = 0; gx <= (w / s) + 1; gx++) {
-            graphics.vLine((int) (x + ox + gx * s), y, y + h, 0x64464646);
+            graphics.verticalLine((int) (x + ox + gx * s), y, y + h, 0x64464646);
         }
         for (int gy = 0; gy <= (h / s) + 1; gy++) {
-            graphics.hLine(x, x + w, (int) (y + oy + gy * s), 0x64464646);
+            graphics.horizontalLine(x, x + w, (int) (y + oy + gy * s), 0x64464646);
         }
     }
 
     @Override
-    public void drawForeground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawForeground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         String coords = "X: " + regionPanel.blockX + ", Y: " + (regionPanel.blockY == HeightUtils.UNKNOWN ? "??" : regionPanel.blockY) + ", Z: " + regionPanel.blockZ;
 
         if (regionPanel.blockY != HeightUtils.UNKNOWN) {

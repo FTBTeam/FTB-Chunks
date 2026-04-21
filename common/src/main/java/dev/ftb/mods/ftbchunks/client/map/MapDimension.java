@@ -3,12 +3,13 @@ package dev.ftb.mods.ftbchunks.client.map;
 import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerAvailableEvent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -20,7 +21,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
@@ -79,7 +79,7 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 			}
 			currentDimension = MapManager.getInstance().orElseThrow().getDimension(level.dimension());
 
-            WaypointManagerEvent.AVAILABLE.invoker().onAvailable(currentDimension.getWaypointManager());
+			NativeEventPosting.get().postEvent(new WaypointManagerAvailableEvent.Data(currentDimension.getWaypointManager()));
         }
 
 		return Optional.ofNullable(currentDimension);
@@ -95,7 +95,7 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 	}
 
 	public int getLoadedView(MapRegion region, int cx, int cz) {
-		return loadedChunkView.get(ChunkPos.asLong((region.pos.x() << 5) + cx, (region.pos.z() << 5) + cz));
+		return loadedChunkView.get(ChunkPos.pack((region.pos.x() << 5) + cx, (region.pos.z() << 5) + cz));
 	}
 
 	public Map<XZ, MapRegion> getRegions() {
@@ -243,7 +243,7 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 	}
 
 	@Override
-	public int compareTo(@NotNull MapDimension other) {
+	public int compareTo(MapDimension other) {
 		Identifier dim1id = this.dimension.identifier();
 		Identifier dim2id = other.dimension.identifier();
 		if (dim1id.getNamespace().equals("minecraft") && !dim2id.getNamespace().equals("minecraft")) {

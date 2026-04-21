@@ -1,14 +1,14 @@
 package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.gui.MinimapInfoSortScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
 import dev.ftb.mods.ftbchunks.client.map.WaypointType;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.screens.KeyReferenceScreen;
@@ -23,7 +23,7 @@ import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 
@@ -125,7 +125,7 @@ class MapScreenButtonPanel extends Panel {
                 settingsButton.onClicked(MouseButton.LEFT);
             }
             return true;
-        } else if (FTBChunksClient.doesKeybindMatch(FTBChunksClient.INSTANCE.waypointManagerKey, key.event())) {
+        } else if (FTBChunksClient.waypointManagerKey.isDown()) {
             waypointManagerButton.onClicked(MouseButton.LEFT);
             return true;
         }
@@ -134,9 +134,9 @@ class MapScreenButtonPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         graphics.fill(x, y, x + w, y + h, 0x30000000);
-        graphics.vLine(x + w, y - 1, y + h, 0x50000000);
+        graphics.verticalLine(x + w, y - 1, y + h, 0x50000000);
     }
 
     private static class SimpleTooltipButton extends SimpleButton {

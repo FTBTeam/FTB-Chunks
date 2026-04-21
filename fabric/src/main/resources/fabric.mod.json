@@ -26,9 +26,8 @@
 	],
 	"accessWidener": "ftbchunks.accesswidener",
 	"depends": {
-		"fabric": "${fabricapiversionrange}",
-		"minecraft": "~${mcversion}",
-		"architectury": ">=${archversion}",
+		"fabric-api": "${fabricapiversionrange}",
+		"minecraft": "${minecraft_version_range_semver}",
 		"ftblibrary": ">=${ftblibraryversion}",
 		"ftbteams": ">=${ftbteamsversion}"
 	}

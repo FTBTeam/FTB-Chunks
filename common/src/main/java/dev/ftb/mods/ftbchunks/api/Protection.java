@@ -14,17 +14,15 @@ import java.util.stream.StreamSupport;
 
 @FunctionalInterface
 public interface Protection {
-	/**
-	 * Get the protection policy for a specific action
-	 *
-	 * @param player player doing the action
-	 * @param pos blockpos at which the action occurs
-	 * @param hand the hand the player is using
-	 * @param chunk the claimed chunk in which the action is occurring, or null if not in a claimed chunk
-	 * @param entity the entity being acted on, if any
-	 *
-	 * @return the protection policy
-	 */
+	/// Get the protection policy for a specific action
+	///
+	/// @param player player doing the action
+	/// @param pos blockpos at which the action occurs
+	/// @param hand the hand the player is using
+	/// @param chunk the claimed chunk in which the action is occurring, or null if not in a claimed chunk
+	/// @param entity the entity being acted on, if any
+	///
+	/// @return the protection policy
 	ProtectionPolicy getProtectionPolicy(ServerPlayer player, BlockPos pos, InteractionHand hand, @Nullable ClaimedChunk chunk, @Nullable Entity entity);
 
 	Protection EDIT_BLOCK = (player, pos, hand, chunk, entity) -> {
@@ -91,7 +89,7 @@ public interface Protection {
 	};
 
 	Protection INTERACT_ENTITY = (player, pos, hand, chunk, entity) -> {
-		if (entity != null && entity.getType().is(FTBChunksTags.Entities.ENTITY_INTERACT_WHITELIST_TAG)) {
+		if (entity != null && entity.typeHolder().is(FTBChunksTags.Entities.ENTITY_INTERACT_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
 		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.ENTITY_INTERACT_MODE)) {
 			return ProtectionPolicy.ALLOW;
@@ -101,7 +99,7 @@ public interface Protection {
 	};
 
 	Protection ATTACK_NONLIVING_ENTITY = (player, pos, hand, chunk, entity) -> {
-		if (entity != null && entity.getType().is(FTBChunksTags.Entities.NONLIVING_ENTITY_ATTACK_WHITELIST_TAG)) {
+		if (entity != null && entity.typeHolder().is(FTBChunksTags.Entities.NONLIVING_ENTITY_ATTACK_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
 		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.NONLIVING_ENTITY_ATTACK_MODE)) {
 			return ProtectionPolicy.ALLOW;

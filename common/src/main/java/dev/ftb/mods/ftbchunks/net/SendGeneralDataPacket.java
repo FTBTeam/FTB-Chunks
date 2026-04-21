@@ -1,10 +1,11 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -27,8 +28,8 @@ public record SendGeneralDataPacket(GeneralChunkData data) implements CustomPack
         return TYPE;
 	}
 
-    public static void handle(SendGeneralDataPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClient.INSTANCE.updateGeneralData(message.data));
+    public static void handle(SendGeneralDataPacket message, PacketContext ignoredContext) {
+		FTBChunksClient.INSTANCE.updateGeneralData(message.data);
 	}
 
 	public static void send(ChunkTeamData teamData, ServerPlayer player) {
@@ -43,7 +44,7 @@ public record SendGeneralDataPacket(GeneralChunkData data) implements CustomPack
 		players.forEach(player ->
 				teamData.getTeamManager().getTeamForPlayer(player).ifPresent(team -> {
 					if (team.getId().equals(teamData.getTeam().getId())) {
-						NetworkManager.sendToPlayer(player, data);
+						Server2PlayNetworking.send(player, data);
 					}
 				}));
 	}

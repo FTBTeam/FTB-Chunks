@@ -10,12 +10,16 @@ import java.util.HashMap;
 public class BlockColors {
 	private static final HashMap<String, BlockColor> TYPE_MAP = new HashMap<>();
 
-	public static final BlockColor ERROR = register("error", (world, pos) -> Color4I.RED);
-	public static final BlockColor FOLIAGE = register("foliage", (world, pos) -> Color4I.rgb(BiomeColors.getAverageFoliageColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
-	public static final BlockColor GRASS = register("grass", (world, pos) -> Color4I.rgb(BiomeColors.getAverageGrassColor(world, pos)).withTint(Color4I.BLACK.withAlpha(50)));
-	public static final BlockColor IGNORED = register("ignored", new IgnoredBlockColor());
-
-	public static final BlockColor BOP_RAINBOW = register("bop_rainbow", (world, pos) -> Color4I.hsb((((float) pos.getX() + Mth.sin(((float) pos.getZ() + (float) pos.getX()) / 35) * 35) % 150) / 150, 0.6F, 0.5F));
+	public static final BlockColor ERROR = register("error",
+			(_, _) -> Color4I.RED);
+	public static final BlockColor FOLIAGE = register("foliage",
+			(level, pos) -> Color4I.rgb(BiomeColors.getAverageFoliageColor(level, pos)));
+	public static final BlockColor GRASS = register("grass",
+			(level, pos) -> Color4I.rgb(BiomeColors.getAverageGrassColor(level, pos)));
+	public static final BlockColor DYNAMIC = register("dynamic", DynamicBlockColor.INSTANCE);
+	public static final BlockColor IGNORED = register("ignored", IgnoredBlockColor.INSTANCE);
+	public static final BlockColor BOP_RAINBOW = register("bop_rainbow",
+			(_, pos) -> Color4I.hsb((((float) pos.getX() + Mth.sin(((float) pos.getZ() + (float) pos.getX()) / 35) * 35) % 150) / 150, 0.6F, 0.5F));
 
 	public static BlockColor register(String type, BlockColor color) {
 		TYPE_MAP.put(type, color);

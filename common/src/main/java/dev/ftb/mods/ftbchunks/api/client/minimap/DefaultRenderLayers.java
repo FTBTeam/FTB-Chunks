@@ -1,16 +1,14 @@
 package dev.ftb.mods.ftbchunks.api.client.minimap;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.event.MinimapLayerEvent;
+import dev.ftb.mods.ftbchunks.api.client.event.AddMinimapLayerEvent;
 import net.minecraft.resources.Identifier;
 
-/**
- * All the built-in minimap layer render IDs. You can use these to order against when adding custom layers via the
- * {@link MinimapLayerEvent}.
- * <p>
- * Note that adding a layer renderer before the {@code TERRAIN} layer (the first built-in layer) will probably result
- * in your layer being hidden by that layer!
- */
+/// All the built-in minimap layer render IDs. You can use these to order against when adding custom layers via the
+/// [AddMinimapLayerEvent].
+///
+/// Note that adding a layer renderer before the `TERRAIN` layer (the first built-in layer) will probably result
+/// in your layer being hidden by that layer!
 public class DefaultRenderLayers {
     public static final Identifier TERRAIN = FTBChunksAPI.id("terrain");
     public static final Identifier CROSSHAIRS = FTBChunksAPI.id("crosshairs");

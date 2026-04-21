@@ -1,20 +1,22 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.ColorMapLoader;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.core.BiomeFTBC;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.Team;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.IdentifierException;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -151,7 +153,7 @@ public class MapManager implements MapTask {
 		// Necessary if player is switching servers, e.g. with Velocity proxy or similar
 		shutdown();
 
-		Path dir = Platform.getGameFolder().resolve("local/ftbchunks/data/" + serverId);
+		Path dir = Platform.get().paths().gamePath().resolve("local/ftbchunks/data/" + serverId);
 		if (Files.notExists(dir)) {
 			try {
 				Files.createDirectories(dir);
@@ -328,15 +330,16 @@ public class MapManager implements MapTask {
 
 	public Block getBlock(int id) {
 		Identifier rl = blockColorIndexMap.get(id & 0xFFFFFF);
-		Block block = FTBChunks.BLOCK_REGISTRY.get(rl);
-		return block == null ? Blocks.AIR : block;
+		return BuiltInRegistries.BLOCK.get(rl)
+				.map(Holder.Reference::value)
+				.orElse(Blocks.AIR);
 	}
 
 	public BlockColor getBlockColor(int id) {
 		try {
 			return blockIdToColCache.computeIfAbsent(id & 0xFFFFFF, i -> ColorMapLoader.getBlockColor(blockColorIndexMap.get(i)));
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			FTBChunks.LOGGER.error("Exception thrown while trying to get block color for id {}: {}", id, ex.getMessage());
 			return BlockColors.ERROR;
 		}
 	}

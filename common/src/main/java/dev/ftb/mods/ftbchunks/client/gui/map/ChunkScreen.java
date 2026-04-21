@@ -2,9 +2,9 @@ package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.client.gui.screens.KeyReferenceScreen;
@@ -21,7 +21,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.permissions.Permissions;
@@ -40,7 +40,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         showScrollBar(false);
 
         largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
-                (simpleButton, mouseButton) -> LargeMapScreen.openMap()
+                (_, _) -> LargeMapScreen.openMap()
         );
 
         // force a refresh of the minimap texture, which is what we use as the claim GUI background
@@ -147,15 +147,15 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
             super(ChunkScreen.this);
 
             closeButton = new SimpleButton(this, Component.translatable("gui.close"), Icons.CANCEL,
-                    (btn, mb) -> doCancel())
+                    (_, _) -> doCancel())
                     .setForceButtonSize(false);
 
             mouseReferenceButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
-                    (btn, mb) -> new ChunkMouseReferenceScreen().openGui())
+                    (_, _) -> new ChunkMouseReferenceScreen().openGui())
                     .setForceButtonSize(false);
 
             removeAllClaims = new SimpleButton(this, Component.translatable("ftbchunks.gui.unclaim_all"), Icons.BIN,
-                    (btn, mb) -> {
+                    (_, _) -> {
                         if (isShiftKeyDown()) {
                             mainPanel.removeAllClaims();
                         } else {
@@ -191,7 +191,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         }
 
         @Override
-        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawPanelBackground(graphics, x, y, w, h);
             IconHelper.renderIcon(Color4I.BLACK.withAlpha(80), graphics, x, y + h - 1, w, 1);
         }
@@ -202,7 +202,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
             private static final Component MORE_INFO = Component.translatable("ftbchunks.gui.admin_mode_info").withStyle(ChatFormatting.GRAY);
 
             public AdminButton() {
-                super(CustomTopPanel.this, false, Icons.LOCK_OPEN, Icons.LOCK, (btn, newState) ->
+                super(CustomTopPanel.this, false, Icons.LOCK_OPEN, Icons.LOCK, (_, newState) ->
                         ChunkScreen.this.getChunkScreen().isAdminEnabled = newState);
                 setEnabledText(ENABLED);
                 setDisabledText(DISABLED);
@@ -217,10 +217,10 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
         private class ClaimModeButton extends SimpleButton {
             public ClaimModeButton() {
-                super(CustomTopPanel.this, FTBChunksClientConfig.CLAIM_MODE.get().description(), FTBChunksClientConfig.CLAIM_MODE.get().icon(), (widget, button) -> {
+                super(CustomTopPanel.this, FTBChunksClientConfig.CLAIM_MODE.get().description(), FTBChunksClientConfig.CLAIM_MODE.get().icon(), (btn, _) -> {
                     GuiClaimMode newClaimMode = FTBChunksClientConfig.CLAIM_MODE.get().next();
-                    widget.setIcon(newClaimMode.icon());
-                    widget.setTitle(newClaimMode.description());
+                    btn.setIcon(newClaimMode.icon());
+                    btn.setTitle(newClaimMode.description());
                     FTBChunksClientConfig.CLAIM_MODE.set(newClaimMode);
                 });
             }
@@ -253,7 +253,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         }
 
         @Override
-        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawPanelBackground(graphics, x, y, w, h);
 
             IconHelper.renderIcon(Color4I.GRAY.withAlpha(64), graphics, x, y, w, 1);

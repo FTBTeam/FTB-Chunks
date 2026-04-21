@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.mapicon;
 
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader.EntityIconSettings;
 import net.minecraft.core.registries.BuiltInRegistries;

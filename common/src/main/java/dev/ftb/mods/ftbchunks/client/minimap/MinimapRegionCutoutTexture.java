@@ -1,15 +1,16 @@
 package dev.ftb.mods.ftbchunks.client.minimap;
 
+import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.client.map.MapDimension;
+import dev.ftb.mods.ftbchunks.client.map.MapRegion;
+import dev.ftb.mods.ftbchunks.client.map.MapRegionTexture;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftblibrary.math.XZ;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
-import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
-import dev.ftb.mods.ftbchunks.client.map.MapDimension;
-import dev.ftb.mods.ftbchunks.client.map.MapRegion;
-import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
@@ -64,15 +65,16 @@ public class MinimapRegionCutoutTexture {
                 int oz = chunkPos.z() + mz - FTBChunks.TILE_OFFSET;
 
                 MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
-                DynamicTexture dynamicTexture = region.regionTexture().bakedTexture();
+                MapRegionTexture regionTexture = region.regionTexture();
+                DynamicTexture dynamicTexture = regionTexture.bakedTexture();
+                
                 if (dynamicTexture == null) {
+                    // Trigger baking if not already in progress
+                    regionTexture.requestBake();
                     continue;
                 }
 
                 NativeImage regionImage = dynamicTexture.getPixels();
-                if (regionImage == null) {
-                    continue;
-                }
 
                 int imgSize = regionImage.getWidth();
                 int chunksPerRegion = imgSize / 16;

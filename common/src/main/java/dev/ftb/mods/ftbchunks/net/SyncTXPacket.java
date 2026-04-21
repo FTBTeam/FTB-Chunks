@@ -1,10 +1,11 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
+import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -27,17 +28,15 @@ public record SyncTXPacket(RegionSyncKey key, int offset, int total, byte[] data
 		return TYPE;
 	}
 
-	public static void handle(SyncTXPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> {
-			ServerPlayer serverPlayer = (ServerPlayer) context.getPlayer();
-			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
-			if (teamData != null) {
-				for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
-					if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
-						NetworkManager.sendToPlayer(p1, message);
-					}
+	public static void handle(SyncTXPacket message, PacketContext context) {
+		ServerPlayer serverPlayer = (ServerPlayer) context.player();
+		ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(serverPlayer);
+		if (teamData != null) {
+			for (ServerPlayer p1 : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
+				if (p1 != serverPlayer && teamData.isAlly(serverPlayer.getUUID())) {
+					Server2PlayNetworking.send(p1, message);
 				}
 			}
-		});
+		}
 	}
 }

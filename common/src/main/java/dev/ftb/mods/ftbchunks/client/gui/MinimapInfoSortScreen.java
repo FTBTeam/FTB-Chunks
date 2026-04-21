@@ -4,7 +4,7 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.*;
@@ -14,7 +14,7 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -105,7 +105,6 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
     }
 
     public class InfoEntry extends Panel {
-
         private final Button down;
         private final Button up;
         private final SimpleButton hideButton;
@@ -128,7 +127,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
                 playClickSound();
             }) {
                 @Override
-                public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+                public void drawIcon(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
                     super.drawIcon(graphics, theme, x, y, 12, 12);
                 }
             };
@@ -172,7 +171,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         }
 
         @Override
-        public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             theme.drawWidget(graphics, x, y, w, h, getWidgetType());
             if (isMouseOver()) {
                 IconHelper.renderIcon(Color4I.WHITE.withAlpha(33), graphics, x, y, w, h);
@@ -180,11 +179,9 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
             super.draw(graphics, theme, x, y, w, h);
         }
 
-        /**
-         * moves the current MiniMapInfoComponent in our ordered list and saves the new order for rendering
-         * @param forward true if the current value `down` the list and false if `up` the list
-         * @param end true if the current value is the last value in the list and false if it is not
-         */
+        /// moves the current MiniMapInfoComponent in our ordered list and saves the new order for rendering
+        /// @param forward true if the current value `down` the list and false if `up` the list
+        /// @param end true if the current value is the last value in the list and false if it is not
         private void move(boolean forward, boolean end) {
             List<Identifier> list = new LinkedList<>(infoSortList);
             if (end) {
@@ -227,7 +224,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         }
 
         @Override
-        public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             super.drawIcon(graphics, theme, x - 1, y - 2, 6, 8);
         }
     }

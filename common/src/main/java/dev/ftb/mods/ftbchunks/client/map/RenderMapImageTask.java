@@ -1,27 +1,28 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import dev.architectury.platform.Platform;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.net.LoadedChunkViewPacket;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -130,7 +131,7 @@ public class RenderMapImageTask implements MapTask {
 				}
 			}
 
-			var parent = Platform.getGameFolder().resolve("local/ftbchunks/debug/");
+			var parent = Platform.get().paths().gamePath().resolve("local/ftbchunks/debug/");
 			if (!Files.exists(parent)) {
 				try {
 					Files.createDirectories(parent);
@@ -139,7 +140,7 @@ public class RenderMapImageTask implements MapTask {
 				}
 			}
 
-			try (OutputStream stream = Files.newOutputStream(Platform.getGameFolder().resolve("local/ftbchunks/debug/" + region + "-" + getter.getName() + ".png"))) {
+			try (OutputStream stream = Files.newOutputStream(parent.resolve(region + "-" + getter.getName() + ".png"))) {
 				ImageIO.write(export, "PNG", stream);
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -211,7 +212,7 @@ public class RenderMapImageTask implements MapTask {
 
 		float[] hsb = new float[3];
 		Team ownTeam = FTBTeamsAPI.api().getClientManager().selfTeam();
-		Level world = Minecraft.getInstance().level;
+		ClientLevel level = Objects.requireNonNull(Minecraft.getInstance().level);
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
 		MapMode mapMode = FTBChunksClientConfig.MAP_MODE.get();
@@ -291,8 +292,8 @@ public class RenderMapImageTask implements MapTask {
 								regionImage.setPixel(ax, az, fullClaimColor);
 								continue;
 							} else {
-								if (blockColor instanceof CustomBlockColor cbc) {
-									col = cbc.getColor();
+								if (blockColor instanceof CustomBlockColor(Color4I color)) {
+									col = color;
 								} else if (blockColor == BlockColors.FOLIAGE) {
 									if (foliage == null) {
 										foliage = initFoliage(blend, data);
@@ -306,7 +307,7 @@ public class RenderMapImageTask implements MapTask {
 									col = getColor(blend, grass, ax, az).withAlpha(255).withTint(Color4I.BLACK.withAlpha(grassDarkness));
 								} else {
 									// This is unsafe but should be *mostly* fine
-									col = blockColor.getBlockColor(world, blockPos).withAlpha(255);
+									col = blockColor.getBlockColor(level, blockPos).withAlpha(255);
 								}
 
 								if (mapMode == MapMode.NIGHT) {

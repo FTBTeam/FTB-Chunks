@@ -5,16 +5,17 @@ import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.UnknownNullability;
 import org.joml.Matrix3x2fStack;
 
 public enum IconLayerRenderer implements MinimapLayerRenderer {
     INSTANCE;
 
     @Override
-    public void renderLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
+    public void extractLayer(@UnknownNullability GuiGraphicsExtractor graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
         for (MapIcon icon : ctx.mapIcons()) {
             // map icons (waypoints, entities...)
             Vec3 pos = icon.getPos(ctx.deltaTracker().getGameTimeDeltaPartialTick(false));

@@ -2,8 +2,8 @@ package dev.ftb.mods.ftbchunks.client.map;
 
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.mapicon.WaypointMapIcon;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;

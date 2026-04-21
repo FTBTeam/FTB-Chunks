@@ -9,7 +9,7 @@ import dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -34,7 +34,7 @@ public class PointerIcon implements MapIcon {
     }
 
     @Override
-    public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
+    public void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
         Player player = ClientUtils.getClientPlayer();
         graphics.pose().pushMatrix();
         graphics.pose().translate(x + w / 2f, y + h / 2f);

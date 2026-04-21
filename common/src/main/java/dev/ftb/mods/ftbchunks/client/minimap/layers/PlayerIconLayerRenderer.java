@@ -3,14 +3,14 @@ package dev.ftb.mods.ftbchunks.client.minimap.layers;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapLayerRenderer;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapRenderContext;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.PointerIconMode;
 import dev.ftb.mods.ftbchunks.client.gui.PointerIcon;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityMapIcon;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix3x2fStack;
@@ -19,7 +19,7 @@ public enum PlayerIconLayerRenderer implements MinimapLayerRenderer {
     INSTANCE;
 
     @Override
-    public void renderLayer(GuiGraphics graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
+    public void extractLayer(GuiGraphicsExtractor graphics, Matrix3x2fStack poseStack, MinimapRenderContext ctx) {
         Player player = ClientUtils.getClientPlayer();
 
         // pointer icon at the map centre (player position)
@@ -48,7 +48,7 @@ public enum PlayerIconLayerRenderer implements MinimapLayerRenderer {
     }
 
     @Override
-    public boolean shouldRender(MinimapRenderContext ctx) {
+    public boolean shouldExtract(MinimapRenderContext ctx) {
         return ctx.rotationLocked() || FTBChunksClientConfig.SHOW_PLAYER_WHEN_UNLOCKED.get();
     }
 }

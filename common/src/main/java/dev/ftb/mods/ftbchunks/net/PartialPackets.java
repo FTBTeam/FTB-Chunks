@@ -68,7 +68,7 @@ public class PartialPackets<Key, Packet> {
 	}
 
 	public void read(Key key, int offset, final int total, byte[] data) {
-		PartialData partialData = map.computeIfAbsent(key, s -> new PartialData(total));
+		PartialData partialData = map.computeIfAbsent(key, _ -> new PartialData(total));
 
 		System.arraycopy(data, 0, partialData.data, offset, data.length);
 		partialData.remaining -= data.length;

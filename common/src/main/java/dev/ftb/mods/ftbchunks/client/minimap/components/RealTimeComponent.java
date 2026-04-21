@@ -6,7 +6,7 @@ import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -25,7 +25,7 @@ public class RealTimeComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         String setting = context.getSetting(this);
         LocalTime now = LocalTime.now();
         int hours = now.getHour();

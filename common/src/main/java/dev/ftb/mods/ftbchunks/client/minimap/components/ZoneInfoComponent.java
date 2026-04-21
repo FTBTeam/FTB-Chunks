@@ -9,9 +9,10 @@ import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
@@ -21,10 +22,12 @@ import java.util.stream.Collectors;
 
 public class ZoneInfoComponent implements MinimapInfoComponent {
     public static final Identifier ID = FTBChunksAPI.id("zone");
-    public static final Component WILDNESS = Component.translatable("wilderness").withStyle(s -> s.withColor(ChatFormatting.DARK_GREEN).withItalic(true));
+    public static final Component WILDERNESS = Component.translatable("wilderness").withStyle(s -> s.withColor(ChatFormatting.DARK_GREEN).withItalic(true));
 
     @Nullable
     private Team team;
+    private boolean shouldRender;
+    private long lastCheck = 0L;
 
     @Override
     public Identifier id() {
@@ -32,31 +35,39 @@ public class ZoneInfoComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         String setting = context.getSetting(this);
 
         if (team != null) {
             drawCenteredText(context.minecraft().font, graphics, team.getColoredName(), 0);
         } else if (setting.equals(ShowWilderness.SHOW_WILDERNESS.name())) {
-            drawCenteredText(context.minecraft().font, graphics, WILDNESS, 0);
+            drawCenteredText(context.minecraft().font, graphics, WILDERNESS, 0);
         }
     }
 
     @Override
     public boolean shouldRender(MinimapComponentContext context) {
-        var data = context.mapDimension().getRegion(XZ.regionFromChunk(context.mapChunksPos().x(), context.mapChunksPos().z())).getData();
+        // we don't want to be checking the chunk ownership every frame... every 500ms should be good enough
+        long now = Util.getEpochMillis();
+        if (now - lastCheck > 500L) {
+            lastCheck = now;
+            team = null;
 
-        team = null;
-        if (data != null) {
-            Optional<Team> foundTeam = data.getChunk(XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).getTeam();
-            if (foundTeam.isPresent()) {
-                team = foundTeam.get();
-                return true;
+            var data = context.mapDimension().getRegion(XZ.regionFromChunk(context.mapChunksPos().x(), context.mapChunksPos().z())).getData();
+            if (data != null) {
+                Optional<Team> foundTeam = data.getChunk(XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).getTeam();
+                if (foundTeam.isPresent()) {
+                    team = foundTeam.get();
+                    shouldRender = true;
+                }
+            }
+            if (team == null) {
+                String setting = context.getSetting(this);
+                shouldRender = !setting.isEmpty() && !setting.equals(ShowWilderness.JUST_CLAIMED.name());
             }
         }
 
-        String setting = context.getSetting(this);
-        return !setting.isEmpty() && !setting.equals(ShowWilderness.JUST_CLAIMED.name());
+        return shouldRender;
     }
 
 

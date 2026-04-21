@@ -2,15 +2,15 @@ package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.JsonOps;
-import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftblibrary.client.gui.SimpleToast;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.*;
 import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.*;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -154,7 +154,7 @@ public class SliceCreationGUI extends BaseScreen {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         super.drawBackground(graphics, theme, x, y, w, h);
         int oneFourth = w / 4;
         IconHelper.renderIcon(Color4I.BLACK, graphics, oneFourth, y, 4, h);
@@ -178,7 +178,7 @@ public class SliceCreationGUI extends BaseScreen {
     }
 
     @Override
-    public void drawForeground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawForeground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         super.drawForeground(graphics, theme, x, y, w, h);
     }
 
@@ -256,7 +256,7 @@ public class SliceCreationGUI extends BaseScreen {
         }
 
         @Override
-        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             super.drawBackground(graphics, theme, x, y, w, h);
 
             theme.drawString(graphics, "X", xText.getX() + 1, xText.getY() - theme.getFontHeight(), 0xFF000000);
@@ -270,11 +270,11 @@ public class SliceCreationGUI extends BaseScreen {
             }
         }
 
-        public void drawMainTexture(GuiGraphics graphics, int x, int y) {
+        public void drawMainTexture(GuiGraphicsExtractor graphics, int x, int y) {
             IconHelper.renderIcon(mainIcon, graphics, x, y, imageWidth, imageHeight);
         }
 
-        public void drawOverlay(GuiGraphics graphics, int x, int y) {
+        public void drawOverlay(GuiGraphicsExtractor graphics, int x, int y) {
             if (overlay) {
                 IconHelper.renderIcon(colorButton.color4I.withAlpha(100), graphics, x + xText.getIntValue(), y + yText.getIntValue(), wText.getIntValue(), hText.getIntValue());
             }
@@ -300,18 +300,18 @@ public class SliceCreationGUI extends BaseScreen {
             super(panel, Component.literal(""), Icons.COLOR_BLANK, null);
             color4I = activeValue;
             setConsumer((button, mouseButton) -> {
-                int random = Mth.randomBetweenInclusive(ClientUtils.getClientLevel().random, 0, 255);
+                int random = Mth.randomBetweenInclusive(ClientUtils.getClientLevel().getRandom(), 0, 255);
                 color4I = Color4I.get256(random);
             });
         }
 
         @Override
-        public void drawIcon(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
 
         }
 
         @Override
-        public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             super.draw(graphics, theme, x, y, w, h);
             theme.drawWidget(graphics, x, y, w, h, getWidgetType());
             IconHelper.renderIcon(Color4I.BLACK.withAlpha(125), graphics, x + 2, y + 2, 12, 12);
@@ -336,7 +336,7 @@ public class SliceCreationGUI extends BaseScreen {
                     true);
 
             EntityIconLoader.EntityIconSettings.CODEC.encodeStart(JsonOps.INSTANCE, entityIconSettings).result().ifPresent(jsonElement -> {
-                Path path = Platform.getGameFolder().resolve("export");
+                Path path = Platform.get().paths().gamePath().resolve("export");
                 try {
                     Identifier key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
                     String path1 = key.getNamespace() + "/" + key.getPath();

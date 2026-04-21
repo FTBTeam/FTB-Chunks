@@ -1,8 +1,8 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -19,7 +19,7 @@ public enum RequestBlockColorPacket implements CustomPacketPayload {
         return TYPE;
     }
 
-    public static void handle(RequestBlockColorPacket message, NetworkManager.PacketContext context) {
-        context.queue(FTBChunksClientNet::handleBlockColorRequestPacket);
+    public static void handle(RequestBlockColorPacket ignoredMessage, PacketContext ignoredContext) {
+        FTBChunksClientNet.handleBlockColorRequestPacket();
     }
 }

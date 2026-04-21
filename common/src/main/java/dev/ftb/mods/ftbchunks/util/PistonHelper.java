@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.util;
 
-import dev.architectury.platform.Platform;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
 import net.minecraft.core.BlockPos;
@@ -18,23 +18,21 @@ import org.jspecify.annotations.Nullable;
 import java.util.UUID;
 
 public class PistonHelper {
-    /**
-     * Check if a vanilla piston (or sticky piston) can work across claims. At least one of the following
-     * requirements must be met:
-     * <ul>
-     *     <li>Piston protection is disabled in server config</li>
-     *     <li>The moved blocks will all end up in a chunk owned by the same team as the piston base's chunk</li>
-     *     <li>The moved blocks will all end up in an unclaimed chunk, or in a chunk that allows public "edit block" access</li>
-     * </ul>
-     * The same restrictions apply to any blocks that would be destroyed by the piston.
-     * @param level the level
-     * @param pistonPos position of the piston itself
-     * @param resolver the piston's structure resolver (with {@code resolve()} already called successfully), which can be used to determine the affected block positions
-     * @return true if the piston should be prevented from moving, false to let it move
-     */
+    /// Check if a vanilla piston (or sticky piston) can work across claims. At least one of the following
+    /// requirements must be met:
+    ///
+    ///   - Piston protection is disabled in server config
+    ///   - The moved blocks will all end up in a chunk owned by the same team as the piston base's chunk
+    ///   - The moved blocks will all end up in an unclaimed chunk, or in a chunk that allows public "edit block" access
+    ///
+    /// The same restrictions apply to any blocks that would be destroyed by the piston.
+    /// @param level the level
+    /// @param pistonPos position of the piston itself
+    /// @param resolver the piston's structure resolver (with `resolve()` already called successfully), which can be used to determine the affected block positions
+    /// @return true if the piston should be prevented from moving, false to let it move
     public static boolean shouldPreventPistonMovement(Level level, BlockPos pistonPos, PistonStructureResolver resolver) {
         if (!level.isClientSide() && FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
-            PrivacyProperty editProp = Platform.isFabric() ?
+            PrivacyProperty editProp = Platform.get().isFabric() ?
                     FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
                     FTBChunksProperties.BLOCK_EDIT_MODE;
             ClaimedChunkManager mgr = FTBChunksAPI.api().getManager();

@@ -1,15 +1,14 @@
 package dev.ftb.mods.ftbchunks.api;
 
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbteams.api.property.BooleanProperty;
 import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
 import dev.ftb.mods.ftbteams.api.property.StringListProperty;
 
 import java.util.ArrayList;
 
-/**
- * These FTB Teams properties are added to teams by FTB Chunks, and appear in the team properties editor GUI.
- */
+/// These FTB Teams properties are added to teams by FTB Chunks, and appear in the team properties editor GUI if
+/// appropriate.
 public class FTBChunksProperties {
     public static final BooleanProperty ALLOW_ALL_FAKE_PLAYERS
             = new BooleanProperty(FTBChunksAPI.id("allow_fake_players"), FTBChunksWorldConfig.DEF_ALLOW_FAKE_PLAYERS::get);
@@ -31,6 +30,9 @@ public class FTBChunksProperties {
             = new PrivacyProperty(FTBChunksAPI.id("location_mode"), FTBChunksWorldConfig.DEF_PLAYER_VISIBILITY::get);
     public static final BooleanProperty ALLOW_PVP
             = new BooleanProperty(FTBChunksAPI.id("allow_pvp"), FTBChunksWorldConfig.DEF_PVP::get);
+    public static final BooleanProperty BYPASS_PROTECTION
+            = (BooleanProperty) new BooleanProperty(FTBChunksAPI.id("bypass_protection"), false)
+            .hidden().notPlayerEditable();
 
     // FTB Chunks on Forge adds two separate block edit & interact properties
     public static final PrivacyProperty BLOCK_EDIT_MODE

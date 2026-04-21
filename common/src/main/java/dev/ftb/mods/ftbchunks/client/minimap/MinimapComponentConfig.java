@@ -14,13 +14,13 @@ import org.jspecify.annotations.Nullable;
 import java.util.Map;
 
 public class MinimapComponentConfig extends StringMapValue {
-    public MinimapComponentConfig(@Nullable Config parent, String name, Map<String, String> def) {
+    public MinimapComponentConfig(Config parent, String name, Map<String, String> def) {
         super(parent, name, def);
     }
 
     @Override
     protected @Nullable EditableConfigValue<?> fillClientConfig(EditableConfigGroup group) {
-        return group.add(key, new MinimapComponentConfigValue(), get(), stringBooleanMap -> {}, defaultValue);
+        return group.add(key, new MinimapComponentConfigValue(), get(), _ -> {}, defaultValue);
     }
 
     public static class MinimapComponentConfigValue extends EditableConfigValue<Map<String, String>> {

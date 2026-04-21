@@ -15,7 +15,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.Registries;
@@ -65,7 +65,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
             dropDownMenu.setPos(dropDownMenu.getPosX() + 3 + (dimension.getX() - getMouseX()), dropDownMenu.getPosY() + 3 + (dimension.getY() + dimension.getHeight() - getMouseY()));
         }) {
             @Override
-            public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
                 theme.drawButton(graphics, x, y, w, h, getWidgetType());
             }
         };
@@ -105,7 +105,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
             }
 
             @Override
-            public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+            public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
                 buttonAccept.setIcon(isNameValid() ? Icons.ACCEPT : Icons.ACCEPT_GRAY);
                 super.draw(graphics, theme, x, y, w, h);
             }
@@ -184,7 +184,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
         super.drawBackground(graphics, theme, x, y, w, h);
     }
 
@@ -198,7 +198,7 @@ public class AddWaypointOverlay extends EditStringConfigOverlay<String> {
         }
 
         @Override
-        public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             IconHelper.renderIcon(icon, graphics, x, y, w, h);
             Color4I shade = getIcon().addBrightness(-0.15f);
             GuiHelper.drawHollowRect(graphics, x, y, w, h, shade, false);

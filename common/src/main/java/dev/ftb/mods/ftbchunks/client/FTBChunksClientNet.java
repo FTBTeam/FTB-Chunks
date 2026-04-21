@@ -2,9 +2,10 @@ package dev.ftb.mods.ftbchunks.client;
 
 import com.mojang.blaze3d.platform.Window;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
@@ -13,6 +14,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -77,16 +79,16 @@ public class FTBChunksClientNet {
 
                 mc.submit(() -> {
                     if (mc.hitResult instanceof BlockHitResult hitResult && mc.level != null && mc.player != null) {
-                        Identifier id = FTBChunks.BLOCK_REGISTRY.getId(mc.level.getBlockState(hitResult.getBlockPos()).getBlock());
+                        Identifier id = BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(hitResult.getBlockPos()).getBlock());
                         Window window = mc.getWindow();
                         Screenshot.takeScreenshot(mc.getMainRenderTarget(), image -> {
                             int col = image.getPixel(image.getWidth() / 2 - (int) (2D * window.getGuiScale()), image.getHeight() / 2 - (int) (2D * window.getGuiScale()));
                             String s = String.format("\"%s\": \"#%06X\"", id.getPath(), ColorUtils.convertFromNative(col) & 0xFFFFFF);
-                            mc.player.displayClientMessage(Component.literal(id.getNamespace() + " - " + s)
+                            mc.player.sendSystemMessage(Component.literal(id.getNamespace() + " - " + s)
                                     .withStyle(Style.EMPTY.applyFormat(ChatFormatting.GOLD)
                                             .withClickEvent(new ClickEvent.CopyToClipboard(s))
                                             .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy")))
-                                    ), false);
+                                    ));
                         });
                     }
                 });

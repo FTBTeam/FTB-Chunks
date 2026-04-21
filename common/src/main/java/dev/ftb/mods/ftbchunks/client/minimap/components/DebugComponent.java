@@ -11,7 +11,7 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -31,7 +31,7 @@ public class DebugComponent implements MinimapInfoComponent {
     }
 
     @Override
-    public void render(MinimapComponentContext context, GuiGraphics graphics, Font font) {
+    public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         List<Component> components = new ArrayList<>();
         long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
 

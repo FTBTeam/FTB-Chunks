@@ -4,7 +4,7 @@ import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 public class MapTileWidget extends Widget {
@@ -16,7 +16,7 @@ public class MapTileWidget extends Widget {
 	}
 
 	@Override
-	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+	public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
 		var regionTexture = region.regionTexture().getTextureID();
 		if (regionTexture == null) {
 			return;

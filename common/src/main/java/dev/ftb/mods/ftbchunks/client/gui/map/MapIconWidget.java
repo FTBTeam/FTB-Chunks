@@ -7,7 +7,7 @@ import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
 import dev.ftb.mods.ftblibrary.client.gui.widget.Widget;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
@@ -26,7 +26,7 @@ public class MapIconWidget extends Widget {
 	}
 
 	@Override
-	public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+	public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
 		if (width > 0 && height > 0) {
 			updatePosition(regionMapPanel.getPartialTicks());
 			mapIcon.draw(MapType.LARGE_MAP, graphics, x, y, w, h, false, 255);

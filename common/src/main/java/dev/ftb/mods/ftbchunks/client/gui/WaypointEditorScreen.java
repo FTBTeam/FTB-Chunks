@@ -1,7 +1,6 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -19,8 +18,9 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -148,7 +148,7 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
         }
 
         @Override
-        public void draw(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphicsExtractor graphics, Theme theme, int x, int y, int w, int h) {
             super.draw(graphics, theme, x, y, w, h);
 
             var mouseOver = getMouseY() >= 20 && isMouseOver();
@@ -212,7 +212,7 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
                 }
                 if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {  // permissions are checked again on server!
                     list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.ofItem(Items.ENDER_PEARL), btn -> {
-                        NetworkManager.sendToServer(new TeleportFromMapPacket(value.getPos().above(), false, value.getDimension()));
+                        Play2ServerNetworking.send(new TeleportFromMapPacket(value.getPos().above(), false, value.getDimension()));
                         closeGui(false);
                     }));
                 }

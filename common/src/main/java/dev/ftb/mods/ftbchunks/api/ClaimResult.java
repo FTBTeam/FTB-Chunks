@@ -3,69 +3,49 @@ package dev.ftb.mods.ftbchunks.api;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
-/**
- * Represents the result of an operation on a chunk: claiming, un-claiming, force-loading or un-force-loading.
- */
+/// Represents the result of an operation on a chunk: claiming, un-claiming, force-loading or un-force-loading.
 public interface ClaimResult {
-	/**
-	 * Get the result's unique ID. Primarily used to generate translation keys for display purposes.
-	 *
-	 * @return the ID
-	 */
+	/// Get the result's unique ID. Primarily used to generate translation keys for display purposes.
+	///
+	/// @return the ID
 	String getResultId();
 
-	/**
-	 * Was the operation successful?
-	 *
-	 * @return true if the operation succeeded, false is there was a problem
-	 */
+	/// Was the operation successful?
+	///
+	/// @return true if the operation succeeded, false is there was a problem
 	default boolean isSuccess() {
 		return false;
 	}
 
-	/**
-	 * Get the message which will be displayed in the chunk claiming GUI. This should be kept to a short phrase,
-	 * easily readable, since it can be used in a transient message display.
-	 *
-	 * @return the message to be displayed
-	 */
+	/// Get the message which will be displayed in the chunk claiming GUI. This should be kept to a short phrase,
+	/// easily readable, since it can be used in a transient message display.
+	///
+	/// @return the message to be displayed
 	default MutableComponent getMessage() {
 		return Component.translatable(getResultId());
 	}
 
-	/**
-	 * Create a custom claim failure result. This may be of use to mods which add extra checks to claiming/forcing/etc.
-	 * via the events in {@link dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent}; such mods can return a custom claim
-	 * result from the "before" event handler as appropriate.
-	 *
-	 * @param translationKey the translation key for message display
-	 * @return a custom result
-	 */
+	/// Create a custom claim failure result. This may be of use to mods which add extra checks to claiming/forcing/etc.
+	/// via the events in [dev.ftb.mods.ftbchunks.api.event.ChunkChangeEvent]; such mods can return a custom claim
+	/// result from the "before" event handler as appropriate.
+	///
+	/// @param translationKey the translation key for message display
+	/// @return a custom result
 	static ClaimResult customProblem(String translationKey) {
 		return new CustomProblem(translationKey);
 	}
 
-	/**
-	 * Convenience method to return a successful claim outcome. This method should be used rather than returning a
-	 * literal {@code null} value from "before" event handlers for future compatibility purposes.
-	 *
-	 * @implNote a null return from "before" events is currently treated as successful, but that should not be
-	 * relied upon; use this method.
-	 *
-	 * @return a successful outcome
-	 */
-	@Nullable
+	/// Convenience method to return a successful claim outcome.
+	///
+	/// @return a successful outcome
 	static ClaimResult success() {
-		return null;
+		return SUCCESS;
 	}
 
-	/**
-	 * Collection of standard reasons for a claim operation failing. These are returned by methods in FTB Chunks itself.
-	 */
+	/// Collection of standard reasons for a claim operation failing. These are returned by methods in FTB Chunks itself.
 	enum StandardProblem implements ClaimResult {
 		NOT_OWNER("not_owner"),
 		NOT_ENOUGH_POWER("not_enough_power"),
@@ -94,11 +74,9 @@ public interface ClaimResult {
 		}
 	}
 
-	/**
-	 * This class can be used to represent custom reasons why a claim operation cannot be completed. Intended for use
-	 * by other mods when creating a return value for the claim events in {@link dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent}.
-	 * Use {@link ClaimResult#customProblem(String)} to create instances of this class.
-	 */
+	/// This class can be used to represent custom reasons why a claim operation cannot be completed. Intended for use
+	/// by other mods when creating a return value for the claim events in [dev.ftb.mods.ftbchunks.api.event.ChunkChangeEvent].
+	/// Use [ClaimResult#customProblem(String)] to create instances of this class.
 	class CustomProblem implements ClaimResult {
 		private final String translationKey;
 
@@ -111,4 +89,17 @@ public interface ClaimResult {
 			return translationKey;
 		}
 	}
+
+	ClaimResult SUCCESS = new ClaimResult() {
+		@Override
+		public String getResultId() {
+			return "gui.ok";
+		}
+
+		@Override
+		public boolean isSuccess() {
+			return true;
+		}
+	};
+
 }

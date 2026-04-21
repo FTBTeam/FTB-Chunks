@@ -1,9 +1,9 @@
 package dev.ftb.mods.ftbchunks.net;
 
-import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
 import dev.ftb.mods.ftbchunks.client.map.RegionSyncKey;
+import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -25,7 +25,7 @@ public record SyncRXPacket(RegionSyncKey key, int offset, int total, byte[] data
 		return TYPE;
 	}
 
-	public static void handle(SyncRXPacket message, NetworkManager.PacketContext context) {
-		context.queue(() -> FTBChunksClientNet.handleSyncRegionFromServer(message.key, message.offset, message.total, message.data));
+	public static void handle(SyncRXPacket message, PacketContext ignoredContext) {
+		FTBChunksClientNet.handleSyncRegionFromServer(message.key, message.offset, message.total, message.data);
 	}
 }

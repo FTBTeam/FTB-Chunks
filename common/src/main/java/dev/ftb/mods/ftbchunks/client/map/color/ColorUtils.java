@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 public class ColorUtils {
-
 	private static Color4I @Nullable[] reducedColorPalette = null;
 	private static Color4I @Nullable[] topographyPalette = null;
 	private static Color4I @Nullable[][] lightMapPalette = null;

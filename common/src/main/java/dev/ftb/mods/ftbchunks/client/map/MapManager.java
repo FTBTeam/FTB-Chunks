@@ -339,7 +339,7 @@ public class MapManager implements MapTask {
 		try {
 			return blockIdToColCache.computeIfAbsent(id & 0xFFFFFF, i -> ColorMapLoader.getBlockColor(blockColorIndexMap.get(i)));
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			FTBChunks.LOGGER.error("Exception thrown while trying to get block color for id {}: {}", id, ex.getMessage());
 			return BlockColors.ERROR;
 		}
 	}

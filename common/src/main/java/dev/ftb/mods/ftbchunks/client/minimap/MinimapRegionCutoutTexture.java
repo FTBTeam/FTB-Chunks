@@ -70,9 +70,7 @@ public class MinimapRegionCutoutTexture {
                 
                 if (dynamicTexture == null) {
                     // Trigger baking if not already in progress
-                    if (!regionTexture.isBaking()) {
-                        regionTexture.requestBake();
-                    }
+                    regionTexture.requestBake();
                     continue;
                 }
 

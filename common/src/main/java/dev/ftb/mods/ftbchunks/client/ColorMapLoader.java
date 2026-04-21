@@ -1,12 +1,11 @@
 package dev.ftb.mods.ftbchunks.client;
 
+import com.google.gson.*;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColor;
 import dev.ftb.mods.ftbchunks.client.map.color.BlockColors;
 import dev.ftb.mods.ftbchunks.client.map.color.CustomBlockColor;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.platform.Platform;
-import com.google.gson.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -63,44 +62,40 @@ public class ColorMapLoader extends SimplePreparableReloadListener<JsonObject> {
 			Block block = entry.getValue();
 			Identifier id = entry.getKey().identifier();
 
-            if (block instanceof AirBlock
-                    || block instanceof BushBlock
-                    || block instanceof FireBlock
-                    || block instanceof ButtonBlock
-                    || block instanceof TorchBlock
-                    || block instanceof StainedGlassPaneBlock
-            ) {
+            if (block instanceof AirBlock || block instanceof FireBlock) {
                 BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.IGNORED);
             } else if (block instanceof GrassBlock) {
                 BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.GRASS);
             } else if (block instanceof LeavesBlock || block instanceof VineBlock) {
                 BLOCK_ID_TO_COLOR_MAP.put(id, BlockColors.FOLIAGE);
             } else if (block instanceof FlowerPotBlock) {
-                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x683A2D)));
+                BLOCK_ID_TO_COLOR_MAP.put(id, CustomBlockColor.FLOWER_POT);
             } else if (Platform.get().misc().isRailBlock(block)) {
-                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(0x888888)));
+                BLOCK_ID_TO_COLOR_MAP.put(id, CustomBlockColor.RAIL);
             } else if (block.defaultMapColor() != MapColor.NONE) {
-                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.rgb(block.defaultMapColor().col)));
-            } else {
-                BLOCK_ID_TO_COLOR_MAP.put(id, new CustomBlockColor(Color4I.RED));
+                BLOCK_ID_TO_COLOR_MAP.put(id, CustomBlockColor.ofMapColor(block.defaultMapColor()));
             }
         }
 
-		// Fire event Pre
-
-		for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
-			if (entry.getValue().isJsonPrimitive()) {
-				BlockColor col = BlockColors.getFromType(entry.getValue().getAsString());
+		object.asMap().forEach((blockIdStr, colorId) -> {
+			if (colorId.isJsonPrimitive()) {
+				BlockColor col = BlockColors.getFromType(colorId.getAsString());
 				if (col != null) {
-					Identifier key = Identifier.tryParse(entry.getKey());
-					if (key != null) {
-						BLOCK_ID_TO_COLOR_MAP.put(key, col);
+					Identifier blockId = Identifier.tryParse(blockIdStr);
+					if (blockId != null) {
+						BLOCK_ID_TO_COLOR_MAP.put(blockId, col);
+					} else {
+						FTBChunks.LOGGER.error("Bad block ID {} in block colors", blockIdStr);
 					}
+				} else {
+					FTBChunks.LOGGER.error("Unknown color type {} -> {} in block colors", blockIdStr, colorId.getAsString());
 				}
+			} else {
+				FTBChunks.LOGGER.error("Bad Json element for {} in block colors (expected primitive)", blockIdStr);
 			}
-		}
+		});
 
-		// Fire event Post
+		FTBChunks.LOGGER.debug("Loaded {} color entries from {} resource pack files", BLOCK_ID_TO_COLOR_MAP.size(), BLOCK_COLOR_FILE);
 	}
 
 	public static BlockColor getBlockColor(Identifier id) {

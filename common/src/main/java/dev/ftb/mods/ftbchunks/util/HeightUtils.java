@@ -29,17 +29,17 @@ public class HeightUtils {
 		return state instanceof BlockStateFTBC ftbc ? ftbc.ftbc$isWater() : state.getFluidState().getType().isSame(Fluids.WATER);
 	}
 
-	public static boolean skipBlock(Level level, BlockState state) {
+	public static boolean skipBlock(Level level, BlockPos pos, BlockState state) {
 		if (level.isClientSide()) {
-			return state.isAir() || shouldSkipBlock(state);
+			return state.isAir() || shouldSkipBlock(level, pos, state);
 		} else {
 			return false;
 		}
 	}
 
-	private static boolean shouldSkipBlock(BlockState state) {
+	private static boolean shouldSkipBlock(Level level, BlockPos pos, BlockState state) {
 		Identifier identifier = state.getBlock().builtInRegistryHolder().key().identifier();
-		return ColorMapLoader.getBlockColor(identifier).isIgnored();
+		return ColorMapLoader.getBlockColor(identifier).isIgnored(level, pos, state);
 	}
 
 	public static int getHeight(Level level, @Nullable ChunkAccess chunkAccess, BlockPos.MutableBlockPos pos) {
@@ -64,7 +64,7 @@ public class HeightUtils {
 					pos.setY(by);
 					state = chunkAccess.getBlockState(pos);
 
-					if (skipBlock(level, state)) {
+					if (skipBlock(level, pos, state)) {
 						continue outer;
 					}
 				}
@@ -76,7 +76,7 @@ public class HeightUtils {
 				currentWaterY = by;
 			}
 
-			if (!water && !skipBlock(level, state)) {
+			if (!water && !skipBlock(level, pos, state)) {
 				return currentWaterY;
 			}
 		}

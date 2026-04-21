@@ -22,6 +22,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -211,7 +212,7 @@ public class RenderMapImageTask implements MapTask {
 
 		float[] hsb = new float[3];
 		Team ownTeam = FTBTeamsAPI.api().getClientManager().selfTeam();
-		ClientLevel world = Minecraft.getInstance().level;
+		ClientLevel level = Objects.requireNonNull(Minecraft.getInstance().level);
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
 		MapMode mapMode = FTBChunksClientConfig.MAP_MODE.get();
@@ -291,8 +292,8 @@ public class RenderMapImageTask implements MapTask {
 								regionImage.setPixel(ax, az, fullClaimColor);
 								continue;
 							} else {
-								if (blockColor instanceof CustomBlockColor cbc) {
-									col = cbc.getColor();
+								if (blockColor instanceof CustomBlockColor(Color4I color)) {
+									col = color;
 								} else if (blockColor == BlockColors.FOLIAGE) {
 									if (foliage == null) {
 										foliage = initFoliage(blend, data);
@@ -306,7 +307,7 @@ public class RenderMapImageTask implements MapTask {
 									col = getColor(blend, grass, ax, az).withAlpha(255).withTint(Color4I.BLACK.withAlpha(grassDarkness));
 								} else {
 									// This is unsafe but should be *mostly* fine
-									col = blockColor.getBlockColor(world, blockPos).withAlpha(255);
+									col = blockColor.getBlockColor(level, blockPos).withAlpha(255);
 								}
 
 								if (mapMode == MapMode.NIGHT) {

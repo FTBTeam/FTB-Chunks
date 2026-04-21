@@ -21,7 +21,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
@@ -244,7 +243,7 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 	}
 
 	@Override
-	public int compareTo(@NotNull MapDimension other) {
+	public int compareTo(MapDimension other) {
 		Identifier dim1id = this.dimension.identifier();
 		Identifier dim2id = other.dimension.identifier();
 		if (dim1id.getNamespace().equals("minecraft") && !dim2id.getNamespace().equals("minecraft")) {

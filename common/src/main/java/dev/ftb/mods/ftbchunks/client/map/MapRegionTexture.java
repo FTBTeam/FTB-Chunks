@@ -9,7 +9,6 @@ import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -19,7 +18,7 @@ public class MapRegionTexture {
     private final MapRegion region;
     private final Identifier textureID;
 
-    private boolean baking = false;
+    private volatile boolean baking = false;
     @Nullable
     private DynamicTexture texture;
 
@@ -28,7 +27,7 @@ public class MapRegionTexture {
         this.textureID = makeTextureId(region);
     }
 
-    private static @NotNull Identifier makeTextureId(MapRegion region) {
+    private static Identifier makeTextureId(MapRegion region) {
         String id = region.dimension.dimension.identifier().toString().replace(':', '_');
         return FTBChunksAPI.id(id + "/" + region.pos.x() + "_" + region.pos.z());
     }
@@ -49,7 +48,7 @@ public class MapRegionTexture {
         }
 
         baking = true;
-        FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this.region, (image) -> {
+        FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this.region, image -> {
             baking = false;
             // Ensure that we upload on the main thread
             Minecraft.getInstance().execute(() -> upload(image));

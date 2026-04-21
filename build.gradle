@@ -96,7 +96,7 @@ publishMods {
 
 	def createOptions = (String projectName) -> {
 		publishOptions {
-			file = project.provider { project(":$projectName").tasks.remapJar }.flatMap { it.archiveFile }
+			file = project.provider { project(":$projectName").tasks.jar }.flatMap { it.archiveFile }
 			displayName = "${readable_name} ${projectName.capitalize()} ${project.version}"
 			modLoaders.add(projectName.toLowerCase())
 		}

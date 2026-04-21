@@ -34,7 +34,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
-import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -147,7 +146,7 @@ public class NeoEventListeners {
         }
     }
 
-    private void blockBreak(BreakBlockEvent event) {
+    private void blockBreak(BlockEvent.BreakEvent event) {
         if (!mod.blockBreak(event.getLevel(), event.getPos(), event.getState(), event.getPlayer())) {
             event.setCanceled(true);
         }

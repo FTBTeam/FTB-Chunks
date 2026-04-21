@@ -41,6 +41,10 @@ allprojects {
 }
 
 subprojects {
+	base {
+		archivesName = rootProject.base.archivesName.get() + (project.name != "common" ? "-" + project.name : "")
+	}
+
 	if (project.name != "common") {
 		dependencies {
 			api project(":common")

@@ -275,8 +275,11 @@ public class FTBChunks {
     }
 
 	public boolean blockBreak(LevelAccessor ignoredLevel, BlockPos pos, BlockState ignoredBlockState, Player player) {
-		var prot = FTBChunksAPIImpl.INSTANCE.getProtectionImplementations().blockBreakProtection();
-        return !preventInteraction(player, InteractionHand.MAIN_HAND, pos, prot, null);
+		if (player instanceof ServerPlayer) {
+			var prot = FTBChunksAPIImpl.INSTANCE.getProtectionImplementations().blockBreakProtection();
+			return !preventInteraction(player, InteractionHand.MAIN_HAND, pos, prot, null);
+		}
+		return true;
     }
 
 	public boolean blockPlace(@UnknownNullability LevelAccessor level, BlockPos pos, BlockState blockState, @Nullable Entity entity, Protection protection) {

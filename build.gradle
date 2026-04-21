@@ -73,6 +73,8 @@ subprojects {
 					"ftbbackupsversion": project.ftb_backups3_version
 		}
 	}
+
+	createMavenPublishingBlock(project)
 }
 
 idea {

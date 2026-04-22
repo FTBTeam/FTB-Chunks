@@ -7,6 +7,7 @@ import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.client.ClientBouncer;
 import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.config.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.data.*;
@@ -55,7 +56,6 @@ import net.minecraft.world.phys.HitResult;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
@@ -78,7 +78,7 @@ public class FTBChunks {
 		FTBChunksNet.init();
 
 		ConfigManager.getInstance().registerServerConfig(FTBChunksWorldConfig.CONFIG, MOD_ID + ".config.server", true, FTBChunksWorldConfig::onConfigChanged);
-		ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID + ".config.client");
+        ConfigManager.getInstance().registerClientConfig(FTBChunksClientConfig.CONFIG, MOD_ID + ".config.client", ClientBouncer::onConfigChanged);
 
 		for (int i = 0; i < RELATIVE_SPIRAL_POSITIONS.length; i++) {
 			RELATIVE_SPIRAL_POSITIONS[i] = MathUtils.getSpiralPoint(i + 1);
@@ -282,7 +282,7 @@ public class FTBChunks {
 		return true;
     }
 
-	public boolean blockPlace(@UnknownNullability LevelAccessor level, BlockPos pos, BlockState blockState, @Nullable Entity entity, Protection protection) {
+	public boolean blockPlace(LevelAccessor ignoredLevel, BlockPos pos, BlockState ignoredBlockState, @Nullable Entity entity, Protection protection) {
 		if (entity instanceof ServerPlayer sp && preventInteraction(entity, InteractionHand.MAIN_HAND, pos, protection, null)) {
 			FTBCUtils.forceHeldItemSync(sp, InteractionHand.MAIN_HAND);
 			return false;
@@ -472,21 +472,23 @@ public class FTBChunks {
 		data.updateLimits();
 	}
 
-	public void onTeamPropertiesChanged(TeamPropertiesChangedEvent.@UnknownNullability Data event) {
-		MinecraftServer server = ClaimedChunkManagerImpl.getInstance().getMinecraftServer();
+	public void onTeamPropertiesChanged(TeamPropertiesChangedEvent.Data event) {
+		if (!event.isClient()) {
+			MinecraftServer server = ClaimedChunkManagerImpl.getInstance().getMinecraftServer();
 
-        if (event.previousProperties().get(FTBChunksProperties.LOCATION_MODE) != event.team().getProperty(FTBChunksProperties.LOCATION_MODE)) {
-			// team is showing or hiding player locations; sync visible player UUIDs to all players
-			PlayerVisibilityPacket.syncToAll();
+			if (event.hasPropertyChanged(FTBChunksProperties.LOCATION_MODE)) {
+				// team is showing or hiding player locations; sync visible player UUIDs to all players
+				PlayerVisibilityPacket.syncToAll();
+			}
+
+			if (event.hasPropertyChanged(FTBChunksProperties.CLAIM_VISIBILITY)) {
+				// team is showing or hiding claims; sync all their claims to all players
+				ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.team());
+				teamData.syncChunksToAll(server);
+			}
+
+			ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.team()).clearFakePlayerNameCache();
 		}
-
-		if (event.previousProperties().get(FTBChunksProperties.CLAIM_VISIBILITY) != event.team().getProperty(FTBChunksProperties.CLAIM_VISIBILITY)) {
-			// team is showing or hiding claims; sync all their claims to all players
-			ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.team());
-			teamData.syncChunksToAll(server);
-		}
-
-		ClaimedChunkManagerImpl.getInstance().getOrCreateData(event.team()).clearFakePlayerNameCache();
 	}
 
 	public void onPlayerAllianceChange(TeamAllyEvent.Data event) {

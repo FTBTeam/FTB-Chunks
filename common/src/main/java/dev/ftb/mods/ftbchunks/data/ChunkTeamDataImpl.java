@@ -97,7 +97,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 		try {
 			if (Files.exists(path)) {
-				Json5Object dataFile = Json5Util.tryRead(path);
+				Json5Object dataFile = Json5Util.load(path);
 				data.deserializeJson(dataFile);
 			} else {
 				data.markDirty();
@@ -501,7 +501,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	public void saveNow() {
 		if (shouldSave) {
 			try {
-				Json5Util.tryWrite(file, toJson());
+				Json5Util.save(file, toJson());
 				shouldSave = false;
 			} catch (IOException e) {
 				FTBChunks.LOGGER.error("Failed to save chunk team data for team {}", team.getId(), e);

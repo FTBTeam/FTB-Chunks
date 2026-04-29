@@ -45,8 +45,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
         // force a refresh of the minimap texture, which is what we use as the claim GUI background
         // if player isn't rendering minimap for any reason, the dynamic texture may not be registered
-        FTBChunksClient.INSTANCE.getMinimapRenderer().requestTextureRefresh();
-        FTBChunksClient.INSTANCE.getMinimapRenderer().refreshMinimapTextureIfNeeded(ClientUtils.getClientPlayer().position(), dimension);
+        FTBChunksClient.INSTANCE.getMinimapRenderer().refreshMinimapTextureNow(ClientUtils.getClientPlayer().position(), dimension);
     }
 
     @Override
@@ -150,7 +149,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
                     (_, _) -> doCancel())
                     .setForceButtonSize(false);
 
-            mouseReferenceButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.INFO,
+            mouseReferenceButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.chunk_info"), Icons.KEYBOARD,
                     (_, _) -> new ChunkMouseReferenceScreen().openGui())
                     .setForceButtonSize(false);
 

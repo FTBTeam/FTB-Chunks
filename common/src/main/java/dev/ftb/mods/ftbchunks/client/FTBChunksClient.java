@@ -247,7 +247,13 @@ public enum FTBChunksClient {
     }
 
     public void onTeamPropertiesChanged() {
-        MapManager.getInstance().ifPresent(manager -> manager.updateAllRegions(false));
+        MapManager.getInstance().ifPresent(manager -> {
+            manager.updateAllRegions(false);
+
+            MapDimension.getCurrent().ifPresent(dim ->
+                    FTBChunksClient.INSTANCE.getMinimapRenderer().refreshMinimapTextureNow(ClientUtils.getClientPlayer().position(), dim)
+            );
+        });
     }
 
     public void onMapIconEvent(AddMapIconEvent.Data event) {
@@ -330,7 +336,7 @@ public enum FTBChunksClient {
     }
 
     private void addQuickWaypoint() {
-        MapManager.getInstance().ifPresent(manager -> {
+        MapManager.getInstance().ifPresent(_ -> {
             BaseScreen screen = new WaypointAddScreen(new EditableString(), ClientUtils.getClientPlayer());
             // later needed to prevent keypress being passed into gui
             screen.openGuiLater();

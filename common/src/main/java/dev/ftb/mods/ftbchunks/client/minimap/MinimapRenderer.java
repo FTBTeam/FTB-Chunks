@@ -162,6 +162,11 @@ public class MinimapRenderer {
                 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player);
     }
 
+    public void refreshMinimapTextureNow(Vec3 playerPos, MapDimension dim) {
+        requestTextureRefresh();
+        refreshMinimapTextureIfNeeded(playerPos, dim);
+    }
+
     public void refreshMinimapTextureIfNeeded(Vec3 playerPos, MapDimension dim) {
         XZ playerChunkPos = new XZ(Mth.floor(playerPos.x) >> 4, Mth.floor(playerPos.z) >> 4);
         if (!playerChunkPos.equals(currentPlayerChunk) || textureRefreshRequested) {

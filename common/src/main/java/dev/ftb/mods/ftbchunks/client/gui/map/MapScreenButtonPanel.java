@@ -21,6 +21,8 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.util.TextComponentUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.client.ClientTeamManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -37,6 +39,7 @@ class MapScreenButtonPanel extends Panel {
     private final Button dimensionButton;
     private final Button waypointManagerButton;
     private final Button infoButton;
+    private final Button teamPropsButton;
     private final Button settingsButton;
     private final Button serverSettingsButton;
     private final Button clearDeathpointsButton;
@@ -48,37 +51,50 @@ class MapScreenButtonPanel extends Panel {
         this.largeMapScreen = largeMapScreen;
 
         claimChunksButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.claimed_chunks"), Icons.MAP,
-                (b, m) -> ChunkScreen.openChunkScreen(),
+                (_, _) -> ChunkScreen.openChunkScreen(),
                 TextComponentUtils.hotkeyTooltip("C"));
 
         Component tooltip = Component.literal("[")
-                .append(FTBChunksClient.INSTANCE.waypointManagerKey.getTranslatedKeyMessage())
+                .append(FTBChunksClient.waypointManagerKey.getTranslatedKeyMessage())
                 .append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
         waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
-                (b, m) -> new WaypointEditorScreen().openGui(), tooltip);
-        infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), MINIMAP_INFO,
-                (b, m) -> new MinimapInfoSortScreen().openGui(), tooltip);
-        infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.INFO,
-                (b, m) -> new MapKeyReferenceScreen().openGui());
+                (_, _) -> new WaypointEditorScreen().openGui(), tooltip);
+        infoButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map_info"), Icons.KEYBOARD,
+                (_, _) -> new MapKeyReferenceScreen().openGui());
 
         clearDeathpointsButton = new ClearDeathPointButton(this);
 
-        Component dimName = TextComponentUtils.translatedDimension(largeMapScreen.dimension.dimension);
         List<ContextMenuItem> dimItems = AddWaypointOverlay.createDimContextItems(largeMapScreen::switchToDimension);
-        dimensionButton = new SimpleButton(this, dimName, Icons.GLOBE, (b, m) -> {
+        dimensionButton = new SimpleButton(this, List.of(Component.empty()), Icons.GLOBE, (b, _) -> {
             DropDownMenu dropDownMenu = getGui().openDropdownMenu(dimItems);
             dropDownMenu.setPos(b.getX() + b.width, b.getY() + b.height - dropDownMenu.height);
-        });
+        }) {
+            @Override
+            public void addMouseOverText(TooltipList list) {
+                list.add(Component.translatable("ftbchunks.gui.label.dimension"));
+                list.add(TextComponentUtils.translatedDimension(largeMapScreen.dimension.dimension).copy().withStyle(ChatFormatting.GRAY));
+            }
+        };
 
-        settingsButton = SimpleTextButton.create(this, Component.translatable("ftbchunks.gui.settings"),
+        infoSortScreen = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.sort_minimap_info"), MINIMAP_INFO,
+                (_, _) -> new MinimapInfoSortScreen().openGui(), tooltip);
+
+        ClientTeamManager teamMgr = FTBTeamsAPI.api().getClientManager();
+        teamPropsButton = SimpleTextButton.create(this, Component.translatable("ftbteamsconfig"),
+                Icons.SETTINGS.withTint(Color4I.rgb(0x40FFFF)),
+                _ -> teamMgr.openTeamPropertiesEditor(_ -> largeMapScreen.openGui()),
+                Component.translatable(teamMgr.selfTeam().getTypeTranslationKey()).withStyle(ChatFormatting.GRAY)
+                        .append(": ").append(teamMgr.selfTeam().getColoredName()));
+
+        settingsButton = SimpleTextButton.create(this, Component.translatable("ftbchunks.config.client"),
                 Icons.SETTINGS,
-                mb -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
+                _ -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
                 TextComponentUtils.hotkeyTooltip("S"));
 
         boolean adminPlayer = ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
-        serverSettingsButton = SimpleTextButton.create(this, Component.translatable("ftbchunks.gui.settings.server"),
+        serverSettingsButton = SimpleTextButton.create(this, Component.translatable("ftbchunks.config.server"),
                 Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
-                mb -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY, !adminPlayer),
+                _ -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY, !adminPlayer),
                 TextComponentUtils.hotkeyTooltip("Ctrl + S"));
     }
 
@@ -90,6 +106,7 @@ class MapScreenButtonPanel extends Panel {
         add(clearDeathpointsButton);
         add(infoSortScreen);
         add(dimensionButton);
+        add(teamPropsButton);
         add(settingsButton);
         if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             add(serverSettingsButton);
@@ -102,11 +119,12 @@ class MapScreenButtonPanel extends Panel {
         claimChunksButton.setPosAndSize(1, 1, 16, 16);
         waypointManagerButton.setPosAndSize(1, 19, 16, 16);
         infoButton.setPosAndSize(1, 37, 16, 16);
-        infoSortScreen.setPosAndSize(1, 55, 16, 16);
+        dimensionButton.setPosAndSize(1, 55, 16, 16);
         clearDeathpointsButton.setPosAndSize(1, 73, 16, 16);
         // lower buttons
         int yOff = ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) ? 18 : 0;
-        dimensionButton.setPosAndSize(1, height - 36 - yOff, 16, 16);
+        infoSortScreen.setPosAndSize(1, height - 54 - yOff, 16, 16);
+        teamPropsButton.setPosAndSize(1, height - 36 - yOff, 16, 16);
         settingsButton.setPosAndSize(1, height - 18 - yOff, 16, 16);
         serverSettingsButton.setPosAndSize(1, height - 18, 16, 16);
     }
@@ -156,7 +174,7 @@ class MapScreenButtonPanel extends Panel {
 
     private class ClearDeathPointButton extends SimpleButton {
         public ClearDeathPointButton(Panel panel) {
-            super(panel, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CANCEL, (b, m) -> {
+            super(panel, Component.translatable("ftbchunks.gui.clear_deathpoints"), Icons.CANCEL, (_, _) -> {
                 if (largeMapScreen.getWaypointManager().removeIf(wp -> wp.getType() == WaypointType.DEATH)) {
                     refreshWidgets();
                 }

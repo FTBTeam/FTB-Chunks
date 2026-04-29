@@ -166,7 +166,7 @@ public class LargeMapScreen extends BaseScreen {
             GlobalPos globalPos = GlobalPos.of(dimension.dimension, pos);
             List<ContextMenuItem> list = new ArrayList<>();
             Component title = Component.translatable("ftbchunks.gui.add_waypoint");
-            list.add(new ContextMenuItem(title, Icons.ADD, btn -> {
+            list.add(new ContextMenuItem(title, Icons.ADD, _ -> {
                 EditableString name = new EditableString();
                 name.setValue("");
                 EditableColor col = new EditableColor();
@@ -248,11 +248,11 @@ public class LargeMapScreen extends BaseScreen {
             int my = getMouseY();
 
             if (scrollWidth > regionPanel.width) {
-                regionPanel.setScrollX(Math.max(Math.min(regionPanel.getScrollX() + (prevMouseX - mx), scrollWidth - regionPanel.width), 0));
+                regionPanel.setScrollX(Math.clamp(regionPanel.getScrollX() + (prevMouseX - mx), 0, scrollWidth - regionPanel.width));
             }
 
             if (scrollHeight > regionPanel.height) {
-                regionPanel.setScrollY(Math.max(Math.min(regionPanel.getScrollY() + (prevMouseY - my), scrollHeight - regionPanel.height), 0));
+                regionPanel.setScrollY(Math.clamp(regionPanel.getScrollY() + (prevMouseY - my), 0, scrollHeight - regionPanel.height));
             }
 
             prevMouseX = mx;

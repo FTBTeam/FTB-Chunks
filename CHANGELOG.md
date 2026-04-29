@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [26.1.2.3]
+
+### Changed
+* Some reorganization and improvement of the buttons on the left panel of the full-screen map
+  * Added a "Team Properties" button as a convenience to directly open the player's team properties (without needing to use the FTB Teams GUI)
+  * All settings buttons are now at the bottom of the left panel
+    * "Minimap Info Settings" has been moved down
+    * Dimension selector button has been moved up
+  * Fixed some tooltips on these buttons
+
 ## [26.1.2.2]
 
 ### Changed

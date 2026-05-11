@@ -593,6 +593,8 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 	}
 
 	public void updateLimits() {
+		canForceLoadChunks = null;
+
 		updateMemberLimitData(!memberData.isEmpty());
 
 		int prevMaxClaimed = maxClaimChunks;

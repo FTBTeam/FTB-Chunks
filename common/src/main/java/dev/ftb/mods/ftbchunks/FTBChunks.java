@@ -151,6 +151,8 @@ public class FTBChunks {
 	public void onPlayerLogin(TeamPlayerLoggedInEvent.Data eventData) {
 		ServerPlayer player = eventData.player();
 
+		ClaimedChunkManagerImpl.getInstance().clearForceLoadedCache();
+
 		ChunkTeamDataImpl data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
 		if (data == null) {
 			FTBChunks.LOGGER.error("couldn't get chunk team data for player {} on login?", player.getName().getString());

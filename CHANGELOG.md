@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [26.1.2.3]
 
+### Added
+* Added an "Add Waypoint" button to the top of the Waypoint Editor screen
+
 ### Changed
 * Some reorganization and improvement of the buttons on the left panel of the full-screen map
   * Added a "Team Properties" button as a convenience to directly open the player's team properties (without needing to use the FTB Teams GUI)
@@ -13,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * "Minimap Info Settings" has been moved down
     * Dimension selector button has been moved up
   * Fixed some tooltips on these buttons
+
+### Fixed
+* Fixed chunk forcing not working when "Force Mode" was set to "Always" in the server config
 
 ## [26.1.2.2]
 

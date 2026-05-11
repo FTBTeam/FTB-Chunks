@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PistonBaseBlock.class)
 public class PistonBaseBlockMixin {
     @Inject(method = "moveBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/piston/PistonStructureResolver;getToPush()Ljava/util/List;"), cancellable = true)
-    public void onMoveBlocks(Level level, BlockPos blockPos, Direction direction, boolean extending, CallbackInfoReturnable<Boolean> cir, @Local PistonStructureResolver pistonStructureResolver) {
-        if (PistonHelper.shouldPreventPistonMovement(level, blockPos, pistonStructureResolver)) {
+    public void onMoveBlocks(Level level, BlockPos blockPos, Direction direction, boolean extending, CallbackInfoReturnable<Boolean> cir, @Local(name = "resolver") PistonStructureResolver resolver) {
+        if (PistonHelper.shouldPreventPistonMovement(level, blockPos, resolver)) {
             cir.setReturnValue(false);
         }
     }

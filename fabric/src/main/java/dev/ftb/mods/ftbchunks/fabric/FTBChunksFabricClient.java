@@ -41,7 +41,11 @@ public class FTBChunksFabricClient implements ClientModInitializer {
 		ScreenEvents.AFTER_INIT.register((_, screen, _, _) -> client.onGuiInit(screen));
 
 		FTBLibraryFabricEvents.CUSTOM_CLICK.register(data -> client.handleCustomClick(data.id()));
-		FTBTeamsEvents.TEAM_PROPERTIES_CHANGED.register(_ -> client.onTeamPropertiesChanged());
+		FTBTeamsEvents.TEAM_PROPERTIES_CHANGED.register(data -> {
+			if (data.isClient()) {
+				client.onTeamPropertiesChanged();
+			}
+        });
 		FTBChunksClientEvents.ADD_MAP_ICON.register(client::onMapIconEvent);
 
 		if (Platform.get().isDev()) {

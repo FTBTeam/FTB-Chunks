@@ -44,7 +44,11 @@ public class FTBChunksNeoForgeClient {
                 event.setCanceled(true);
             }
         });
-        bus.addListener(FTBTeamsEvent.TeamPropertiesChanged.class, _ -> client.onTeamPropertiesChanged());
+        bus.addListener(FTBTeamsEvent.TeamPropertiesChanged.class, event -> {
+            if (event.getEventData().isClient()) {
+                client.onTeamPropertiesChanged();
+            }
+        });
         bus.addListener(FTBChunksClientEvent.MapIcon.class, event -> client.onMapIconEvent(event.getEventData()));
 
         if (Platform.get().isDev()) {

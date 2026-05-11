@@ -298,11 +298,5 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
 
             addWaypointButton.setPos(getGroupData().size() > 1 ? width - 58 : width - 18, 2);
         }
-
-        private void openEditor() {
-            var editable = new EditableString();
-            new WaypointAddScreen(editable, ClientUtils.getClientPlayer()).openGui();
-
-        }
     }
 }

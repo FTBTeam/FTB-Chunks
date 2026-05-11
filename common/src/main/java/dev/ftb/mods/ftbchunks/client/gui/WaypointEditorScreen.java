@@ -80,6 +80,11 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
     }
 
     @Override
+    protected Panel createTopPanel() {
+        return new WaypointTopPanel();
+    }
+
+    @Override
     public void alignWidgets() {
         super.alignWidgets();
 
@@ -89,6 +94,17 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
             }
         });
     }
+
+    public static void refreshIfOpen() {
+        ClientUtils.runLater(() -> {
+            var screen = ClientUtils.getCurrentGuiAs(WaypointEditorScreen.class);
+            if (screen != null) {
+                screen.rebuildGroupData();
+                screen.refreshWidgets();
+            }
+        });
+    }
+
 
     private void computeWaypointTextWidth() {
         widestWaypoint = 0;
@@ -256,6 +272,37 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
                     return value.getType().getIcon().withTint(Color4I.rgb(value.getColor()));
                 }
             };
+        }
+    }
+
+    private class WaypointTopPanel extends CustomTopPanel {
+        private final SimpleButton addWaypointButton;
+
+        public WaypointTopPanel() {
+            super();
+
+            this.addWaypointButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.add_waypoint"), Icons.ADD,
+                    (_, _) -> new WaypointAddScreen(new EditableString(), ClientUtils.getClientPlayer()).openGui());
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+
+            add(addWaypointButton);
+        }
+
+        @Override
+        public void alignWidgets() {
+            super.alignWidgets();
+
+            addWaypointButton.setPos(getGroupData().size() > 1 ? width - 58 : width - 18, 2);
+        }
+
+        private void openEditor() {
+            var editable = new EditableString();
+            new WaypointAddScreen(editable, ClientUtils.getClientPlayer()).openGui();
+
         }
     }
 }

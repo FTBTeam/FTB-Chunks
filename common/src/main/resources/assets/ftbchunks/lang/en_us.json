@@ -306,7 +306,7 @@
   "ftbteamsconfig.ftbchunks.location_mode.tooltip": "Controls who can see you on the map or minimap (outside the normal vanilla tracking range)",
   "ftbteamsconfig.ftbchunks.minimap_mode": "Minimap Mode",
   "ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode": "Non-living Entity Attack Mode",
-  "ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode.tooltip": "Used when non-living entities (paintings, item frames etc.) are left-clicked",
+  "ftbteamsconfig.ftbchunks.nonliving_entity_attack_mode.tooltip": "Used when non-living entities (paintings, item frames etc.) are left-clicked or take indirect damage",
   "key.category.ftbchunks.keys": "FTB Chunks",
   "key.ftbchunks.keys.add_waypoint": "Quick Add Waypoint",
   "key.ftbchunks.keys.claim_manager": "Open Claim Manager",

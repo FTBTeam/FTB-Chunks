@@ -93,7 +93,7 @@ public class FTBChunks {
 		// note: intentionally does not prevent attacking living entities;
 		// this is for preventing griefing of entities like paintings & item frames
 		if (player instanceof ServerPlayer) {
-			if (protectedEntity(entity) && preventInteraction(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
+			if (isNonLivingOrArmorStand(entity) && preventInteraction(player, interactionHand, entity.blockPosition(), Protection.ATTACK_NONLIVING_ENTITY, entity)) {
 				return InteractionResult.FAIL;
 			}
 		}
@@ -101,7 +101,7 @@ public class FTBChunks {
 		return InteractionResult.PASS;
 	}
 
-	public static boolean protectedEntity(Entity e) {
+	public static boolean isNonLivingOrArmorStand(Entity e) {
 		// Armor stands are a special case: not really living entities, but extend LivingEntity
 		return e instanceof ArmorStand || !(e instanceof LivingEntity);
 	}

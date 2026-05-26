@@ -14,10 +14,13 @@ import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.neoforge.FTBTeamsEvent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
@@ -90,19 +93,37 @@ public class NeoEventListeners {
     }
 
     private void explosionDetonate(ExplosionEvent.Detonate event) {
-        List<BlockPos> posList = event.getAffectedBlocks();
-        var byChunk = posList.stream().collect(Collectors.groupingBy(ChunkPos::containing));
+        ResourceKey<Level> dimension = event.getExplosion().level().dimension();
 
-        List<BlockPos> newList = new ArrayList<>();
-        byChunk.forEach((chunkPos, l) -> {
-            ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(event.getExplosion().level().dimension(), chunkPos));
+        List<BlockPos> posList = event.getAffectedBlocks();
+        var blocksByChunk = posList.stream().collect(Collectors.groupingBy(ChunkPos::containing));
+        List<BlockPos> newPosList = new ArrayList<>();
+        blocksByChunk.forEach((chunkPos, l) -> {
+            ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(dimension, chunkPos));
             if (cc == null || cc.allowExplosions()) {
-                newList.addAll(l);
+                newPosList.addAll(l);
             }
         });
-        if (newList.size() != posList.size()) {
+        if (newPosList.size() != posList.size()) {
             posList.clear();
-            posList.addAll(newList);
+            posList.addAll(newPosList);
+        }
+
+        List<Entity> entityList = event.getAffectedEntities();
+        var entitiesByChunk = entityList.stream().collect(Collectors.groupingBy(Entity::chunkPosition));
+        List<Entity> newEntityList = new ArrayList<>();
+        entitiesByChunk.forEach((chunkPos, l) -> {
+            ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(dimension, chunkPos));
+            if (cc == null || cc.allowExplosions()) {
+                newEntityList.addAll(l);
+            } else {
+                // in protected chunks, don't allow non-living entities to be damaged
+                newEntityList.addAll(l.stream().filter(e -> !FTBChunks.isNonLivingOrArmorStand(e)).toList());
+            }
+        });
+        if (newEntityList.size() != entityList.size()) {
+            entityList.clear();
+            entityList.addAll(newEntityList);
         }
     }
 

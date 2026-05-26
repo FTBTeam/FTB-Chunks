@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * Fixed entity icons sometimes not rendering on large map screen (widget layering issue)
+* Better protection for all non-living entities (item frames, boats, minecarts...) as well as armor stands
+  * These are now better protected from indirect damage like arrows and explosions
+  * "Allow Explosions" and "Non-living Entity Attack Mode" team properties control these protections
 
 ## [26.1.2.3]
 

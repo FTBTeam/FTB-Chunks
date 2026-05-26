@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.AddMapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.AddMinimapLayerEvent;
@@ -30,10 +29,8 @@ import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.platform.client.PlatformClient;
-import dev.ftb.mods.ftblibrary.platform.client.input.InputHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -62,17 +59,6 @@ public enum FTBChunksClient {
     private static final Identifier BUTTON_ID_MAP = FTBChunksAPI.id("open_gui");
     private static final Identifier BUTTON_ID_CLAIM = FTBChunksAPI.id("open_claim_gui");
 
-    private static final KeyMapping.Category KEY_CATEGORY = new KeyMapping.Category(FTBChunksAPI.id("keys"));
-
-    // Keybinding to open Large map screen
-    public static final KeyMapping openMapKey = InputHelper.createSimpleKeyMapping("map", KEY_CATEGORY, InputConstants.KEY_M);
-    public static final KeyMapping toggleMinimapKey = InputHelper.createSimpleKeyMapping("toggle_minimap", KEY_CATEGORY);
-    public static final KeyMapping openClaimManagerKey = InputHelper.createSimpleKeyMapping("claim_manager", KEY_CATEGORY);
-    public static final KeyMapping zoomInKey = InputHelper.createSimpleKeyMapping("zoom_in", KEY_CATEGORY, InputConstants.KEY_EQUALS);
-    public static final KeyMapping zoomOutKey = InputHelper.createSimpleKeyMapping("zoom_out", KEY_CATEGORY, InputConstants.KEY_MINUS);
-    public static final KeyMapping addWaypointKey = InputHelper.createSimpleKeyMapping("add_waypoint", KEY_CATEGORY);
-    public static final KeyMapping waypointManagerKey = InputHelper.createSimpleKeyMapping("waypoint_manager", KEY_CATEGORY);
-
     private long taskQueueTicks = 0L;
     private long nextRegionSave = 0L;
     private GeneralChunkData generalChunkData = GeneralChunkData.NONE;
@@ -84,7 +70,7 @@ public enum FTBChunksClient {
     public FTBChunksClient init() {
         FTBChunksAPI._initClient(new FTBChunksClientAPIImpl());
 
-        registerKeyMappings();
+        FTBChunksKeyMappings.init();
 
         PlatformClient.get().addResourcePackReloadListener(FTBChunksAPI.MOD_ID, FTBChunksAPI.id("colormap"), new ColorMapLoader());
 
@@ -95,12 +81,6 @@ public enum FTBChunksClient {
 
     public void addTestMinimapLayer(AddMinimapLayerEvent.Data event) {
         event.addLayer(FTBChunksAPI.id("test"), FTBChunksClient::renderTestMinimapLayer, AddMinimapLayerEvent.Order.atEnd());
-    }
-
-    private void registerKeyMappings() {
-        PlatformClient.get().input().registerKeyMapping(FTBChunksAPI.MOD_ID,
-                openMapKey, toggleMinimapKey, openClaimManagerKey, zoomInKey, zoomOutKey, addWaypointKey, waypointManagerKey
-        );
     }
 
     public void onClientStarted(Minecraft ignoredMc) {
@@ -152,20 +132,20 @@ public enum FTBChunksClient {
             return;
         }
 
-        if (openMapKey.isDown()) {
+        if (FTBChunksKeyMappings.MAP_KEY.isDown()) {
             LargeMapScreen.openMap();
-        } else if (toggleMinimapKey.isDown()) {
+        } else if (FTBChunksKeyMappings.TOGGLE_MINIMAP_KEY.isDown()) {
             FTBChunksClientConfig.MINIMAP_ENABLED.set(!FTBChunksClientConfig.MINIMAP_ENABLED.get());
             FTBChunksClientConfig.saveConfig();
-        } else if (openClaimManagerKey.isDown()) {
+        } else if (FTBChunksKeyMappings.CLAIM_MANAGER_KEY.isDown()) {
             ChunkScreen.openChunkScreen();
-        } else if (zoomInKey.isDown()) {
+        } else if (FTBChunksKeyMappings.ZOOM_IN_KEY.isDown()) {
             minimapRenderer.changeZoom(true);
-        } else if (zoomOutKey.isDown()) {
+        } else if (FTBChunksKeyMappings.ZOOM_OUT_KEY.isDown()) {
             minimapRenderer.changeZoom(false);
-        } else if (addWaypointKey.isDown()) {
+        } else if (FTBChunksKeyMappings.ADD_WAYPOINT_KEY.isDown()) {
             addQuickWaypoint();
-        } else if (waypointManagerKey.isDown()) {
+        } else if (FTBChunksKeyMappings.WAYPOINT_MANAGER_KEY.isDown()) {
             new WaypointEditorScreen().openGui();
         }
     }

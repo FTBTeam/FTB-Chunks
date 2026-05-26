@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksKeyMappings;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.map.*;
 import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
@@ -210,7 +210,7 @@ public class LargeMapScreen extends BaseScreen {
             FTBChunksClientConfig.saveConfig();
             dimension.getManager().updateAllRegions(false);
             return true;
-        } else if (FTBChunksClient.openMapKey.matches(key.event())) {
+        } else if (FTBChunksKeyMappings.MAP_KEY.matches(key.event())) {
             closeGui(false);
             return true;
         }

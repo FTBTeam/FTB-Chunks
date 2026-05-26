@@ -30,6 +30,7 @@ import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.platform.client.PlatformClient;
+import dev.ftb.mods.ftblibrary.platform.client.input.InputHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
@@ -64,26 +65,13 @@ public enum FTBChunksClient {
     private static final KeyMapping.Category KEY_CATEGORY = new KeyMapping.Category(FTBChunksAPI.id("keys"));
 
     // Keybinding to open Large map screen
-    public static final KeyMapping openMapKey
-            = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, InputConstants.KEY_M, KEY_CATEGORY);
-    // Keybinding to toggle the minimap
-    public static final KeyMapping toggleMinimapKey
-            = new KeyMapping("key.ftbchunks.toggle_minimap", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-    // Keybinding to open claim manager screen
-    public static final KeyMapping openClaimManagerKey
-            = new KeyMapping("key.ftbchunks.claim_manager", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-    // Keybinding to zoom in minimap
-    public static final KeyMapping zoomInKey
-            = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, InputConstants.KEY_EQUALS, KEY_CATEGORY);
-    // Keybinding to zoom out minimap
-    public static final KeyMapping zoomOutKey
-            = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, InputConstants.KEY_MINUS, KEY_CATEGORY);
-    // Keybinding to quick-add waypoint at current position
-    public static final KeyMapping addWaypointKey
-            = new KeyMapping("key.ftbchunks.add_waypoint", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-    // Keybinding to open the waypoint manager screen
-    public static final KeyMapping waypointManagerKey
-            = new KeyMapping("key.ftbchunks.waypoint_manager", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
+    public static final KeyMapping openMapKey = InputHelper.createSimpleKeyMapping("map", KEY_CATEGORY, InputConstants.KEY_M);
+    public static final KeyMapping toggleMinimapKey = InputHelper.createSimpleKeyMapping("toggle_minimap", KEY_CATEGORY);
+    public static final KeyMapping openClaimManagerKey = InputHelper.createSimpleKeyMapping("claim_manager", KEY_CATEGORY);
+    public static final KeyMapping zoomInKey = InputHelper.createSimpleKeyMapping("zoom_in", KEY_CATEGORY, InputConstants.KEY_EQUALS);
+    public static final KeyMapping zoomOutKey = InputHelper.createSimpleKeyMapping("zoom_out", KEY_CATEGORY, InputConstants.KEY_MINUS);
+    public static final KeyMapping addWaypointKey = InputHelper.createSimpleKeyMapping("add_waypoint", KEY_CATEGORY);
+    public static final KeyMapping waypointManagerKey = InputHelper.createSimpleKeyMapping("waypoint_manager", KEY_CATEGORY);
 
     private long taskQueueTicks = 0L;
     private long nextRegionSave = 0L;
@@ -110,7 +98,7 @@ public enum FTBChunksClient {
     }
 
     private void registerKeyMappings() {
-        PlatformClient.get().registerKeyMapping(FTBChunksAPI.MOD_ID,
+        PlatformClient.get().input().registerKeyMapping(FTBChunksAPI.MOD_ID,
                 openMapKey, toggleMinimapKey, openClaimManagerKey, zoomInKey, zoomOutKey, addWaypointKey, waypointManagerKey
         );
     }
@@ -141,7 +129,8 @@ public enum FTBChunksClient {
     }
 
     public void onPlayerQuit() {
-        MapManager.shutdown();
+        // Note: on Fabric, this gets called on a network thread
+        Minecraft.getInstance().schedule(MapManager::shutdown);
     }
 
     public boolean handleCustomClick(Identifier id) {

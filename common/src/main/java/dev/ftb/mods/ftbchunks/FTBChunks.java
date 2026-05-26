@@ -101,7 +101,7 @@ public class FTBChunks {
 		return InteractionResult.PASS;
 	}
 
-	private boolean protectedEntity(Entity e) {
+	public static boolean protectedEntity(Entity e) {
 		// Armor stands are a special case: not really living entities, but extend LivingEntity
 		return e instanceof ArmorStand || !(e instanceof LivingEntity);
 	}

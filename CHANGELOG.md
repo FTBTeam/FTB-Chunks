@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2101.1.15]
 
+### Added
+* Added protection for fluids flowing across claim boundaries
+  * Fluids flowing into a claimed chunk from an unclaimed chunk or chunk claimed by a different team are stopped
+    * Unless the team's "Edit Block" team property is set to public
+  * Disabled by default due to potential for performance issues (fluid flow can be calculated very frequently by the server)
+  * Set "Flowing Fluid Protection" to `true` in server config to enable
+
 ### Fixed
 * Fixed team claim limits not getting updated immediately when a player leaves the team
 

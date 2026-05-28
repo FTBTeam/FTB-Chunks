@@ -1,27 +1,29 @@
 package dev.ftb.mods.ftbchunks.neoforge;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
-import dev.ftb.mods.ftbchunks.api.FTBChunksTags;
-import dev.ftb.mods.ftbchunks.api.Protection;
+import dev.ftb.mods.ftbchunks.api.*;
 import dev.ftb.mods.ftbchunks.command.FTBChunksCommands;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.util.FTBCUtils;
+import dev.ftb.mods.ftbchunks.util.FireSpreadHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.neoforge.FTBTeamsEvent;
+import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Util;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
@@ -43,6 +45,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class NeoEventListeners {
@@ -73,6 +76,7 @@ public class NeoEventListeners {
         bus.addListener(EventPriority.HIGHEST, this::blockBreak);
         bus.addListener(EventPriority.HIGHEST, this::blockPlace);
         bus.addListener(EventPriority.HIGHEST, this::playerAttackEntity);
+        bus.addListener(EventPriority.HIGHEST, this::fluidCauseFire);
 
         bus.addListener(this::entityInteractSpecific);
         bus.addListener(this::mobGriefing);
@@ -90,6 +94,14 @@ public class NeoEventListeners {
 
         // TODO bucket filling mixin (do we need this?)
 //        bus.addListener(this::fillBucket);
+    }
+
+    private void fluidCauseFire(BlockEvent.FluidPlaceBlockEvent event) {
+        if (event.getNewState().getBlock() instanceof BaseFireBlock
+                && FireSpreadHelper.shouldPreventFireSpread(event.getLevel(), event.getLiquidPos(), event.getPos()))
+        {
+            event.setCanceled(true);
+        }
     }
 
     private void explosionDetonate(ExplosionEvent.Detonate event) {

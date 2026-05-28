@@ -8,6 +8,7 @@
     "BlockStateMixin",
     "ChunkMapMixin",
     "EntityMixin",
+    "FireBlockMixin",
     "FlowingFluidMixin",
     "PistonBaseBlockMixin"
   ],

@@ -155,6 +155,8 @@
   "ftbchunks.config.server.piston_protection.tooltip": "If true, pistons may not push/pull blocks across claims owned by different teams (unless the block is entering/leaving a claim with block edit mode set to Public)\nIf 'disable_protection' is set to true, this setting is ignored.",
   "ftbchunks.config.server.flowing_fluid_protection": "Flowing Fluid Protection",
   "ftbchunks.config.server.flowing_fluid_protection.tooltip": "If true, fluids are prevented from flowing horizontally across claims owned by different teams (unless the target claim has public 'edit block' permissions defined).\nFalse by default; enabling this can potentially lead to server performance issues, since fluid flow ticks are checked very frequently, especially for large bodies of flowing fluids\nIf 'disable_protection' is set to true, this setting is ignored.",
+  "ftbchunks.config.server.fire_spread_protection": "Fire Spread Protection",
+  "ftbchunks.config.server.fire_spread_protection.tooltip": "If true, fire is prevented from spreading across claims owned by different teams (unless the target claim has public 'edit block' permissions defined).\nFalse by default; enabling this can potentially lead to server performance issues, especially when many blocks are on fire\nIf 'disable_protection' is set to true, this setting is ignored.",
   "ftbchunks.config.server.protect_unknown_explosions": "Prevent Explosions from Unknown Sources",
   "ftbchunks.config.server.protect_unknown_explosions.tooltip": "Some explosion sources (e.g. Ghasts) can't be determined in code.\nIf this setting is true, damage from these explosion is prevented in protected chunks.",
   "ftbchunks.config.server.pvp_mode": "Allow PvP Combat in Claimed Chunks",

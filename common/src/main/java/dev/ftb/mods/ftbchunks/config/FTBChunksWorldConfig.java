@@ -44,7 +44,9 @@ public interface FTBChunksWorldConfig {
 	BooleanValue LOCATION_MODE_OVERRIDE = CONFIG.addBoolean("location_mode_override", false)
 			.comment("If true, \"Location Visibility\" team settings are ignored, and all players can see each other anywhere on the map.");
 	BooleanValue PISTON_PROTECTION = CONFIG.addBoolean("piston_protection", true)
-			.comment("If true, pistons are prevented from pushing/pulling blocks across claims owned by different teams (unless the target claim has public 'edit block' permissions defined). If 'disable_protection' is set to true, this setting is ignored.");
+			.comment("If true, pistons are prevented from pushing/pulling blocks across claims owned by different teams (unless the target claim has public 'edit block' permissions defined).", "If 'disable_protection' is set to true, this setting is ignored.");
+	BooleanValue FLOWING_FLUID_PROTECTION = CONFIG.addBoolean("flowing_fluid_protection", false)
+			.comment("If true, fluids are prevented from flowing horizontally across claims owned by different teams (unless the target claim has public 'edit block' permissions defined).", "False by default; enabling this can potentially lead to server performance issues, since fluid flow ticks are checked very frequently, especially for large bodies of flowing fluids", "If 'disable_protection' is set to true, this setting is ignored.");
 
 	Config FAKE_PLAYERS = CONFIG.addGroup("fake_players");
 	EnumValue<ProtectionPolicy> ALLOW_FAKE_PLAYERS = FAKE_PLAYERS.addEnum("fake_players", NameMap.of(ProtectionPolicy.CHECK, ProtectionPolicy.values()).create())

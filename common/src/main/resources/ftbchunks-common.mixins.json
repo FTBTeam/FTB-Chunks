@@ -1,21 +1,22 @@
 {
-	"required": true,
-	"package": "dev.ftb.mods.ftbchunks.core.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"mixins": [
-		"ArmorStandMixin",
-		"BiomeMixin",
-		"BlockStateMixin",
-		"ChunkMapMixin",
-		"PistonBaseBlockMixin"
-	],
-	"client": [
-		"ClientPacketListenerMixin",
-		"GuiMixin",
-		"UtilMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"minVersion": "0.8"
+  "required": true,
+  "package": "dev.ftb.mods.ftbchunks.core.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ArmorStandMixin",
+    "BiomeMixin",
+    "BlockStateMixin",
+    "ChunkMapMixin",
+    "FlowingFluidMixin",
+    "PistonBaseBlockMixin"
+  ],
+  "client": [
+    "ClientPacketListenerMixin",
+    "GuiMixin",
+    "UtilMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
 }

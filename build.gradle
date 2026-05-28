@@ -1,7 +1,7 @@
 plugins {
 	id "architectury-plugin" version "3.4-SNAPSHOT"
 	id "dev.architectury.loom" version "1.7-SNAPSHOT" apply false
-	id "me.modmuss50.mod-publish-plugin" version "0.5.1"
+	id "me.modmuss50.mod-publish-plugin" version "2.0.0-beta.2"
 }
 
 apply from: 'https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/changelog.gradle'
@@ -108,6 +108,8 @@ publishMods {
 		accessToken = providers.environmentVariable("CURSEFORGE_KEY")
 		minecraftVersions.add("${minecraft_version}")
 		javaVersions.add(JavaVersion.VERSION_21)
+		server = true
+		client = true
 	}
 
 	curseforge("curseforgeFabric") {

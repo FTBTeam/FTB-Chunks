@@ -1,6 +1,7 @@
-package dev.ftb.mods.ftbchunks;
+package dev.ftb.mods.ftbchunks.util;
 
 import dev.architectury.platform.Platform;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;

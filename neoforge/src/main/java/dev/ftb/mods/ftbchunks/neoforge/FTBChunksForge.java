@@ -6,20 +6,24 @@ import dev.ftb.mods.ftbchunks.api.Protection;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.neoforge.integration.FTBBackups3Integration;
+import dev.ftb.mods.ftbchunks.util.FireSpreadHelper;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.block.BaseFireBlock;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityMobGriefingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 @Mod(FTBChunks.MOD_ID)
 public class FTBChunksForge {
 	public FTBChunksForge(IEventBus modEventBus) {
 		NeoForge.EVENT_BUS.addListener(this::entityInteractSpecific);
 		NeoForge.EVENT_BUS.addListener(this::mobGriefing);
+		NeoForge.EVENT_BUS.addListener(this::fluidCauseFire);
 
 		if (ModList.get().isLoaded("ftbbackups3")) {
 			FTBBackups3Integration.init();
@@ -56,6 +60,14 @@ public class FTBChunksForge {
 			if (cc != null && !cc.allowMobGriefing()) {
 				event.setCanGrief(false);
 			}
+		}
+	}
+
+	private void fluidCauseFire(BlockEvent.FluidPlaceBlockEvent event) {
+		if (event.getNewState().getBlock() instanceof BaseFireBlock
+				&& FireSpreadHelper.shouldPreventFireSpread(event.getLevel(), event.getLiquidPos(), event.getPos()))
+		{
+			event.setCanceled(true);
 		}
 	}
 }

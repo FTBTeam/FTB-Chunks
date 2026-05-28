@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftbchunks.core.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import dev.ftb.mods.ftbchunks.FlowingFluidHelper;
+import dev.ftb.mods.ftbchunks.util.FlowingFluidHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;

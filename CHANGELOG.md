@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Better protection for all non-living entities (item frames, boats, minecarts...) as well as armor stands
   * These are now better protected from indirect damage like arrows and explosions
   * "Allow Explosions" and "Non-living Entity Attack Mode" team properties control these protections
+* Added protection for fluids flowing across claim boundaries
+  * Fluids flowing into a claimed chunk from an unclaimed chunk or chunk claimed by a different team are stopped
+    * Unless the team's "Edit Block" team property is set to public
+  * Disabled by default due to potential for performance issues (fluid flow can be calculated very frequently by the server)
+  * Set "Flowing Fluid Protection" to `true` in server config to enable
+* Added protection for fire spreading across claim boundaries
+  * Fire spreading (from fire or lava) into a claimed chunk from an unclaimed chunk or chunk claimed by a different team are stopped
+    * Unless the team's "Edit Block" team property is set to public
+  * Disabled by default due to potential for performance issues (similarly to fluid protection)
+  * Set "Fire Spread Protection" to `true` in server config to enable
 
 ## [26.1.2.3]
 

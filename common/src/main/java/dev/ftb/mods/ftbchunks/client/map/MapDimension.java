@@ -10,6 +10,7 @@ import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
+import dev.ftb.mods.ftbteams.api.Team;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -155,6 +156,18 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 
 			return region;
 		}
+	}
+
+	public @Nullable Team getOwningTeam(ChunkPos pos) {
+		MapRegion mapRegion = getRegions().get(XZ.regionFromChunk(pos));
+		if (mapRegion != null) {
+			MapRegionData data = mapRegion.getData();
+			if (data != null) {
+				MapChunk mapChunk = mapRegion.getMapChunk(XZ.of(pos.x() & 31, pos.z() & 31));
+				return mapChunk == null ? null : mapChunk.getTeam().orElse(null);
+			}
+		}
+		return null;
 	}
 
 	public WaypointManagerImpl getWaypointManager() {

@@ -4,7 +4,6 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapComponentContext;
 import dev.ftb.mods.ftbchunks.api.client.minimap.MinimapInfoComponent;
 import dev.ftb.mods.ftbchunks.api.client.minimap.TranslatedOption;
-import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
@@ -13,10 +12,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.world.level.ChunkPos;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,17 +50,10 @@ public class ZoneInfoComponent implements MinimapInfoComponent {
         long now = Util.getEpochMillis();
         if (now - lastCheck > 500L) {
             lastCheck = now;
-            team = null;
-
-            var data = context.mapDimension().getRegion(XZ.regionFromChunk(context.mapChunksPos().x(), context.mapChunksPos().z())).getData();
-            if (data != null) {
-                Optional<Team> foundTeam = data.getChunk(XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).getTeam();
-                if (foundTeam.isPresent()) {
-                    team = foundTeam.get();
-                    shouldRender = true;
-                }
-            }
-            if (team == null) {
+            team = context.mapDimension().getOwningTeam(new ChunkPos(context.mapChunksPos().x(), context.mapChunksPos().z()));
+            if (team != null) {
+                shouldRender = true;
+            } else {
                 String setting = context.getSetting(this);
                 shouldRender = !setting.isEmpty() && !setting.equals(ShowWilderness.JUST_CLAIMED.name());
             }

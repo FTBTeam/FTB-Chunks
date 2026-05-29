@@ -9,7 +9,9 @@
     "ChunkMapMixin",
     "FireBlockMixin",
     "FlowingFluidMixin",
-    "PistonBaseBlockMixin"
+    "ItemFrameMixin",
+    "PistonBaseBlockMixin",
+    "VehicleEntityMixin"
   ],
   "client": [
     "ClientPacketListenerMixin",

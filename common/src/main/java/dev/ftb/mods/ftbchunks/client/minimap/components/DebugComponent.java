@@ -39,7 +39,7 @@ public class DebugComponent implements MinimapInfoComponent {
 
         addLine(components, "TaskQ",  ClientTaskQueue.queueSize());
         addLine(components, "Chunk",  "[" + chunkXZ.x() + ", " + chunkXZ.z() + "]");
-        addLine(components, "Mem~",  StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB");
+        addLine(components, "Mem",  "~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB");
         addLine(components, "Updates", FTBChunksClient.INSTANCE.getRerenderTracker().getRerenderCount());
         if (ChunkUpdateTask.getDebugLastTime() > 0L) {
             addLine(components, "Last", String.format("%,d ns", ChunkUpdateTask.getDebugLastTime()));

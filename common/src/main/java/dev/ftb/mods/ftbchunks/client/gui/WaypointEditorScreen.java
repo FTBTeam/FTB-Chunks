@@ -126,12 +126,12 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
         public RowPanel(Panel parent, WaypointImpl waypoint) {
             super(parent, waypoint);
 
-            hideButton = new ToggleableButton(this, !value.isHidden(), (widget, newState) -> value.setHidden(!newState));
+            hideButton = new ToggleableButton(this, !value.isHidden(), (_, newState) -> value.setHidden(!newState));
             nameField = new TextField(this).setTrim().setColor(Color4I.rgb(value.getColor())).addFlags(Theme.SHADOW);
             String distStr = ClientUtils.getClientLevel().dimension().equals(value.getDimension()) ?
                     String.format("%.1fm", Math.sqrt(value.getDistanceSq(ClientUtils.getClientPlayer()))) : "";
             distField = new TextField(this).setText(distStr).setColor(Color4I.WHITE);
-            deleteButton = new SimpleButton(this, DELETE, Icons.BIN, (w, mb) -> deleteWaypoint(!isShiftKeyDown())) {
+            deleteButton = new SimpleButton(this, DELETE, Icons.BIN, (_, _) -> deleteWaypoint(!isShiftKeyDown())) {
                 @Override
                 public Component getTitle() {
                     return isShiftKeyDown() ? QUICK_DELETE : DELETE;
@@ -195,7 +195,7 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
                 list.add(makeTitleMenuItem());
                 list.add(ContextMenuItem.SEPARATOR);
 
-                list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> openWaypointEditPanel()));
+                list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, _ -> openWaypointEditPanel()));
 
                 WaypointShareMenu.build(ClientUtils.getClientPlayer(), value).ifPresent(list::add);
 
@@ -227,12 +227,12 @@ public class WaypointEditorScreen extends AbstractGroupedButtonListScreen<Resour
                     }));
                 }
                 if (ClientUtils.getClientPlayer().permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {  // permissions are checked again on server!
-                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.ofItem(Items.ENDER_PEARL), btn -> {
+                    list.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.teleport"), ItemIcon.ofItem(Items.ENDER_PEARL), _ -> {
                         Play2ServerNetworking.send(new TeleportFromMapPacket(value.getPos().above(), false, value.getDimension()));
                         closeGui(false);
                     }));
                 }
-                list.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, btn -> deleteWaypoint(true)));
+                list.add(new ContextMenuItem(DELETE, Icons.BIN, _ -> deleteWaypoint(true)));
 
                 getGui().openContextMenu(list);
                 return true;

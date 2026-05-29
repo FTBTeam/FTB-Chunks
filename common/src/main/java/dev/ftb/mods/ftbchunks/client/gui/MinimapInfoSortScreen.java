@@ -234,7 +234,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         List<String> list = new LinkedList<>();
         infoSortList.forEach(Identifier -> list.add(Identifier.toString()));
         FTBChunksClientConfig.MINIMAP_INFO_ORDER.set(list);
-        FTBChunksClientConfig.saveConfig();
+        FTBChunksClientConfig.saveNeeded();
         FTBChunksClient.INSTANCE.getMinimapRenderer().setupComponents();
     }
 
@@ -258,7 +258,7 @@ public class MinimapInfoSortScreen extends AbstractThreePanelScreen<MinimapInfoS
         Map<String, String> stringStringMap = FTBChunksClientConfig.MINIMAP_SETTINGS.get();
         stringStringMap.put(component.id().toString(), option.optionName());
         FTBChunksClientConfig.MINIMAP_SETTINGS.set(stringStringMap);
-        FTBChunksClientConfig.saveConfig();
+        FTBChunksClientConfig.saveNeeded();
     }
 
 }

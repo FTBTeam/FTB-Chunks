@@ -26,7 +26,7 @@
 	"ftbchunks.config.client.minimap.visibility": "小地图透明度",
 	"ftbchunks.config.client.minimap.zone": "小地图zone",
 	"sidebar_button.ftbchunks.chunks": "FTB区块声明",
-	"key.ftbchunks.map": "打开FTB区块声明地图",
+	"key.ftbchunks.keys.map": "打开FTB区块声明地图",
 	"wilderness": "野外",
 	"ftbchunks.no_server_mod": "服务器需要此Mod！",
 	"ftbchunks.already_claimed": "此区块已被%s认领",

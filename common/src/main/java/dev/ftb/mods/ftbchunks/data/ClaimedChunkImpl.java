@@ -16,8 +16,6 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.UnknownNullability;
-import org.jspecify.annotations.NonNull;
 
 public class ClaimedChunkImpl implements ClaimedChunk {
 	private ChunkTeamDataImpl teamData;
@@ -40,7 +38,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 		return teamData;
 	}
 
-	public void setTeamData(@NonNull ChunkTeamDataImpl teamData) {
+	public void setTeamData(ChunkTeamDataImpl teamData) {
 		teamData.clearClaimCaches();
 		this.teamData.clearClaimCaches();
 		this.teamData = teamData;
@@ -102,7 +100,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
         }
 	}
 
-	public boolean canEntitySpawn(@UnknownNullability EntityType<?> entity) {
+	public boolean canEntitySpawn(EntityType<?> entity) {
 		return true;
 	}
 
@@ -163,7 +161,7 @@ public class ClaimedChunkImpl implements ClaimedChunk {
 
 	@Override
 	public String toString() {
-		return "[ " + pos.toString() + " - " + teamData + " ]";
+		return "[ " + pos + " - " + teamData + " ]";
 	}
 
 	public Json5Object toJson() {

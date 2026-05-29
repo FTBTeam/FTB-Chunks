@@ -3,7 +3,6 @@ package dev.ftb.mods.ftbchunks.client.gui.map;
 import dev.ftb.mods.ftbchunks.api.client.event.AddMapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
-import dev.ftb.mods.ftbchunks.client.map.MapChunk;
 import dev.ftb.mods.ftbchunks.client.map.MapRegion;
 import dev.ftb.mods.ftbchunks.client.map.MapRegionData;
 import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
@@ -18,11 +17,15 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,16 +184,10 @@ public class RegionMapPanel extends Panel {
 	public void addMouseOverText(TooltipList list) {
 		super.addMouseOverText(list);
 
-		MapRegion mapRegion = largeMapScreen.dimension.getRegions().get(XZ.regionFromBlock(blockX, blockZ));
-		if (mapRegion != null) {
-			MapRegionData data = mapRegion.getData();
-			if (data != null) {
-				MapChunk mapChunk = mapRegion.getMapChunk(XZ.of((blockX >> 4) & 31, (blockZ >> 4) & 31));
-				Team team = mapChunk == null ? null : mapChunk.getTeam().orElse(null);
-				if (team != null) {
-					list.add(team.getName());
-				}
-			}
+		Team team = largeMapScreen.dimension.getOwningTeam(new ChunkPos(blockX >> 4, blockZ >> 4));
+		if (team != null) {
+			list.add(team.getName());
+			list.add(Component.translatable(team.getTypeTranslationKey()).withStyle(ChatFormatting.GRAY));
 		}
 	}
 

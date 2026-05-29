@@ -54,7 +54,6 @@ public class MapRegion implements MapTask {
 		return lastDataAccess;
 	}
 	
-	@NonNull
 	public MapRegionData getDataBlocking() {
 		synchronized (dimension.getManager().lock) {
 			return getDataBlockingNoSync();

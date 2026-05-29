@@ -54,7 +54,7 @@ public class FTBChunksClientAPIImpl implements FTBChunksClientAPI {
         } else {
             FTBChunksClientConfig.MINIMAP_INFO_HIDDEN.get().add(component.id().toString());
         }
-        FTBChunksClientConfig.saveConfig();
+        FTBChunksClientConfig.saveNeeded();
         FTBChunksClient.INSTANCE.getMinimapRenderer().setupComponents();
     }
 

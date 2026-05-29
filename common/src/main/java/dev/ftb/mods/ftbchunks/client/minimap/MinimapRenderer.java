@@ -35,6 +35,7 @@ import java.util.stream.IntStream;
 
 public class MinimapRenderer {
     private static final float ZOOM_FUDGE_FACTOR = 3.5F;
+    public static final double ZOOM_FACTOR = 1.257013375D;  // cube root of 2
 
     private final Lazy<MinimapRegionCutoutTexture> miniMapTexture = Lazy.of(MinimapRegionCutoutTexture::new);
     private XZ currentPlayerChunk = XZ.of(0, 0);
@@ -198,11 +199,14 @@ public class MinimapRenderer {
     public void changeZoom(boolean zoomIn) {
         prevZoom = FTBChunksClientConfig.MINIMAP_ZOOM.get().floatValue();
         lastZoomTime = Util.getEpochMillis();
-        double newZoom = Mth.clamp(prevZoom + (zoomIn ? 1D : -1D), 1D, 4D);
-        FTBChunksClientConfig.MINIMAP_ZOOM.set(newZoom);
+        double newZoom = Mth.clamp(prevZoom * (zoomIn ? ZOOM_FACTOR : 1 / ZOOM_FACTOR), 1D, 4D);
+        if (newZoom != prevZoom) {
+            FTBChunksClientConfig.MINIMAP_ZOOM.set(newZoom);
+            FTBChunksClientConfig.saveNeeded();
 
-        if (FTBChunksClientConfig.shouldBlurTexture(newZoom) != FTBChunksClientConfig.shouldBlurTexture(prevZoom)) {
-            requestTextureRefresh();
+            if (FTBChunksClientConfig.shouldBlurTexture(newZoom) != FTBChunksClientConfig.shouldBlurTexture(prevZoom)) {
+                requestTextureRefresh();
+            }
         }
     }
 
@@ -321,7 +325,7 @@ public class MinimapRenderer {
 
         if (save) {
             FTBChunksClientConfig.MINIMAP_INFO_ORDER.set(order.stream().map(Identifier::toString).collect(Collectors.toList()));
-            FTBChunksClientConfig.saveConfig();
+            FTBChunksClientConfig.saveNeeded();
         }
     }
 }

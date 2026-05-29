@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [26.1.2.4]
+
+### Added
+* Better protection for all non-living entities (item frames, boats, minecarts...) as well as armor stands
+  * These are now better protected from indirect damage like arrows and explosions
+  * "Allow Explosions" and "Non-living Entity Attack Mode" team properties control these protections
+* Added protection for fluids flowing across claim boundaries
+  * Fluids flowing into a claimed chunk from an unclaimed chunk or chunk claimed by a different team are stopped
+    * Unless the team's "Edit Block" team property is set to public
+  * Disabled by default due to potential for performance issues (fluid flow can be calculated very frequently by the server)
+  * Set "Flowing Fluid Protection" to `true` in server config to enable
+* Added protection for fire spreading across claim boundaries
+  * Fire spreading (from fire or lava) into a claimed chunk from an unclaimed chunk or chunk claimed by a different team are stopped
+    * Unless the team's "Edit Block" team property is set to public
+  * Disabled by default due to potential for performance issues (similarly to fluid protection)
+  * Set "Fire Spread Protection" to `true` in server config to enable
+* Added API methods for querying chunk team ownership and force-load status which can also be used clientside
+  * `FTBChunksAPI.API#isForceLoadingRequested` and `FTBChunksAPI.API#getOwningTeam`
+  * Deprecated `FTBChunksAPI.API#isChunkForceloaded`
+
+### Changelog
+* Better minimap zooming behaviour (zoom level change is multiplicative now instead of additive)
+
+### Fixed
+* Fixed entity icons sometimes not rendering on large map screen (widget layering issue)
+* Fixed minimap zoom level changes not always getting saved to client config
+
 ## [26.1.2.3]
 
 ### Added

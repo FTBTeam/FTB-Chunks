@@ -1,9 +1,13 @@
 package dev.ftb.mods.ftbchunks.util;
 
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
 import dev.ftb.mods.ftbchunks.data.CustomMinYRegistry;
 import dev.ftb.mods.ftbchunks.api.LevelMinYCalculator;
 import dev.ftb.mods.ftbchunks.api.event.CustomMinYEvent;
+import dev.ftb.mods.ftblibrary.platform.Platform;
 import dev.ftb.mods.ftblibrary.platform.event.NativeEventPosting;
+import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -32,4 +36,10 @@ public class FTBCUtils {
         NativeEventPosting.get().postEvent(new CustomMinYEvent.Data(list));
         CustomMinYRegistry.getInstance(clientSide).register(list);
     }
+
+	public static PrivacyProperty getPlatformEditProp() {
+		return Platform.get().isFabric() ?
+				FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
+				FTBChunksProperties.BLOCK_EDIT_MODE;
+	}
 }

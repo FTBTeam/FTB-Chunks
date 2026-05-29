@@ -2,7 +2,7 @@ package dev.ftb.mods.ftbchunks.client.gui.map;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.client.FTBChunksKeyMappings;
 import dev.ftb.mods.ftbchunks.client.gui.AddWaypointOverlay;
 import dev.ftb.mods.ftbchunks.client.gui.MinimapInfoSortScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
@@ -55,7 +55,7 @@ class MapScreenButtonPanel extends Panel {
                 TextComponentUtils.hotkeyTooltip("C"));
 
         Component tooltip = Component.literal("[")
-                .append(FTBChunksClient.waypointManagerKey.getTranslatedKeyMessage())
+                .append(FTBChunksKeyMappings.WAYPOINT_MANAGER_KEY.getTranslatedKeyMessage())
                 .append(Component.literal("]")).withStyle(ChatFormatting.GRAY);
         waypointManagerButton = new SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.waypoints"), Icons.COMPASS,
                 (_, _) -> new WaypointEditorScreen().openGui(), tooltip);
@@ -143,7 +143,7 @@ class MapScreenButtonPanel extends Panel {
                 settingsButton.onClicked(MouseButton.LEFT);
             }
             return true;
-        } else if (FTBChunksClient.waypointManagerKey.isDown()) {
+        } else if (FTBChunksKeyMappings.WAYPOINT_MANAGER_KEY.isDown()) {
             waypointManagerButton.onClicked(MouseButton.LEFT);
             return true;
         }

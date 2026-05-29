@@ -29,7 +29,7 @@ public class EntityIconUtils {
             // entity not listed in the config (most likely a new mod was added) - get its defaults if possible
             EntityIconSettings settings = EntityIconLoader.getSettings(type).orElse(EntityIconSettings.legacy());
             FTBChunksClientConfig.ENTITY_ICON.get().put(key.identifier().toString(), settings.defaultEnabled());
-            FTBChunksClientConfig.saveConfig();
+            FTBChunksClientConfig.saveNeeded();
             return settings.defaultEnabled();
         } else {
             return FTBChunksClientConfig.ENTITY_ICON.get().get(key.identifier().toString());

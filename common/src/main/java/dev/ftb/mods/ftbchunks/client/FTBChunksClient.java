@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftbchunks.client;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.AddMapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.AddMinimapLayerEvent;
@@ -32,7 +31,6 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.platform.client.PlatformClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -61,30 +59,6 @@ public enum FTBChunksClient {
     private static final Identifier BUTTON_ID_MAP = FTBChunksAPI.id("open_gui");
     private static final Identifier BUTTON_ID_CLAIM = FTBChunksAPI.id("open_claim_gui");
 
-    private static final KeyMapping.Category KEY_CATEGORY = new KeyMapping.Category(FTBChunksAPI.id("keys"));
-
-    // Keybinding to open Large map screen
-    public static final KeyMapping openMapKey
-            = new KeyMapping("key.ftbchunks.map", InputConstants.Type.KEYSYM, InputConstants.KEY_M, KEY_CATEGORY);
-    // Keybinding to toggle the minimap
-    public static final KeyMapping toggleMinimapKey
-            = new KeyMapping("key.ftbchunks.toggle_minimap", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-    // Keybinding to open claim manager screen
-    public static final KeyMapping openClaimManagerKey
-            = new KeyMapping("key.ftbchunks.claim_manager", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-    // Keybinding to zoom in minimap
-    public static final KeyMapping zoomInKey
-            = new KeyMapping("key.ftbchunks.minimap.zoomIn", InputConstants.Type.KEYSYM, InputConstants.KEY_EQUALS, KEY_CATEGORY);
-    // Keybinding to zoom out minimap
-    public static final KeyMapping zoomOutKey
-            = new KeyMapping("key.ftbchunks.minimap.zoomOut", InputConstants.Type.KEYSYM, InputConstants.KEY_MINUS, KEY_CATEGORY);
-    // Keybinding to quick-add waypoint at current position
-    public static final KeyMapping addWaypointKey
-            = new KeyMapping("key.ftbchunks.add_waypoint", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-    // Keybinding to open the waypoint manager screen
-    public static final KeyMapping waypointManagerKey
-            = new KeyMapping("key.ftbchunks.waypoint_manager", InputConstants.Type.KEYSYM, -1, KEY_CATEGORY);
-
     private long taskQueueTicks = 0L;
     private long nextRegionSave = 0L;
     private GeneralChunkData generalChunkData = GeneralChunkData.NONE;
@@ -92,11 +66,12 @@ public enum FTBChunksClient {
     private final InWorldIconRenderer inWorldIconRenderer = new InWorldIconRenderer();
     private final LongRangePlayerTrackerClient longRangePlayerTracker = new LongRangePlayerTrackerClient();
     private final RerenderTracker rerenderTracker = new RerenderTracker();
+    private boolean clientConfigSavePending;
 
     public FTBChunksClient init() {
         FTBChunksAPI._initClient(new FTBChunksClientAPIImpl());
 
-        registerKeyMappings();
+        FTBChunksKeyMappings.init();
 
         PlatformClient.get().addResourcePackReloadListener(FTBChunksAPI.MOD_ID, FTBChunksAPI.id("colormap"), new ColorMapLoader());
 
@@ -107,12 +82,6 @@ public enum FTBChunksClient {
 
     public void addTestMinimapLayer(AddMinimapLayerEvent.Data event) {
         event.addLayer(FTBChunksAPI.id("test"), FTBChunksClient::renderTestMinimapLayer, AddMinimapLayerEvent.Order.atEnd());
-    }
-
-    private void registerKeyMappings() {
-        PlatformClient.get().registerKeyMapping(FTBChunksAPI.MOD_ID,
-                openMapKey, toggleMinimapKey, openClaimManagerKey, zoomInKey, zoomOutKey, addWaypointKey, waypointManagerKey
-        );
     }
 
     public void onClientStarted(Minecraft ignoredMc) {
@@ -141,7 +110,8 @@ public enum FTBChunksClient {
     }
 
     public void onPlayerQuit() {
-        MapManager.shutdown();
+        // Note: on Fabric, this gets called on a network thread
+        Minecraft.getInstance().schedule(MapManager::shutdown);
     }
 
     public boolean handleCustomClick(Identifier id) {
@@ -163,20 +133,20 @@ public enum FTBChunksClient {
             return;
         }
 
-        if (openMapKey.isDown()) {
+        if (FTBChunksKeyMappings.MAP_KEY.consumeClick()) {
             LargeMapScreen.openMap();
-        } else if (toggleMinimapKey.isDown()) {
+        } else if (FTBChunksKeyMappings.TOGGLE_MINIMAP_KEY.consumeClick()) {
             FTBChunksClientConfig.MINIMAP_ENABLED.set(!FTBChunksClientConfig.MINIMAP_ENABLED.get());
-            FTBChunksClientConfig.saveConfig();
-        } else if (openClaimManagerKey.isDown()) {
+            FTBChunksClientConfig.saveNeeded();
+        } else if (FTBChunksKeyMappings.CLAIM_MANAGER_KEY.consumeClick()) {
             ChunkScreen.openChunkScreen();
-        } else if (zoomInKey.isDown()) {
+        } else if (FTBChunksKeyMappings.ZOOM_IN_KEY.consumeClick()) {
             minimapRenderer.changeZoom(true);
-        } else if (zoomOutKey.isDown()) {
+        } else if (FTBChunksKeyMappings.ZOOM_OUT_KEY.consumeClick()) {
             minimapRenderer.changeZoom(false);
-        } else if (addWaypointKey.isDown()) {
+        } else if (FTBChunksKeyMappings.ADD_WAYPOINT_KEY.consumeClick()) {
             addQuickWaypoint();
-        } else if (waypointManagerKey.isDown()) {
+        } else if (FTBChunksKeyMappings.WAYPOINT_MANAGER_KEY.consumeClick()) {
             new WaypointEditorScreen().openGui();
         }
     }
@@ -238,6 +208,11 @@ public enum FTBChunksClient {
 
             if (mc.player != null && mc.player.tickCount % 20 == 0) {
                 maybeClearDeathpoint(mc.player);
+
+                if (clientConfigSavePending) {
+                    FTBChunksClientConfig.saveNow();
+                    clientConfigSavePending = false;
+                }
             }
 
             manager.firePendingUpdateEvents();
@@ -386,5 +361,9 @@ public enum FTBChunksClient {
 
     public static void openIconSettingsScreen() {
         new EntityIconSettingsScreen(true).openGuiLater();
+    }
+
+    public void markClientConfigDirty() {
+        clientConfigSavePending = true;
     }
 }

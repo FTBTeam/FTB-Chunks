@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.config;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.PointerIconMode;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.map.BiomeBlendMode;
@@ -150,7 +151,11 @@ public interface FTBChunksClientConfig {
         return Platform.get().isModLoaded("journeymap") || Platform.get().isModLoaded("voxelmap") || Platform.get().isModLoaded("antiqueatlas") || Platform.get().isModLoaded("xaerominimap");
     }
 
-    static void saveConfig() {
+    static void saveNeeded() {
+        FTBChunksClient.INSTANCE.markClientConfigDirty();
+    }
+
+    static void saveNow() {
         ConfigManager.getInstance().save(KEY);
     }
 

@@ -2,6 +2,7 @@ package dev.ftb.mods.ftbchunks.api;
 
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.event.TeamManagerEvent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -9,9 +10,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class FTBChunksAPI {
     public static final String MOD_ID = "ftbchunks";
@@ -91,10 +94,37 @@ public class FTBChunksAPI {
         /// @return the result of making (or simulating) the claim
         ClaimResult claimAsPlayer(ServerPlayer player, ResourceKey<Level> dimension, ChunkPos pos, boolean checkOnly);
 
-        /// Check if the given chunk is currently force-loaded, i.e. remains loaded when no player is near.
+        /// Check if force-loading is currently requested for the given chunk position.
+        ///
+        /// This may only be called on the server; it will always return `false` if called on the client.
         ///
         /// @param chunkPos the chunk position
         /// @return true if the chunk is force-loaded
+        /// @deprecated use [#isForceLoadingRequested(Level, ChunkPos)]
+        @Deprecated(forRemoval = true)
         boolean isChunkForceLoaded(ChunkDimPos chunkPos);
+
+        /// Check if force-loading is currently requested for the given chunk position. This does not necessarily
+        /// mean that force-loading is actually active for the chunk; that depends on server chunk-loading settings
+        /// and team offline force-loading ability. Use [ClaimedChunk#isActuallyForceLoaded()] on the server to know
+        /// for sure.
+        ///
+        /// This method may also be called on the client, with the restriction that the level is the same as the client
+        /// player's current level. Passing any other level will return {@code false}.
+        ///
+        /// @param level the level to check
+        /// @param pos the block position to check
+        /// @return true if the chunk is force-loaded
+        boolean isForceLoadingRequested(Level level, ChunkPos pos);
+
+        /// Get the team which has claimed the chunk at the given block position, if any.
+        ///
+        /// This method may be called on the client, with the restriction that the level is the same as the client
+        /// player's current level. Passing any other level will return {@code Optional.empty()}.
+        ///
+        /// @param level the level to check
+        /// @param pos the block position to check
+        /// @return the owning team, or `Optional.empty()` if the chunk is not claimed
+        Optional<Team> getOwningTeam(Level level, @UnknownNullability ChunkPos pos);
     }
 }

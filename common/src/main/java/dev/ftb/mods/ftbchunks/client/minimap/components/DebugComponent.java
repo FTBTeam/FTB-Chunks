@@ -33,26 +33,31 @@ public class DebugComponent implements MinimapInfoComponent {
     @Override
     public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         List<Component> components = new ArrayList<>();
-        long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
 
-        components.add(Component.literal("TQ: " + ClientTaskQueue.queueSize()).withStyle(ChatFormatting.GRAY));
-        components.add(Component.literal("Rgn: " + XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z())).withStyle(ChatFormatting.GRAY));
-        components.add(Component.literal("Mem: ~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB").withStyle(ChatFormatting.GRAY));
-        components.add(Component.literal("Updates: " + FTBChunksClient.INSTANCE.getRerenderTracker().getRerenderCount()).withStyle(ChatFormatting.GRAY));
+        long memory = MapManager.getInstance().map(MapManager::estimateMemoryUsage).orElse(0L);
+        XZ chunkXZ = XZ.of(context.mapChunksPos().x(), context.mapChunksPos().z());
+
+        addLine(components, "TaskQ",  ClientTaskQueue.queueSize());
+        addLine(components, "Chunk",  "[" + chunkXZ.x() + ", " + chunkXZ.z() + "]");
+        addLine(components, "Mem",  "~" + StringUtils.formatDouble00(memory / 1024D / 1024D) + " MB");
+        addLine(components, "Updates", FTBChunksClient.INSTANCE.getRerenderTracker().getRerenderCount());
         if (ChunkUpdateTask.getDebugLastTime() > 0L) {
-            components.add(Component.literal(String.format("Last: %,d ns", ChunkUpdateTask.getDebugLastTime())).withStyle(ChatFormatting.GRAY));
+            addLine(components, "Last", String.format("%,d ns", ChunkUpdateTask.getDebugLastTime()));
         }
 
         int y = 0;
-        int lineHeight = /*computeLineHeight(context.minecraft(), 1) +*/ font.lineHeight + 1;
         for (Component component : components) {
             drawCenteredText(context.minecraft().font, graphics, component, y);
-            y += lineHeight;
+            y += font.lineHeight + 1;
         }
+    }
+
+    private void addLine(List<Component> components, String title, Object text) {
+        components.add(Component.literal(title).append(": ").append(text.toString()).withStyle(ChatFormatting.GRAY));
     }
 
     @Override
     public int height(MinimapComponentContext context) {
-        return computeLineHeight(context.minecraft(), ChunkUpdateTask.getDebugLastTime() > 0L ? 5 : 4);// + context.minecraft().font.lineHeight;
+        return computeLineHeight(context.minecraft(), ChunkUpdateTask.getDebugLastTime() > 0L ? 5 : 4);
     }
 }

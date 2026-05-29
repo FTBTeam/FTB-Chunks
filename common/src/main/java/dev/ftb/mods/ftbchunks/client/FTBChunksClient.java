@@ -66,6 +66,7 @@ public enum FTBChunksClient {
     private final InWorldIconRenderer inWorldIconRenderer = new InWorldIconRenderer();
     private final LongRangePlayerTrackerClient longRangePlayerTracker = new LongRangePlayerTrackerClient();
     private final RerenderTracker rerenderTracker = new RerenderTracker();
+    private boolean clientConfigSavePending;
 
     public FTBChunksClient init() {
         FTBChunksAPI._initClient(new FTBChunksClientAPIImpl());
@@ -132,20 +133,20 @@ public enum FTBChunksClient {
             return;
         }
 
-        if (FTBChunksKeyMappings.MAP_KEY.isDown()) {
+        if (FTBChunksKeyMappings.MAP_KEY.consumeClick()) {
             LargeMapScreen.openMap();
-        } else if (FTBChunksKeyMappings.TOGGLE_MINIMAP_KEY.isDown()) {
+        } else if (FTBChunksKeyMappings.TOGGLE_MINIMAP_KEY.consumeClick()) {
             FTBChunksClientConfig.MINIMAP_ENABLED.set(!FTBChunksClientConfig.MINIMAP_ENABLED.get());
-            FTBChunksClientConfig.saveConfig();
-        } else if (FTBChunksKeyMappings.CLAIM_MANAGER_KEY.isDown()) {
+            FTBChunksClientConfig.saveNeeded();
+        } else if (FTBChunksKeyMappings.CLAIM_MANAGER_KEY.consumeClick()) {
             ChunkScreen.openChunkScreen();
-        } else if (FTBChunksKeyMappings.ZOOM_IN_KEY.isDown()) {
+        } else if (FTBChunksKeyMappings.ZOOM_IN_KEY.consumeClick()) {
             minimapRenderer.changeZoom(true);
-        } else if (FTBChunksKeyMappings.ZOOM_OUT_KEY.isDown()) {
+        } else if (FTBChunksKeyMappings.ZOOM_OUT_KEY.consumeClick()) {
             minimapRenderer.changeZoom(false);
-        } else if (FTBChunksKeyMappings.ADD_WAYPOINT_KEY.isDown()) {
+        } else if (FTBChunksKeyMappings.ADD_WAYPOINT_KEY.consumeClick()) {
             addQuickWaypoint();
-        } else if (FTBChunksKeyMappings.WAYPOINT_MANAGER_KEY.isDown()) {
+        } else if (FTBChunksKeyMappings.WAYPOINT_MANAGER_KEY.consumeClick()) {
             new WaypointEditorScreen().openGui();
         }
     }
@@ -207,6 +208,11 @@ public enum FTBChunksClient {
 
             if (mc.player != null && mc.player.tickCount % 20 == 0) {
                 maybeClearDeathpoint(mc.player);
+
+                if (clientConfigSavePending) {
+                    FTBChunksClientConfig.saveNow();
+                    clientConfigSavePending = false;
+                }
             }
 
             manager.firePendingUpdateEvents();
@@ -355,5 +361,9 @@ public enum FTBChunksClient {
 
     public static void openIconSettingsScreen() {
         new EntityIconSettingsScreen(true).openGuiLater();
+    }
+
+    public void markClientConfigDirty() {
+        clientConfigSavePending = true;
     }
 }

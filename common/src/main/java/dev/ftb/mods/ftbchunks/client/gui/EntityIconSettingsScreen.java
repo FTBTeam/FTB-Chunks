@@ -69,7 +69,7 @@ public class EntityIconSettingsScreen extends AbstractGroupedButtonListScreen<Mo
             boolean hiddenState = FTBChunksClientConfig.ENTITY_ICON.get().getOrDefault(resourceKey.identifier().toString(), true);
             hideButton = new ToggleableButton(this, hiddenState, Icons.ACCEPT, Icons.ACCEPT_GRAY, (hideButton, hidden) -> {
                 FTBChunksClientConfig.ENTITY_ICON.get().put(resourceKey.identifier().toString(), hidden);
-                FTBChunksClientConfig.saveConfig();
+                FTBChunksClientConfig.saveNeeded();
             });
 
             Icon<?> btnIcon = EntityIconLoader.isDynamicTexture(value) ? Icons.BOOK_RED : Icons.BOOK;

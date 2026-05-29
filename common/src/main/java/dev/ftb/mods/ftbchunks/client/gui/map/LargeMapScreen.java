@@ -207,7 +207,7 @@ public class LargeMapScreen extends BaseScreen {
             return true;
         } else if (key.is(InputConstants.KEY_G) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F3)) {
             FTBChunksClientConfig.CHUNK_GRID.toggle();
-            FTBChunksClientConfig.saveConfig();
+            FTBChunksClientConfig.saveNeeded();
             dimension.getManager().updateAllRegions(false);
             return true;
         } else if (FTBChunksKeyMappings.MAP_KEY.matches(key.event())) {

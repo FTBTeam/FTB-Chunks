@@ -7,6 +7,7 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
 import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
+import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
@@ -103,6 +104,7 @@ public class WaypointManagerImpl implements Iterable<WaypointImpl>, WaypointMana
             waypoint.refreshIcon();
             mapDimension.markDirty();
             FTBChunksAPI.clientApi().requestMinimapIconRefresh();
+            WaypointEditorScreen.refreshIfOpen();
         }
     }
 
@@ -113,6 +115,7 @@ public class WaypointManagerImpl implements Iterable<WaypointImpl>, WaypointMana
             }
             mapDimension.markDirty();
             FTBChunksAPI.clientApi().requestMinimapIconRefresh();
+            WaypointEditorScreen.refreshIfOpen();
         }
     }
 
@@ -122,6 +125,7 @@ public class WaypointManagerImpl implements Iterable<WaypointImpl>, WaypointMana
             deathpoints.addAll(waypoints.stream().filter(w -> w.getType() == WaypointType.DEATH).toList());
             mapDimension.markDirty();
             FTBChunksAPI.clientApi().requestMinimapIconRefresh();
+            WaypointEditorScreen.refreshIfOpen();
             return true;
         }
         return false;

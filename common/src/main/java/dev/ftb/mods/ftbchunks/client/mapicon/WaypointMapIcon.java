@@ -4,8 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.api.client.icon.WaypointIcon;
-import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen;
+import dev.ftb.mods.ftbchunks.client.gui.WaypointAddScreen;
 import dev.ftb.mods.ftbchunks.client.gui.WaypointShareMenu;
 import dev.ftb.mods.ftbchunks.client.map.WaypointImpl;
 import dev.ftb.mods.ftbchunks.net.TeleportFromMapPacket;
@@ -146,7 +146,7 @@ public class WaypointMapIcon extends StaticMapIcon implements WaypointIcon {
         contextMenu.add(new ContextMenuItem(Component.translatable("ftbchunks.gui.edit"), Icons.SETTINGS, b -> {
             StringConfig configName = new StringConfig();
             configName.setValue(waypoint.getName());
-            new FTBChunksClient.WaypointAddScreen(configName, GlobalPos.of(waypoint.getDimension(), waypoint.getPos()), Color4I.rgb(waypoint.getColor()), true).openGui();
+            new WaypointAddScreen(configName, GlobalPos.of(waypoint.getDimension(), waypoint.getPos()), Color4I.rgb(waypoint.getColor()), true).openGui();
         }));
 
         contextMenu.add(new ContextMenuItem(Component.translatable("gui.remove"), Icons.REMOVE, b -> {

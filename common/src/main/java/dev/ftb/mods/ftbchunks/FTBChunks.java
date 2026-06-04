@@ -44,6 +44,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -150,6 +151,11 @@ public class FTBChunks {
 		}
 
 		return EventResult.pass();
+	}
+
+	public static boolean isNonLivingOrArmorStand(Entity e) {
+		// Armor stands are a special case: not really living entities, but extend LivingEntity
+		return e instanceof ArmorStand || !(e instanceof LivingEntity);
 	}
 
 	private EventResult onLivingHurt(LivingEntity living, DamageSource damageSource, float dmg) {
@@ -484,9 +490,11 @@ public class FTBChunks {
 			}
 
 			partyData.deleteMemberData(event.getPlayerId());
+			partyData.updateLimits();
 
 			if (event.getPlayer() != null) {
 				PlayerVisibilityPacket.syncToLevel(event.getPlayer().level());
+				SendGeneralDataPacket.send(playerData, event.getPlayer());
 			}
 		});
 	}

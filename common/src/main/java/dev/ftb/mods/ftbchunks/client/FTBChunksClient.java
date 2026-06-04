@@ -20,7 +20,6 @@ import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
-import dev.ftb.mods.ftbchunks.api.client.event.ChunksUpdatedFromServerEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.MapIconEvent;
 import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapIcon;
@@ -38,9 +37,7 @@ import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
-import dev.ftb.mods.ftblibrary.config.ColorConfig;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -49,11 +46,9 @@ import dev.ftb.mods.ftblibrary.math.XZ;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.CustomClickEvent;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.ModUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
-import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.event.ClientTeamPropertiesChangedEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -1345,62 +1340,6 @@ public enum FTBChunksClient {
     // This moves the vanilla potion effects rendering to the left of the minimap if it's in the top-right
     public static double getVanillaEffectsOffsetX() {
         return vanillaEffectsOffsetX;
-    }
-
-    public static class WaypointAddScreen extends BaseScreen {
-        private final StringConfig name;
-        private final GlobalPos waypointLocation;
-        private final ColorConfig color;
-        private final boolean override;
-
-        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation, Color4I color, boolean override) {
-            super();
-            this.name = name;
-            this.waypointLocation = waypointLocation;
-            this.setHeight(35);
-            this.color = new ColorConfig();
-            this.color.setValue(color);
-            this.override = override;
-        }
-
-        public WaypointAddScreen(StringConfig name, GlobalPos waypointLocation) {
-            this(name, waypointLocation, Color4I.hsb(MathUtils.RAND.nextFloat(), 1F, 1F), false);
-        }
-
-        public WaypointAddScreen(StringConfig name, Player player) {
-            this(name, new GlobalPos(player.level().dimension(), player.blockPosition()));
-        }
-
-        @Override
-        public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
-        }
-
-        @Override
-        public void addWidgets() {
-            AddWaypointOverlay.GlobalPosConfig globalPosConfig = new AddWaypointOverlay.GlobalPosConfig();
-            globalPosConfig.setValue(waypointLocation);
-            Component title = Component.translatable("ftbchunks.gui." + (override ? "edit_waypoint" : "add_waypoint"));
-            AddWaypointOverlay overlay = new AddWaypointOverlay(this, title, globalPosConfig, name, color, set -> {
-                if (set && !name.getValue().isEmpty()) {
-                    if (override) {
-                        FTBChunksAPI.clientApi().getWaypointManager(waypointLocation.dimension())
-                                .ifPresent(mgr -> mgr.removeWaypointAt(waypointLocation.pos()));
-                    }
-                    Waypoint wp = addWaypoint(name.getValue(), globalPosConfig.getValue(), color.getValue().rgba());
-                    Minecraft.getInstance().player.displayClientMessage(
-                            Component.translatable("ftbchunks.waypoint_added",
-                                    wp.getDisplayName().copy().withStyle(ChatFormatting.YELLOW)
-                            ), true);
-                }
-            }) {
-                @Override
-                public void onClosed() {
-                    closeGui();
-                }
-            };
-            overlay.setWidth(this.width);
-            pushModalPanel(overlay);
-        }
     }
 
     public int getRenderedDebugCount() {

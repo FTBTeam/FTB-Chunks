@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2101.1.15]
 
 ### Added
+* Better protection for all non-living entities (item frames, boats, minecarts...) as well as armor stands
+  * These are now better protected from indirect damage like arrows and explosions
+  * "Allow Explosions" and "Non-living Entity Attack Mode" team properties control these protections
 * Added protection for fluids flowing across claim boundaries
   * Fluids flowing into a claimed chunk from an unclaimed chunk or chunk claimed by a different team are stopped
     * Unless the team's "Edit Block" team property is set to public
@@ -17,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * Unless the team's "Edit Block" team property is set to public
   * Disabled by default due to potential for performance issues (similarly to fluid protection)
   * Set "Fire Spread Protection" to `true` in server config to enable
+* Added an "Add Waypoint" button in the top right of the waypoint manager screen
 
 ### Fixed
 * Fixed team claim limits not getting updated immediately when a player leaves the team

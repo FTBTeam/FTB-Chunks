@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.16]
+
+### Added
+* The map sidebar button is now hidden if general mapping is unavailable due to game stage restrictions
+  * Previously it was present, but did nothing
+
+### Fixed
+* Fixed a regression in gamestage / chunk claim screen behaviour
+  * Chunk claim screen should always be available even if general mapping is unavailable due to game stage restrictions
+
 ## [2101.1.15]
 
 ### Added

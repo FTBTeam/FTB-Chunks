@@ -37,6 +37,7 @@ import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
+import dev.ftb.mods.ftblibrary.api.sidebar.SidebarButtonCreatedEvent;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
@@ -181,6 +182,7 @@ public enum FTBChunksClient {
         MapIconEvent.LARGE_MAP.register(this::mapIcons);
         MapIconEvent.MINIMAP.register(this::mapIcons);
         ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
+        SidebarButtonCreatedEvent.EVENT.register(this::onSidebarButtonCreated);
         registerPlatform();
 
         if (ModUtils.isDevMode()) {
@@ -370,6 +372,12 @@ public enum FTBChunksClient {
     public boolean skipBlock(BlockState state) {
         ResourceLocation id = FTBChunks.BLOCK_REGISTRY.getId(state.getBlock());
         return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
+    }
+
+    private void onSidebarButtonCreated(SidebarButtonCreatedEvent event) {
+        if (event.getButton().getId().equals(FTBChunksAPI.rl("chunks"))) {
+            event.getButton().addVisibilityCondition(() -> FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player));
+        }
     }
 
     public EventResult customClick(CustomClickEvent event) {

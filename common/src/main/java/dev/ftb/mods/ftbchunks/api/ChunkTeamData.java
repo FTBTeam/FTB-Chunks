@@ -69,7 +69,7 @@ public interface ChunkTeamData {
      * @param source the command source (player or console) unclaiming the chunk
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the unclaim
-     * @param adminOverride if true, admins can unclaim regardless chunk ownership
+     * @param adminOverride if true, command sources with admin level of game master or better can unclaim regardless chunk ownership
      *
      * @return the result of the attempt
      */
@@ -94,7 +94,7 @@ public interface ChunkTeamData {
      * @param source the command source (player or console) force-loading the chunk
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the force-load
-     * @param adminOverride if true, admins can force-load regardless chunk ownership
+     * @param adminOverride if true, command sources with admin level of game master or better can force-load regardless chunk ownership
      *
      * @return the result of the attempt
      */
@@ -119,7 +119,7 @@ public interface ChunkTeamData {
      * @param source the command source (player or console) un-force-loading the chunk
      * @param pos the combined dimension and chunk pos
      * @param checkOnly true if just simulating the un-force-load
-     * @param adminOverride if true, admins can un-force regardless chunk ownership
+     * @param adminOverride if true, command sources with admin level of game master or better can un-force regardless chunk ownership
      *
      * @return the un-force-load result
      */

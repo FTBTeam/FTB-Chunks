@@ -192,7 +192,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 		if (chunk == null) {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
-		} else if (chunk.getTeamData() != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
+		} else if (chunk.getTeamData() != this && !source.hasPermission(2)) {
 			return ClaimResult.StandardProblem.NOT_OWNER;
 		}
 
@@ -216,7 +216,7 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 
 		if (chunk == null) {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
-		} else if (chunk.getTeamData() != this && !source.hasPermission(2) && !source.getServer().isSingleplayer()) {
+		} else if (chunk.getTeamData() != this && !source.hasPermission(2)) {
 			return ClaimResult.StandardProblem.NOT_OWNER;
 		} else if (chunk.isForceLoaded()) {
 			return ClaimResult.StandardProblem.ALREADY_LOADED;
@@ -247,7 +247,6 @@ public class ChunkTeamDataImpl implements ChunkTeamData {
 			return ClaimResult.StandardProblem.NOT_CLAIMED;
 		} else if (chunk.getTeamData() != this
 				&& !source.hasPermission(2)
-				&& !source.getServer().isSingleplayer()
 				&& !(source.getEntity() instanceof ServerPlayer && isTeamMember(source.getEntity().getUUID()))
 		) {
 			return ClaimResult.StandardProblem.NOT_OWNER;

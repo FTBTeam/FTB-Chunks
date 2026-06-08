@@ -104,7 +104,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 		level.getChunkSource().save(false);
 
-		FTBChunks.LOGGER.info("Force-loaded %d chunks in %s".formatted(map.size(), level.dimension().location()));
+		FTBChunks.LOGGER.info("Force-loaded {} chunks in {}", map.size(), level.dimension().location());
 	}
 
 	private ChunkTeamDataImpl loadTeamData(Team team) {
@@ -154,12 +154,12 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		ChunkTeamDataImpl data = teamData.get(toDelete.getId());
 
 		if (data != null && toDelete.getMembers().isEmpty()) {
-			FTBChunks.LOGGER.debug("dropping references to empty team " + toDelete.getId());
+			FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
 			teamData.remove(toDelete.getId());
 			try {
 				Files.deleteIfExists(data.getFile());
 			} catch (IOException e) {
-				FTBChunks.LOGGER.error(String.format("can't delete file %s: %s", data.getFile(), e.getMessage()));
+				FTBChunks.LOGGER.error("can't delete file {}: {}", data.getFile(), e.getMessage());
 			}
 		}
 	}
@@ -188,7 +188,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		return teamManager.getPlayerTeamForPlayerID(player)
 				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION))
 				.orElse(false);
-		}
+	}
 
 	@Override
 	public void setBypassProtection(UUID player, boolean bypass) {
@@ -200,7 +200,10 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 
 	@Override
 	public boolean shouldPreventInteraction(@Nullable Entity actor, InteractionHand hand, BlockPos pos, Protection protection, @Nullable Entity targetEntity) {
-		if (!(actor instanceof ServerPlayer player) || FTBChunksWorldConfig.DISABLE_PROTECTION.get() || player.level() == null) {
+		if (!(actor instanceof ServerPlayer player)
+				|| FTBChunksWorldConfig.DISABLE_PROTECTION.get()
+				|| getBypassProtection(player.getUUID()))
+		{
 			return false;
 		}
 
@@ -210,30 +213,22 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 
 		ClaimedChunkImpl chunk = getChunk(new ChunkDimPos(player.level(), pos));
-		if (chunk != null) {
-			ProtectionPolicy policy = protection.getProtectionPolicy(player, pos, hand, chunk, targetEntity);
-			boolean prevented = policy.isOverride() ?
-					policy.shouldPreventInteraction() :
-					!player.isSpectator() && (isFake || !getBypassProtection(player.getUUID()));
-            if (prevented) {
-				PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.action_prevented").withStyle(ChatFormatting.GOLD), 2000);
-				if (isFake) {
-					chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
-				}
-			}
-			return prevented;
-		} else if (FTBChunksWorldConfig.noWilderness(player)) {
-			ProtectionPolicy override = protection.getProtectionPolicy(player, pos, hand, null, targetEntity);
-			if (override.isOverride()) {
-				return override.shouldPreventInteraction();
-			} else if (!isFake && (getBypassProtection(player.getUUID()) || player.isSpectator())) {
-				return false;
-			}
-			PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.need_to_claim_chunk").withStyle(ChatFormatting.GOLD), 2000);
-			return true;
+		if (chunk == null && !FTBChunksWorldConfig.noWilderness(player)) {
+			return false;
 		}
 
-		return false;
+		ProtectionPolicy policy = protection.getProtectionPolicy(player, pos, hand, chunk, targetEntity);
+		boolean prevented = policy.isOverride() ? policy.shouldPreventInteraction() : isFake || !player.isSpectator();
+
+		if (prevented) {
+			String key = chunk == null ? "ftbchunks.need_to_claim_chunk" : "ftbchunks.action_prevented";
+			PlayerNotifier.notifyWithCooldown(player, Component.translatable(key).withStyle(ChatFormatting.GOLD), 2000);
+			if (isFake && chunk != null) {
+				chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
+			}
+		}
+
+		return prevented;
 	}
 
 	public void clearForceLoadedCache() {

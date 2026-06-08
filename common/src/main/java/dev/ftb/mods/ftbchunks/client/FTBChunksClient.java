@@ -37,6 +37,7 @@ import dev.ftb.mods.ftbchunks.client.minimap.components.*;
 import dev.ftb.mods.ftbchunks.data.ChunkSyncInfo;
 import dev.ftb.mods.ftbchunks.net.PartialPackets;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket.GeneralChunkData;
+import dev.ftb.mods.ftblibrary.api.sidebar.SidebarButtonCreatedEvent;
 import dev.ftb.mods.ftblibrary.config.StringConfig;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.FaceIcon;
@@ -181,6 +182,7 @@ public enum FTBChunksClient {
         MapIconEvent.LARGE_MAP.register(this::mapIcons);
         MapIconEvent.MINIMAP.register(this::mapIcons);
         ClientReloadShadersEvent.EVENT.register(this::reloadShaders);
+        SidebarButtonCreatedEvent.EVENT.register(this::onSidebarButtonCreated);
         registerPlatform();
 
         if (ModUtils.isDevMode()) {
@@ -372,15 +374,21 @@ public enum FTBChunksClient {
         return id == null || ColorMapLoader.getBlockColor(id).isIgnored();
     }
 
+    private void onSidebarButtonCreated(SidebarButtonCreatedEvent event) {
+        if (event.getButton().getId().equals(FTBChunksAPI.rl("chunks"))) {
+            event.getButton().addVisibilityCondition(() -> FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player));
+        }
+    }
+
     public EventResult customClick(CustomClickEvent event) {
-        if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
-            if (event.id().equals(BUTTON_ID_MAP)) {
+        if (event.id().equals(BUTTON_ID_MAP)) {
+            if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
                 openGui();
                 return EventResult.interruptTrue();
-            } else if (event.id().equals(BUTTON_ID_CLAIM)) {
-                ChunkScreen.openChunkScreen();
-                return EventResult.interruptTrue();
             }
+        } else if (event.id().equals(BUTTON_ID_CLAIM)) {
+            ChunkScreen.openChunkScreen();
+            return EventResult.interruptTrue();
         }
 
         return EventResult.pass();
@@ -389,9 +397,19 @@ public enum FTBChunksClient {
     public EventResult keyPressed(Minecraft client, int keyCode, int scanCode, int action, int modifiers) {
         if (action != GLFW.GLFW_PRESS
                 || client.screen != null
-                || !FTBChunksWorldConfig.playerHasMapStage(client.player)
                 || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), InputConstants.KEY_F3))
         {
+            return EventResult.pass();
+        }
+
+        // chunk claiming doesn't require the mapping game stage
+        if (doesKeybindMatch(openClaimManagerKey, keyCode, scanCode, modifiers)) {
+            ChunkScreen.openChunkScreen();
+            return EventResult.interruptTrue();
+        }
+
+        // all other actions require the mapping game stage, if so configured
+        if (!FTBChunksWorldConfig.playerHasMapStage(client.player)) {
             return EventResult.pass();
         }
 
@@ -401,13 +419,6 @@ public enum FTBChunksClient {
         } else if (doesKeybindMatch(toggleMinimapKey, keyCode, scanCode, modifiers)) {
             FTBChunksClientConfig.MINIMAP_ENABLED.set(!FTBChunksClientConfig.MINIMAP_ENABLED.get());
             FTBChunksClientConfig.saveConfig();
-            return EventResult.interruptTrue();
-        } else if (doesKeybindMatch(openClaimManagerKey, keyCode, scanCode, modifiers)) {
-            try {
-                ChunkScreen.openChunkScreen();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             return EventResult.interruptTrue();
         } else if (doesKeybindMatch(zoomInKey, keyCode, scanCode, modifiers)) {
             return changeZoom(true);
@@ -1337,7 +1348,7 @@ public enum FTBChunksClient {
     }
 
     // See GuiMixin
-    // This moves the vanilla potion effects rendering to the left of the minimap if it's in the top-right
+// This moves the vanilla potion effects rendering to the left of the minimap if it's in the top-right
     public static double getVanillaEffectsOffsetX() {
         return vanillaEffectsOffsetX;
     }

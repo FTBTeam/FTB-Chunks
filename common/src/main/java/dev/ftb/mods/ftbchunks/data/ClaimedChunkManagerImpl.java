@@ -154,7 +154,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		ChunkTeamDataImpl data = teamData.get(toDelete.getId());
 
 		if (data != null && toDelete.getMembers().isEmpty()) {
-            FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
+			FTBChunks.LOGGER.debug("dropping references to empty team {}", toDelete.getId());
 			teamData.remove(toDelete.getId());
 			try {
 				Files.deleteIfExists(data.getFile());
@@ -188,7 +188,7 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		return teamManager.getPlayerTeamForPlayerID(player)
 				.map(team -> team.getExtraData().getBoolean(BYPASS_FTB_CHUNKS_PROTECTION))
 				.orElse(false);
-		}
+	}
 
 	@Override
 	public void setBypassProtection(UUID player, boolean bypass) {
@@ -213,28 +213,22 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 		}
 
 		ClaimedChunkImpl chunk = getChunk(new ChunkDimPos(player.level(), pos));
-		if (chunk != null) {
-			ProtectionPolicy policy = protection.getProtectionPolicy(player, pos, hand, chunk, targetEntity);
-			boolean prevented = policy.isOverride() ? policy.shouldPreventInteraction() : !player.isSpectator() && isFake;
-            if (prevented) {
-				PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.action_prevented").withStyle(ChatFormatting.GOLD), 2000);
-				if (isFake) {
-					chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
-				}
-			}
-			return prevented;
-		} else if (FTBChunksWorldConfig.noWilderness(player)) {
-			ProtectionPolicy override = protection.getProtectionPolicy(player, pos, hand, null, targetEntity);
-			if (override.isOverride()) {
-				return override.shouldPreventInteraction();
-			} else if (!isFake && player.isSpectator()) {
-				return false;
-			}
-			PlayerNotifier.notifyWithCooldown(player, Component.translatable("ftbchunks.need_to_claim_chunk").withStyle(ChatFormatting.GOLD), 2000);
-			return true;
+		if (chunk == null && !FTBChunksWorldConfig.noWilderness(player)) {
+			return false;
 		}
 
-		return false;
+		ProtectionPolicy policy = protection.getProtectionPolicy(player, pos, hand, chunk, targetEntity);
+		boolean prevented = policy.isOverride() ? policy.shouldPreventInteraction() : isFake || !player.isSpectator();
+
+		if (prevented) {
+			String key = chunk == null ? "ftbchunks.need_to_claim_chunk" : "ftbchunks.action_prevented";
+			PlayerNotifier.notifyWithCooldown(player, Component.translatable(key).withStyle(ChatFormatting.GOLD), 2000);
+			if (isFake && chunk != null) {
+				chunk.getTeamData().logPreventedAccess(player, System.currentTimeMillis());
+			}
+		}
+
+		return prevented;
 	}
 
 	public void clearForceLoadedCache() {

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The map sidebar button is now hidden if general mapping is unavailable due to game stage restrictions
   * Previously it was present, but did nothing
 
+### Changed
+* Admin bypass checks (`/ftbchunks admin bypass_protection`) checks are now done before fake player checks
+  * This means that fake players which have the UUID of an admin player in bypass mode can now operate as expected
+
 ### Fixed
 * Fixed a regression in gamestage / chunk claim screen behaviour
   * Chunk claim screen should always be available even if general mapping is unavailable due to game stage restrictions

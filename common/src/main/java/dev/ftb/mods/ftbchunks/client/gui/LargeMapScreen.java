@@ -82,11 +82,15 @@ public class LargeMapScreen extends BaseScreen {
         minZoom = determineMinZoom();
     }
 
-    public static void openMap() {
-        MapDimension.getCurrent().ifPresentOrElse(
-                mapDimension -> new LargeMapScreen(mapDimension).openGui(),
-                () -> FTBChunks.LOGGER.warn("Missing MapDimension data?? not opening large map")
-        );
+    public static boolean openMap() {
+        if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
+            MapDimension.getCurrent().ifPresentOrElse(
+                    mapDimension -> new LargeMapScreen(mapDimension).openGui(),
+                    () -> FTBChunks.LOGGER.warn("Missing MapDimension data?? not opening large map")
+            );
+            return true;
+        }
+        return false;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
 import dev.ftb.mods.ftbchunks.FTBChunks;
+import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
@@ -25,13 +26,16 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     private final MapDimension dimension;
     private final Team openedAs;
     private ChunkScreenPanel chunkScreenPanel;
-    private SimpleButton largeMapButton;
+    private final SimpleButton largeMapButton;
 
     private ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
         this.dimension = dimension;
         this.openedAs = openedAs;
         showCloseButton(true);
         showScrollBar(false);
+
+        largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
+                (btn, mb) -> LargeMapScreen.openMap());
     }
 
     @Override
@@ -59,9 +63,9 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
     public void addWidgets() {
         super.addWidgets();
 
-        add(largeMapButton = new SimpleButton(this, Component.translatable("ftbchunks.gui.large_map"), Icons.MAP,
-                (simpleButton, mouseButton) -> LargeMapScreen.openMap()
-        ));
+        if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
+            add(largeMapButton);
+        }
     }
 
     @Override
@@ -265,7 +269,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
             MutableComponent forceLoadComponent = Component.translatable("ftbchunks.gui.force_loaded").append(Component.literal(": "))
                     .append(Component.literal(loaded + " / " + maxLoaded)
-                                    .withStyle(loaded > maxLoaded ? ChatFormatting.RED : loaded == maxLoaded ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+                            .withStyle(loaded > maxLoaded ? ChatFormatting.RED : loaded == maxLoaded ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
             String forceLoadText = forceLoadComponent.getString();
             int forceLoadX = x + w - theme.getStringWidth(forceLoadText) - 2;
             theme.drawString(graphics, forceLoadComponent, forceLoadX, y + 4);

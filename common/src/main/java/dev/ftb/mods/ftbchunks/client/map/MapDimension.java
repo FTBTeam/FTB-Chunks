@@ -1,12 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.map;
 
-import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.event.WaypointManagerEvent;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -16,6 +16,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,7 +27,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DeflaterOutputStream;
 
-public class MapDimension implements MapTask {
+public class MapDimension implements MapTask, Comparable<MapDimension> {
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static MapDimension currentDimension;
 
@@ -229,5 +230,10 @@ public class MapDimension implements MapTask {
 
 	public void updateLoadedChunkView(Long2IntMap chunks) {
 		loadedChunkView = chunks;
+	}
+
+	@Override
+	public int compareTo(@NotNull MapDimension o) {
+		return dimension.location().toString().compareTo(o.dimension.location().toString());
 	}
 }

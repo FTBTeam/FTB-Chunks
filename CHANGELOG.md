@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2101.1.19]
 
+### Added
+* Chunk claim screen now has buttons for client and server settings
+  * Useful if large map screen is unavailable due to game stages restrictions
+* Some reorganization and improvement of the buttons on the left panel of the full-screen map
+  * Panel itself has a slightly darkened background
+  * All settings buttons are now at the bottom of the left panel
+    * "Minimap Info Settings" has been moved down
+    * Dimension selector button has been moved up
+  * Backported from 26.1
+
 ### Fixes
 * Fixed a permissions checking issue
 

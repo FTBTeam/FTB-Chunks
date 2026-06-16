@@ -4,10 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.19]
+
+### Fixes
+* Fixed a permissions checking issue
+
 ## [2101.1.18]
 
 ### Fixed
-* Waypoint manager causes crashes when the map contains waypoints between dimensions. [#2106](https://github.com/FTBTeam/FTB-Mods-Issues/issues/2106) Thanks to [@ishinyca](https://github.com/Ishinyca) and [@Appulcake](https://github.com/Appulcake) for the report and testing
+* Waypoint manager causes crashes when the map contains waypoints between dimensions. 
+  * [#2106](https://github.com/FTBTeam/FTB-Mods-Issues/issues/2106) Thanks to [@ishinyca](https://github.com/Ishinyca) and [@Appulcake](https://github.com/Appulcake) for the report and testing
 
 ## [2101.1.17]
 

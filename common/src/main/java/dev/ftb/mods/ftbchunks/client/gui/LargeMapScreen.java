@@ -473,7 +473,7 @@ public class LargeMapScreen extends BaseScreen {
         }
     }
 
-    private static class SimpleTooltipButton extends SimpleButton {
+    static class SimpleTooltipButton extends SimpleButton {
         private final List<Component> tooltipLines;
 
         public SimpleTooltipButton(Panel panel, Component text, Icon icon, Callback c, Component tooltipLine) {

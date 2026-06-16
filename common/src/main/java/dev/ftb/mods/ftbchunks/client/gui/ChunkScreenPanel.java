@@ -150,11 +150,6 @@ public class ChunkScreenPanel extends Panel {
 	}
 
 	@Override
-	public boolean keyPressed(Key key) {
-		return key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C) ? LargeMapScreen.openMap() : super.keyPressed(key);
-	}
-
-	@Override
 	public void drawBackground(GuiGraphics graphics, Theme theme, int x, int y, int w, int h) {
 		Player player = Minecraft.getInstance().player;
 

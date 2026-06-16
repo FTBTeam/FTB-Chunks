@@ -6,9 +6,12 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
+import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
 import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -16,17 +19,20 @@ import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
-
     private final MapDimension dimension;
     private final Team openedAs;
     private ChunkScreenPanel chunkScreenPanel;
     private final SimpleButton largeMapButton;
+    private Button settingsButton;
+    private Button serverSettingsButton;
 
     private ChunkScreen(MapDimension dimension, @Nullable Team openedAs) {
         this.dimension = dimension;
@@ -58,7 +64,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         return true;
     }
 
-
     @Override
     public void addWidgets() {
         super.addWidgets();
@@ -66,6 +71,18 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
             add(largeMapButton);
         }
+
+        add(settingsButton = new LargeMapScreen.SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
+                (b, m) -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
+                Component.literal("[S]").withStyle(ChatFormatting.GRAY))
+        );
+
+        boolean adminPlayer = Minecraft.getInstance().player.hasPermissions(Commands.LEVEL_GAMEMASTERS);
+        add(serverSettingsButton = new LargeMapScreen.SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings.server"),
+                Icons.SETTINGS.withTint(Color4I.rgb(0xA040FF)),
+                (b, m) -> ConfigManagerClient.editConfig(FTBChunksWorldConfig.KEY, !adminPlayer),
+                Component.literal("[Ctrl + S]").withStyle(ChatFormatting.GRAY)
+        ));
     }
 
     @Override
@@ -73,6 +90,26 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
         super.alignWidgets();
 
         largeMapButton.setPosAndSize(-getX() + 2, -getY() + 2, 16, 16);
+        settingsButton.setPosAndSize(-getX() + 2, -getY() + 20, 16, 16);
+        if (serverSettingsButton != null) {
+            serverSettingsButton.setPosAndSize(-getX() + 2, -getY() + 38, 16, 16);
+        }
+    }
+    @Override
+    public boolean keyPressed(Key key) {
+        if (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C)) {
+            return LargeMapScreen.openMap();
+        } else if (key.is(GLFW.GLFW_KEY_S)) {
+            if (Screen.hasControlDown()) {
+                if (serverSettingsButton != null) {
+                    serverSettingsButton.onClicked(MouseButton.LEFT);
+                }
+            } else {
+                settingsButton.onClicked(MouseButton.LEFT);
+            }
+            return true;
+        }
+        return super.keyPressed(key);
     }
 
     public static void openChunkScreen(@Nullable Team openedAs) {
@@ -97,7 +134,6 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     protected void doAccept() {
-
     }
 
     @Override

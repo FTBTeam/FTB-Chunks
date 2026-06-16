@@ -72,7 +72,7 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
             add(largeMapButton);
         }
 
-        add(settingsButton = new LargeMapScreen.SimpleTooltipButton(this, Component.translatable("ftbchunks.gui.settings"), Icons.SETTINGS,
+        add(settingsButton = new LargeMapScreen.SimpleTooltipButton(this, Component.translatable("ftbchunks.config.client"), Icons.SETTINGS,
                 (b, m) -> ConfigManagerClient.editConfig(FTBChunksClientConfig.KEY),
                 Component.literal("[S]").withStyle(ChatFormatting.GRAY))
         );

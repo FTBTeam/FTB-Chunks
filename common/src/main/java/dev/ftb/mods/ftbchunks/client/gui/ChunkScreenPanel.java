@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
-import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
@@ -148,16 +147,6 @@ public class ChunkScreenPanel extends Panel {
 				.map(ChunkButton::getChunkPos)
 				.collect(Collectors.toSet());
 		NetworkManager.sendToServer(new RequestChunkChangePacket(ChunkChangeOp.UNCLAIM, allChunks, canChangeAsAdmin(), teamId));
-	}
-
-	@Override
-	public boolean keyPressed(Key key) {
-		if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player) && (key.is(GLFW.GLFW_KEY_M) || key.is(GLFW.GLFW_KEY_C))) {
-			LargeMapScreen.openMap();
-			return true;
-		}
-
-		return super.keyPressed(key);
 	}
 
 	@Override

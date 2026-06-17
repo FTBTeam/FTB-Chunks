@@ -275,10 +275,6 @@ public enum FTBChunksClient {
         return doesKeybindMatch(keyMapping, key.keyCode, key.scanCode, key.modifiers.modifiers);
     }
 
-    public void openGui() {
-        LargeMapScreen.openMap();
-    }
-
     public void scheduleMinimapUpdate() {
         updateMinimapScheduled = true;
     }
@@ -382,10 +378,7 @@ public enum FTBChunksClient {
 
     public EventResult customClick(CustomClickEvent event) {
         if (event.id().equals(BUTTON_ID_MAP)) {
-            if (FTBChunksWorldConfig.playerHasMapStage(Minecraft.getInstance().player)) {
-                openGui();
-                return EventResult.interruptTrue();
-            }
+            return LargeMapScreen.openMap() ? EventResult.interruptTrue() : EventResult.pass();
         } else if (event.id().equals(BUTTON_ID_CLAIM)) {
             ChunkScreen.openChunkScreen();
             return EventResult.interruptTrue();
@@ -414,8 +407,7 @@ public enum FTBChunksClient {
         }
 
         if (doesKeybindMatch(openMapKey, keyCode, scanCode, modifiers)) {
-            openGui();
-            return EventResult.interruptTrue();
+            return LargeMapScreen.openMap() ? EventResult.interruptTrue() : EventResult.pass();
         } else if (doesKeybindMatch(toggleMinimapKey, keyCode, scanCode, modifiers)) {
             FTBChunksClientConfig.MINIMAP_ENABLED.set(!FTBChunksClientConfig.MINIMAP_ENABLED.get());
             FTBChunksClientConfig.saveConfig();

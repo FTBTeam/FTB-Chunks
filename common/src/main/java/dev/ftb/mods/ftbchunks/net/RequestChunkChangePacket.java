@@ -11,7 +11,6 @@ import dev.ftb.mods.ftblibrary.platform.network.PacketContext;
 import dev.ftb.mods.ftblibrary.platform.network.Server2PlayNetworking;
 import dev.ftb.mods.ftblibrary.util.NetworkHelper;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.UUIDUtil;
@@ -21,10 +20,21 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
 
+/// Sent by client to claim/unclaim/load/unload one or more chunks.
+///
+///   - If `tryAdminChanges` is true, the requesting player must be an admin
+///   - If a non-empty `teamId` is supplied, the requesting player must either be an admin, or be a member of that team
+///
+/// @param action the action to carry out
+/// @param chunks positions of the chunks to change
+/// @param tryAdminChanges if true, chunks owned by a team other than the operating team can be affected
+/// @param teamId if non-empty, operate as the team for this ID; otherwise, operate as the requesting player's team
 public record RequestChunkChangePacket(Operation action, Set<XZ> chunks, boolean tryAdminChanges, Optional<UUID> teamId) implements CustomPacketPayload {
 	public static final Type<RequestChunkChangePacket> TYPE = new Type<>(FTBChunksAPI.id("request_chunk_change_packet"));
 
@@ -44,23 +54,10 @@ public record RequestChunkChangePacket(Operation action, Set<XZ> chunks, boolean
 		ServerPlayer player = (ServerPlayer) context.player();
 		CommandSourceStack source = player.createCommandSourceStack();
 
-		ChunkTeamData chunkTeamData = null;
-		if (message.teamId().isPresent()) {
-			Optional<Team> team = FTBTeamsAPI.api().getManager().getTeamByID(message.teamId().get());
-			if (team.isEmpty()) {
-				player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", message.teamId, ChatFormatting.RED));
-				return;
-			}
-			chunkTeamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team.get());
-		}
-		if (chunkTeamData == null) {
-			chunkTeamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(player);
-		}
-		if (chunkTeamData == null) {
+		ChunkTeamData data = getTeamData(player, message);
+		if (data == null) {
 			return;
 		}
-
-		ChunkTeamData data = chunkTeamData;
 
 		Function<XZ, ClaimResult> consumer = switch (message.action) {
 			case CLAIM -> pos -> data.claim(source, pos.dim(player.level()), false);
@@ -88,8 +85,24 @@ public record RequestChunkChangePacket(Operation action, Set<XZ> chunks, boolean
 		SendGeneralDataPacket.send(data, player);
 
 		if (message.teamId.isPresent()) {
-			SendGeneralDataPacket.send(chunkTeamData, data.getTeam().getOnlineMembers());
+			SendGeneralDataPacket.send(data, data.getTeam().getOnlineMembers());
 		}
 	}
 
+	@Nullable
+	private static ChunkTeamData getTeamData(ServerPlayer player, RequestChunkChangePacket message) {
+		return message.teamId().map(teamId ->
+				FTBTeamsAPI.api().getManager().getTeamByID(teamId).map(team -> {
+					ChunkTeamData data = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
+					if (!player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) && !data.getTeam().getMembers().contains(player.getUUID())) {
+						// player must be an admin to make changes as a different team!
+						return null;
+					}
+					return data;
+				}).orElseGet(() -> {
+					player.sendSystemMessage(Component.translatable("ftbteams.team_not_found", teamId, ChatFormatting.RED));
+					return null;
+				})
+		).orElseGet(() -> ClaimedChunkManagerImpl.getInstance().getOrCreateData(player));
+	}
 }

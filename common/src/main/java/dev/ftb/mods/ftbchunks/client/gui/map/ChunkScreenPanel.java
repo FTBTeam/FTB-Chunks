@@ -44,6 +44,7 @@ import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import org.jspecify.annotations.Nullable;
 
 import java.text.DateFormat;
 import java.util.*;
@@ -56,6 +57,7 @@ public class ChunkScreenPanel extends Panel {
 	private static final ImageIcon CHECKERED_ICON = new ImageIcon(FTBChunksAPI.id("textures/checkered.png"));
 
 	private final List<ChunkButton> chunkButtons = new ArrayList<>();
+	@Nullable
 	private XZ firstSelectedChunk = null;
 	private final Set<XZ> selectedChunks = new HashSet<>();
 	private final List<ChunkButtonPos> chunkedPosList = new ArrayList<>();
@@ -64,6 +66,7 @@ public class ChunkScreenPanel extends Panel {
 	public int tileSizeX = 16;
 	public int tileSizeY = 16;
 	private final ChunkScreen chunkScreen;
+	@Nullable
 	private Button lastButtonDragged = null;
 
 	public ChunkScreenPanel(ChunkScreen panel) {
@@ -268,6 +271,8 @@ public class ChunkScreenPanel extends Panel {
 		}
 
 		private void addChunksToSelection() {
+			assert firstSelectedChunk != null;
+
 			int x1 = Math.min(firstSelectedChunk.x(), chunkPos.x());
 			int x2 = Math.max(firstSelectedChunk.x(), chunkPos.x());
 			int z1 = Math.min(firstSelectedChunk.z(), chunkPos.z());
@@ -335,7 +340,7 @@ public class ChunkScreenPanel extends Panel {
 
 		@Override
 		public boolean mouseScrolled(double scroll) {
-			return chunk.getForceLoadedDate().map(forceLoadedDate -> {
+			return chunk.getForceLoadedDate().map(_ -> {
 				boolean teamMember = chunk.isTeamMember(ClientUtils.getClientPlayer());
 				if (isMouseOver && (canChangeAsAdmin() || teamMember)) {
 					int dir = (int) Math.signum(scroll);

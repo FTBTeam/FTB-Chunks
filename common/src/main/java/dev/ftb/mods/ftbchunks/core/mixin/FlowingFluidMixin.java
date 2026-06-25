@@ -18,7 +18,7 @@ import java.util.Map;
 @Mixin(FlowingFluid.class)
 public abstract class FlowingFluidMixin {
     @Inject(method = "getSpread", at = @At("RETURN"))
-    public void onGetSpread(Level level, BlockPos blockPos, BlockState blockState, CallbackInfoReturnable<Map<Direction, FluidState>> cir, @Local(name = "map") Map<Direction,FluidState> map) {
+    public void onGetSpread(Level level, BlockPos blockPos, BlockState blockState, CallbackInfoReturnable<Map<Direction, FluidState>> cir, @Local Map<Direction,FluidState> map) {
         FlowingFluidHelper.applyFluidSpreadRestrictions(level, blockPos, map);
     }
 }

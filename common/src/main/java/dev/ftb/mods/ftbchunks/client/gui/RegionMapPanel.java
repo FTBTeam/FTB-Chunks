@@ -10,6 +10,7 @@ import dev.ftb.mods.ftbchunks.client.mapicon.MapIconComparator;
 import dev.ftb.mods.ftbchunks.util.HeightUtils;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -217,12 +218,11 @@ public class RegionMapPanel extends Panel {
 	}
 
 	@Override
-	public boolean scrollPanel(double scroll) {
+	public boolean scrollPanel(double xDelta, double yDelta) {
 		if (isMouseOver()) {
-			largeMap.addZoom(scroll);
+			largeMap.addZoom(yDelta);
 			return true;
 		}
-
 		return false;
 	}
 }

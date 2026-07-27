@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.21]
+
+### Changed
+* A couple of significant client-side optimizations
+  * Minimap rendering should much more efficient now (coalescing textures to greatly reduce GPU uploading)
+  * Saving map images clientside is done more off-thread now
+* Updated to work with new FTB Library panel scrolling (FTB Library 2101.1.34+ required)
+
 ## [2101.1.20]
 
 ### Fixed

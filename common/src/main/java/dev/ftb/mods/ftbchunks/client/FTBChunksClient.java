@@ -547,24 +547,7 @@ public enum FTBChunksClient {
             scheduleMinimapUpdate();
         }
 
-        if (updateMinimapScheduled) {
-            updateMinimapScheduled = false;
-
-            // TODO: More math here to upload from (up to) 4 regions instead of all chunks inside them, to speed things up
-
-            for (int mz = 0; mz < FTBChunks.TILES; mz++) {
-                for (int mx = 0; mx < FTBChunks.TILES; mx++) {
-                    int ox = cx + mx - FTBChunks.TILE_OFFSET;
-                    int oz = cz + mz - FTBChunks.TILE_OFFSET;
-
-                    MapRegion region = dim.getRegion(XZ.regionFromChunk(ox, oz));
-                    region.getRenderedMapImage().upload(0, mx * 16, mz * 16, (ox & 31) * 16, (oz & 31) * 16, 16, 16, minimapBlur, false, false, false);
-                }
-            }
-
-            currentPlayerChunkX = cx;
-            currentPlayerChunkZ = cz;
-        }
+        updateMinimapIfNeeded(cx, cz, dim, minimapBlur);
 
         if (mc.options.hideGui || mc.getDebugOverlay().showDebugScreen() || !FTBChunksClientConfig.MINIMAP_ENABLED.get() || FTBChunksClientConfig.MINIMAP_VISIBILITY.get() == 0 || !FTBChunksWorldConfig.shouldShowMinimap(mc.player)) {
             return;
@@ -798,6 +781,57 @@ public enum FTBChunksClient {
         if (worldMatrix != null && FTBChunksClientConfig.IN_WORLD_WAYPOINTS.get()) {
             drawInWorldIcons(mc, graphics, tickDelta, playerX, playerY, playerZ, scaledWidth, scaledHeight);
         }
+    }
+
+    private void updateMinimapIfNeeded(int cx, int cz, MapDimension mapDimension, boolean minimapBlur) {
+        if (updateMinimapScheduled) {
+            updateMinimapScheduled = false;
+
+            // The TILES x TILES window of chunks can only ever straddle at most 2 regions on each axis
+            // (regions are 32x32 chunks, and TILES < 32), so split each axis into contiguous runs of
+            // chunks that share the same region and upload one rectangular block per region touched
+            // (at most 4 uploads total).
+            int[] regionSplitX = regionSplits(cx);
+            int[] regionSplitZ = regionSplits(cz);
+
+            for (int ix = 0; ix < regionSplitX.length - 1; ix++) {
+                int x1 = regionSplitX[ix];
+                int x2 = regionSplitX[ix + 1];
+                int ox = cx + x1 - FTBChunks.TILE_OFFSET;
+
+                for (int iz = 0; iz < regionSplitZ.length - 1; iz++) {
+                    int z1 = regionSplitZ[iz];
+                    int z2 = regionSplitZ[iz + 1];
+                    int oz = cz + z1 - FTBChunks.TILE_OFFSET;
+
+                    MapRegion region = mapDimension.getRegion(XZ.regionFromChunk(ox, oz));
+                    if (region != null) {  // should always be the case
+                        region.getRenderedMapImage().upload(0,  // level
+                                x1 * 16, z1 * 16,   // x/z offsets
+                                (ox & 31) * 16, (oz & 31) * 16, // unpack skip pixels/rows
+                                (x2 - x1) * 16, (z2 - z1) * 16,  // width/height
+                                minimapBlur, false, false, false   // blur/clamp/mipmap/autoclose
+                        );
+                    }
+                }
+            }
+
+            currentPlayerChunkX = cx;
+            currentPlayerChunkZ = cz;
+        }
+    }
+
+    // Splits the [0, FTBChunks.TILES) tile index range on the given axis into contiguous runs of
+    // chunks that fall within the same region, given the axis' centre chunk coordinate. Returned as
+    // boundary indices, e.g. {0, 5, 15} means tiles [0,5) are in one region and [5,15) are in the next.
+    private static int[] regionSplits(int centreChunk) {
+        int firstRegion = (centreChunk - FTBChunks.TILE_OFFSET) >> 5;
+        for (int m = 1; m < FTBChunks.TILES; m++) {
+            if (((centreChunk + m - FTBChunks.TILE_OFFSET) >> 5) != firstRegion) {
+                return new int[]{0, m, FTBChunks.TILES};
+            }
+        }
+        return new int[]{0, FTBChunks.TILES};
     }
 
     private int getMinimapComponentsTotalHeight(Minecraft mc, MapDimension dim, double playerX, double playerY, double playerZ) {

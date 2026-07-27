@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -50,9 +51,13 @@ public class MapRegionData {
 	}
 
 	public int getBlockIndex(int index) {
-		int f = (foliage[index] >> 24) & 0xFF;
-		int g = (grass[index] >> 24) & 0xFF;
-		int w = (water[index] >> 24) & 0xFF;
+		return getBlockIndex(index, foliage, grass, water);
+	}
+
+	private static int getBlockIndex(int index, int[] foliage1, int[] grass1, int[] water1) {
+		int f = (foliage1[index] >> 24) & 0xFF;
+		int g = (grass1[index] >> 24) & 0xFF;
+		int w = (water1[index] >> 24) & 0xFF;
 		return (f << 16) | (g << 8) | w;
 	}
 
@@ -109,26 +114,30 @@ public class MapRegionData {
 						case "grass.png" -> grassImage = ImageIO.read(zis);
 						case "water.png" -> waterImage = ImageIO.read(zis);
 						case "blocks.png" -> blocksImage = ImageIO.read(zis);
-						default -> FTBChunks.LOGGER.warn("Unknown file " + ze.getName() + " in " + file.toAbsolutePath());
+						default -> FTBChunks.LOGGER.warn("Unexpected file {} in {}", ze.getName(), file.toAbsolutePath());
 					}
 				}
 
-				for (int y = 0; y < 512; y++) {
-					for (int x = 0; x < 512; x++) {
-						int index = x + y * 512;
-						height[index] = (short) ((dataImage.getRGB(x, y) >> 16) & 0xFFFF);
+				if (dataImage != null && foliageImage != null && grassImage != null && waterImage != null && blocksImage != null) {
+					for (int y = 0; y < 512; y++) {
+						for (int x = 0; x < 512; x++) {
+							int index = x + y * 512;
+							height[index] = (short) ((dataImage.getRGB(x, y) >> 16) & 0xFFFF);
 
-						if (version < 3 && height[index] == 0) {
-							height[index] = (short) HeightUtils.UNKNOWN;
-							region.markDirty();
+							if (version < 3 && height[index] == 0) {
+								height[index] = (short) HeightUtils.UNKNOWN;
+								region.markDirty();
+							}
+
+							waterLightAndBiome[index] = (short) (dataImage.getRGB(x, y) & 0xFFFF);
+							foliage[index] = foliageImage.getRGB(x, y);
+							grass[index] = grassImage.getRGB(x, y);
+							water[index] = waterImage.getRGB(x, y);
+							setBlockIndex(index, blocksImage.getRGB(x, y));
 						}
-
-						waterLightAndBiome[index] = (short) (dataImage.getRGB(x, y) & 0xFFFF);
-						foliage[index] = foliageImage.getRGB(x, y);
-						grass[index] = grassImage.getRGB(x, y);
-						water[index] = waterImage.getRGB(x, y);
-						setBlockIndex(index, blocksImage.getRGB(x, y));
 					}
+				} else {
+					FTBChunks.LOGGER.warn("not all images could be read from {} - file damaged?", file);
 				}
 			}
 		}
@@ -144,34 +153,47 @@ public class MapRegionData {
 			return;
 		}
 
-		BufferedImage dataImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-		BufferedImage foliageImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-		BufferedImage grassImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-		BufferedImage waterImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-		BufferedImage blocksImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-
-		for (int y = 0; y < 512; y++) {
-			for (int x = 0; x < 512; x++) {
-				int index = x + y * 512;
-				dataImage.setRGB(x, y, (((int) height[index] & 0xFFFF) << 16) | ((int) waterLightAndBiome[index] & 0xFFFF));
-				foliageImage.setRGB(x, y, 0xFF000000 | (foliage[index] & 0xFFFFFF));
-				grassImage.setRGB(x, y, 0xFF000000 | (grass[index] & 0xFFFFFF));
-				waterImage.setRGB(x, y, 0xFF000000 | (water[index] & 0xFFFFFF));
-				blocksImage.setRGB(x, y, 0xFF000000 | getBlockIndex(index));
-			}
-		}
+		// snapshot all the data arrays so we can safely construct images from them in a separate thread
+		short[] heightCopy = Arrays.copyOf(height, height.length);
+		short[] waterLightAndBiomeCopy = Arrays.copyOf(waterLightAndBiome, waterLightAndBiome.length);
+		int[] foliageCopy = Arrays.copyOf(foliage, foliage.length);
+		int[] grassCopy = Arrays.copyOf(grass, grass.length);
+		int[] waterCopy = Arrays.copyOf(water, water.length);
 
 		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+			BufferedImage dataImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage foliageImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+			BufferedImage grassImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+			BufferedImage waterImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+			BufferedImage blocksImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+
+			for (int y = 0; y < 512; y++) {
+				for (int x = 0; x < 512; x++) {
+					int index = x + y * 512;
+					dataImage.setRGB(x, y, (((int) heightCopy[index] & 0xFFFF) << 16) | ((int) waterLightAndBiomeCopy[index] & 0xFFFF));
+					foliageImage.setRGB(x, y, 0xFF000000 | (foliageCopy[index] & 0xFFFFFF));
+					grassImage.setRGB(x, y, 0xFF000000 | (grassCopy[index] & 0xFFFFFF));
+					waterImage.setRGB(x, y, 0xFF000000 | (waterCopy[index] & 0xFFFFFF));
+					blocksImage.setRGB(x, y, 0xFF000000 | getBlockIndex(index, foliageCopy, grassCopy, waterCopy));
+				}
+			}
+
 			try {
-				writeData(chunkList, dataImage, foliageImage, grassImage, waterImage, blocksImage);
+				Map<String,BufferedImage> images = Map.of(
+						"data.png", dataImage,
+						"foliage.png", foliageImage,
+						"grass.png", grassImage,
+						"water.png", waterImage,
+						"blocks.png", blocksImage
+				);
+				writeData(chunkList, images);
 			} catch (Exception ex) {
-				FTBChunks.LOGGER.error("Failed to write map region " + region.dimension + ":" + region + ":");
-				ex.printStackTrace();
+                FTBChunks.LOGGER.error("Failed to write map region {}:{}: {}", region.dimension, region, ex.getMessage());
 			}
 		});
 	}
 
-	private void writeData(Collection<MapChunk> chunkList, BufferedImage dataImage, BufferedImage foliageImage, BufferedImage grassImage, BufferedImage waterImage, BufferedImage blocksImage) throws IOException {
+	private void writeData(Collection<MapChunk> chunkList, Map<String,BufferedImage> images) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(baos);
@@ -188,25 +210,11 @@ public class MapRegionData {
 
 			out.closeEntry();
 
-			out.putNextEntry(new ZipEntry("data.png"));
-			ImageIO.write(dataImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("foliage.png"));
-			ImageIO.write(foliageImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("grass.png"));
-			ImageIO.write(grassImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("water.png"));
-			ImageIO.write(waterImage, "PNG", out);
-			out.closeEntry();
-
-			out.putNextEntry(new ZipEntry("blocks.png"));
-			ImageIO.write(blocksImage, "PNG", out);
-			out.closeEntry();
+			for (Map.Entry<String, BufferedImage> entry : images.entrySet()) {
+				out.putNextEntry(new ZipEntry(entry.getKey()));
+				ImageIO.write(entry.getValue(), "PNG", out);
+				out.closeEntry();
+			}
 		}
 
 		if (Files.notExists(region.dimension.directory)) {

@@ -51,9 +51,13 @@ public class MapRegionData {
 	}
 
 	public int getBlockIndex(int index) {
-		int f = (foliage[index] >> 24) & 0xFF;
-		int g = (grass[index] >> 24) & 0xFF;
-		int w = (water[index] >> 24) & 0xFF;
+		return getBlockIndex(index, foliage, grass, water);
+	}
+
+	private static int getBlockIndex(int index, int[] foliage1, int[] grass1, int[] water1) {
+		int f = (foliage1[index] >> 24) & 0xFF;
+		int g = (grass1[index] >> 24) & 0xFF;
+		int w = (water1[index] >> 24) & 0xFF;
 		return (f << 16) | (g << 8) | w;
 	}
 
@@ -147,24 +151,31 @@ public class MapRegionData {
 			return;
 		}
 
-		BufferedImage dataImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-		BufferedImage foliageImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-		BufferedImage grassImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-		BufferedImage waterImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-		BufferedImage blocksImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-
-		for (int y = 0; y < 512; y++) {
-			for (int x = 0; x < 512; x++) {
-				int index = x + y * 512;
-				dataImage.setRGB(x, y, (((int) height[index] & 0xFFFF) << 16) | ((int) waterLightAndBiome[index] & 0xFFFF));
-				foliageImage.setRGB(x, y, 0xFF000000 | (foliage[index] & 0xFFFFFF));
-				grassImage.setRGB(x, y, 0xFF000000 | (grass[index] & 0xFFFFFF));
-				waterImage.setRGB(x, y, 0xFF000000 | (water[index] & 0xFFFFFF));
-				blocksImage.setRGB(x, y, 0xFF000000 | getBlockIndex(index));
-			}
-		}
+		// snapshot all the data arrays so we can safely construct images from them in a separate thread
+		short[] heightCopy = Arrays.copyOf(height, height.length);
+		short[] waterLightAndBiomeCopy = Arrays.copyOf(waterLightAndBiome, waterLightAndBiome.length);
+		int[] foliageCopy = Arrays.copyOf(foliage, foliage.length);
+		int[] grassCopy = Arrays.copyOf(grass, grass.length);
+		int[] waterCopy = Arrays.copyOf(water, water.length);
 
 		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+			BufferedImage dataImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage foliageImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+			BufferedImage grassImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+			BufferedImage waterImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+			BufferedImage blocksImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+
+			for (int y = 0; y < 512; y++) {
+				for (int x = 0; x < 512; x++) {
+					int index = x + y * 512;
+					dataImage.setRGB(x, y, (((int) heightCopy[index] & 0xFFFF) << 16) | ((int) waterLightAndBiomeCopy[index] & 0xFFFF));
+					foliageImage.setRGB(x, y, 0xFF000000 | (foliageCopy[index] & 0xFFFFFF));
+					grassImage.setRGB(x, y, 0xFF000000 | (grassCopy[index] & 0xFFFFFF));
+					waterImage.setRGB(x, y, 0xFF000000 | (waterCopy[index] & 0xFFFFFF));
+					blocksImage.setRGB(x, y, 0xFF000000 | getBlockIndex(index, foliageCopy, grassCopy, waterCopy));
+				}
+			}
+
 			try {
 				Map<String,BufferedImage> images = Map.of(
 						"data.png", dataImage,

@@ -56,15 +56,11 @@ public class TrackedPlayerMapIcon implements MapIcon {
 
     @Override
     public void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-        if (mapType.isMinimap() || w < 4) {
-            IconHelper.renderIcon(faceIcon, graphics, x, y, w, h);
-        } else {
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(x, y);
-            graphics.pose().scale(w / 18F, h / 18F);
-            IconHelper.renderIcon(Color4I.BLACK, graphics, 0, 0, 18, 18);
-            IconHelper.renderIcon(faceIcon, graphics, 1, 1, 16, 16);
-            graphics.pose().popMatrix();
-        }
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(w / 18F, h / 18F);
+        IconHelper.renderIcon(faceIcon.withColor(Color4I.BLACK.withAlpha(128)), graphics, 0, 0, 18, 18);
+        IconHelper.renderIcon(faceIcon, graphics, 1, 1, 16, 16);
+        graphics.pose().popMatrix();
     }
 }

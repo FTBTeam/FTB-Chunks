@@ -16,6 +16,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3x2fStack;
@@ -83,16 +84,17 @@ public class EntityMapIcon implements MapIcon {
 
     @Override
     public void draw(MapType mapType, GuiGraphicsExtractor graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-        if (!(entity instanceof AbstractClientPlayer) || mapType.isMinimap() || w < 4 || icon == EntityIconLoader.NORMAL || icon == EntityIconLoader.HOSTILE) {
-            IconHelper.renderIcon(icon, graphics, x, y, w, h);
-        } else {
-            Matrix3x2fStack poseStack = graphics.pose();
-            poseStack.pushMatrix();
-            poseStack.translate(x, y);
-            poseStack.scale(w / 18F, h / 18F);
-            IconHelper.renderIcon(Color4I.BLACK, graphics, 0, 0, 18, 18);
-            IconHelper.renderIcon(icon, graphics, 1, 1, widthHeight.width(), widthHeight.height());
-            poseStack.popMatrix();
+        Matrix3x2fStack poseStack = graphics.pose();
+        poseStack.pushMatrix();
+        poseStack.translate(x, y);
+        if (entity instanceof LocalPlayer player) {
+            poseStack.translate(w / 2f, h / 2f);
+            poseStack.rotate((player.getVisualRotationYInDegrees() + 180F) * Mth.DEG_TO_RAD);
+            poseStack.translate(-w / 2f, -h / 2f);
         }
+        poseStack.scale(w / 18F, h / 18F);
+        IconHelper.renderIcon(icon.withColor(Color4I.BLACK.withAlpha(128)), graphics, 0, 0, 18, 18);
+        IconHelper.renderIcon(icon, graphics, 1, 1, widthHeight.width(), widthHeight.height());
+        poseStack.popMatrix();
     }
 }

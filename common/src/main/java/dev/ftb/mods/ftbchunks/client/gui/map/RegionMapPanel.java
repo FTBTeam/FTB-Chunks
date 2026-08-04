@@ -214,9 +214,9 @@ public class RegionMapPanel extends Panel {
 	}
 
 	@Override
-	public boolean scrollPanel(double scroll) {
+	public boolean scrollPanel(double xDelta, double yDelta) {
 		if (isMouseOver()) {
-			largeMapScreen.addZoom(scroll);
+			largeMapScreen.addZoom(yDelta);
 			return true;
 		}
 

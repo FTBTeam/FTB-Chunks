@@ -46,7 +46,7 @@ public class LargeMapScreen extends BaseScreen {
 
     private final RegionMapPanel regionPanel;
     private final MapScreenButtonPanel buttonPanel;
-    private int zoom = 256;
+    private static int zoom = 256;  // static to remember across screen invocations
 
     MapDimension dimension;
     int scrollWidth = 0;

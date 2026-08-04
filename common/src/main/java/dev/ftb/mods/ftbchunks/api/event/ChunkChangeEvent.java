@@ -25,10 +25,10 @@ public class ChunkChangeEvent {
         LOAD("load"),
         UNLOAD("unload");
 
-        private final String name;
+        private final String id;
 
-        Operation(String name) {
-            this.name = name;
+        Operation(String id) {
+            this.id = id;
         }
 
         public static Operation createOnClient(boolean isLeftMouse, boolean isShift) {
@@ -36,6 +36,10 @@ public class ChunkChangeEvent {
                     (isLeftMouse ? Operation.LOAD : Operation.UNLOAD) :
                     (isLeftMouse ? Operation.CLAIM : Operation.UNCLAIM);
 
+        }
+
+        public String getId() {
+            return id;
         }
     }
 

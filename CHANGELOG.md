@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [26.1.2.7]
+
+### Changed
+* Short and tall grass, bushes and ferns are now ignored for map drawing purposes
+  * Makes for a much cleaner-looking map
+* Map entity icons now have a darkened border around them for better contrast with the terrain behind them
+* Map image writing to disk now does more of its work off-thread for better client-side performance
+* Some optimization work done in minimap texture uploading to GPU
+* The zoom level of the large map screen is now remembered when re-opening the screen
+
+### Added
+* Added `ChunkChangeEvent.Operation.getId()` method, primarily for benefit of KubeJS scripts
+
 ## [26.1.2.6]
 
 ### Fixed

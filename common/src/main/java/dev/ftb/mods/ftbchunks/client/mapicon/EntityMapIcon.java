@@ -76,16 +76,12 @@ public class EntityMapIcon implements MapIcon {
 
     @Override
     public void draw(MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha) {
-        if (!(entity instanceof AbstractClientPlayer) || mapType.isMinimap() || w < 4 || icon == EntityIconLoader.NORMAL || icon == EntityIconLoader.HOSTILE) {
-            icon.draw(graphics, x, y, w, h);
-        } else {
-            PoseStack poseStack = graphics.pose();
-            poseStack.pushPose();
-            poseStack.translate(x, y, 0F);
-            poseStack.scale(w / 18F, h / 18F, 1F);
-            Color4I.BLACK.draw(graphics, 0, 0, 18, 18);
-            icon.draw(graphics, 1, 1, widthHeight.width(), widthHeight.height());
-            poseStack.popPose();
-        }
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(x, y, 0F);
+        poseStack.scale(w / 18F, h / 18F, 1F);
+        Color4I.BLACK.withAlpha(128).draw(graphics, 0, 0, 18, 18);
+        icon.withColor(Color4I.BLACK).draw(graphics, 1, 1, widthHeight.width(), widthHeight.height());
+        poseStack.popPose();
     }
 }

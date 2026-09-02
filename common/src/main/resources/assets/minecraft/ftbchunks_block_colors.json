@@ -73,5 +73,10 @@
 	"chain": "ignored",
 	"lever": "ignored",
 	"barrier": "ignored",
-	"light": "ignored"
+	"light": "ignored",
+	"short_grass": "ignored",
+	"tall_grass": "ignored",
+	"bush": "ignored",
+	"fern": "ignored",
+	"large_fern": "ignored"
 }

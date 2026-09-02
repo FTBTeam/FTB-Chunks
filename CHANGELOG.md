@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.22]
+
+### Changed
+* Foliage (grass, bushes, ferns) are now ignored by default for mapping
+  * Leads to much cleaner looking maps; foliage caused a lot of ugly noise on the map
+* Entity & player icons on the map now always have a darkened border for better contrast on the map
+
+### Fixed
+* Fixed a thread-safety issue which could lead to a client-side crash (CME)
+* Fixed a display bug on the claim manager screen causing player icon position to be inaccurate at some resolutions (thanks @Ricket)
+
 ## [2101.1.21]
 
 ### Changed

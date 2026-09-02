@@ -195,8 +195,8 @@ public class ChunkScreenPanel extends Panel {
 			}
 		}
 
-		double hx = sx + tileSizeX * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D);
-		double hy = sy + tileSizeY * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D);
+		double hx = sx + tileSizeX * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getX(), 16D) / 16D * tileSizeX;
+		double hy = sy + tileSizeY * FTBChunks.TILE_OFFSET + MathUtils.mod(player.getZ(), 16D) / 16D * tileSizeY;
 
 		new PointerIcon().draw(MapType.LARGE_MAP, graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8, false, 255);
 		IconHelper.renderIcon(FaceIcon.getFace(player.getGameProfile(), true), graphics, (int) (hx - 4D), (int) (hy - 4D), 8, 8);

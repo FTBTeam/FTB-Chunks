@@ -92,7 +92,9 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 	}
 
 	public Collection<MapRegion> getLoadedRegions() {
-		return regions == null ? Collections.emptyList() : regions.values();
+		synchronized (manager.lock) {
+			return regions == null ? Collections.emptyList() : ImmutableList.copyOf(regions.values());
+		}
 	}
 
 	public int getLoadedView(MapRegion region, int cx, int cz) {

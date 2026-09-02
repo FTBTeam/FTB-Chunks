@@ -170,9 +170,11 @@ public class MapManager implements MapTask {
 			return;
 		}
 
-		for (MapDimension dimension : MapManager.instance.getDimensions().values()) {
-			dimension.getLoadedRegions().forEach(MapRegion::saveIfChanged);
-			dimension.saveIfChanged();
+		synchronized (lock) {
+			for (MapDimension dimension : MapManager.instance.getDimensions().values()) {
+				dimension.getLoadedRegions().forEach(MapRegion::saveIfChanged);
+				dimension.saveIfChanged();
+			}
 		}
 
 		if (MapManager.instance.needsSave) {
@@ -188,11 +190,13 @@ public class MapManager implements MapTask {
 	}
 
 	@NotNull
-	public synchronized MapDimension getDimension(ResourceKey<Level> dim) {
-		return getDimensions().computeIfAbsent(dim, dimKey -> {
-			needsSave = true;
-			return new MapDimension(this, dimKey, directory);
-		});
+	public MapDimension getDimension(ResourceKey<Level> dim) {
+		synchronized (lock) {
+			return getDimensions().computeIfAbsent(dim, dimKey -> {
+				needsSave = true;
+				return new MapDimension(this, dimKey, directory);
+			});
+		}
 	}
 
 	public boolean isInvalid() {

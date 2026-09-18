@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.gui.map.ChunkScreen;
+import dev.ftb.mods.ftbchunks.util.RetryTracker;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -21,6 +22,8 @@ public class MapRegionTexture {
     private volatile boolean baking = false;
     @Nullable
     private DynamicTexture texture;
+
+    private final RetryTracker retryTracker = new RetryTracker();
 
     public MapRegionTexture(MapRegion region) {
         this.region = region;
@@ -43,16 +46,28 @@ public class MapRegionTexture {
     }
 
     public void requestBake() {
-        if (isBaking()) {
+        if (isBaking() || !retryTracker.readyToTry()) {
             return;
         }
 
         baking = true;
-        FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this.region, image -> {
-            baking = false;
-            // Ensure that we upload on the main thread
-            Minecraft.getInstance().execute(() -> upload(image));
-        }));
+
+        RenderMapImageTask task = new RenderMapImageTask(this.region, image ->
+                Minecraft.getInstance().execute(() -> upload(image))
+        );
+
+        FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+            try {
+                task.runMapTask();
+                retryTracker.succeeded();
+            } catch (Exception ex) {
+                retryTracker.failed();
+                LOGGER.error("Failed to bake map region texture for {} (attempt {}), retrying in {} ms",
+                        region, retryTracker.failureCount(), retryTracker.getDelay(), ex);
+            } finally {
+                baking = false;
+            }
+        });
     }
 
     private void upload(NativeImage image) {

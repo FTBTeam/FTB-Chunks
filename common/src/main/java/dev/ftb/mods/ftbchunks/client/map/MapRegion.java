@@ -3,13 +3,13 @@ package dev.ftb.mods.ftbchunks.client.map;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.util.RetryTracker;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.ChunkPos;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -31,6 +31,8 @@ public class MapRegion implements MapTask {
 
 	private final Map<XZ, MapChunk> chunks = new HashMap<>();
 	private final MapRegionTexture regionTexture;
+
+	private final RetryTracker retryTracker = new RetryTracker();
 
 	public MapRegion(MapDimension dimension, XZ pos) {
 		this.dimension = dimension;
@@ -65,8 +67,12 @@ public class MapRegion implements MapTask {
 			data = new MapRegionData(this);
 			try {
 				data.read();
-			} catch (IOException ex) {
-				FTBChunks.LOGGER.error("can't read map region data for {}/{}: {}", dimension.dimension.identifier(), pos, ex.getMessage());
+				retryTracker.succeeded();
+			} catch (Exception ex) {
+				retryTracker.failed();
+				FTBChunks.LOGGER.error(
+						"can't read map region data for {}/{} (attempt {}): {}",
+						dimension.dimension.identifier(), pos, retryTracker.failureCount(), ex.getMessage());
 			}
 		}
 
@@ -76,15 +82,26 @@ public class MapRegion implements MapTask {
 
 	@Nullable
 	public MapRegionData getData() {
-		if (data == null && !isLoadingData) {
+		if (data == null && !isLoadingData && retryTracker.readyToTry()) {
 			isLoadingData = true;
-			FTBChunksClient.MAP_EXECUTOR.execute(this::getDataBlocking);
+			try {
+				FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+					try {
+						getDataBlocking();
+					} finally {
+						isLoadingData = false;
+					}
+				});
+			} catch (Exception ex) {
+				isLoadingData = false;
+				retryTracker.failed();
+				FTBChunks.LOGGER.error("couldn't schedule data load for region {}: {}", pos, ex.getMessage());
+			}
 		}
 
 		if (data != null) {
 			lastDataAccess = System.currentTimeMillis();
 		}
-
 		return data;
 	}
 

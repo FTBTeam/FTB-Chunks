@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.util.RetryTracker;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -36,6 +37,9 @@ public class MapRegion implements MapTask {
 	private boolean mapImageLoaded;
 	private boolean renderingMapImage;
 	private final Map<XZ, MapChunk> chunks = new HashMap<>();
+
+	private final RetryTracker loadingRetryTracker = new RetryTracker();
+	private final RetryTracker renderRetryTracker = new RetryTracker();
 
 	public MapRegion(MapDimension d, XZ p) {
 		dimension = d;
@@ -79,8 +83,12 @@ public class MapRegion implements MapTask {
 			data = new MapRegionData(this);
 			try {
 				data.read();
-			} catch (IOException ex) {
-				ex.printStackTrace();
+				loadingRetryTracker.succeeded();
+			} catch (Exception ex) {
+				loadingRetryTracker.failed();
+				FTBChunks.LOGGER.error(
+						"can't read map region data for {}/{} (attempt {}): {}",
+						dimension.dimension.location(), pos, loadingRetryTracker.failureCount(), ex.getMessage());
 			}
 		}
 
@@ -90,9 +98,21 @@ public class MapRegion implements MapTask {
 
 	@Nullable
 	public MapRegionData getData() {
-		if (data == null && !isLoadingData) {
+		if (data == null && !isLoadingData && loadingRetryTracker.readyToTry()) {
 			isLoadingData = true;
-			FTBChunksClient.MAP_EXECUTOR.execute(this::getDataBlocking);
+			try {
+				FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+					try {
+						getDataBlocking();
+					} finally {
+						isLoadingData = false;
+					}
+				});
+			} catch (Exception ex) {
+				isLoadingData = false;
+				loadingRetryTracker.failed();
+				FTBChunks.LOGGER.error("couldn't schedule data load for region {}: {}", pos, ex.getMessage());
+			}
 		}
 
 		if (data != null) {
@@ -111,10 +131,25 @@ public class MapRegion implements MapTask {
 			}
 		}
 
-		if (updateRenderedMapImage && !renderingMapImage) {
+		if (updateRenderedMapImage && !renderingMapImage && renderRetryTracker.readyToTry()) {
 			updateRenderedMapImage = false;
 			mapImageLoaded = false;
 			renderingMapImage = true;
+
+			RenderMapImageTask task = new RenderMapImageTask(this);
+			FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+				try {
+					task.runMapTask();
+					renderRetryTracker.succeeded();
+				} catch (Exception ex) {
+					renderRetryTracker.failed();
+					renderingMapImage = false;
+					FTBChunks.LOGGER.error(
+							"Failed to render map image for region {} (attempt {}), retrying in {} ms",
+							pos, renderRetryTracker.failureCount(), renderRetryTracker.getDelay(), ex);
+				}
+			});
+
 			FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this));
 		}
 

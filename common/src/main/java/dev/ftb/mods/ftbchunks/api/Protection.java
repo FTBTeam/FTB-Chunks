@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.api;
 
+import dev.ftb.mods.ftbchunks.FTBCUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -33,7 +34,7 @@ public interface Protection {
 			return ProtectionPolicy.ALLOW;
 		}
 
-		if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.BLOCK_EDIT_MODE)) {
+		if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBCUtils.getPlatformEditProp())) {
 			return ProtectionPolicy.ALLOW;
 		}
 
@@ -47,7 +48,7 @@ public interface Protection {
 			return ProtectionPolicy.ALLOW;
 		}
 
-		if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.BLOCK_INTERACT_MODE)) {
+		if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBCUtils.getPlatformInteractProp())) {
 			return ProtectionPolicy.ALLOW;
 		}
 
@@ -59,10 +60,10 @@ public interface Protection {
 
 		if (stack.isEdible() || isBeneficialPotion(stack) || stack.is(FTBChunksTags.Items.RIGHT_CLICK_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
-		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.BLOCK_INTERACT_MODE)) {
+		} else if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBCUtils.getPlatformInteractProp())) {
 			return ProtectionPolicy.ALLOW;
 		} else if (chunk != null && stack.is(FTBChunksTags.Items.RIGHT_CLICK_BLACKLIST_TAG)) {
-			return ProtectionPolicy.DENY;
+			return ProtectionPolicy.CHECK;
 		}
 
 		return ProtectionPolicy.ALLOW;
@@ -74,7 +75,7 @@ public interface Protection {
 	}
 
 	Protection EDIT_FLUID = (player, pos, hand, chunk, entity) -> {
-		if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBChunksProperties.BLOCK_EDIT_MODE)) {
+		if (chunk != null && chunk.getTeamData().canPlayerUse(player, FTBCUtils.getPlatformEditProp())) {
 			return ProtectionPolicy.ALLOW;
 		}
 
@@ -105,7 +106,7 @@ public interface Protection {
 	Protection EDIT_AND_INTERACT_BLOCK = (player, pos, hand, chunk, entity) -> {
 		BlockState blockState = player.level().getBlockState(pos);
 
-		if (blockState.is(FTBChunksTags.Blocks.INTERACT_WHITELIST_TAG)) {
+		if (blockState.is(FTBChunksTags.Blocks.EDIT_WHITELIST_TAG) || blockState.is(FTBChunksTags.Blocks.INTERACT_WHITELIST_TAG)) {
 			return ProtectionPolicy.ALLOW;
 		}
 

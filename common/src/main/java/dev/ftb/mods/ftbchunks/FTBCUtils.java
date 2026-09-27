@@ -1,6 +1,9 @@
 package dev.ftb.mods.ftbchunks;
 
 import dev.architectury.injectables.annotations.ExpectPlatform;
+import dev.architectury.platform.Platform;
+import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
+import dev.ftb.mods.ftbteams.api.property.PrivacyProperty;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -11,6 +14,18 @@ public class FTBCUtils {
 	@ExpectPlatform
 	public static boolean isRail(Block block) {
 		throw new AssertionError();
+	}
+
+	public static PrivacyProperty getPlatformEditProp() {
+		return Platform.isFabric() ?
+				FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
+				FTBChunksProperties.BLOCK_EDIT_MODE;
+	}
+
+	public static PrivacyProperty getPlatformInteractProp() {
+		return Platform.isFabric() ?
+				FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
+				FTBChunksProperties.BLOCK_INTERACT_MODE;
 	}
 
 

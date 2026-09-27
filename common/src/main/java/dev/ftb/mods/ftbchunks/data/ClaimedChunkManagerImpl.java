@@ -207,6 +207,10 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 			return FTBChunksWorldConfig.FAKE_PLAYERS.get().shouldPreventInteraction();
 		}
 
+		if (!isFake && getBypassProtection(player.getUUID())) {
+			return false;
+		}
+
 		ClaimedChunkImpl chunk = getChunk(new ChunkDimPos(player.level(), pos));
 		if (chunk != null) {
 			ProtectionPolicy policy = protection.getProtectionPolicy(player, pos, hand, chunk, targetEntity);

@@ -33,9 +33,7 @@ public class PistonHelper {
      */
     public static boolean shouldPreventPistonMovement(Level level, BlockPos pistonPos, PistonStructureResolver resolver) {
         if (!level.isClientSide && FTBChunksWorldConfig.PISTON_PROTECTION.get() && !FTBChunksWorldConfig.DISABLE_PROTECTION.get()) {
-            PrivacyProperty editProp = Platform.isFabric() ?
-                    FTBChunksProperties.BLOCK_EDIT_AND_INTERACT_MODE :
-                    FTBChunksProperties.BLOCK_EDIT_MODE;
+            PrivacyProperty editProp = dev.ftb.mods.ftbchunks.FTBCUtils.getPlatformEditProp();
             ClaimedChunkManager mgr = FTBChunksAPI.api().getManager();
             ClaimedChunk srcClaim = mgr.getChunk(new ChunkDimPos(level, pistonPos));
             for (BlockPos pos : resolver.getToPush()) {

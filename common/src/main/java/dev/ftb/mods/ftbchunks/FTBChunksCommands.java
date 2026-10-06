@@ -11,10 +11,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.util.UndashedUuid;
 import dev.architectury.networking.NetworkManager;
-import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.FTBChunksProperties;
+import dev.ftb.mods.ftbchunks.api.*;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.data.ChunkTeamDataImpl;
 import dev.ftb.mods.ftbchunks.data.ClaimedChunkImpl;
@@ -24,6 +21,7 @@ import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.api.property.PrivacyMode;
 import dev.ftb.mods.ftbteams.data.TeamArgument;
 import dev.ftb.mods.ftbteams.data.TeamArgumentProvider;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
@@ -52,9 +50,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.ToIntBiFunction;
 
 public class FTBChunksCommands {
@@ -264,16 +260,28 @@ public class FTBChunksCommands {
         ServerPlayer player = source.getPlayerOrException();
         ClaimedChunkManagerImpl manager = claimManager();
         manager.setBypassProtection(player.getUUID(), !manager.getBypassProtection(player.getUUID()));
-        source.sendSuccess(() -> {
-            boolean bypassProtection = manager.getBypassProtection(player.getUUID());
-            return Component.translatable("ftbchunks.command.bypass_protection_" + (bypassProtection ? "enabled" : "disabled"));
-        }, true);
+        boolean bypassProtection = manager.getBypassProtection(player.getUUID());
+        ClaimedChunkManagerImpl.getInstance().allTeamData().forEach(teamData -> {
+            if (teamData.getTeam().getProperty(FTBChunksProperties.CLAIM_VISIBILITY) != PrivacyMode.PUBLIC) {
+                teamData.syncChunksToPlayer(player);
+            }
+        });
+        source.sendSuccess(() -> Component.translatable("ftbchunks.command.bypass_protection_" + (bypassProtection ? "enabled" : "disabled")), true);
         return Command.SINGLE_SUCCESS;
     }
 
     private static int openClaimGuiAs(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
         Team team = TeamArgument.get(context, "team");
-        NetworkManager.sendToPlayer(context.getSource().getPlayerOrException(), new OpenClaimGUIPacket(team.getTeamId()));
+
+        if (team.getProperty(FTBChunksProperties.CLAIM_VISIBILITY) != PrivacyMode.PUBLIC) {
+            // ensure this admin player can see the team's claims, even if only temporarily
+            // see ChunkScreenClosedPacket for cleanup
+            ClaimVisibilityOverride.INSTANCE.add(player, team);
+            ClaimedChunkManagerImpl.getInstance().getOrCreateData(team).syncChunksToPlayer(player);
+        }
+
+        NetworkManager.sendToPlayer(player, new OpenClaimGUIPacket(team.getTeamId()));
         return Command.SINGLE_SUCCESS;
     }
 

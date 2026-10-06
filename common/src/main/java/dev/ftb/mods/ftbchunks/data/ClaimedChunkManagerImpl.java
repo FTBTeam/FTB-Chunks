@@ -273,4 +273,8 @@ public class ClaimedChunkManagerImpl implements ClaimedChunkManager {
 	public void unregisterClaim(ChunkDimPos pos) {
 		claimedChunks.remove(pos);
 	}
+
+	public Collection<ChunkTeamDataImpl> allTeamData() {
+		return teamData.values();
+	}
 }

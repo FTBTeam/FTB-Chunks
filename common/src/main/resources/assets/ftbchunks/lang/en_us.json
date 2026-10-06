@@ -237,6 +237,7 @@
   "ftbchunks.action_prevented": "Interaction prevented here by claim protection!",
   "ftbchunks.nether_portal.failure": "Cannot teleport here: remote portal creation prevented!",
   "ftbchunks.nether_portal.no_portal": "Teleportation allowed, portal creation prevented",
+  "ftbchunks.admin_bypass_reminder": "Reminder: FTB Chunks admin bypass is currently enabled.\nYou can toggle this with '/ftbchunks admin bypass_protection'.",
   "ftbchunks.label.show": "Show",
   "ftbchunks.label.hide": "Hide",
   "ftbchunks.message.no_pvp": "PvP combat is disabled here",

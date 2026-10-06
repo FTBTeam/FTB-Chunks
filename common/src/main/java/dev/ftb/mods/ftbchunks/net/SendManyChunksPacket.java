@@ -34,7 +34,7 @@ public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, Li
         if (teamData.shouldHideClaims()) {
             SendManyChunksPacket hiddenPacket = hidden();
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                NetworkManager.sendToPlayer(player, teamData.isAlly(player.getUUID()) ? this : hiddenPacket);
+                NetworkManager.sendToPlayer(player, SendChunkPacket.hasVisibility(teamData, player) ? this : hiddenPacket);
             }
         } else {
             NetworkManager.sendToPlayers(server.getPlayerList().getPlayers(), this);
@@ -43,7 +43,7 @@ public record SendManyChunksPacket(ResourceKey<Level> dimension, UUID teamId, Li
 
 	public void sendToPlayer(ServerPlayer player, ChunkTeamData teamData) {
         if (teamData.shouldHideClaims()) {
-            NetworkManager.sendToPlayer(player, teamData.isAlly(player.getUUID()) ? this : hidden());
+            NetworkManager.sendToPlayer(player, SendChunkPacket.hasVisibility(teamData, player) ? this : hidden());
         } else {
             NetworkManager.sendToPlayer(player, this);
         }

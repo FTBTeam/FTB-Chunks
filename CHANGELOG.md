@@ -6,9 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [26.1.2.9]
 
+### Added
+* Added control of vanilla creation of nether portals for players where they don't have permission to place blocks
+  * E.g. if a player creates a portal in the Nether which would cause a portal to be auto-created in the overworld in a chunk belonging to a different team
+  * New server config setting `nether_portal_creation`, default "no_portal"
+  * "no_portal" allows teleportation, but does not create an exit portal
+  * "allow" falls back to vanilla behaviour, creating a portal
+  * "failure" prevents teleportation entirely
+
 ### Fixed
+* Admin players can now see hidden team claims (where claim visibility property is set to private) when needed
+  * Admins can see team claims when editing them (with `/ftbchunks admin open_claim_gui_as ...`)
+  * Admins using bypass mode (`/ftbchunks admin bypass_protection`) can now always see all team claims, regardless of visibility
+  * Admins are now reminded on login if they currently have bypass mode active
 * Possible fix for rare issue where a region fails to render on the map (leaving a black square)
   * Could not reproduce this, so can't guarantee a fix here
+* Change fire spread protection mixin from a Redirect to a WrapOperation
+  * This should be much more cross-mod compatible
+* Fixed potential clientside memory leak related to map color quantization
+* Server-side performance fix for mob spawn control in forceloaded chunks
+  * Changed a mixin from a cancellable Inject to a ModifyReturnValue to avoid instantiation overheads in a hot method (could have a noticeable TPS impact on busy servers)
 
 ## [26.1.2.8]
 

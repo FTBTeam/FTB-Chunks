@@ -149,8 +149,6 @@ public class MapRegion implements MapTask {
 							pos, renderRetryTracker.failureCount(), renderRetryTracker.getDelay(), ex);
 				}
 			});
-
-			FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this));
 		}
 
 		return renderedMapImage;

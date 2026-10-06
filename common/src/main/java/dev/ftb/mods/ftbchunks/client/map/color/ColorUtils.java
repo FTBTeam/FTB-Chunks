@@ -155,4 +155,8 @@ public class ColorUtils {
 
 		return lightMapPalette;
 	}
+
+    public static void cleanup() {
+        reducedColorMap.clear();
+    }
 }

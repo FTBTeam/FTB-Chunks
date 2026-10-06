@@ -13,6 +13,7 @@ import dev.ftb.mods.ftbchunks.client.gui.WaypointEditorScreen;
 import dev.ftb.mods.ftbchunks.client.gui.map.ChunkScreen;
 import dev.ftb.mods.ftbchunks.client.gui.map.LargeMapScreen;
 import dev.ftb.mods.ftbchunks.client.map.*;
+import dev.ftb.mods.ftbchunks.client.map.color.ColorUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityIconUtils;
 import dev.ftb.mods.ftbchunks.client.mapicon.EntityMapIcon;
 import dev.ftb.mods.ftbchunks.client.minimap.MinimapRenderer;
@@ -112,6 +113,7 @@ public enum FTBChunksClient {
     public void onPlayerQuit() {
         // Note: on Fabric, this gets called on a network thread
         Minecraft.getInstance().schedule(MapManager::shutdown);
+        ColorUtils.cleanup();
     }
 
     public boolean handleCustomClick(Identifier id) {

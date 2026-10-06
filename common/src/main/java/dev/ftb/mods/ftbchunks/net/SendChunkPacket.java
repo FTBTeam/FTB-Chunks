@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbchunks.net;
 
+import dev.ftb.mods.ftbchunks.ClaimVisibilityOverride;
 import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientNet;
@@ -15,6 +16,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Util;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
@@ -35,13 +37,19 @@ public record SendChunkPacket(ResourceKey<Level> dimension, UUID teamId, ChunkSy
 			// only send to those players who are allies of the team
             SendChunkPacket hiddenPacket = new SendChunkPacket(dimension(), Util.NIL_UUID, chunk().hidden());
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                Server2PlayNetworking.send(player, teamData.isAlly(player.getUUID()) ? this : hiddenPacket);
+				Server2PlayNetworking.send(player, hasVisibility(teamData, player) ? this : hiddenPacket);
             }
         } else {
 			// just send to everyone
             Server2PlayNetworking.sendToAllPlayers(server, this);
         }
     }
+
+	static boolean hasVisibility(ChunkTeamData teamData, Player player) {
+		return ClaimVisibilityOverride.INSTANCE.hasVisibility(player, teamData.getTeam())
+				|| teamData.isAlly(player.getUUID())
+				|| teamData.getManager().getBypassProtection(player.getUUID());
+	}
 
 	@Override
 	public Type<SendChunkPacket> type() {

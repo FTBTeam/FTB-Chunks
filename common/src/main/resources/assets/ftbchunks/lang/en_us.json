@@ -2,6 +2,7 @@
   "ftbchunks.action_prevented": "Interaction prevented here by claim protection!",
   "ftbchunks.nether_portal.failure": "Cannot teleport here: remote portal creation prevented!",
   "ftbchunks.nether_portal.no_portal": "Teleportation allowed, portal creation prevented",
+  "ftbchunks.admin_bypass_reminder": "Reminder: FTB Chunks admin bypass is currently enabled.\nYou can toggle this with '/ftbchunks admin bypass_protection'.",
   "ftbchunks.ally_mode.default": "Default",
   "ftbchunks.ally_mode.forced_all": "Forced All",
   "ftbchunks.ally_mode.forced_none": "Forced None",

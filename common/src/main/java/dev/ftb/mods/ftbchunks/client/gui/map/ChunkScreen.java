@@ -5,6 +5,7 @@ import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.gui.GuiClaimMode;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
 import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import dev.ftb.mods.ftbchunks.net.ChunkScreenClosed;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.client.gui.screens.AbstractThreePanelScreen;
 import dev.ftb.mods.ftblibrary.client.gui.screens.KeyReferenceScreen;
@@ -17,6 +18,7 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.platform.network.Play2ServerNetworking;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.ChatFormatting;
@@ -104,6 +106,11 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     protected void doAccept() {
+    }
+
+    @Override
+    public void onClosed() {
+        Play2ServerNetworking.send(ChunkScreenClosed.INSTANCE);
     }
 
     @Override

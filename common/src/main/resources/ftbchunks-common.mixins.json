@@ -10,7 +10,9 @@
     "FireBlockMixin",
     "FlowingFluidMixin",
     "ItemFrameMixin",
+    "NetherPortalBlockMixin",
     "PistonBaseBlockMixin",
+    "PortalForcerAccessor",
     "VehicleEntityMixin"
   ],
   "client": [

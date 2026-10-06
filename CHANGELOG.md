@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2101.1.23]
 
+### Added
+* Added control of vanilla creation of nether portals for players where they don't have permission to place blocks
+  * E.g. if a player creates a portal in the Nether which would cause a portal to be auto-created in the overworld in a chunk belonging to a different team 
+  * New server config setting `nether_portal_creation`, default "no_portal"
+  * "no_portal" allows teleportation, but does not create an exit portal
+  * "allow" falls back to vanilla behaviour, creating a portal
+  * "failure" prevents teleportation entirely
+
 ### Fixed
 * Possible fix for rare issue where a region fails to render on the map (leaving a black square)
   * Could not reproduce this, so can't guarantee a fix here

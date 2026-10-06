@@ -37,7 +37,6 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 	private final ChunkAccess chunkAccess;
 	private final ChunkPos chunkPos;
 	private final int[] blocksToUpdate;
-	private final long taskStartTime;
 
 	public ChunkUpdateTask(@Nullable MapManager manager, Level level, ChunkAccess chunkAccess, ChunkPos chunkPos) {
 		this(manager, level, chunkAccess, chunkPos, ALL_BLOCKS);
@@ -49,8 +48,6 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 		this.chunkAccess = chunkAccess;
 		this.chunkPos = chunkPos;
 		this.blocksToUpdate = blocksToUpdate;
-
-		taskStartTime = System.currentTimeMillis();
 	}
 
 	public static void init() {
@@ -63,19 +60,11 @@ public class ChunkUpdateTask implements MapTask, BiomeManager.NoiseBiomeSource {
 
 	@Override
 	public void runMapTask() throws Exception {
-		while (manager == null) {
+		if (manager == null) {
 			manager = MapManager.getInstance().orElse(null);
-			if (manager == null) {
-				// Safety mechanic in case for some reason the map task hangs
-				if ((System.currentTimeMillis() - taskStartTime) >= 30000L) {
-					return;
-				} else {
-					Thread.sleep(1L);
-				}
-			}
 		}
 
-		if (manager.isInvalid()) {
+		if (manager == null || manager.isInvalid()) {
 			return;
 		}
 

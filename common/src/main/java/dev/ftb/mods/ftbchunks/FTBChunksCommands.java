@@ -524,7 +524,7 @@ public class FTBChunksCommands {
     private static int unclaimDimension(CommandSourceStack source, ResourceKey<Level> dim) {
         int claimedChunks = 0;
         for (ClaimedChunk c : new ArrayList<>(claimManager().getAllClaimedChunks())) {
-            if (source.getLevel().dimension().equals(dim)) {
+            if (c.getPos().dimension().equals(dim)) {
                 c.getTeamData().unclaim(source, c.getPos(), false);
                 claimedChunks++;
             }

@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Change fire spread protection mixin from a Redirect to a WrapOperation
   * This should be much more cross-mod compatible
 * Fixed potential clientside memory leak related to map color quantization
+* Server-side performance fix for mob spawn control in forceloaded chunks
+  * Changed a mixin from a cancellable Inject to a ModifyReturnValue to avoid instantiation overheads in a hot method (could have a noticeable TPS impact on busy servers)
 
 ## [2101.1.22]
 

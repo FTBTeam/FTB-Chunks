@@ -6,6 +6,7 @@ import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.ProtectionPolicy;
 import dev.ftb.mods.ftbchunks.data.*;
 import dev.ftb.mods.ftbchunks.integration.PermissionsHelper;
+import dev.ftb.mods.ftbchunks.util.ClaimRespectingNetherPortals.PortalBehaviour;
 import dev.ftb.mods.ftbchunks.util.DimensionFilter;
 import dev.ftb.mods.ftblibrary.config.value.*;
 import dev.ftb.mods.ftblibrary.integration.stages.StageHelper;
@@ -49,6 +50,11 @@ public interface FTBChunksWorldConfig {
 			.comment("If true, fluids are prevented from flowing horizontally across claims owned by different teams", "(unless the target claim has public 'edit block' permissions defined).", "False by default; enabling this can potentially lead to server performance issues,", "since fluid flow ticks are checked very frequently, especially for large bodies of flowing fluids", "If 'disable_protection' is set to true, this setting is ignored.");
 	BooleanValue FIRE_SPREAD_PROTECTION = CONFIG.addBoolean("fire_spread_protection", false)
 			.comment("If true, fire is prevented from spreading across claims owned by different teams", "(unless the target claim has public 'edit block' permissions defined).", "False by default; enabling this can potentially lead to server performance issues,", "especially when many blocks are on fire", "If 'disable_protection' is set to true, this setting is ignored.");
+	EnumValue<PortalBehaviour> PORTAL_CREATION = CONFIG.addEnum("nether_portal_creation", PortalBehaviour.NAME_MAP, PortalBehaviour.NO_PORTAL)
+			.comment("How to act if vanilla attempts to create a nether portal for a player in a chunk that's claimed by another team",
+					"no_portal: allow the player to teleport but don't create a portal structure",
+					"failure: prevent teleportation completely",
+					"allow: just go ahead and create the portal as normal");
 
 	Config FAKE_PLAYERS = CONFIG.addGroup("fake_players");
 	EnumValue<ProtectionPolicy> ALLOW_FAKE_PLAYERS = FAKE_PLAYERS.addEnum("fake_players", NameMap.of(ProtectionPolicy.CHECK, ProtectionPolicy.values()).create())

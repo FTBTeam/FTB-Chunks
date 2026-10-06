@@ -1,5 +1,7 @@
 {
   "ftbchunks.action_prevented": "Interaction prevented here by claim protection!",
+  "ftbchunks.nether_portal.failure": "Cannot teleport here: remote portal creation prevented!",
+  "ftbchunks.nether_portal.no_portal": "Teleportation allowed, portal creation prevented",
   "ftbchunks.ally_mode.default": "Default",
   "ftbchunks.ally_mode.forced_all": "Forced All",
   "ftbchunks.ally_mode.forced_none": "Forced None",
@@ -182,6 +184,8 @@
   "ftbchunks.config.server.waypoint_sharing.waypoint_sharing_party": "Allow Sharing waypoints with Party",
   "ftbchunks.config.server.waypoint_sharing.waypoint_sharing_players": "Allow Sharing waypoints with Players",
   "ftbchunks.config.server.waypoint_sharing.waypoint_sharing_server": "Allow Sharing waypoints with Server",
+  "ftbchunks.config.server.nether_portal_creation": "Nether Portal Creation",
+  "ftbchunks.config.server.nether_portal_creation.tooltip": "How to act if vanilla attempts to create a nether portal for a player in a chunk that's claimed by another team\nno_portal: allow the player to teleport but don't create a portal structure\nfailure: prevent teleportation completely\nallow: just go ahead and create the portal as normal",
   "ftbchunks.deathpoint_removed": "Waypoint '%s' auto-removed",
   "ftbchunks.force_load_mode.always": "Always",
   "ftbchunks.force_load_mode.default": "Default",

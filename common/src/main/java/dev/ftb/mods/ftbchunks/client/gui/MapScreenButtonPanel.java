@@ -60,7 +60,7 @@ class MapScreenButtonPanel extends Panel {
         List<ContextMenuItem> dimItems = AddWaypointOverlay.createDimContextItems(largeMapScreen::switchToDimension);
         dimensionButton = new SimpleButton(this, List.of(Component.empty()), Icons.GLOBE, (b, mb) -> {
             DropDownMenu dropDownMenu = getGui().openDropdownMenu(dimItems);
-            dropDownMenu.setPos(b.getX() + b.width, b.getY() + b.height - dropDownMenu.height);
+            dropDownMenu.setPos(b.getX() + b.width, b.getY() + b.height);
         }) {
             @Override
             public void addMouseOverText(TooltipList list) {

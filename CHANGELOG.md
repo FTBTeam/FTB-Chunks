@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Changed a mixin from a cancellable Inject to a ModifyReturnValue to avoid instantiation overheads in a hot method (could have a noticeable TPS impact on busy servers)
 * Fixed NeoForge forceload validation to prevent chunks being loaded that shouldn't be loaded after a server restart
 * Fixed `/ftbchunks admin unclaim_dimension` command, which wasn't working at all
+* Fixed dimension selection popup positioning (thanks @Nol125)
 
 ## [26.1.2.8]
 

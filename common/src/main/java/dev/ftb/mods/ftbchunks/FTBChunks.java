@@ -177,15 +177,21 @@ public class FTBChunks {
 					.add(ChunkSyncInfo.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
 		}
 
-		chunksToSend.forEach((dimensionAndId, chunkPackets) ->
-				FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
-					ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
-					if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
-						SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
-						Server2PlayNetworking.send(player, packet);
-					}
-				}));
+		boolean hasAdminBypass = FTBChunksAPI.api().getManager().getBypassProtection(eventData.player().getUUID());
+		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
+			FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
+				ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
+				if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY) || hasAdminBypass) {
+					SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
+					Server2PlayNetworking.send(player, packet);
+				}
+			});
+		});
 		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
+
+		if (hasAdminBypass) {
+			eventData.player().sendSystemMessage(Component.translatable("ftbchunks.admin_bypass_reminder").withStyle(ChatFormatting.YELLOW));
+		}
 
 		data.setLastLoginTime(now);
 

@@ -115,7 +115,7 @@ public interface ChunkTeamData {
     /// Convenience method to check if the given player ID is a member of this team
     boolean isTeamMember(UUID playerId);
 
-    /// Convenience method to check if the given player ID is an ally of this team
+    /// Convenience method to check if the given player ID is (at least) an ally of this team
     boolean isAlly(UUID playerId);
 
     /// Check if the given player is allowed to use the given privacy property of this team. In general this will be

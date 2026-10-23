@@ -10,7 +10,10 @@
     "EntityMixin",
     "FireBlockMixin",
     "FlowingFluidMixin",
-    "PistonBaseBlockMixin"
+    "PistonBaseBlockMixin",
+    "NetherPortalBlockMixin",
+    "PistonBaseBlockMixin",
+    "PortalForcerAccessor"
   ],
   "client": [
     "ClientPacketListenerMixin",

@@ -53,6 +53,12 @@ public class ForceLoading {
                     toRemove.add(longChunkPos);
                 }
             });
+            chunks.naturalSpawning().forEach(longChunkPos -> {
+                ClaimedChunkImpl cc = ClaimedChunkManagerImpl.getInstance().getChunk(new ChunkDimPos(level.dimension(), ChunkPos.unpack(longChunkPos)));
+                if (cc == null || !cc.getTeamData().getTeamId().equals(id) || !cc.isActuallyForceLoaded()) {
+                    toRemove.add(longChunkPos);
+                }
+            });
             if (!toRemove.isEmpty()) {
                 toRemove.forEach(l -> ticketHelper.removeTicket(id, l, true));
                 FTBChunks.LOGGER.info("cleaned up {} stale ticking Forge chunkloading tickets for team ID {} in dimension {}",

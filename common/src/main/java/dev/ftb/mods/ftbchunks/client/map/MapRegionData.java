@@ -14,11 +14,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class MapRegionData {
+	// Bounds how many regions can have taken their pre-encode array snapshot but not yet finished
+	// being encoded/written to disk by the single-threaded MAP_EXECUTOR. Without this, a burst of
+	// many dirty regions at once (e.g. a bulk claim resync) can synchronously allocate a full 4MB
+	// array copy for every one of them - all on the calling thread, well ahead of the executor
+	// actually draining any of them - spiking memory far beyond steady-state usage.
+	private static final Semaphore WRITE_PERMITS = new Semaphore(2);
+
 	public final MapRegion region;
 
 	// a region is a 512x512 block area
@@ -151,6 +159,18 @@ public class MapRegionData {
 			return;
 		}
 
+		// Block (briefly, under normal conditions) until fewer than WRITE_PERMITS saves are already
+		// snapshotted and awaiting encode, rather than letting an unbounded backlog of 4MB copies
+		// pile up on the single-threaded executor. This never drops the save - it just delays taking
+		// the snapshot until there's room, so a caller flushing all pending saves (e.g. on shutdown)
+		// still ends up writing every region.
+		try {
+			WRITE_PERMITS.acquire();
+		} catch (InterruptedException ex) {
+			Thread.currentThread().interrupt();
+			return;
+		}
+
 		// snapshot all the data arrays so we can safely construct images from them in a separate thread
 		short[] heightCopy = Arrays.copyOf(height, height.length);
 		short[] waterLightAndBiomeCopy = Arrays.copyOf(waterLightAndBiome, waterLightAndBiome.length);
@@ -159,34 +179,38 @@ public class MapRegionData {
 		int[] waterCopy = Arrays.copyOf(water, water.length);
 
 		FTBChunksClient.MAP_EXECUTOR.execute(() -> {
-			BufferedImage dataImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-			BufferedImage foliageImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-			BufferedImage grassImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-			BufferedImage waterImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-			BufferedImage blocksImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
-
-			for (int y = 0; y < 512; y++) {
-				for (int x = 0; x < 512; x++) {
-					int index = x + y * 512;
-					dataImage.setRGB(x, y, (((int) heightCopy[index] & 0xFFFF) << 16) | ((int) waterLightAndBiomeCopy[index] & 0xFFFF));
-					foliageImage.setRGB(x, y, 0xFF000000 | (foliageCopy[index] & 0xFFFFFF));
-					grassImage.setRGB(x, y, 0xFF000000 | (grassCopy[index] & 0xFFFFFF));
-					waterImage.setRGB(x, y, 0xFF000000 | (waterCopy[index] & 0xFFFFFF));
-					blocksImage.setRGB(x, y, 0xFF000000 | getBlockIndex(index, foliageCopy, grassCopy, waterCopy));
-				}
-			}
-
 			try {
-				Map<String,BufferedImage> images = Map.of(
-						"data.png", dataImage,
-						"foliage.png", foliageImage,
-						"grass.png", grassImage,
-						"water.png", waterImage,
-						"blocks.png", blocksImage
-				);
-				writeData(chunkList, images);
-			} catch (IOException ex) {
-                FTBChunks.LOGGER.error("Failed to write map region {}:{}: {}", region.dimension, region, ex.getMessage());
+				BufferedImage dataImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+				BufferedImage foliageImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+				BufferedImage grassImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+				BufferedImage waterImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+				BufferedImage blocksImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+
+				for (int y = 0; y < 512; y++) {
+					for (int x = 0; x < 512; x++) {
+						int index = x + y * 512;
+						dataImage.setRGB(x, y, (((int) heightCopy[index] & 0xFFFF) << 16) | ((int) waterLightAndBiomeCopy[index] & 0xFFFF));
+						foliageImage.setRGB(x, y, 0xFF000000 | (foliageCopy[index] & 0xFFFFFF));
+						grassImage.setRGB(x, y, 0xFF000000 | (grassCopy[index] & 0xFFFFFF));
+						waterImage.setRGB(x, y, 0xFF000000 | (waterCopy[index] & 0xFFFFFF));
+						blocksImage.setRGB(x, y, 0xFF000000 | getBlockIndex(index, foliageCopy, grassCopy, waterCopy));
+					}
+				}
+
+				try {
+					Map<String,BufferedImage> images = Map.of(
+							"data.png", dataImage,
+							"foliage.png", foliageImage,
+							"grass.png", grassImage,
+							"water.png", waterImage,
+							"blocks.png", blocksImage
+					);
+					writeData(chunkList, images);
+				} catch (IOException ex) {
+	                FTBChunks.LOGGER.error("Failed to write map region {}:{}: {}", region.dimension, region, ex.getMessage());
+				}
+			} finally {
+				WRITE_PERMITS.release();
 			}
 		});
 	}

@@ -109,8 +109,10 @@ public class MapChunk {
 	}
 
 	public MapChunk offsetBlocking(int x, int z) {
+		// Only the neighboring region's chunk map is needed here (for claim-adjacency checks), not its
+		// pixel data, so look the chunk up directly rather than forcing a full region data load.
 		XZ pos = getActualPos().offset(x, z);
-		return region.dimension.getRegion(XZ.regionFromChunk(pos.x(), pos.z())).getDataBlocking().getChunk(pos);
+		return region.dimension.getRegion(XZ.regionFromChunk(pos.x(), pos.z())).getChunkForAbsoluteChunkPos(pos);
 	}
 
 	public void updateFromServer(Date now, ChunkSyncInfo packet, UUID teamId) {

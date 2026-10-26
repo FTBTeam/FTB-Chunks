@@ -62,6 +62,23 @@ public class MapRegion implements MapTask {
 	}
 
 	public MapRegionData getDataBlockingNoSync() {
+		MapRegionData localData = loadDataIfAbsent();
+		lastDataAccess = System.currentTimeMillis();
+		return localData;
+	}
+
+	/**
+     * Like getDataBlocking(), but does NOT update lastDataAccess. Used for incidental reads of
+     * this region's data that aren't a genuine user-facing access - e.g. a neighboring region
+     * being pulled in purely to blend/shade the edge of a different region's map texture. Those
+     * reads shouldn't make this region look "recently used" and so block it from being released
+     * by the stale-data reaper while the player is nowhere near it.
+     */
+    public MapRegionData peekDataBlocking() {
+		return loadDataIfAbsent();
+	}
+
+	private MapRegionData loadDataIfAbsent() {
 		MapRegionData localData = data;
 
 		if (localData == null) {
@@ -87,7 +104,6 @@ public class MapRegion implements MapTask {
 			}
 		}
 
-		lastDataAccess = System.currentTimeMillis();
 		return Objects.requireNonNull(localData);  // localData should never be null at this point!
 	}
 

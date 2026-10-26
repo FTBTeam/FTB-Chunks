@@ -136,11 +136,13 @@ public class MapDimension implements MapTask, Comparable<MapDimension> {
 	}
 
 	public int @Nullable[] getColors(int x, int z, ColorsFromRegion colors) {
+		// Only used to pull in a neighboring region purely for edge blending - not a genuine
+		// access to that region, so don't let it count toward its stale-data release timer.
 		MapRegion region = getRegions().get(XZ.of(x, z));
 		if (region == null) {
 			return null;
 		} else {
-			MapRegionData data = region.getDataBlocking();
+			MapRegionData data = region.peekDataBlocking();
 			return colors.getColors(data);
 		}
 	}

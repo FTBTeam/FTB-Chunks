@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MapRegion implements MapTask {
 	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
@@ -26,9 +27,10 @@ public class MapRegion implements MapTask {
 	public final MapDimension dimension;
 	public final XZ pos;
 
-	private MapRegionData data;
-	private long lastDataAccess; // time of last access, so stale regions can be released to save memory
-	private boolean isLoadingData;
+	@Nullable
+	private volatile MapRegionData data;
+	private volatile long lastDataAccess; // time of last access, so stale regions can be released to save memory
+	private volatile boolean isLoadingData;
 	private boolean shouldSave;
 	private NativeImage renderedMapImage;
 	private boolean updateRenderedMapImage;
@@ -72,17 +74,19 @@ public class MapRegion implements MapTask {
 
 	@NotNull
 	public MapRegionData getDataBlocking() {
-		synchronized (dimension.getManager().lock) {
-			return getDataBlockingNoSync();
-		}
+		return getDataBlockingNoSync();
 	}
 
 	@NotNull
 	public MapRegionData getDataBlockingNoSync() {
-		if (data == null) {
-			data = new MapRegionData(this);
+		MapRegionData localData = data;
+
+		if (localData == null) {
+			// Constructs and reads the (potentially slow - disk I/O + image decoding) MapRegionData without
+			// holding the global manager lock, so other regions aren't blocked while this one loads.
+			MapRegionData newData = new MapRegionData(this);
 			try {
-				data.read();
+				newData.read();
 				loadingRetryTracker.succeeded();
 			} catch (Exception ex) {
 				loadingRetryTracker.failed();
@@ -90,10 +94,18 @@ public class MapRegion implements MapTask {
 						"can't read map region data for {}/{} (attempt {}): {}",
 						dimension.dimension.location(), pos, loadingRetryTracker.failureCount(), ex.getMessage());
 			}
+
+			// This is the only part that actually needs to use the global lock
+			synchronized (dimension.getManager().lock) {
+				if (data == null) {
+					data = newData;
+				}
+				localData = data;
+			}
 		}
 
 		lastDataAccess = System.currentTimeMillis();
-		return data;
+		return Objects.requireNonNull(localData);  // localData should never be null at this point!
 	}
 
 	@Nullable
@@ -178,16 +190,21 @@ public class MapRegion implements MapTask {
 	}
 
 	public void release(boolean releaseMapChunks) {
-		if (shouldSave && data != null) {
+		MapRegionData oldData;
+		synchronized (dimension.getManager().lock) {
+			oldData = data;
+			data = null;
+		}
+
+		if (shouldSave && oldData != null) {
 			try {
-				data.write();
+				oldData.write();
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
 
 		if (releaseMapChunks) chunks.clear();
-		data = null;
 		lastDataAccess = 0L;
 		isLoadingData = false;
 		releaseMapImage();
@@ -228,8 +245,9 @@ public class MapRegion implements MapTask {
 
 	@Override
 	public void runMapTask() throws Exception {
-		if (data != null) {
-			data.write();
+		MapRegionData localData = data;
+		if (localData != null) {
+			localData.write();
 		}
 	}
 

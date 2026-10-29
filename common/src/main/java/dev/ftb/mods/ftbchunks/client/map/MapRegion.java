@@ -56,7 +56,15 @@ public class MapRegion implements MapTask {
 	public long getLastDataAccess() {
 		return lastDataAccess;
 	}
-	
+
+	// Marks this region as genuinely in-use (e.g. its already-baked map texture is actually being
+	// displayed right now) without loading/touching its data. A region whose texture was baked once
+	// and is still being shown doesn't call getDataBlocking() again, so without this the stale-data
+	// reaper would eventually release it - and close its texture - while it's still on screen.
+	public void touch() {
+		lastDataAccess = System.currentTimeMillis();
+	}
+
 	public MapRegionData getDataBlocking() {
 		return getDataBlockingNoSync();
 	}

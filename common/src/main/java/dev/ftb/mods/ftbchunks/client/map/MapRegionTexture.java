@@ -42,7 +42,14 @@ public class MapRegionTexture {
             return null;
         }
 
-        return texture == null ? null : textureID;
+        if (texture == null) {
+            return null;
+        }
+
+        // This texture is actually being drawn right now - keep the region "fresh" so the stale-data
+        // reaper doesn't release it (and close this very texture) while it's still on screen.
+        region.touch();
+        return textureID;
     }
 
     public void requestBake() {
@@ -110,6 +117,11 @@ public class MapRegionTexture {
 
     @Nullable
     public DynamicTexture bakedTexture() {
+        if (texture != null) {
+            // As with getTextureID(), this texture is about to be used for real rendering (minimap) -
+            // keep the region fresh so it isn't released out from under the minimap either.
+            region.touch();
+        }
         return texture;
     }
 }

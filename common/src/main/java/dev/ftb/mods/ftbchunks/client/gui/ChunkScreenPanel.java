@@ -24,6 +24,7 @@ import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TimeUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.ChatFormatting;
@@ -72,7 +73,7 @@ public class ChunkScreenPanel extends Panel {
 	}
 
 	public static void notifyChunkUpdates(int totalChunks, int changedChunks, Map<String, Integer> problems) {
-		if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof ChunkScreen cs) {
+		if (ClientUtils.getCurrentGuiAs(ChunkScreen.class) instanceof ChunkScreen cs) {
 			cs.getChunkScreen().updateInfo = new ChunkUpdateInfo(totalChunks, changedChunks, problems, Minecraft.getInstance().level.getGameTime());
 		}
 	}

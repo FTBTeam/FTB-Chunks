@@ -221,16 +221,21 @@ public class FTBChunks {
 					.add(ChunkSyncInfo.create(now, chunk.getPos().x(), chunk.getPos().z(), chunk));
 		}
 
+		boolean hasAdminBypass = FTBChunksAPI.api().getManager().getBypassProtection(event.getPlayer().getUUID());
 		chunksToSend.forEach((dimensionAndId, chunkPackets) -> {
 			FTBTeamsAPI.api().getManager().getTeamByID(dimensionAndId.getRight()).ifPresent(team -> {
 				ChunkTeamDataImpl teamData = ClaimedChunkManagerImpl.getInstance().getOrCreateData(team);
-				if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY)) {
+				if (teamData.canPlayerUse(player, FTBChunksProperties.CLAIM_VISIBILITY) || hasAdminBypass) {
 					SendManyChunksPacket packet = new SendManyChunksPacket(dimensionAndId.getLeft(), dimensionAndId.getRight(), chunkPackets);
 					NetworkManager.sendToPlayer(player, packet);
 				}
 			});
 		});
 		FTBChunks.LOGGER.debug("claimed chunk data sent to {}", playerId);
+
+		if (hasAdminBypass) {
+			event.getPlayer().displayClientMessage(Component.translatable("ftbchunks.admin_bypass_reminder").withStyle(ChatFormatting.YELLOW), false);
+		}
 
 		data.setLastLoginTime(now);
 

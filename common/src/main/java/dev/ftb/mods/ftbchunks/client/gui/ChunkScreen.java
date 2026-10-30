@@ -1,10 +1,12 @@
 package dev.ftb.mods.ftbchunks.client.gui;
 
+import dev.architectury.networking.NetworkManager;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.FTBChunksWorldConfig;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftbchunks.client.map.MapDimension;
+import dev.ftb.mods.ftbchunks.net.ChunkScreenClosed;
 import dev.ftb.mods.ftbchunks.net.SendGeneralDataPacket;
 import dev.ftb.mods.ftblibrary.config.manager.ConfigManagerClient;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -134,6 +136,11 @@ public class ChunkScreen extends AbstractThreePanelScreen<ChunkScreenPanel> {
 
     @Override
     protected void doAccept() {
+    }
+
+    @Override
+    public void onClosed() {
+        NetworkManager.sendToServer(ChunkScreenClosed.INSTANCE);
     }
 
     @Override

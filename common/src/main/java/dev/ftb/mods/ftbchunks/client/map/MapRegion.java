@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.ftb.mods.ftbchunks.FTBChunks;
 import dev.ftb.mods.ftbchunks.client.ClientTaskQueue;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClient;
+import dev.ftb.mods.ftbchunks.util.RetryTracker;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.math.MathUtils;
 import dev.ftb.mods.ftblibrary.math.XZ;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MapRegion implements MapTask {
 	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
@@ -25,9 +27,10 @@ public class MapRegion implements MapTask {
 	public final MapDimension dimension;
 	public final XZ pos;
 
-	private MapRegionData data;
-	private long lastDataAccess; // time of last access, so stale regions can be released to save memory
-	private boolean isLoadingData;
+	@Nullable
+	private volatile MapRegionData data;
+	private volatile long lastDataAccess; // time of last access, so stale regions can be released to save memory
+	private volatile boolean isLoadingData;
 	private boolean shouldSave;
 	private NativeImage renderedMapImage;
 	private boolean updateRenderedMapImage;
@@ -36,6 +39,9 @@ public class MapRegion implements MapTask {
 	private boolean mapImageLoaded;
 	private boolean renderingMapImage;
 	private final Map<XZ, MapChunk> chunks = new HashMap<>();
+
+	private final RetryTracker loadingRetryTracker = new RetryTracker();
+	private final RetryTracker renderRetryTracker = new RetryTracker();
 
 	public MapRegion(MapDimension d, XZ p) {
 		dimension = d;
@@ -68,31 +74,57 @@ public class MapRegion implements MapTask {
 
 	@NotNull
 	public MapRegionData getDataBlocking() {
-		synchronized (dimension.getManager().lock) {
-			return getDataBlockingNoSync();
-		}
+		return getDataBlockingNoSync();
 	}
 
 	@NotNull
 	public MapRegionData getDataBlockingNoSync() {
-		if (data == null) {
-			data = new MapRegionData(this);
+		MapRegionData localData = data;
+
+		if (localData == null) {
+			// Constructs and reads the (potentially slow - disk I/O + image decoding) MapRegionData without
+			// holding the global manager lock, so other regions aren't blocked while this one loads.
+			MapRegionData newData = new MapRegionData(this);
 			try {
-				data.read();
-			} catch (IOException ex) {
-				ex.printStackTrace();
+				newData.read();
+				loadingRetryTracker.succeeded();
+			} catch (Exception ex) {
+				loadingRetryTracker.failed();
+				FTBChunks.LOGGER.error(
+						"can't read map region data for {}/{} (attempt {}): {}",
+						dimension.dimension.location(), pos, loadingRetryTracker.failureCount(), ex.getMessage());
+			}
+
+			// This is the only part that actually needs to use the global lock
+			synchronized (dimension.getManager().lock) {
+				if (data == null) {
+					data = newData;
+				}
+				localData = data;
 			}
 		}
 
 		lastDataAccess = System.currentTimeMillis();
-		return data;
+		return Objects.requireNonNull(localData);  // localData should never be null at this point!
 	}
 
 	@Nullable
 	public MapRegionData getData() {
-		if (data == null && !isLoadingData) {
+		if (data == null && !isLoadingData && loadingRetryTracker.readyToTry()) {
 			isLoadingData = true;
-			FTBChunksClient.MAP_EXECUTOR.execute(this::getDataBlocking);
+			try {
+				FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+					try {
+						getDataBlocking();
+					} finally {
+						isLoadingData = false;
+					}
+				});
+			} catch (Exception ex) {
+				isLoadingData = false;
+				loadingRetryTracker.failed();
+				FTBChunks.LOGGER.error("couldn't schedule data load for region {}: {}", pos, ex.getMessage());
+			}
 		}
 
 		if (data != null) {
@@ -111,11 +143,24 @@ public class MapRegion implements MapTask {
 			}
 		}
 
-		if (updateRenderedMapImage && !renderingMapImage) {
+		if (updateRenderedMapImage && !renderingMapImage && renderRetryTracker.readyToTry()) {
 			updateRenderedMapImage = false;
 			mapImageLoaded = false;
 			renderingMapImage = true;
-			FTBChunksClient.MAP_EXECUTOR.execute(new RenderMapImageTask(this));
+
+			RenderMapImageTask task = new RenderMapImageTask(this);
+			FTBChunksClient.MAP_EXECUTOR.execute(() -> {
+				try {
+					task.runMapTask();
+					renderRetryTracker.succeeded();
+				} catch (Exception ex) {
+					renderRetryTracker.failed();
+					renderingMapImage = false;
+					FTBChunks.LOGGER.error(
+							"Failed to render map image for region {} (attempt {}), retrying in {} ms",
+							pos, renderRetryTracker.failureCount(), renderRetryTracker.getDelay(), ex);
+				}
+			});
 		}
 
 		return renderedMapImage;
@@ -145,16 +190,21 @@ public class MapRegion implements MapTask {
 	}
 
 	public void release(boolean releaseMapChunks) {
-		if (shouldSave && data != null) {
+		MapRegionData oldData;
+		synchronized (dimension.getManager().lock) {
+			oldData = data;
+			data = null;
+		}
+
+		if (shouldSave && oldData != null) {
 			try {
-				data.write();
+				oldData.write();
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
 
 		if (releaseMapChunks) chunks.clear();
-		data = null;
 		lastDataAccess = 0L;
 		isLoadingData = false;
 		releaseMapImage();
@@ -195,8 +245,9 @@ public class MapRegion implements MapTask {
 
 	@Override
 	public void runMapTask() throws Exception {
-		if (data != null) {
-			data.write();
+		MapRegionData localData = data;
+		if (localData != null) {
+			localData.write();
 		}
 	}
 

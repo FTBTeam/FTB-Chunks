@@ -289,6 +289,7 @@ public enum FTBChunksClient {
 
     public void loggedOut(@Nullable LocalPlayer player) {
         MapManager.shutdown();
+        ColorUtils.cleanup();
     }
 
     public void updateGeneralData(GeneralChunkData chunkData) {

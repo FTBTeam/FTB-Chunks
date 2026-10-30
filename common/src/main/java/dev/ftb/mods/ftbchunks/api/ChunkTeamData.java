@@ -144,7 +144,7 @@ public interface ChunkTeamData {
     boolean isTeamMember(UUID playerId);
 
     /**
-     * Convenience method to check if the given player ID is an ally of this team
+     * Convenience method to check if the given player ID is (at least) an ally of this team
      */
     boolean isAlly(UUID playerId);
 

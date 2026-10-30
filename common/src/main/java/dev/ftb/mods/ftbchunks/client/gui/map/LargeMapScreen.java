@@ -332,6 +332,8 @@ public class LargeMapScreen extends BaseScreen {
             theme.drawString(graphics, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
             poseStack.popMatrix();
         }
+
+        super.drawForeground(graphics, theme, x, y, w, h);
     }
 
     public static void refreshIconsIfOpen() {
@@ -349,11 +351,11 @@ public class LargeMapScreen extends BaseScreen {
             return 1;
         }
 
-        // limit the possible zoom-out based on number of regions known about (i.e. which *could* be loaded,
-        // taking up ~4MB RAM per region)
+        // limit the possible zoom-out based on number of regions known about (i.e. which *could* be loaded
+        // and rendered, taking up ~4MB RAM for region data plus ~2MB for its baked map texture)
 
         // possible memory that could be used
-        long potentialUsage = dimension.getLoadedRegions().size() * MapManager.MEMORY_PER_REGION;
+        long potentialUsage = dimension.getLoadedRegions().size() * (MapManager.MEMORY_PER_REGION + MapManager.MEMORY_PER_REGION_TEXTURE);
 
         // note: this not necessarily the amount of memory that can be allocated, but this is a
         // fairly fuzzy check anyway

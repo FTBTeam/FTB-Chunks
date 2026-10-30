@@ -16,6 +16,7 @@ import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -68,15 +69,15 @@ public class RenderMapImageTask implements MapTask {
 
 		int posX = region.pos.x();
 		int posZ = region.pos.z();
-		int[] rWW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ, getter);
-		int[] rEE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ, getter);
-		int[] rNN = blend == 0 ? null : region.dimension.getColors(posX, posZ - 1, getter);
-		int[] rSS = blend == 0 ? null : region.dimension.getColors(posX, posZ + 1, getter);
+		int @Nullable [] rWW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ, getter);
+		int @Nullable [] rEE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ, getter);
+		int @Nullable [] rNN = blend == 0 ? null : region.dimension.getColors(posX, posZ - 1, getter);
+		int @Nullable [] rSS = blend == 0 ? null : region.dimension.getColors(posX, posZ + 1, getter);
 
-		int[] rNW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ - 1, getter);
-		int[] rSW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ + 1, getter);
-		int[] rNE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ - 1, getter);
-		int[] rSE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ + 1, getter);
+		int @Nullable [] rNW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ - 1, getter);
+		int @Nullable [] rSW = blend == 0 ? null : region.dimension.getColors(posX - 1, posZ + 1, getter);
+		int @Nullable [] rNE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ - 1, getter);
+		int @Nullable [] rSE = blend == 0 ? null : region.dimension.getColors(posX + 1, posZ + 1, getter);
 
 		for (int i = 0; i < 512; i++) {
 			for (int j = 0; j < 512; j++) {
@@ -179,14 +180,15 @@ public class RenderMapImageTask implements MapTask {
 		short[] heightN = new short[512];
 		short[] waterLightAndBiomeW = new short[512];
 		short[] waterLightAndBiomeN = new short[512];
-		int[][] foliage = null;
-		int[][] grass = null;
-		int[][] water = null;
+		int @Nullable [][] foliage = null;
+		int @Nullable [][] grass = null;
+		int @Nullable [][] water = null;
 
 		MapRegion rWest = region.dimension.getRegions().get(region.pos.offset(-1, 0));
 
 		if (rWest != null) {
-			MapRegionData d = rWest.getDataBlocking();
+			// Only reading a 1-pixel-wide edge strip for shadow blending - not a genuine access to rWest.
+			MapRegionData d = rWest.peekDataBlocking();
 
 			for (int i = 0; i < 512; i++) {
 				heightW[i] = d.height[511 + i * 512];
@@ -202,7 +204,8 @@ public class RenderMapImageTask implements MapTask {
 		MapRegion rNorth = region.dimension.getRegions().get(region.pos.offset(0, -1));
 
 		if (rNorth != null) {
-			MapRegionData d = rNorth.getDataBlocking();
+			// Only reading a 1-pixel-wide edge strip for shadow blending - not a genuine access to rNorth.
+			MapRegionData d = rNorth.peekDataBlocking();
 			System.arraycopy(d.height, 511 * 512, heightN, 0, 512);
 			System.arraycopy(d.waterLightAndBiome, 511 * 512, waterLightAndBiomeN, 0, 512);
 		} else {

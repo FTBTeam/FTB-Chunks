@@ -38,6 +38,10 @@ public class MapManager implements MapTask {
 	// - 1MB each for foliage, grass & water
 	public static final long MEMORY_PER_REGION = 4L * 1024L * 1024L;
 
+	// A baked region map texture retains a 512x512 RGBA NativeImage mirror (native heap) plus the
+	// equivalent GPU-resident texture - ~1MB each, on top of the raw region data above.
+	public static final long MEMORY_PER_REGION_TEXTURE = 2L * 1024L * 1024L;
+
 	@Nullable
 	private static MapManager instance;
 
@@ -361,7 +365,14 @@ public class MapManager implements MapTask {
 		long memory = 0L;
 
 		for (MapDimension dim : dimensions.values()) {
-			memory += dim.getLoadedRegions().stream().filter(MapRegion::isDataLoaded).mapToLong(region -> MEMORY_PER_REGION).sum();
+			for (MapRegion region : dim.getLoadedRegions()) {
+				if (region.isDataLoaded()) {
+					memory += MEMORY_PER_REGION;
+				}
+				if (region.regionTexture().isOpen()) {
+					memory += MEMORY_PER_REGION_TEXTURE;
+				}
+			}
 		}
 
 		return memory;

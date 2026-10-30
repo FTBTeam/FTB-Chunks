@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MapRegion implements MapTask {
 	public static final Color4I GRID_COLOR = Color4I.rgba(70, 70, 70, 50);
@@ -24,9 +25,9 @@ public class MapRegion implements MapTask {
 	public final XZ pos;
 
 	@Nullable
-	private MapRegionData data;
-	private long lastDataAccess; // time of last access, so stale regions can be released to save memory
-	private boolean isLoadingData;
+	private volatile MapRegionData data;
+	private volatile long lastDataAccess; // time of last access, so stale regions can be released to save memory
+	private volatile boolean isLoadingData;
 	private boolean shouldSave;
 
 	private final Map<XZ, MapChunk> chunks = new HashMap<>();
@@ -55,18 +56,45 @@ public class MapRegion implements MapTask {
 	public long getLastDataAccess() {
 		return lastDataAccess;
 	}
-	
+
+	// Marks this region as genuinely in-use (e.g. its already-baked map texture is actually being
+	// displayed right now) without loading/touching its data. A region whose texture was baked once
+	// and is still being shown doesn't call getDataBlocking() again, so without this the stale-data
+	// reaper would eventually release it - and close its texture - while it's still on screen.
+	public void touch() {
+		lastDataAccess = System.currentTimeMillis();
+	}
+
 	public MapRegionData getDataBlocking() {
-		synchronized (dimension.getManager().lock) {
-			return getDataBlockingNoSync();
-		}
+		return getDataBlockingNoSync();
 	}
 
 	public MapRegionData getDataBlockingNoSync() {
-		if (data == null) {
-			data = new MapRegionData(this);
+		MapRegionData localData = loadDataIfAbsent();
+		lastDataAccess = System.currentTimeMillis();
+		return localData;
+	}
+
+	/**
+     * Like getDataBlocking(), but does NOT update lastDataAccess. Used for incidental reads of
+     * this region's data that aren't a genuine user-facing access - e.g. a neighboring region
+     * being pulled in purely to blend/shade the edge of a different region's map texture. Those
+     * reads shouldn't make this region look "recently used" and so block it from being released
+     * by the stale-data reaper while the player is nowhere near it.
+     */
+    public MapRegionData peekDataBlocking() {
+		return loadDataIfAbsent();
+	}
+
+	private MapRegionData loadDataIfAbsent() {
+		MapRegionData localData = data;
+
+		if (localData == null) {
+			// Constructs and reads the (potentially slow - disk I/O + image decoding) MapRegionData without
+			// holding the global manager lock, so other regions aren't blocked while this one loads.
+			MapRegionData newData = new MapRegionData(this);
 			try {
-				data.read();
+				newData.read();
 				retryTracker.succeeded();
 			} catch (Exception ex) {
 				retryTracker.failed();
@@ -74,10 +102,17 @@ public class MapRegion implements MapTask {
 						"can't read map region data for {}/{} (attempt {}): {}",
 						dimension.dimension.identifier(), pos, retryTracker.failureCount(), ex.getMessage());
 			}
+
+			// This is the only part that actually needs to use the global lock
+			synchronized (dimension.getManager().lock) {
+				if (data == null) {
+					data = newData;
+				}
+				localData = data;
+			}
 		}
 
-		lastDataAccess = System.currentTimeMillis();
-		return data;
+		return Objects.requireNonNull(localData);  // localData should never be null at this point!
 	}
 
 	@Nullable
@@ -106,16 +141,21 @@ public class MapRegion implements MapTask {
 	}
 
 	public void release(boolean releaseMapChunks) {
-		if (shouldSave && data != null) {
+		MapRegionData oldData;
+		synchronized (dimension.getManager().lock) {
+			oldData = data;
+			data = null;
+		}
+
+		if (shouldSave && oldData != null) {
 			try {
-				data.write();
+				oldData.write();
 			} catch (IOException ex) {
 				FTBChunks.LOGGER.error("can't write map region data for {}/{}: {}", dimension.dimension.identifier(), pos, ex.getMessage());
 			}
 		}
 
 		if (releaseMapChunks) chunks.clear();
-		data = null;
 		lastDataAccess = 0L;
 		isLoadingData = false;
 		releaseMapImage();
@@ -146,8 +186,9 @@ public class MapRegion implements MapTask {
 
 	@Override
 	public void runMapTask() throws Exception {
-		if (data != null) {
-			data.write();
+		MapRegionData localData = data;
+		if (localData != null) {
+			localData.write();
 		}
 	}
 

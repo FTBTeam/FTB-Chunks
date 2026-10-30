@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * Made a few multithreading improvements to map region data loading & decoding
   * Should be safer and more performant now
+* Fixed context menus not appearing correctly in conjunction with most recent FTB Library releases
 
 ## [26.1.2.9]
 

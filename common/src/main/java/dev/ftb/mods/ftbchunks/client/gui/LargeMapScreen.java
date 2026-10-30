@@ -367,6 +367,8 @@ public class LargeMapScreen extends BaseScreen {
             theme.drawString(graphics, zoomWarn, 0, 0, Color4I.rgb(0xF0C000), Theme.CENTERED);
             poseStack.popPose();
         }
+
+        super.drawForeground(graphics, theme, x, y, w, h);
     }
 
     public static void refreshIconsIfOpen() {

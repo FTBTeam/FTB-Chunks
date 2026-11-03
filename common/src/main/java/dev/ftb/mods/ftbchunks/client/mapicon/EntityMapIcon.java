@@ -10,6 +10,7 @@ import dev.ftb.mods.ftblibrary.client.icon.IconHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader.EntityIconSettings;
+import dev.ftb.mods.ftblibrary.icon.EntityImageIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -93,7 +94,11 @@ public class EntityMapIcon implements MapIcon {
             poseStack.translate(-w / 2f, -h / 2f);
         }
         poseStack.scale(w / 18F, h / 18F);
-        IconHelper.renderIcon(icon.withColor(Color4I.BLACK.withAlpha(128)), graphics, 0, 0, 18, 18);
+        if (icon instanceof EntityImageIcon) {
+            // for entity faces, a slightly darkened border greatly improves legibility on the map
+            // not necessary for the fallback peaceful/hostile icons; they already have a dark border
+            IconHelper.renderIcon(icon.withColor(Color4I.BLACK.withAlpha(128)), graphics, 0, 0, widthHeight.width() + 2, widthHeight.height() + 2);
+        }
         IconHelper.renderIcon(icon, graphics, 1, 1, widthHeight.width(), widthHeight.height());
         poseStack.popMatrix();
     }

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2101.1.24]
+
+### Fixed
+* Fixed the fallback entity icons (red & white dots for hostile/peaceful entities) rendering blackened
+* Fixed the "Entity Heads" client config setting always being considered true, even if set to false
+
 ## [2101.1.23]
 
 ### Added

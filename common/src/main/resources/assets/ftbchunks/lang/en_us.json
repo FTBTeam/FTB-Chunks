@@ -74,6 +74,7 @@
   "ftbchunks.config.client.minimap.compass": "Compass",
   "ftbchunks.config.client.minimap.enabled": "Enabled",
   "ftbchunks.config.client.minimap.icons.entities": "Entities",
+  "ftbchunks.config.client.minimap.entity_heads": "Entity heads",
   "ftbchunks.config.client.minimap.icons.entities.tooltip": "Icons for non-player living entities",
   "ftbchunks.config.client.minimap.icons.entity_icon": "Entity Icon Visibility",
   "ftbchunks.config.client.minimap.icons": "Icons",

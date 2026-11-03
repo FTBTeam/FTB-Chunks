@@ -112,6 +112,8 @@ public interface FTBChunksClientConfig {
             .comment("Mode for the pointer icon to render on minimap");
     BooleanValue MINIMAP_ENTITIES = MINIMAP_ICONS.addBoolean("entities", true)
             .comment("Show entity icons on the minimap");
+    BooleanValue MINIMAP_ENTITY_HEADS = MINIMAP.addBoolean("entity_heads", true)
+            .comment("Show entity heads on minimap");
     BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP_ICONS.addBoolean("large_entities", false)
             .comment("Make entity icons on the minimap larger");
     BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP_ICONS.addBoolean("show_player_when_unlocked", true)

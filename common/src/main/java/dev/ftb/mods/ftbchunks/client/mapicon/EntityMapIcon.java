@@ -6,6 +6,7 @@ import dev.ftb.mods.ftbchunks.api.client.icon.MapType;
 import dev.ftb.mods.ftbchunks.client.FTBChunksClientConfig;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.EntityIconLoader;
+import dev.ftb.mods.ftblibrary.icon.EntityImageIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -80,8 +81,12 @@ public class EntityMapIcon implements MapIcon {
         poseStack.pushPose();
         poseStack.translate(x, y, 0F);
         poseStack.scale(w / 18F, h / 18F, 1F);
-        Color4I.BLACK.withAlpha(128).draw(graphics, 0, 0, 18, 18);
-        icon.withColor(Color4I.BLACK).draw(graphics, 1, 1, widthHeight.width(), widthHeight.height());
+        if (icon instanceof EntityImageIcon) {
+            // for entity faces, a slightly darkened border greatly improves legibility on the map
+            // not necessary for the fallback peaceful/hostile icons; they already have a dark border
+            Color4I.BLACK.withAlpha(160).draw(graphics, 0, 0, widthHeight.width() + 2, widthHeight.height() + 2);
+        }
+        icon.draw(graphics, 1, 1, widthHeight.width(), widthHeight.height());
         poseStack.popPose();
     }
 }

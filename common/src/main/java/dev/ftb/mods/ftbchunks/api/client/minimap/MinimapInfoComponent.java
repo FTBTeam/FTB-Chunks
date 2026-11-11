@@ -53,10 +53,25 @@ public interface MinimapInfoComponent {
         return (int) ((minecraft.font.lineHeight + 1) * lines * fontScale);
     }
 
-    /// Helper method to draw centered text without the faff of calculating the width of the text
+    /// Helper method to draw centered text without the need to calculate the width of the text
     default void drawCenteredText(Font font, GuiGraphicsExtractor graphics, Component text, int y) {
         int textWidth = font.width(text.getVisualOrderText());
         graphics.text(font, text, -textWidth / 2, y, 0xFFFFFFFF, true);
+    }
+
+    /// Draw centered text, with or without preceding label, depending on client config
+    /// See also [#drawCenteredText(Font, GuiGraphicsExtractor, Component, int)]
+    default void drawCenteredText(Font font, GuiGraphicsExtractor graphics, String translationKey, Component text, int y) {
+        if (FTBChunksClientConfig.MINIMAP_INFO_LABELS.get()) {
+            drawCenteredText(font, graphics, Component.translatable(translationKey, text), y);
+        } else {
+            drawCenteredText(font, graphics, text, y);
+        }
+    }
+
+    /// See [#drawCenteredText(Font, GuiGraphicsExtractor, String, Component, int)]
+    default void drawCenteredText(Font font, GuiGraphicsExtractor graphics, String translationKey, String text, int y) {
+        drawCenteredText(font, graphics, translationKey, Component.literal(text), y);
     }
 
     /// @return display name render in the Minimap Info Settings GUI
@@ -67,5 +82,10 @@ public interface MinimapInfoComponent {
     /// @return hover texted displayed render in the Minimap Info Settings GUI
     default Component description() {
         return Component.translatable("minimap.info." + id().getNamespace() + "." + id().getPath() + ".description");
+    }
+
+    /// @return whether label prefixes should be included on info text lines
+    default boolean showLabels() {
+        return FTBChunksClientConfig.MINIMAP_INFO_LABELS.get();
     }
 }

@@ -333,7 +333,7 @@ public class LargeMapScreen extends BaseScreen {
             poseStack.popMatrix();
         }
 
-        super.drawForeground(graphics, theme, x, y, w, h);
+//        super.drawForeground(graphics, theme, x, y, w, h);
     }
 
     public static void refreshIconsIfOpen() {

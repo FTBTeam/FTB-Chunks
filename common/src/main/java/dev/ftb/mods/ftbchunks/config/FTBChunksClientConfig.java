@@ -136,6 +136,8 @@ public interface FTBChunksClientConfig {
     StringListValue MINIMAP_INFO_HIDDEN = MINIMAP_INFO.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList())
             .excludedFromGui()
             .comment("Info hidden under minimap");
+    BooleanValue MINIMAP_INFO_LABELS = MINIMAP_INFO.addBoolean("info_labels", false)
+            .comment("Show label prefixes on minimap info lines?");
 
     Config ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");

@@ -2,6 +2,10 @@ package dev.ftb.mods.ftbchunks.client.minimap.components;
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
+import dev.ftb.mods.ftbchunks.config.FTBChunksClientConfig;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
 
 public class MinimapComponentSetup {
     public static void registerComponents() {

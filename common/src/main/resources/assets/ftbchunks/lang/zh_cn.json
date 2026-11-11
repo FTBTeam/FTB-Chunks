@@ -20,7 +20,7 @@
 	"ftbchunks.config.client.minimap.icons.player_heads": "小地图玩家图标",
 	"ftbchunks.config.client.minimap.icons.large_entities": "小地图大型实体",
 	"ftbchunks.config.client.minimap.xyz": "小地图XYZ",
-	"ftbchunks.minimap.biome": "小地图生物群系",
+	"ftbchunks.minimap.biome": "小地图生物群系: %s",
 	"ftbchunks.config.client.minimap.blur_mode": "小地图锐化",
 	"ftbchunks.config.client.minimap.compass": "小地图指南针",
 	"ftbchunks.config.client.minimap.visibility": "小地图透明度",

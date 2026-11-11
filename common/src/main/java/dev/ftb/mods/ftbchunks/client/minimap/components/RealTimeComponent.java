@@ -30,7 +30,7 @@ public class RealTimeComponent implements MinimapInfoComponent {
         LocalTime now = LocalTime.now();
         int hours = now.getHour();
         int minutes = now.getMinute();
-        drawCenteredText(font, graphics, Component.translatable("ftbchunks.real_time", createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(font, graphics, "ftbchunks.real_time", createTimeString(hours, minutes, setting.equals(TimeMode.TWENTY_FOUR.name())), 0);
     }
 
     @Override

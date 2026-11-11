@@ -26,8 +26,8 @@ public class BiomeComponent implements MinimapInfoComponent {
     @Override
     public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
         if (biomeKey != null) {
-            drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.minimap.biome").append(": ")
-                    .append(Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath())), 0);
+            var biome = Component.translatable("biome." + biomeKey.identifier().getNamespace() + "." + biomeKey.identifier().getPath());
+            drawCenteredText(context.minecraft().font, graphics, "ftbchunks.minimap.biome", biome, 0);
         }
     }
 

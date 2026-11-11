@@ -40,7 +40,7 @@
 	"ftbchunks.config.client.minimap.icons.large_entities": "큰 엔티티",
 	"ftbchunks.config.client.minimap.zoom": "확대",
 	"ftbchunks.config.client.minimap.xyz": "XYZ",
-	"ftbchunks.minimap.biome": "생물군계",
+	"ftbchunks.minimap.biome": "생물군계: %s",
 	"ftbchunks.config.client.minimap.blur_mode": "블러 모드",
 	"ftbchunks.minimap.blur_mode.auto": "자동",
 	"ftbchunks.minimap.blur_mode.on": "켜짐",

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [26.1.2.11]
+
+### Changed
+* Minimap info lines no longer include the label ("Player Pos:", "Biome:", etc.) since this is largely redundant info
+  * Exception is the "FPS:" label which is always shown (a bare FPS number lacks useful context)
+  * Labels can be re-enabled with "Show Minimap Info Labels" client config setting, if desired
+
+### Fixed
+* Fixed fallback icons for entities on the map rendering fully black
+* Added back missing "Entity Heads" client config setting (got dropped in the port to 26.1)
+
 ## [26.1.2.10]
 
 ### Fixed

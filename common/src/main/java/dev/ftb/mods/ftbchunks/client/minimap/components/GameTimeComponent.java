@@ -45,9 +45,11 @@ public class GameTimeComponent implements MinimapInfoComponent {
         if (hourTime >= 24) {
             hourTime -= 24;
         }
-        drawCenteredText(font, graphics, Component.translatable("ftbchunks.game_time", RealTimeComponent.createTimeString(hourTime, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name()))), 0);
+        drawCenteredText(font, graphics, "ftbchunks.game_time",
+                RealTimeComponent.createTimeString(hourTime, minutes, setting.equals(ClockedTimeMode.TWENTY_FOUR.name())),
+                0
+        );
     }
-
 
     @Override
     public int height(MinimapComponentContext context) {

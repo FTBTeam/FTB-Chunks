@@ -24,6 +24,8 @@ public class FPSComponent implements MinimapInfoComponent {
 
     @Override
     public void render(MinimapComponentContext context, GuiGraphicsExtractor graphics, Font font) {
+        // note: not using the config-aware variant of drawCenteredText here
+        // "FPS" label is short, and a bare FPS number doesn't have enough context to be meaningful
         drawCenteredText(context.minecraft().font, graphics, Component.translatable("ftbchunks.fps", Minecraft.getInstance().getFps()), 0);
     }
 

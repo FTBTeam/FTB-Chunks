@@ -112,6 +112,8 @@ public interface FTBChunksClientConfig {
             .comment("Mode for the pointer icon to render on minimap");
     BooleanValue MINIMAP_ENTITIES = MINIMAP_ICONS.addBoolean("entities", true)
             .comment("Show entity icons on the minimap");
+    BooleanValue MINIMAP_ENTITY_HEADS = MINIMAP.addBoolean("entity_heads", true)
+            .comment("Show entity heads on minimap");
     BooleanValue MINIMAP_LARGE_ENTITIES = MINIMAP_ICONS.addBoolean("large_entities", false)
             .comment("Make entity icons on the minimap larger");
     BooleanValue SHOW_PLAYER_WHEN_UNLOCKED = MINIMAP_ICONS.addBoolean("show_player_when_unlocked", true)
@@ -134,6 +136,8 @@ public interface FTBChunksClientConfig {
     StringListValue MINIMAP_INFO_HIDDEN = MINIMAP_INFO.addStringList("info_hidden", Stream.of(FPSComponent.ID, GameTimeComponent.ID, RealTimeComponent.ID, DebugComponent.ID).map(Identifier::toString).toList())
             .excludedFromGui()
             .comment("Info hidden under minimap");
+    BooleanValue MINIMAP_INFO_LABELS = MINIMAP_INFO.addBoolean("info_labels", false)
+            .comment("Show label prefixes on minimap info lines?");
 
     Config ADVANCED = CONFIG.addGroup("advanced", 3);
     BooleanValue DEBUG_INFO = ADVANCED.addBoolean("debug_info", false).comment("Enables debug info");

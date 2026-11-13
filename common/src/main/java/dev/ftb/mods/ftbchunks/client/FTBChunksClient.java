@@ -80,6 +80,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -1148,7 +1149,10 @@ public enum FTBChunksClient {
                     continue;
                 }
 
-                Icon icon = EntityIconLoader.getIcon(entity);
+                Icon icon = FTBChunksClientConfig.MINIMAP_ENTITY_HEADS.get() ?
+                        EntityIconLoader.getIcon(entity) :
+                        (entity instanceof Enemy ? EntityIconLoader.HOSTILE : EntityIconLoader.NORMAL);
+
                 Optional<EntityIconLoader.EntityIconSettings> settings = EntityIconLoader.getSettings(entity.getType());
                 if (settings.isEmpty()) {
                     continue;

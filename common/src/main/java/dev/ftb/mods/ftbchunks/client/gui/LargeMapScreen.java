@@ -25,6 +25,7 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.ui.misc.KeyReferenceScreen;
 import dev.ftb.mods.ftblibrary.util.StringUtils;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftblibrary.util.client.ClientUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
@@ -372,7 +373,7 @@ public class LargeMapScreen extends BaseScreen {
     }
 
     public static void refreshIconsIfOpen() {
-        if (Minecraft.getInstance().screen instanceof ScreenWrapper sw && sw.getGui() instanceof LargeMapScreen lms) {
+        if (ClientUtils.getCurrentGuiAs(LargeMapScreen.class) instanceof LargeMapScreen lms) {
             lms.refreshIcons();
         }
     }
